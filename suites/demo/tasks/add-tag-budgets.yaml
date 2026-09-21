@@ -1,0 +1,61 @@
+id: add-tag-budgets
+name: Add tag-based monthly budgets
+version: 1
+description: New budgets module plus a report section, spanning two modules.
+
+repo:
+  path: ../fixture_repo
+  base_ref: HEAD
+
+prompt: |
+  Add tag-based monthly budgets to ledgerlite.
+
+  1. Create `ledgerlite/budgets.py` with:
+     - a frozen dataclass `Budget(tag: str, monthly_limit: Decimal)`;
+     - a frozen dataclass `BudgetStatus(tag: str, limit: Decimal, spent: Decimal,
+       remaining: Decimal, over_budget: bool)`;
+     - `budget_status(ledger, budgets, year, month) -> list[BudgetStatus]` returning
+       one status per budget, in the order the budgets were given.
+       `spent` is the total of *expenses* (entries with a negative amount) dated in
+       that month that carry the budget's tag, expressed as a positive Decimal.
+       Income (positive amounts) is never counted. An entry with several tags counts
+       towards every matching budget. `remaining = limit - spent` (it may be
+       negative) and `over_budget = spent > limit`.
+     Reuse the existing `Ledger` helpers (`entries_between`, `spent_by_tag`) and
+     `report.month_range` where sensible instead of re-implementing them.
+
+  2. Extend `ledgerlite/report.py`: `render_summary(ledger, year, month, budgets=None)`.
+     When `budgets` is given and non-empty, append a section to the rendered
+     report: a line `Budgets:` followed by one line per budget formatted exactly as
+     `  <tag>: <spent> of <limit> (<remaining> left)` where the three amounts use
+     `ledgerlite.money.format_amount`, and with the suffix ` OVER` appended when the
+     budget is exceeded. Without budgets the output must be unchanged.
+
+  Do not modify anything under `tests/`. Run `python -m unittest discover -s tests`
+  to check your work.
+
+setup:
+  commands: []
+
+verification:
+  command: python -m unittest discover -s tests -v
+  score_command: python .harnesslab_verify/score_budgets.py
+  timeout_seconds: 60
+  inject:
+    - source: add-tag-budgets/verify/test_hidden_budgets.py
+      dest: tests/test_hidden_budgets.py
+    - source: add-tag-budgets/verify/score_budgets.py
+      dest: .harnesslab_verify/score_budgets.py
+  protected_paths:
+    - tests/
+
+limits:
+  agent_timeout_seconds: 600
+
+tags:
+  - python
+  - feature
+
+reference_solution:
+  overlay: add-tag-budgets/solution
+  description: budgets.py plus a budgets section in report.render_summary.

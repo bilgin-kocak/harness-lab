@@ -1,0 +1,47 @@
+id: consolidate-money-formatting
+name: Consolidate duplicated currency formatting
+version: 1
+description: Refactor duplicated formatting logic while preserving byte-identical output.
+
+repo:
+  path: ../fixture_repo
+  base_ref: HEAD
+
+prompt: |
+  The currency formatting logic in ledgerlite is duplicated: `ledgerlite/report.py`
+  defines its own private `_format_money` helper that re-implements
+  `ledgerlite.money.format_amount`.
+
+  Refactor so that there is exactly one implementation of amount formatting,
+  living in `ledgerlite/money.py`, and make `ledgerlite/report.py` use it for all
+  of its output. After the change `report.py` must no longer define
+  `_format_money` nor contain its own number-formatting logic.
+
+  The observable behaviour of `render_summary`, `render_entries` and
+  `money.format_amount` must stay byte-for-byte identical, including negative
+  amounts, half-up rounding to cents, thousands separators and the currency
+  suffix. Do not modify anything under `tests/`. Run
+  `python -m unittest discover -s tests` to check your work.
+
+setup:
+  commands: []
+
+verification:
+  command: python -m unittest discover -s tests -v
+  timeout_seconds: 60
+  inject:
+    - source: consolidate-money-formatting/verify/test_hidden_formatting.py
+      dest: tests/test_hidden_formatting.py
+  protected_paths:
+    - tests/
+
+limits:
+  agent_timeout_seconds: 600
+
+tags:
+  - python
+  - refactor
+
+reference_solution:
+  overlay: consolidate-money-formatting/solution
+  description: report.py imports and uses money.format_amount.

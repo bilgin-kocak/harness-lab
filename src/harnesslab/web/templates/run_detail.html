@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}{{ task.task_key }} × {{ variant.variant_key }} · Harness Lab{% endblock %}
+{% block content %}
+<nav class="crumbs"><a href="/">Experiments</a> › <a href="/experiments/{{ exp.id }}">{{ exp.name }}</a> › run <span class="mono">{{ run.id }}</span></nav>
+<h1>{{ task.name }} <span class="muted">×</span> {{ variant.variant_key }}
+  <span class="badge {{ run.outcome|outcome_class }}">{{ run.outcome }}</span>
+  <span class="badge {{ run.status|status_class }}">{{ run.status }}</span>
+</h1>
+<p class="muted">task <span class="mono">{{ task.task_key }}</span> · harness <strong>{{ run.runner }}</strong> · model {{ run.model_requested or "default" }}{% if run.model_resolved and run.model_resolved != run.model_requested %} → <strong>{{ run.model_resolved }}</strong>{% endif %} · repetition {{ run.repetition }} · started {{ run.started_at|dt }}{% if run.error_message %} · <span class="error-text">{{ run.error_message }}</span>{% endif %}</p>
+
+<div class="cards">
+  <div class="card metric"><div class="label">verified result</div><div class="value {{ run.outcome|outcome_class }}">{{ run.outcome }}</div><div class="sub">score {{ metrics.verified_score|num }}{% if verifier and verifier.max_score %} ({{ verifier.score|num }} / {{ verifier.max_score|num }}){% endif %}</div></div>
+  <div class="card metric"><div class="label">duration</div><div class="value">{{ metrics.wall_time_seconds|seconds }}</div><div class="sub">agent {{ metrics.agent_wall_time_seconds|seconds }} · verifier {{ metrics.verifier_wall_time_seconds|seconds }}</div></div>
+  <div class="card metric"><div class="label">tokens</div><div class="value">{{ metrics.input_tokens|int }} <span class="muted">/</span> {{ metrics.output_tokens|int }}</div><div class="sub">input / output · cached {{ metrics.cached_input_tokens|int }} · cache write {{ metrics.cache_write_tokens|int }}</div></div>
+  <div class="card metric"><div class="label">cost</div><div class="value">{{ metrics.reported_cost_usd|cost }}</div><div class="sub">reported by harness{% if metrics.estimated_cost_usd is not none %} · estimated {{ metrics.estimated_cost_usd|cost }} ({{ metrics.pricing_version }}){% endif %}</div></div>
+  <div class="card metric"><div class="label">tool calls</div><div class="value">{{ metrics.tool_calls }}</div><div class="sub">{{ metrics.shell_commands }} shell · {{ metrics.tool_calls_unfinished }} unfinished · {{ metrics.reasoning_events }} reasoning events</div></div>
+  <div class="card metric"><div class="label">files changed</div><div class="value">{{ metrics.files_changed }}</div><div class="sub"><span class="diff-add">+{{ metrics.lines_added }}</span> <span class="diff-del">−{{ metrics.lines_deleted }}</span></div></div>
+  <div class="card metric"><div class="label">exit codes</div><div class="value">{{ metrics.agent_exit_code if metrics.agent_exit_code is not none else "—" }} <span class="muted">/</span> {{ metrics.verifier_exit_code if metrics.verifier_exit_code is not none else "—" }}</div><div class="sub">agent / verifier · turns {{ metrics.num_turns if metrics.num_turns is not none else "—" }}{% if metrics.permission_denials %} · <span class="error-text">{{ metrics.permission_denials }} permission denials</span>{% endif %}</div></div>
+</div>
+
+{% if run.final_message %}
+<section>
+  <h2>Final agent message <span class="muted small">(not evidence of success)</span></h2>
+  <pre class="wrap">{{ run.final_message }}</pre>
+</section>
+{% endif %}
+
+<section>
+  <h2>Timeline <span class="muted small">{{ event_count }} normalized events · tool and command calls are collapsible · reasoning content is never recorded</span></h2>
+  <ol class="timeline">
+  {% for item in timeline %}
+    <li class="tl tl-{{ item.group }}{% if item.parent_call_id %} tl-sub{% endif %}">
+      {% if item.collapsible %}
+      <details {% if item.open_by_default %}open{% endif %}>
+        <summary>
+          <span class="seq">#{{ item.sequence }}</span>
+          <span class="offset">{{ item.payload._offset_s if item.payload._offset_s is not none else "" }}s</span>
+          <span class="group">{{ item.group }}</span>
+          <span class="title">{{ item.title }}</span>
+          {% if item.subtitle %}<span class="subtitle">{{ item.subtitle }}</span>{% endif %}
+          {% if item.duration_ms is not none %}<span class="duration">{{ item.duration_ms|ms }}</span>{% endif %}
+          {% if item.status %}<span class="badge badge-{{ 'pass' if item.status == 'completed' else ('warn' if item.status in ('running','unfinished','interrupted') else 'fail') }}">{{ item.status }}</span>{% endif %}
+          {% if item.parent_call_id %}<span class="chip small">subagent</span>{% endif %}
+        </summary>
+        <div class="tl-body">
+          {% if item.output %}<div class="label">output</div><pre>{{ item.output }}</pre>{% endif %}
+          <div class="label">payload</div><pre class="small">{{ item.payload|json }}</pre>
+          {% if item.result %}<div class="label">result</div><pre class="small">{{ item.result|json }}</pre>{% endif %}
+        </div>
+      </details>
+      {% else %}
+      <div class="tl-row">
+        <span class="seq">#{{ item.sequence }}</span>
+        <span class="offset">{{ item.payload._offset_s if item.payload._offset_s is not none else "" }}s</span>
+        <span class="group">{{ item.group }}</span>
+        <span class="title">{{ item.title }}</span>
+        {% if item.subtitle %}<span class="subtitle">{{ item.subtitle }}</span>{% endif %}
+        {% if item.text %}<pre class="wrap message">{{ item.text }}</pre>{% endif %}
+      </div>
+      {% endif %}
+    </li>
+  {% endfor %}
+  </ol>
+</section>
+
+<section>
+  <h2>Git diff <span class="muted small">captured by Harness Lab against base commit <span class="mono">{{ run.base_commit[:12] if run.base_commit else "?" }}</span></span>
+    {% if artifacts.agent_diff %}<a class="button secondary small" href="/runs/{{ run.id }}/artifacts/agent_diff">raw</a>{% endif %}</h2>
+  {% if diff_stat %}<pre class="small">{{ diff_stat }}</pre>{% endif %}
+  <pre class="diff">{{ diff_text|diff }}</pre>
+  {% if git_status %}<details><summary class="muted small">git status --porcelain</summary><pre class="small">{{ git_status }}</pre></details>{% endif %}
+</section>
+
+<section>
+  <h2>Verifier output <span class="muted small">independent of the agent</span></h2>
+  {% if verifier %}
+  <table class="data compact kv">
+    <tr><th>command</th><td class="mono">{{ verifier.command }}</td></tr>
+    <tr><th>exit code</th><td>{{ verifier.exit_code if verifier.exit_code is not none else "—" }}{% if verifier.timed_out %} <span class="badge badge-fail">timed out</span>{% endif %}</td></tr>
+    <tr><th>duration</th><td>{{ verifier.duration_ms|ms }}</td></tr>
+    {% if verifier.score_command %}<tr><th>score command</th><td class="mono">{{ verifier.score_command }} → score {{ verifier.score|num }} / {{ verifier.max_score|num }}{% if verifier.score_error %} <span class="error-text">{{ verifier.score_error }}</span>{% endif %}{% if verifier.score_metrics_json %} <span class="mono small">{{ verifier.score_metrics_json|json }}</span>{% endif %}</td></tr>{% endif %}
+    {% if verifier.injected_files_json %}<tr><th>injected at verification</th><td class="mono small">{{ verifier.injected_files_json|join(", ") }}</td></tr>{% endif %}
+    {% if verifier.protected_violations_json %}<tr><th>protected paths modified</th><td class="error-text">{{ verifier.protected_violations_json|join(", ") }}</td></tr>{% endif %}
+    {% if verifier.skipped_reason %}<tr><th>note</th><td class="error-text">{{ verifier.skipped_reason }}</td></tr>{% endif %}
+  </table>
+  <div class="label">stdout</div><pre class="small">{{ verifier.stdout or "(empty)" }}</pre>
+  <div class="label">stderr</div><pre class="small">{{ verifier.stderr or "(empty)" }}</pre>
+  {% else %}
+  <p class="muted">The verifier did not run for this run ({{ run.status }}).</p>
+  {% endif %}
+</section>
+
+<section>
+  <h2>Reproducibility record</h2>
+  <table class="data compact kv">
+    <tr><th>base commit</th><td class="mono">{{ run.base_commit }}</td></tr>
+    <tr><th>task hash / prompt hash</th><td class="mono">{{ run.task_hash }} / {{ run.prompt_hash }}</td></tr>
+    <tr><th>harness lab</th><td>{{ run.harnesslab_version }} <span class="mono">{{ run.harnesslab_commit or "(not a git checkout)" }}</span></td></tr>
+    <tr><th>runner</th><td>{{ run.runner }} · cli {{ run.cli_version or "—" }} · provider session <span class="mono">{{ run.provider_session_id or "—" }}</span></td></tr>
+    <tr><th>model</th><td>requested {{ run.model_requested or "default" }} · resolved {{ run.model_resolved or "—" }}</td></tr>
+    <tr><th>runner config</th><td><pre class="small">{{ run.runner_config_json|json }}</pre><span class="muted small">hash {{ run.config_hash }}</span></td></tr>
+    <tr><th>environment</th><td><span class="mono small">{{ run.environment_json|json }}</span></td></tr>
+    <tr><th>versions</th><td>parser {{ run.parser_version }} · metrics {{ run.metrics_version }}{% if verifier %} · verifier {{ verifier.verifier_version }}{% endif %}</td></tr>
+    <tr><th>worktree</th><td class="mono small">{{ run.worktree_path or "—" }}{% if run.worktree_kept %} (kept){% else %} (removed after the run){% endif %}</td></tr>
+    {% if run.runner_metadata_json %}<tr><th>runner metadata</th><td><pre class="small">{{ run.runner_metadata_json|json }}</pre></td></tr>{% endif %}
+  </table>
+</section>
+
+<section>
+  <h2>Artifacts</h2>
+  <ul class="artifacts">
+  {% for kind, a in artifacts.items() %}
+    <li><a href="/runs/{{ run.id }}/artifacts/{{ kind }}">{{ kind }}</a> <span class="muted small mono">{{ a.path }} · {{ a.size_bytes }} bytes</span></li>
+  {% endfor %}
+  </ul>
+</section>
+{% endblock %}

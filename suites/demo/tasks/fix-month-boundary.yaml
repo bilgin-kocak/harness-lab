@@ -1,0 +1,44 @@
+id: fix-month-boundary
+name: Fix month-end transactions being dropped
+version: 1
+description: A date-range bug drops entries dated on the last day of a month.
+
+repo:
+  path: ../fixture_repo
+  base_ref: HEAD
+
+prompt: |
+  Users report that monthly reports produced by `ledgerlite.report.monthly_summary`
+  and `render_summary` silently omit transactions dated on the last day of the
+  month (for example a purchase on 2024-01-31 never shows up in the January
+  report). Find the root cause and fix it.
+
+  Requirements:
+  - `Ledger.entries_between(start, end)` is documented as inclusive on both ends;
+    keep that contract and make sure the monthly report honours it.
+  - Keep existing behaviour for all other inputs (ordering, validation errors).
+  - Do not modify anything under `tests/`. Run `python -m unittest discover -s tests`
+    to check your work.
+
+setup:
+  commands: []
+
+verification:
+  command: python -m unittest discover -s tests -v
+  timeout_seconds: 60
+  inject:
+    - source: fix-month-boundary/verify/test_hidden_month_boundary.py
+      dest: tests/test_hidden_month_boundary.py
+  protected_paths:
+    - tests/
+
+limits:
+  agent_timeout_seconds: 600
+
+tags:
+  - python
+  - bugfix
+
+reference_solution:
+  overlay: fix-month-boundary/solution
+  description: Make the end of the range inclusive.

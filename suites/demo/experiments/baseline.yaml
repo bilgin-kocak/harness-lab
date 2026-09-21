@@ -1,0 +1,25 @@
+# Example experiment: run with `harnesslab run suites/demo/experiments/baseline.yaml`
+name: baseline-comparison
+description: Compare the reference fake agent against a no-op control on the demo suite.
+suite: ../suite.yaml
+
+repetitions: 1
+parallelism: 2
+
+variants:
+  - id: fake-reference
+    runner: fake
+    behavior: solve
+
+  - id: fake-noop
+    runner: fake
+    behavior: noop
+
+  # Real harnesses (require the CLIs and credentials):
+  # - id: codex-default
+  #   runner: codex
+  #   model: null
+  # - id: claude-default
+  #   runner: claude
+  #   model: null
+  #   max_turns: 30

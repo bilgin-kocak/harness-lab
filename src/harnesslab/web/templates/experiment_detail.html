@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}{{ exp.name }} · Harness Lab{% endblock %}
+{% block content %}
+<nav class="crumbs"><a href="/">Experiments</a> › {{ exp.name }}</nav>
+<h1>{{ exp.name }} <span class="badge {{ exp.status|status_class }}">{{ exp.status }}</span></h1>
+<p class="muted">
+  <span class="mono">{{ exp.id }}</span> · suite <strong>{{ exp.suite_name }}</strong> · created {{ exp.created_at|dt }}
+  {% if exp.finished_at %} · finished {{ exp.finished_at|dt }}{% endif %}
+  · repetitions {{ exp.repetitions }} · parallelism {{ exp.parallelism }}
+  · harnesslab {{ exp.harnesslab_version }}{% if exp.harnesslab_commit %} @ <span class="mono">{{ exp.harnesslab_commit[:12] }}</span>{% endif %}
+  · env <span class="mono">{{ exp.environment_hash }}</span>
+</p>
+<p class="actions">
+  {% if variant_keys|length >= 2 %}<a class="button" href="/experiments/{{ exp.id }}/compare">Compare variants</a>{% endif %}
+  <a class="button secondary" href="/api/experiments/{{ exp.id }}/export.json">Export JSON</a>
+</p>
+
+<section>
+  <h2>Variants</h2>
+  <table class="data compact">
+    <thead><tr><th>variant</th><th>harness</th><th>model</th><th>config</th><th>description</th></tr></thead>
+    <tbody>
+    {% for v in variants %}
+      <tr>
+        <td><strong>{{ v.variant_key }}</strong></td>
+        <td>{{ v.runner }}{% if v.harness_version %} <span class="muted">{{ v.harness_version }}</span>{% endif %}</td>
+        <td>{{ v.model_requested or "default" }}</td>
+        <td><details><summary class="mono small">{{ v.config_hash }}</summary><pre class="small">{{ v.config_json.options|json }}</pre></details></td>
+        <td class="muted">{{ v.description or "" }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>Task × variant matrix <span class="muted small">(verified by the independent verifier; click a cell to open the run)</span></h2>
+  <table class="data matrix">
+    <thead><tr><th>task</th>{% for vk in variant_keys %}<th class="center">{{ vk }}</th>{% endfor %}</tr></thead>
+    <tbody>
+    {% for t in tasks %}
+      <tr>
+        <td><strong>{{ t.name }}</strong><div class="muted mono small">{{ t.task_key }} · {{ t.tags_json|join(", ") }}</div></td>
+        {% for vk in variant_keys %}
+          {% set cell = matrix[t.task_key][vk] %}
+          <td class="center cell cell-{{ cell.state }}">
+            {% if cell.primary_run %}
+              <a href="/runs/{{ cell.primary_run.run_id }}" title="{{ cell.primary_run.status }} / {{ cell.primary_run.outcome }}">
+                <span class="symbol">{{ cell.state|state_symbol }}</span>
+                {% if cell.n > 1 %}<span class="small">{{ cell.n_passed }}/{{ cell.n_valid }}</span>{% endif %}
+                {% if cell.mean_score is not none and cell.mean_score not in (0.0, 1.0) %}<span class="small">{{ cell.mean_score|num }}</span>{% endif %}
+                {% if cell.state == "error" %}<span class="small">{{ cell.primary_run.status }}</span>{% endif %}
+              </a>
+              {% if cell.n > 1 %}<div class="small muted">{% for r in cell.runs %}<a href="/runs/{{ r.run_id }}">#{{ r.repetition }}</a> {% endfor %}</div>{% endif %}
+            {% else %}—{% endif %}
+          </td>
+        {% endfor %}
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>Aggregate metrics per variant</h2>
+  <table class="data aggregates">
+    <thead><tr><th>metric</th>{% for vk in variant_keys %}<th class="num">{{ vk }}</th>{% endfor %}</tr></thead>
+    <tbody>
+      <tr><td>runs (valid / total)</td>{% for vk in variant_keys %}<td class="num">{{ aggregates[vk].n_valid }} / {{ aggregates[vk].n_total }}</td>{% endfor %}</tr>
+      <tr><td>verified pass rate</td>{% for vk in variant_keys %}{% set a = aggregates[vk] %}<td class="num"><strong>{{ a.success_rate|pct }}</strong> <span class="muted">({{ a.n_passed }}/{{ a.n_valid }})</span></td>{% endfor %}</tr>
+      <tr><td>mean verified score ± std</td>{% for vk in variant_keys %}{% set a = aggregates[vk] %}<td class="num">{{ a.score.mean|num }}{% if a.score.std is not none %} ± {{ a.score.std|num }}{% endif %}</td>{% endfor %}</tr>
+      <tr><td>median wall time ± std</td>{% for vk in variant_keys %}{% set a = aggregates[vk] %}<td class="num">{{ a.wall_time_seconds.median|seconds }}{% if a.wall_time_seconds.std is not none %} ± {{ a.wall_time_seconds.std|seconds }}{% endif %}</td>{% endfor %}</tr>
+      <tr><td>median input tokens</td>{% for vk in variant_keys %}<td class="num">{{ aggregates[vk].input_tokens.median|int }}</td>{% endfor %}</tr>
+      <tr><td>median cached input tokens</td>{% for vk in variant_keys %}<td class="num">{{ aggregates[vk].cached_input_tokens.median|int }}</td>{% endfor %}</tr>
+      <tr><td>median output tokens</td>{% for vk in variant_keys %}<td class="num">{{ aggregates[vk].output_tokens.median|int }}</td>{% endfor %}</tr>
+      <tr><td>median tool calls</td>{% for vk in variant_keys %}<td class="num">{{ aggregates[vk].tool_calls.median|int }}</td>{% endfor %}</tr>
+      <tr><td>median shell commands</td>{% for vk in variant_keys %}<td class="num">{{ aggregates[vk].shell_commands.median|int }}</td>{% endfor %}</tr>
+      <tr><td>median files changed</td>{% for vk in variant_keys %}<td class="num">{{ aggregates[vk].files_changed.median|int }}</td>{% endfor %}</tr>
+      <tr><td>median reported cost <span class="muted">(n with cost)</span></td>{% for vk in variant_keys %}{% set a = aggregates[vk] %}<td class="num">{{ a.reported_cost_usd.median|cost }} <span class="muted">({{ a.reported_cost_usd.n }})</span></td>{% endfor %}</tr>
+      <tr><td>median estimated cost <span class="muted">(pricing.yaml)</span></td>{% for vk in variant_keys %}{% set a = aggregates[vk] %}<td class="num">{{ a.estimated_cost_usd.median|cost }} <span class="muted">({{ a.estimated_cost_usd.n }})</span></td>{% endfor %}</tr>
+      <tr><td>infrastructure failures</td>{% for vk in variant_keys %}<td class="num">{{ aggregates[vk].n_infra_failures }}</td>{% endfor %}</tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>All runs <span class="muted small">({{ samples|length }})</span></h2>
+  <table class="data compact">
+    <thead><tr><th>run</th><th>task</th><th>variant</th><th class="num">rep</th><th>status</th><th>verified</th><th class="num">score</th><th class="num">wall</th><th class="num">tokens in / cached / out</th><th class="num">tools</th><th class="num">shell</th><th class="num">files</th><th class="num">cost</th><th>error</th></tr></thead>
+    <tbody>
+    {% for s in samples %}
+      {% set r = runs_by_id[s.run_id] %}
+      <tr>
+        <td><a class="mono small" href="/runs/{{ s.run_id }}">{{ s.run_id }}</a></td>
+        <td>{{ s.task_key }}</td>
+        <td>{{ s.variant_key }}</td>
+        <td class="num">{{ s.repetition }}</td>
+        <td><span class="badge {{ s.status|status_class }}">{{ s.status }}</span></td>
+        <td><span class="badge {{ s.outcome|outcome_class }}">{{ s.outcome }}</span></td>
+        <td class="num">{{ s.verified_score|num }}</td>
+        <td class="num">{{ s.wall_time_seconds|seconds }}</td>
+        <td class="num">{{ s.input_tokens|int }} / {{ s.cached_input_tokens|int }} / {{ s.output_tokens|int }}</td>
+        <td class="num">{{ s.tool_calls|int }}</td>
+        <td class="num">{{ s.shell_commands|int }}</td>
+        <td class="num">{{ s.files_changed|int }} <span class="muted">+{{ r.lines_added or 0 }} −{{ r.lines_deleted or 0 }}</span></td>
+        <td class="num">{{ s.reported_cost_usd|cost }}{% if s.estimated_cost_usd is not none %} <span class="muted">est {{ s.estimated_cost_usd|cost }}</span>{% endif %}</td>
+        <td class="small muted">{{ (r.error_message or "")[:120] }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

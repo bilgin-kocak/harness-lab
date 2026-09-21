@@ -1,0 +1,59 @@
+name: demo
+description: >
+  Three small, verifier-backed coding tasks against the `ledgerlite` fixture
+  repository (Python standard library only). Hidden tests are injected into the
+  worktree only when the verifier runs.
+
+tasks:
+  - tasks/fix-month-boundary.yaml
+  - tasks/add-tag-budgets.yaml
+  - tasks/consolidate-money-formatting.yaml
+
+# Variants available to `harnesslab run suites/demo/suite.yaml --variants ...`.
+# Keys other than id/runner/model are passed to the runner as options.
+variants:
+  - id: fake-reference
+    runner: fake
+    description: Deterministic fake agent that applies each task's reference solution.
+    behavior: solve
+
+  - id: fake-noop
+    runner: fake
+    description: Fake agent that claims success without changing anything (control).
+    behavior: noop
+
+  - id: fake-partial
+    runner: fake
+    description: Fake agent that solves only the bug-fix task.
+    behavior: solve
+    solve_tasks: [fix-month-boundary]
+    simulate_cost_usd_per_1k_tokens: 0.004
+
+  - id: codex-default
+    runner: codex
+    model: null
+    description: OpenAI Codex CLI, default model, workspace-write sandbox, no network.
+    sandbox: workspace-write
+    network_access: false
+
+  - id: claude-default
+    runner: claude
+    model: null
+    description: Claude Code CLI, default model, acceptEdits with a shell allowlist.
+    max_turns: 30
+    permission_mode: acceptEdits
+    allowed_tools:
+      - Read
+      - Edit
+      - Write
+      - MultiEdit
+      - Glob
+      - Grep
+      - LS
+      - "Bash(python *)"
+      - "Bash(python3 *)"
+      - "Bash(ls *)"
+      - "Bash(cat *)"
+      - "Bash(git diff *)"
+      - "Bash(git status *)"
+      - "Bash(git log *)"

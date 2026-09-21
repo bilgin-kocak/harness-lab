@@ -1,0 +1,15 @@
+# Harness Lab local data (database, worktrees, artifacts)
+.harnesslab/
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.venv/
+build/
+dist/
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store

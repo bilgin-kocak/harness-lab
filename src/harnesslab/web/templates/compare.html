@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Compare · {{ exp.name }} · Harness Lab{% endblock %}
+{% block content %}
+<nav class="crumbs"><a href="/">Experiments</a> › <a href="/experiments/{{ exp.id }}">{{ exp.name }}</a> › Compare</nav>
+<h1>Compare variants</h1>
+<form class="compare-form" method="get" action="/experiments/{{ exp.id }}/compare"
+      hx-get="/experiments/{{ exp.id }}/compare" hx-target="#compare-body" hx-trigger="change" hx-push-url="true">
+  <label>A <select name="a">{% for vk in variant_keys %}<option value="{{ vk }}" {% if vk == a %}selected{% endif %}>{{ vk }}</option>{% endfor %}</select></label>
+  <label>B <select name="b">{% for vk in variant_keys %}<option value="{{ vk }}" {% if vk == b %}selected{% endif %}>{{ vk }}</option>{% endfor %}</select></label>
+  <noscript><button type="submit">Compare</button></noscript>
+</form>
+<div id="compare-body">
+  {% include "partials/compare_body.html" %}
+</div>
+{% endblock %}

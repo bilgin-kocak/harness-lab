@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Experiments · Harness Lab{% endblock %}
+{% block content %}
+<h1>Experiments</h1>
+{% if not experiments %}
+  <div class="card empty">
+    <p>No experiments yet. Run one:</p>
+    <pre>uv run harnesslab run suites/demo/suite.yaml --variants fake-reference,fake-noop</pre>
+  </div>
+{% else %}
+<table class="data">
+  <thead>
+    <tr><th>name</th><th>date</th><th>suite</th><th>variants</th><th class="num">tasks</th><th class="num">runs</th><th class="num">passed</th><th class="num">best verified score</th><th>status</th></tr>
+  </thead>
+  <tbody>
+  {% for e in experiments %}
+    <tr>
+      <td><a href="/experiments/{{ e.id }}"><strong>{{ e.name }}</strong></a><div class="muted mono small">{{ e.id }}</div></td>
+      <td>{{ e.created_at|dt }}</td>
+      <td>{{ e.suite_name }}</td>
+      <td>{% for v in e.variants %}<span class="chip">{{ v }}</span>{% endfor %}</td>
+      <td class="num">{{ e.tasks }}</td>
+      <td class="num">{{ e.runs }}</td>
+      <td class="num">{{ e.passed }}/{{ e.runs }}</td>
+      <td class="num">{{ e.best_score|num }}</td>
+      <td><span class="badge {{ e.status|status_class }}">{{ e.status }}</span></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+{% endblock %}

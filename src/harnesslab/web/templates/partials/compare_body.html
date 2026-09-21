@@ -1,0 +1,54 @@
+{% set c = comparison %}
+<section>
+  <h2>{{ a }} vs {{ b }} <span class="muted small">raw metrics, no composite score</span></h2>
+  <table class="data compare">
+    <thead><tr><th>metric</th><th class="num">{{ a }}</th><th class="num">{{ b }}</th><th class="num">Δ (B − A)</th></tr></thead>
+    <tbody>
+    {% for d in c.deltas %}
+      <tr>
+        <td>{{ d.label }}{% if d.lower_is_better %} <span class="muted small">(lower is better)</span>{% endif %}</td>
+        {% if d.metric == "success_rate" %}
+          <td class="num">{{ d.a|pct }}</td><td class="num">{{ d.b|pct }}</td>
+          <td class="num {% if d.delta %}{{ 'better' if d.delta > 0 else 'worse' }}{% endif %}">{% if d.delta is not none %}{{ (d.delta * 100)|delta(0) }} pts{% else %}—{% endif %}</td>
+        {% elif d.metric in ("reported_cost_usd", "estimated_cost_usd") %}
+          <td class="num">{{ d.a|cost }}</td><td class="num">{{ d.b|cost }}</td>
+          <td class="num {% if d.delta %}{{ 'better' if (d.delta < 0) == d.lower_is_better else 'worse' }}{% endif %}">{{ d.delta|delta(4) }}</td>
+        {% elif d.metric == "wall_time_seconds" %}
+          <td class="num">{{ d.a|seconds }}</td><td class="num">{{ d.b|seconds }}</td>
+          <td class="num {% if d.delta %}{{ 'better' if (d.delta < 0) == d.lower_is_better else 'worse' }}{% endif %}">{{ d.delta|delta(1) }} s</td>
+        {% else %}
+          <td class="num">{{ d.a|num }}</td><td class="num">{{ d.b|num }}</td>
+          <td class="num {% if d.delta %}{{ 'better' if (d.delta < 0) == d.lower_is_better else 'worse' }}{% endif %}">{{ d.delta|delta }}</td>
+        {% endif %}
+      </tr>
+    {% endfor %}
+      <tr><td>valid runs</td><td class="num">{{ c.a_aggregate.n_valid }} / {{ c.a_aggregate.n_total }}</td><td class="num">{{ c.b_aggregate.n_valid }} / {{ c.b_aggregate.n_total }}</td><td></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>Per-task agreement</h2>
+  <p class="chips">
+    <span class="chip chip-pass">both passed: {{ c.summary.both_passed }}</span>
+    <span class="chip chip-fail">both failed: {{ c.summary.both_failed }}</span>
+    <span class="chip chip-a">{{ a }} passed / {{ b }} failed: {{ c.summary.a_only }}</span>
+    <span class="chip chip-b">{{ b }} passed / {{ a }} failed: {{ c.summary.b_only }}</span>
+    {% if c.summary.mixed %}<span class="chip">mixed (repetitions disagree): {{ c.summary.mixed }}</span>{% endif %}
+    {% if c.summary.unverified %}<span class="chip">unverified: {{ c.summary.unverified }}</span>{% endif %}
+  </p>
+  <table class="data">
+    <thead><tr><th>task</th><th class="center">{{ a }}</th><th class="center">{{ b }}</th><th>category</th></tr></thead>
+    <tbody>
+    {% for t in c.tasks %}
+      {% set ca = matrix[t.task_key][a] %}{% set cb = matrix[t.task_key][b] %}
+      <tr>
+        <td>{{ t.task_key }}</td>
+        <td class="center cell cell-{{ ca.state }}">{% if ca.primary_run %}<a href="/runs/{{ ca.primary_run.run_id }}">{{ ca.state|state_symbol }} {{ t.a_score|num }}</a>{% else %}—{% endif %}</td>
+        <td class="center cell cell-{{ cb.state }}">{% if cb.primary_run %}<a href="/runs/{{ cb.primary_run.run_id }}">{{ cb.state|state_symbol }} {{ t.b_score|num }}</a>{% else %}—{% endif %}</td>
+        <td><span class="chip chip-{{ t.category }}">{{ t.category|replace("_", " ") }}</span></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>

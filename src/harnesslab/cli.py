@@ -16,7 +16,7 @@ from rich.table import Table
 
 import harnesslab
 from harnesslab.config import Settings
-from harnesslab.core.models import ExperimentSpec, RunStatus, SuiteSpec, TaskSpec, VariantSpec
+from harnesslab.core.models import ExperimentSpec, RunStatus, TaskSpec, VariantSpec
 from harnesslab.core.pricing import PricingTable, find_pricing_table
 from harnesslab.experiments.aggregate import aggregate_variants, build_matrix, samples_from_rows
 from harnesslab.experiments.export import export_experiment
@@ -68,7 +68,14 @@ def _fmt(value: Any, digits: int = 2) -> str:
 @app.callback()
 def main(
     ctx: typer.Context,
-    home: Annotated[Path | None, typer.Option("--home", envvar="HARNESSLAB_HOME", help="Harness Lab data directory (default ./.harnesslab).")] = None,
+    home: Annotated[
+        Path | None,
+        typer.Option(
+            "--home",
+            envvar="HARNESSLAB_HOME",
+            help="Harness Lab data directory (default ./.harnesslab).",
+        ),
+    ] = None,
 ) -> None:
     ctx.obj = Settings.from_env(home)
 
@@ -98,7 +105,11 @@ def doctor(ctx: typer.Context) -> None:
     failures = 0
 
     py_ok = sys.version_info >= (3, 12)
-    table.add_row("python", "[green]ok[/]" if py_ok else "[red]too old[/]", f"{platform.python_version()} ({sys.executable})")
+    table.add_row(
+        "python",
+        "[green]ok[/]" if py_ok else "[red]too old[/]",
+        f"{platform.python_version()} ({sys.executable})",
+    )
     failures += 0 if py_ok else 1
 
     gv = git_version()
@@ -119,13 +130,17 @@ def doctor(ctx: typer.Context) -> None:
         table.add_row(f"{name} cli", status, detail)
 
     uv = shutil.which("uv")
-    table.add_row("uv", "[green]ok[/]" if uv else "[yellow]optional[/]", uv or "not found (optional)")
+    table.add_row(
+        "uv", "[green]ok[/]" if uv else "[yellow]optional[/]", uv or "not found (optional)"
+    )
 
     try:
         db = _open_db(settings)
         count = Repository(db, settings.home).count_experiments()
         db.dispose()
-        table.add_row("database", "[green]ok[/]", f"{settings.resolved_database_url} ({count} experiments)")
+        table.add_row(
+            "database", "[green]ok[/]", f"{settings.resolved_database_url} ({count} experiments)"
+        )
     except Exception as exc:  # pragma: no cover - depends on filesystem state
         failures += 1
         table.add_row("database", "[red]error[/]", str(exc))
@@ -142,7 +157,9 @@ def doctor(ctx: typer.Context) -> None:
 
     console.print(table)
     if not probes["codex"].available or not probes["claude"].available:
-        console.print("[dim]Missing CLIs only disable their runners; the fake runner and dashboard work without them.[/]")
+        console.print(
+            "[dim]Missing CLIs only disable their runners; the fake runner and dashboard work without them.[/]"
+        )
     raise typer.Exit(code=1 if failures else 0)
 
 
@@ -160,7 +177,9 @@ def _find_suites(path: Path) -> list[Path]:
 @suite_app.command("list")
 def suite_list(
     ctx: typer.Context,
-    path: Annotated[Path, typer.Argument(help="A suite.yaml or a directory to search.")] = Path("suites"),
+    path: Annotated[Path, typer.Argument(help="A suite.yaml or a directory to search.")] = Path(
+        "suites"
+    ),
 ) -> None:
     """List suites, their tasks and variants."""
     suites = _find_suites(path)
@@ -182,11 +201,15 @@ def suite_list(
         table.add_column("tags")
         table.add_column("verifier")
         for task in tasks:
-            verifier = task.verification.command + (" (+score)" if task.verification.score_command else "")
+            verifier = task.verification.command + (
+                " (+score)" if task.verification.score_command else ""
+            )
             table.add_row(task.id, task.name, ", ".join(task.tags), verifier)
         console.print(table)
         if suite.variants:
-            console.print("  variants: " + ", ".join(f"{v.id} ({v.runner})" for v in suite.variants))
+            console.print(
+                "  variants: " + ", ".join(f"{v.id} ({v.runner})" for v in suite.variants)
+            )
         console.print()
 
 
@@ -212,12 +235,16 @@ def _progress_printer(total: int):  # type: ignore[no-untyped-def]
         score = f" score={p.verified_score:.2f}" if p.verified_score is not None else ""
         secs = f" {p.wall_time_seconds:.1f}s" if p.wall_time_seconds is not None else ""
         extra = f" [dim]{p.error}[/]" if p.error and p.outcome != "pass" else ""
-        console.print(f"[{done['n']}/{total}] {p.task_key} × {p.variant_key}: {mark}{score}{secs}{extra}")
+        console.print(
+            f"[{done['n']}/{total}] {p.task_key} × {p.variant_key}: {mark}{score}{secs}{extra}"
+        )
 
     return cb
 
 
-def _print_outcome_table(outcome: ExperimentOutcome, tasks: list[TaskSpec], variants: list[VariantSpec]) -> None:
+def _print_outcome_table(
+    outcome: ExperimentOutcome, tasks: list[TaskSpec], variants: list[VariantSpec]
+) -> None:
     table = Table(title=f"experiment {outcome.experiment_id} — {outcome.name}")
     table.add_column("task")
     for v in variants:
@@ -254,20 +281,32 @@ def _load_pricing(settings: Settings, explicit: Path | None) -> PricingTable | N
 def run(
     ctx: typer.Context,
     target: Annotated[Path, typer.Argument(help="A suite.yaml or an experiment.yaml.")],
-    variants: Annotated[str | None, typer.Option("--variants", "-v", help="Comma-separated variant ids.")] = None,
-    tasks: Annotated[str | None, typer.Option("--tasks", "-t", help="Comma-separated task ids (default: all).")] = None,
+    variants: Annotated[
+        str | None, typer.Option("--variants", "-v", help="Comma-separated variant ids.")
+    ] = None,
+    tasks: Annotated[
+        str | None, typer.Option("--tasks", "-t", help="Comma-separated task ids (default: all).")
+    ] = None,
     repetitions: Annotated[int | None, typer.Option("--repetitions", "-r", min=1)] = None,
     parallelism: Annotated[int | None, typer.Option("--parallelism", "-p", min=1)] = None,
     name: Annotated[str | None, typer.Option("--name", "-n", help="Experiment name.")] = None,
-    keep_worktrees: Annotated[bool, typer.Option("--keep-worktrees", help="Do not delete worktrees after runs.")] = False,
-    pricing: Annotated[Path | None, typer.Option("--pricing", help="pricing.yaml for cost estimates.")] = None,
+    keep_worktrees: Annotated[
+        bool, typer.Option("--keep-worktrees", help="Do not delete worktrees after runs.")
+    ] = False,
+    pricing: Annotated[
+        Path | None, typer.Option("--pricing", help="pricing.yaml for cost estimates.")
+    ] = None,
 ) -> None:
     """Run every task of a suite against one or more harness variants."""
     settings = _settings(ctx)
     try:
         experiment, suite, all_tasks = load_run_target(target)
-        chosen_variants = resolve_variants([v.strip() for v in variants.split(",")] if variants else None, experiment, suite)
-        chosen_tasks = select_tasks(all_tasks, [t.strip() for t in tasks.split(",")] if tasks else experiment.tasks)
+        chosen_variants = resolve_variants(
+            [v.strip() for v in variants.split(",")] if variants else None, experiment, suite
+        )
+        chosen_tasks = select_tasks(
+            all_tasks, [t.strip() for t in tasks.split(",")] if tasks else experiment.tasks
+        )
     except SpecError as exc:
         err_console.print(f"[red]{exc}[/]")
         raise typer.Exit(code=2) from exc
@@ -309,7 +348,9 @@ def run(
     console.print("dashboard: harnesslab serve  →  http://127.0.0.1:8000")
     infra = [r for r in outcome.runs if r.status not in (RunStatus.COMPLETED,)]
     if infra:
-        console.print(f"[yellow]{len(infra)} run(s) did not complete normally (see errors above).[/]")
+        console.print(
+            f"[yellow]{len(infra)} run(s) did not complete normally (see errors above).[/]"
+        )
 
 
 @suite_app.command("check")
@@ -324,10 +365,19 @@ def suite_check(
     except SpecError as exc:
         err_console.print(f"[red]{exc}[/]")
         raise typer.Exit(code=2) from exc
-    experiment = ExperimentSpec(name=f"suite-check:{suite.name}", suite=str(suite_path), parallelism=2, source_path=suite_path.resolve())
+    experiment = ExperimentSpec(
+        name=f"suite-check:{suite.name}",
+        suite=str(suite_path),
+        parallelism=2,
+        source_path=suite_path.resolve(),
+    )
     variants = [
-        VariantSpec(id="check-reference", runner="fake", behavior="solve", description="reference solution"),
-        VariantSpec(id="check-noop", runner="fake", behavior="noop", description="untouched repository"),
+        VariantSpec(
+            id="check-reference", runner="fake", behavior="solve", description="reference solution"
+        ),
+        VariantSpec(
+            id="check-noop", runner="fake", behavior="noop", description="untouched repository"
+        ),
     ]
     db = _open_db(settings)
     service = ExperimentService(settings, db)
@@ -342,8 +392,18 @@ def suite_check(
     table.add_column("untouched repo")
     table.add_column("verdict")
     for task in tasks:
-        ref = next((r for r in outcome.runs if r.task_key == task.id and r.variant_key == "check-reference"), None)
-        noop = next((r for r in outcome.runs if r.task_key == task.id and r.variant_key == "check-noop"), None)
+        ref = next(
+            (
+                r
+                for r in outcome.runs
+                if r.task_key == task.id and r.variant_key == "check-reference"
+            ),
+            None,
+        )
+        noop = next(
+            (r for r in outcome.runs if r.task_key == task.id and r.variant_key == "check-noop"),
+            None,
+        )
         ref_ok = bool(ref and ref.metrics.verified_pass)
         noop_fails = bool(noop and noop.metrics.verified_pass is False)
         has_ref = task.reference_solution is not None and task.reference_solution.overlay
@@ -402,7 +462,17 @@ def experiment_list(ctx: typer.Context) -> None:
     finally:
         db.dispose()
     table = Table()
-    for col in ("id", "name", "created", "suite", "variants", "runs", "passed", "best score", "status"):
+    for col in (
+        "id",
+        "name",
+        "created",
+        "suite",
+        "variants",
+        "runs",
+        "passed",
+        "best score",
+        "status",
+    ):
         table.add_column(col)
     for r in rows:
         table.add_row(
@@ -437,8 +507,12 @@ def experiment_show(ctx: typer.Context, experiment_id: Annotated[str, typer.Argu
         db.dispose()
     variant_keys = [v.variant_key for v in exp.variants]
     task_keys = [t.task_key for t in exp.tasks]
-    console.print(f"[bold]{exp.name}[/]  id={exp.id}  suite={exp.suite_name}  status={exp.status}  created={exp.created_at:%Y-%m-%d %H:%M}")
-    console.print(f"harnesslab {exp.harnesslab_version} commit={exp.harnesslab_commit or '—'}  env={exp.environment_hash}")
+    console.print(
+        f"[bold]{exp.name}[/]  id={exp.id}  suite={exp.suite_name}  status={exp.status}  created={exp.created_at:%Y-%m-%d %H:%M}"
+    )
+    console.print(
+        f"harnesslab {exp.harnesslab_version} commit={exp.harnesslab_commit or '—'}  env={exp.environment_hash}"
+    )
 
     matrix = build_matrix(samples, task_keys, variant_keys)
     mt = Table(title="task × variant (verified)")
@@ -450,7 +524,9 @@ def experiment_show(ctx: typer.Context, experiment_id: Annotated[str, typer.Argu
         for vk in variant_keys:
             cell = matrix[tk][vk]
             if cell.state == "pass":
-                row.append("[green]✔[/]" + (f" {cell.n_passed}/{cell.n_valid}" if cell.n > 1 else ""))
+                row.append(
+                    "[green]✔[/]" + (f" {cell.n_passed}/{cell.n_valid}" if cell.n > 1 else "")
+                )
             elif cell.state == "fail":
                 row.append("[red]✘[/]" + (f" {cell.n_passed}/{cell.n_valid}" if cell.n > 1 else ""))
             elif cell.state == "mixed":
@@ -471,8 +547,20 @@ def experiment_show(ctx: typer.Context, experiment_id: Annotated[str, typer.Argu
     def stat_row(label: str, getter, digits: int = 2) -> None:  # type: ignore[no-untyped-def]
         at.add_row(label, *[_fmt(getter(aggs[vk]), digits) for vk in variant_keys])
 
-    at.add_row("runs (valid/total)", *[f"{aggs[vk].n_valid}/{aggs[vk].n_total}" for vk in variant_keys])
-    at.add_row("pass rate", *[(f"{aggs[vk].success_rate * 100:.0f}% ({aggs[vk].n_passed}/{aggs[vk].n_valid})" if aggs[vk].success_rate is not None else "—") for vk in variant_keys])
+    at.add_row(
+        "runs (valid/total)", *[f"{aggs[vk].n_valid}/{aggs[vk].n_total}" for vk in variant_keys]
+    )
+    at.add_row(
+        "pass rate",
+        *[
+            (
+                f"{aggs[vk].success_rate * 100:.0f}% ({aggs[vk].n_passed}/{aggs[vk].n_valid})"
+                if aggs[vk].success_rate is not None
+                else "—"
+            )
+            for vk in variant_keys
+        ],
+    )
     stat_row("mean score", lambda a: a.score.mean)
     stat_row("score std", lambda a: a.score.std)
     stat_row("median wall time (s)", lambda a: a.wall_time_seconds.median)
@@ -486,7 +574,19 @@ def experiment_show(ctx: typer.Context, experiment_id: Annotated[str, typer.Argu
     console.print(at)
 
     rt = Table(title="runs")
-    for col in ("run id", "task", "variant", "rep", "status", "outcome", "score", "time (s)", "tokens in/out", "tools", "files"):
+    for col in (
+        "run id",
+        "task",
+        "variant",
+        "rep",
+        "status",
+        "outcome",
+        "score",
+        "time (s)",
+        "tokens in/out",
+        "tools",
+        "files",
+    ):
         rt.add_column(col)
     for s in samples:
         rt.add_row(
@@ -509,9 +609,18 @@ def experiment_show(ctx: typer.Context, experiment_id: Annotated[str, typer.Argu
 def experiment_export(
     ctx: typer.Context,
     experiment_id: Annotated[str, typer.Argument()],
-    events: Annotated[bool, typer.Option("--events/--no-events", help="Include normalized events.")] = True,
-    artifacts: Annotated[bool, typer.Option("--artifacts/--no-artifacts", help="Inline text artifacts (diffs, verifier output).")] = True,
-    output: Annotated[Path | None, typer.Option("--output", "-o", help="Write to a file instead of stdout.")] = None,
+    events: Annotated[
+        bool, typer.Option("--events/--no-events", help="Include normalized events.")
+    ] = True,
+    artifacts: Annotated[
+        bool,
+        typer.Option(
+            "--artifacts/--no-artifacts", help="Inline text artifacts (diffs, verifier output)."
+        ),
+    ] = True,
+    output: Annotated[
+        Path | None, typer.Option("--output", "-o", help="Write to a file instead of stdout.")
+    ] = None,
 ) -> None:
     """Export an experiment (spec, runs, traces, verdicts, aggregates) as JSON."""
     settings = _settings(ctx)

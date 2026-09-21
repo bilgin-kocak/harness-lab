@@ -1,0 +1,480 @@
+# Harness Lab
+
+**A local-first experimentation platform for evaluating AI coding-agent harnesses.**
+
+Given the same software task and the same starting repository state, how do different agent
+harnesses and configurations compare in *verified* success, token usage, tool usage, latency,
+cost and behaviour? Harness Lab answers that question reproducibly:
+
+```text
+                 TASK SUITE
+                     │
+            identical starting repo (one git commit)
+                     │
+          ┌──────────┼──────────┐
+          ▼          ▼          ▼
+       Harness A  Harness B  Harness C        codex · claude · fake · generic
+          │          │          │
+      isolated    isolated    isolated        one git worktree per run
+      worktree    worktree    worktree
+          │          │          │
+          └──────────┼──────────┘
+                     ▼
+              independent verifier            hidden tests + exit code / partial score
+                     │
+                     ▼
+            normalized experiment             provider-neutral trace + metrics + diff
+                     │
+                     ▼
+              Harness Lab UI                   matrix · run detail · compare
+```
+
+Harness Lab is **not** an observability product. It is a scientific instrument for controlled
+comparisons: the agent never decides whether it succeeded, every run starts from the same commit,
+and every trace is stored in one provider-neutral schema.
+
+## Table of contents
+
+- [What Harness Lab is](#what-harness-lab-is)
+- [Architecture](#architecture)
+- [Installation](#installation)
+- [Quickstart](#quickstart)
+- [Running the fake demo](#running-the-fake-demo)
+- [Running Codex](#running-codex)
+- [Running Claude Code](#running-claude-code)
+- [Creating a task suite](#creating-a-task-suite)
+- [Creating a harness variant](#creating-a-harness-variant)
+- [Interpreting metrics](#interpreting-metrics)
+- [Security warning](#security-warning)
+- [Research principles](#research-principles)
+- [Roadmap](#roadmap)
+
+## What Harness Lab is
+
+The central experimental object is
+
+```text
+TASK × MODEL × HARNESS × CONFIGURATION × ENVIRONMENT → TRACE → VERIFIER → METRICS
+```
+
+| Axis | Harness Lab object | Where it lives |
+| --- | --- | --- |
+| TASK | `TaskSpec` (prompt, fixture repo, verifier, limits) | `suites/<suite>/tasks/*.yaml` |
+| MODEL | `VariantSpec.model` (requested) and `model_resolved` (what the harness actually used) | variant YAML, `runs` table |
+| HARNESS | `VariantSpec.runner` (`codex`, `claude`, `fake`, `generic`, …) + `cli_version` | variant YAML, `runs` table |
+| CONFIGURATION | every other key of a variant (`max_turns`, `sandbox`, `context_policy`, `tool_policy`, …) hashed as `config_hash` | variant YAML, `variants`/`runs` tables |
+| ENVIRONMENT | `EnvironmentSpec` (sandbox kind, OS, Python, git) hashed as `environment_hash` | `experiments`/`runs` tables |
+| TRACE | normalized `Event` list (`assistant_message`, `tool_started`, `command_finished`, `usage`, …) | `events` table + sanitized stream artifact |
+| VERIFIER | `VerifierResult` (exit code, optional partial score, protected-path violations) | `verifier_results` table |
+| METRICS | `RunMetrics` (verified pass/score, wall time, tokens, cost, tool calls, files changed, …) | `runs` table (`metrics_json` + columns) |
+
+A **run** is one cell of that product. An **experiment** is a set of runs (tasks × variants ×
+repetitions) with per-variant aggregates and pairwise comparisons.
+
+## Architecture
+
+```text
+src/harnesslab/
+  cli.py                 Typer CLI: doctor · suite list/check · run · serve · experiment list/show/export
+  config.py              Settings (HARNESSLAB_HOME, default ./.harnesslab)
+  core/
+    models.py            TaskSpec, SuiteSpec, VariantSpec, ExperimentSpec, RunnerConfig, RunnerResult,
+                         EnvironmentSpec, DiffSummary, VerifierResult, RunMetrics
+    events.py            EventKind, Event, EventEmitter (sequence numbers, timestamps, redaction, batching)
+    metrics.py           trace + verdict + diff → RunMetrics
+    pricing.py           optional pricing.yaml → estimated_cost_usd
+    ids.py               time-sortable ids, canonical hashing
+  runners/
+    base.py              HarnessRunner ABC + registry (runners never touch the DB or UI)
+    fake.py              deterministic simulated agent (tests, demo, verifier sanity checks)
+    generic.py           wrap any CLI; optional JSONL event protocol
+    codex.py             OpenAI Codex CLI adapter (`codex exec --json`)
+    claude.py            Claude Code adapter (`claude -p --output-format stream-json`)
+  execution/
+    process.py           async subprocess streaming, process-group kill on timeout, allowlisted env
+    fixture.py           deterministic fixture snapshots (content-hash keyed, fixed author/date)
+    worktree.py          git worktree lifecycle + diff capture against the recorded base commit
+    sandbox.py           ExecutionSandbox ABC · LocalWorktreeSandbox · DockerSandbox (stub)
+  trace/
+    redaction.py         secret redaction (safety net, not DLP)
+    normalize.py         shared normalization helpers, orphaned tool-call closure
+    codex_parser.py      Codex JSONL → events (reasoning text discarded)
+    claude_parser.py     Claude stream-json → events (thinking text discarded)
+  verification/
+    command.py           exit-code verifier, hidden-file injection, protected paths
+    score.py             optional partial-score JSON verifier
+  storage/
+    models.py            SQLAlchemy tables: experiments, variants, tasks, runs, events,
+                         verifier_results, artifacts
+    repository.py        persistence API
+  experiments/
+    spec.py              YAML loading, built-in variants
+    service.py           orchestration: worktree → agent → diff → verifier → metrics → persist
+    aggregate.py         per-variant aggregates, task×variant matrix, pairwise comparison
+    export.py            JSON export
+  web/                   FastAPI + Jinja2 + HTMX dashboard
+suites/demo/             the demo benchmark (fixture repo, 3 tasks, hidden tests, reference solutions)
+tests/                   unit, parser (recorded JSONL fixtures), end-to-end, CLI, web, opt-in integration
+```
+
+### Run pipeline
+
+For every task × variant × repetition cell the `ExperimentService`:
+
+1. inserts a `running` run row (progress is visible in the dashboard while an experiment runs);
+2. snapshots the fixture repository once per experiment and creates a **detached git worktree**
+   under `<home>/worktrees/<experiment-id>/<run-id>/` from an internal clone, so the source
+   fixture is never modified (not even its `.git`; the clone has no `origin` remote);
+3. runs the task's `setup.commands` (they must leave the worktree clean);
+4. launches the harness with the worktree as its working directory and an **allowlisted
+   environment** (provider credentials are forwarded to the agent only, never to the verifier);
+5. captures `git status`, `git diff --stat` and `git diff` **against the recorded base commit**
+   (correct even if the agent committed or reset) and stores them as artifacts;
+6. runs the **independent verifier** in the same worktree: protected paths → inject hidden files
+   → verification command (exit code) → optional partial-score command;
+7. computes metrics, persists events, verdict and artifacts;
+8. removes the worktree (unless `--keep-worktrees`).
+
+### Data layout
+
+Everything lives under one directory (default `./.harnesslab`, override with `HARNESSLAB_HOME`):
+
+```text
+.harnesslab/
+  harnesslab.db        SQLite (WAL)
+  fixtures/<hash>/     materialized fixture repositories (plain directories → deterministic commit)
+  repos/<hash>/        internal clones of git fixture repositories
+  worktrees/<exp>/<run>/
+  artifacts/<exp>/<run>/   prompt.txt · agent.diff · diff_stat.txt · git_status.txt
+                           verifier_stdout.txt · verifier_stderr.txt
+                           agent_stream.sanitized.jsonl · agent.stderr.log   (real harnesses)
+```
+
+## Installation
+
+Requirements: Python 3.12+, git 2.20+, [uv](https://docs.astral.sh/uv/) (recommended).
+
+```bash
+git clone https://github.com/bilgin-kocak/harness-lab
+cd harness-lab
+uv sync
+uv run harnesslab doctor
+```
+
+`doctor` reports Python, git, the Codex and Claude Code CLIs (missing CLIs are a warning, not an
+error), `uv` and the database. Without `uv`: `python3.12 -m venv .venv && . .venv/bin/activate &&
+pip install -e '.[dev]'`.
+
+## Quickstart
+
+```bash
+uv sync
+uv run harnesslab doctor
+uv run harnesslab suite list suites/demo/suite.yaml
+uv run harnesslab run suites/demo/suite.yaml --variants fake-reference,fake-noop
+uv run harnesslab serve
+# open http://localhost:8000
+```
+
+Other commands:
+
+```bash
+uv run harnesslab suite check suites/demo/suite.yaml       # verifier sanity: reference passes, untouched fails
+uv run harnesslab experiment list
+uv run harnesslab experiment show <experiment-id>           # terminal matrix + aggregates + runs
+uv run harnesslab experiment export <experiment-id> > experiment.json
+uv run harnesslab run suites/demo/experiments/baseline.yaml # experiment YAML instead of suite YAML
+uv run harnesslab run suites/demo/suite.yaml --variants fake-reference --repetitions 3 --parallelism 2
+uv run pytest                                               # full test suite (no API access needed)
+```
+
+## Running the fake demo
+
+The demo suite (`suites/demo`) targets `ledgerlite`, a tiny standard-library Python package,
+with three tasks:
+
+| Task | Kind | Hidden verifier checks |
+| --- | --- | --- |
+| `fix-month-boundary` | bug fix | month-end entries appear in reports; inclusive date ranges; ordering and validation unchanged |
+| `add-tag-budgets` | feature across two modules | budget maths on unseen data (income ignored, multi-tag entries, exact limits), exact report formatting; partial score = fraction of hidden tests |
+| `consolidate-money-formatting` | refactor with invariant | byte-identical golden output *and* a single formatting implementation (`report.py` no longer defines its own) |
+
+Hidden tests live in `suites/demo/tasks/<task>/verify/` and are copied into the worktree only
+when the verifier runs; visible tests are `protected_paths`, so an agent that edits them fails.
+
+The fake runner (`runner: fake`) needs no credentials. `fake-reference` applies each task's
+reference solution, `fake-noop` changes nothing but *claims* success (the verifier correctly fails
+it), `fake-partial` solves one task. Other behaviours: `partial`, `fail` (a confident wrong
+edit), `crash`, `timeout`. The whole dashboard can be explored with fake data:
+
+```bash
+uv run harnesslab run suites/demo/suite.yaml --variants fake-reference,fake-noop,fake-partial --parallelism 3
+uv run harnesslab serve
+```
+
+## Running Codex
+
+Requires the [OpenAI Codex CLI](https://github.com/openai/codex) on `PATH` and its credentials
+(`OPENAI_API_KEY` or a `codex login`; `CODEX_HOME` is forwarded).
+
+```bash
+uv run harnesslab doctor                      # shows "codex cli ok <version>"
+uv run harnesslab run suites/demo/suite.yaml --variants codex-default
+```
+
+The adapter runs `codex exec --json --full-auto --sandbox workspace-write --skip-git-repo-check
+--color never -C <worktree> -c sandbox_workspace_write.network_access=false -o <last-message> -`
+with the prompt on stdin, parses the JSONL stream incrementally and normalizes command
+executions (with exit codes and output), file changes, MCP tool calls, web searches, todo lists,
+assistant messages, per-turn usage and errors. Reasoning items are counted as `reasoning_event`;
+their text is discarded before anything is written. A legacy `{"id", "msg": {...}}` stream shape
+is also understood. Codex does not report cost, so `reported_cost_usd` stays `null` (use
+`pricing.yaml` for estimates).
+
+Variant options: `model`, `sandbox` (`workspace-write` default, `read-only`, or the explicit
+opt-in `danger-full-access`), `network_access` (default `false`), `reasoning_effort`, `profile`,
+`config_overrides` (`-c key=value`), `extra_args`, `env_passthrough`, `executable`.
+
+Codex is not installed in the environment where this MVP was built, so the adapter is verified
+against recorded JSONL fixtures (`tests/fixtures/codex/`) and against a stand-in executable that
+replays them through the real adapter code (`tests/test_adapters.py`). To exercise the real CLI:
+`HARNESSLAB_INTEGRATION=1 uv run pytest tests/test_integration_real.py`.
+
+## Running Claude Code
+
+Requires the [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) on `PATH` and
+either `ANTHROPIC_API_KEY` / `CLAUDE_CODE_OAUTH_TOKEN` in the environment or a completed
+`claude auth login` (Bedrock/Vertex variables are forwarded too).
+
+```bash
+uv run harnesslab doctor                      # shows "claude cli ok 2.x.y"
+uv run harnesslab run suites/demo/suite.yaml --variants claude-default
+```
+
+The adapter runs `claude -p --output-format stream-json --verbose --max-turns 30
+--permission-mode acceptEdits --permission-prompts none --no-session-persistence
+--strict-mcp-config --session-id <uuid> --disallowedTools WebFetch WebSearch --allowedTools …`
+with the prompt on stdin. `bypassPermissions` is refused unless a variant sets
+`allow_dangerous_permissions: true`; `--include-partial-messages` and
+`--forward-subagent-text` are never passed. The parser normalizes text blocks, tool calls
+(`Bash` → command events with stdout/stderr, file tools → `file_change`), tool results paired by
+id, subagent activity (`parent_call_id`), per-message usage (deduplicated by message id), the
+final `result` record (cost, totals per model, turns, permission denials) and system events
+(`api_retry`, `compact_boundary`, `permission_denied`). Thinking blocks become
+`reasoning_event {count: 1}`; their text and signature are dropped before persistence.
+
+Default shell allowlist (override per variant with `allowed_tools`):
+`Read, Edit, Write, MultiEdit, Glob, Grep, LS, Bash(python *), Bash(python3 *), Bash(pytest *),
+Bash(ls *), Bash(cat *), Bash(git diff *), Bash(git status *), Bash(git log *)`. Commands outside
+the allowlist are denied (nobody answers prompts in headless mode); the denial count is stored
+per run, and a run that ends unsuccessfully after denials is marked `blocked` rather than
+`failed` so configuration problems are distinguishable from task failures.
+
+Variant options: `model`, `max_turns`, `permission_mode`, `allowed_tools`, `disallowed_tools`,
+`tools`, `max_budget_usd`, `bare` (skips hooks/CLAUDE.md/plugins; requires an API key),
+`setting_sources`, `append_system_prompt`, `effort`, `extra_args`, `env_passthrough`,
+`executable`.
+
+## Creating a task suite
+
+A suite is a YAML file listing task files and (optionally) variants:
+
+```yaml
+name: my-suite
+tasks:
+  - tasks/add-health-endpoint.yaml
+variants:
+  - id: claude-default
+    runner: claude
+    max_turns: 30
+```
+
+A task:
+
+```yaml
+id: add-health-endpoint
+name: Add health endpoint
+version: 1
+
+repo:
+  path: ../fixture_repo      # plain directory (materialized deterministically) or a git repo
+  base_ref: main             # only used for git repositories
+
+prompt: |
+  Add a health-check function according to the repository requirements.
+  Do not modify the tests.
+
+setup:
+  commands: []               # run before the agent; must leave the worktree clean
+
+verification:
+  command: python -m unittest discover -s tests -v     # exit code 0 = pass
+  score_command: python .harnesslab_verify/score.py    # optional partial score (see below)
+  timeout_seconds: 60
+  inject:                    # copied into the worktree only when the verifier runs
+    - source: add-health-endpoint/verify/test_hidden.py
+      dest: tests/test_hidden.py
+  protected_paths:           # changes here fail the run before the verifier runs
+    - tests/
+
+limits:
+  agent_timeout_seconds: 600
+
+tags: [python, editing]
+
+reference_solution:          # optional: used by the fake runner and `suite check`
+  overlay: add-health-endpoint/solution
+```
+
+Paths are relative to the task file. A partial-score command must write JSON to the file named
+by `$HARNESSLAB_SCORE_FILE` (or print it as the last JSON line on stdout):
+
+```json
+{"score": 0.8, "max_score": 1.0, "metrics": {"tests_passed": 8, "tests_total": 10}}
+```
+
+`verified_pass` always comes from the exit code of `command`; the score only refines
+`verified_score`. Keep agent-specific instructions out of the verifier; the verifier is the
+contract. Run `harnesslab suite check my-suite.yaml` to confirm each verifier fails on the
+untouched repository and passes with the reference solution.
+
+Plain-directory fixtures are turned into a git repository with a fixed author, date and config,
+so the base commit SHA is a pure function of the fixture's content and identical on every
+machine.
+
+## Creating a harness variant
+
+Variants can live in a suite, in an experiment file, or come from the built-ins
+(`fake-reference`, `fake-noop`, `codex-default`, `claude-default`):
+
+```yaml
+name: context-ablation
+suite: ./suites/demo/suite.yaml
+repetitions: 3
+parallelism: 2
+
+variants:
+  - id: claude-sonnet-small-context
+    runner: claude
+    model: claude-sonnet-5
+    max_turns: 20
+    context_policy: { window: small }     # recorded on the variant for later ablation analysis
+    tool_policy: { shell: allowlist }
+    allowed_tools: [Read, Edit, "Bash(python *)"]
+
+  - id: my-harness
+    runner: generic
+    command: "my-agent --repo {worktree} --model {model}"
+    prompt_via: stdin                     # stdin | file ({prompt_file}) | arg ({prompt})
+    output_format: jsonl                  # lines like {"kind":"tool_started","call_id":"1","payload":{...}}
+    env_passthrough: [MY_AGENT_API_KEY]
+```
+
+Any key that is not `id`/`runner`/`model`/`description`/`harness_version`/`model_provider`/
+`context_policy`/`tool_policy`/`skill_version` is passed to the runner verbatim, so new harness
+knobs never require schema changes. To add a new harness, subclass
+`harnesslab.runners.base.HarnessRunner`, implement `async run(task, worktree, config, emit)`
+(emit normalized events, return a `RunnerResult`) and decorate it with `@register_runner`; the
+Codex and Claude adapters are ~200 lines each and are good templates.
+
+## Interpreting metrics
+
+Per run (`runs` table / run page):
+
+| Metric | Meaning |
+| --- | --- |
+| `verified_pass` | exit code 0 of the verification command (`null` when the verifier could not run) |
+| `verified_score` | normalized partial score if a `score_command` exists, else 1.0 / 0.0 |
+| `wall_time_seconds` | whole pipeline (agent + capture + verifier), plus `agent_wall_time_seconds` and `verifier_wall_time_seconds` |
+| `input_tokens` / `cached_input_tokens` / `cache_write_tokens` / `output_tokens` | normalized: `input_tokens` are *uncached* prompt tokens for every harness (Codex reports cached tokens inside its input count; Claude reports them separately; adapters map both to this shape) |
+| `reported_cost_usd` | what the harness itself reported (Claude Code does, Codex CLI does not) — never invented |
+| `estimated_cost_usd` + `pricing_version` | computed only from your `pricing.yaml` (see `pricing.example.yaml`) |
+| `tool_calls` / `shell_commands` / `tool_calls_unfinished` / `subagent_tool_calls` | counted from normalized events |
+| `files_changed` / `lines_added` / `lines_deleted` | from `git diff --numstat` against the base commit |
+| `agent_exit_code` / `verifier_exit_code` / `num_turns` / `permission_denials` | raw process facts |
+
+Run **status** (`completed`, `timeout`, `crashed`, `unavailable`, `blocked`, `interrupted`) is the
+infrastructure state; **outcome** (`pass`, `fail`, `not_verified`) is the verifier's verdict.
+A crashed or timed-out agent is still verified (partial work may pass); an unavailable harness is
+`not_verified` and excluded from pass rates.
+
+Per variant (experiment page, `experiment show`): success rate over *valid* runs
+(`n_passed / n_valid`), mean ± std verified score, median ± std wall time, median input/output
+tokens, median tool calls, median files changed, median reported and estimated cost with the
+number of runs that had one, infrastructure failures. With repetitions the matrix shows `k/n`
+and every individual run stays listed — averages never hide runs.
+
+The compare view puts two variants side by side (pass rate, score, tokens, time, tool calls,
+cost) and classifies each task as *both passed*, *both failed*, *A only*, *B only*, *mixed*
+(repetitions disagree) or *unverified*. There is deliberately no composite "winner" score:
+compare configurations on the Pareto frontier of verified success, cost, latency, tokens and
+variance.
+
+## Security warning
+
+Harness Lab **executes coding agents and agent-written code on your machine**. The MVP isolates
+runs with git worktrees, not containers:
+
+- Agents run with your user's privileges. The Codex adapter uses Codex's own `workspace-write`
+  sandbox with network disabled; the Claude adapter uses `acceptEdits` plus a shell allowlist and
+  denies everything else. Neither is a security boundary against a determined agent.
+- Use only trusted benchmark repositories and throwaway credentials until container isolation
+  (`DockerSandbox`) exists.
+- Hidden tests are copied into the worktree only at verification time, but an agent that
+  searches the host filesystem could still find `suites/<suite>/tasks/*/verify`. Runs whose shell
+  commands mention the suite directory are flagged (`possible_suite_access` in the run metadata).
+- The environment passed to agents is an allowlist (`PATH`, locale, proxy/CA settings and
+  provider credentials); verifier and setup commands receive no credentials at all. Environment
+  variables are never logged.
+- Before persistence, command output, messages, tool output, diffs and stderr pass through a
+  **heuristic redactor** (provider `sk-*` keys, GitHub tokens, bearer tokens, AWS keys, Slack and
+  Google keys, `NAME=value` assignments for secret-looking names, private-key blocks and the
+  literal values of secret-looking variables in Harness Lab's own environment). **This is a safety
+  net, not a data-loss-prevention system**; anything it misses is stored verbatim.
+- Hidden chain-of-thought is never persisted or rendered: thinking/reasoning content is dropped
+  at parse time and only `reasoning_event {count}` metadata survives; the stored provider stream
+  is a sanitized copy. The test-suite scans the database and every artifact for leaked markers.
+- Runaway processes are killed as a process group (SIGTERM, grace period, SIGKILL) after
+  `agent_timeout_seconds`; verifiers have their own timeout.
+
+## Research principles
+
+The design follows recent work on agent harnesses (HarnessDev, *An Empirical Study of Harness
+Design for Coding Agents*, *How Do Agent Harnesses Create Value?*, multi-harness RL and
+LoopArena, among others):
+
+1. **Model and harness are independent variables.** Every run records model (requested and
+   resolved), harness and CLI version, configuration hash and environment hash separately.
+2. **Prefer component ablations over framework-vs-framework comparisons.** Variants carry
+   `context_policy`, `tool_policy`, `skill_version` and arbitrary options so the same harness
+   can be compared with one component changed.
+3. **Verification is external.** The agent's "done" is recorded as a message, never as a result.
+4. **Raw evidence is preserved.** Normalized events with stable ids and ordering, diffs,
+   verifier output and sanitized provider streams are kept per run for replay and failure
+   analysis.
+5. **Pareto frontiers, not one score.** The UI shows raw metrics side by side.
+6. **Reproducibility.** Task hash, base commit, Harness Lab commit, runner config, CLI version,
+   timestamps and platform are stored; experiments export to JSON.
+
+## Roadmap
+
+Phase 2 builds on this substrate (nothing below is implemented yet):
+
+- **Container isolation** (`DockerSandbox`): run harness CLIs inside containers with an executor
+  abstraction so hidden tests and the host are unreachable.
+- **Harness Autotuner / Skill A/B lab**: candidate harness mutation → cheap diagnostic suite →
+  full hidden regression suite → cost/latency comparison → promote or reject.
+- **Model × Harness matrix experiments** and controlled component ablations (context policy,
+  planning policy, action space) as first-class experiment designs.
+- **Agent causal debugger / delta replay**: replay a trace, locate the first divergence between a
+  passing and a failing run, counterfactual interventions on stable event ids.
+- **Failure clustering** over normalized traces and verifier output.
+- **Verifier generation** and multi-verifier scoring; live event streaming to the dashboard.
+- More adapters (OpenCode, OpenAI Agents SDK, LangGraph) through `HarnessRunner`.
+
+Not in scope by design: prompt optimization, RL, LLM judges, accounts, teams, billing,
+distributed workers, Kubernetes, vector databases, model routing.
+
+## License
+
+MIT.

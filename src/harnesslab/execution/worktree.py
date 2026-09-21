@@ -77,19 +77,25 @@ def capture_changes_sync(worktree: Path, base_commit: str) -> DiffSummary:
     summary = DiffSummary(base_commit=base_commit)
     tmp_index = None
     try:
-        status = run_git(["status", "--porcelain=v1", "--untracked-files=all"], cwd=worktree, check=False)
+        status = run_git(
+            ["status", "--porcelain=v1", "--untracked-files=all"], cwd=worktree, check=False
+        )
         summary.status_text = status.stdout
         fd, tmp_index = tempfile.mkstemp(prefix="harnesslab-index-")
         os.close(fd)
         os.unlink(tmp_index)  # git creates it; an empty existing file is not a valid index
         env = {"GIT_INDEX_FILE": tmp_index}
         run_git(["add", "-A", "--", "."], cwd=worktree, env=env)
-        numstat = run_git(["diff", "--cached", "--numstat", "--find-renames", base_commit], cwd=worktree, env=env)
+        numstat = run_git(
+            ["diff", "--cached", "--numstat", "--find-renames", base_commit], cwd=worktree, env=env
+        )
         summary.files = _parse_numstat(numstat.stdout)
         summary.files_changed = len(summary.files)
         summary.lines_added = sum(f.added for f in summary.files)
         summary.lines_deleted = sum(f.deleted for f in summary.files)
-        stat = run_git(["diff", "--cached", "--stat=120", "--find-renames", base_commit], cwd=worktree, env=env)
+        stat = run_git(
+            ["diff", "--cached", "--stat=120", "--find-renames", base_commit], cwd=worktree, env=env
+        )
         summary.stat_text = stat.stdout
         patch = run_git(
             ["diff", "--cached", "--no-color", "--find-renames", "--no-ext-diff", base_commit],
@@ -98,7 +104,9 @@ def capture_changes_sync(worktree: Path, base_commit: str) -> DiffSummary:
         )
         text = patch.stdout
         if len(text.encode("utf-8", errors="replace")) > DIFF_CAP_BYTES:
-            text = text.encode("utf-8", errors="replace")[:DIFF_CAP_BYTES].decode("utf-8", errors="replace")
+            text = text.encode("utf-8", errors="replace")[:DIFF_CAP_BYTES].decode(
+                "utf-8", errors="replace"
+            )
             summary.diff_truncated = True
         summary.diff_text = text
     except GitError as exc:

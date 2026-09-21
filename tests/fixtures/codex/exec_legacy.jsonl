@@ -1,0 +1,11 @@
+{"id":"0","msg":{"type":"session_configured","session_id":"sess-legacy-1","model":"gpt-5-codex"}}
+{"id":"1","msg":{"type":"task_started"}}
+{"id":"1","msg":{"type":"agent_reasoning","text":"SECRET_LEGACY_REASONING about the fix"}}
+{"id":"1","msg":{"type":"agent_reasoning_delta","delta":"SECRET_LEGACY_DELTA"}}
+{"id":"1","msg":{"type":"exec_command_begin","call_id":"call_1","command":["bash","-lc","cat README.md"],"cwd":"/tmp/worktree"}}
+{"id":"1","msg":{"type":"exec_command_end","call_id":"call_1","stdout":"# ledgerlite\n","stderr":"","exit_code":0}}
+{"id":"1","msg":{"type":"patch_apply_begin","call_id":"call_2","auto_approved":true,"changes":{"/tmp/worktree/ledgerlite/ledger.py":{"update":{"unified_diff":"--- a\n+++ b\n","move_path":null}}}}}
+{"id":"1","msg":{"type":"patch_apply_end","call_id":"call_2","stdout":"Success. Updated the following files:\nM ledgerlite/ledger.py\n","stderr":"","success":true}}
+{"id":"1","msg":{"type":"agent_message","message":"Done: inclusive range."}}
+{"id":"1","msg":{"type":"token_count","input_tokens":2000,"cached_input_tokens":500,"output_tokens":300,"reasoning_output_tokens":50,"total_tokens":2300}}
+{"id":"1","msg":{"type":"task_complete","last_agent_message":"Done: inclusive range."}}

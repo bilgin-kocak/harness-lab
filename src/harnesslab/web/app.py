@@ -24,7 +24,9 @@ def create_app(settings: Settings | None = None, db: Database | None = None) -> 
     db = db or Database(settings.resolved_database_url)
     db.create_all()
 
-    app = FastAPI(title="Harness Lab", version=harnesslab.__version__, docs_url=None, redoc_url=None)
+    app = FastAPI(
+        title="Harness Lab", version=harnesslab.__version__, docs_url=None, redoc_url=None
+    )
     templates = Jinja2Templates(directory=str(WEB_DIR / "templates"))
     templates.env.autoescape = True
     templates.env.filters.update(FILTERS)

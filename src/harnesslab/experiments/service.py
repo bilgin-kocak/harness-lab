@@ -145,12 +145,20 @@ class ExperimentService:
         )
 
         # Snapshot fixture repositories once so every run starts from the same commit.
-        task_rows: dict[str, tuple[str, str, str]] = {}  # task id -> (row id, base_commit, task_hash)
+        task_rows: dict[
+            str, tuple[str, str, str]
+        ] = {}  # task id -> (row id, base_commit, task_hash)
         for position, task in enumerate(tasks):
-            snapshot = await asyncio.to_thread(self.sandbox.snapshot, task) if hasattr(self.sandbox, "snapshot") else None
+            snapshot = (
+                await asyncio.to_thread(self.sandbox.snapshot, task)
+                if hasattr(self.sandbox, "snapshot")
+                else None
+            )
             base_commit = snapshot.base_commit if snapshot else "unknown"
             task_hash = hash_value({"spec": task.spec_hash(), "base_commit": base_commit})
-            row_id = self.repo.add_task(exp_id, task, base_commit=base_commit, task_hash=task_hash, position=position)
+            row_id = self.repo.add_task(
+                exp_id, task, base_commit=base_commit, task_hash=task_hash, position=position
+            )
             task_rows[task.id] = (row_id, base_commit, task_hash)
 
         variant_rows: dict[str, str] = {}
@@ -226,11 +234,21 @@ class ExperimentService:
             metrics_version=METRICS_VERSION,
         )
         if progress:
-            progress(RunProgress(run_id=run_id, task_key=task.id, variant_key=variant.id, repetition=repetition, phase="started"))
+            progress(
+                RunProgress(
+                    run_id=run_id,
+                    task_key=task.id,
+                    variant_key=variant.id,
+                    repetition=repetition,
+                    phase="started",
+                )
+            )
 
         artifacts_dir = self.settings.artifacts_dir / exp_id / run_id
         artifacts_dir.mkdir(parents=True, exist_ok=True)
-        emitter = EventEmitter(run_id, redactor=self.redactor, sink=lambda evs: self.repo.add_events(run_id, evs))
+        emitter = EventEmitter(
+            run_id, redactor=self.redactor, sink=lambda evs: self.repo.add_events(run_id, evs)
+        )
 
         t0 = time.monotonic()
         runner_result = RunnerResult(status=RunStatus.CRASHED)
@@ -249,36 +267,43 @@ class ExperimentService:
             except KeyError as exc:
                 runner = None
                 runner_result = RunnerResult(status=RunStatus.UNAVAILABLE, error=str(exc))
-                emitter.emit(EventKind.ERROR, name="runner_unavailable", payload={"message": str(exc)})
+                emitter.emit(
+                    EventKind.ERROR, name="runner_unavailable", payload={"message": str(exc)}
+                )
 
             if runner is not None:
                 availability = await runner.check_availability(config)
                 if not availability.available:
                     msg = f"runner {config.runner!r} unavailable: {availability.detail}"
                     runner_result = RunnerResult(status=RunStatus.UNAVAILABLE, error=msg)
-                    emitter.emit(EventKind.ERROR, name="runner_unavailable", payload={"message": msg})
+                    emitter.emit(
+                        EventKind.ERROR, name="runner_unavailable", payload={"message": msg}
+                    )
                     runner = None
 
-            ctx = await self.sandbox.prepare(task, experiment_id=exp_id, run_id=run_id)
-            self.repo.update_run(run_id, base_commit=ctx.base_commit, worktree_path=str(ctx.workdir))
-            await self._run_setup(task, ctx, emitter)
-            (artifacts_dir / "prompt.txt").write_text(task.prompt, encoding="utf-8")
-            self.repo.add_artifact(run_id, "prompt", artifacts_dir / "prompt.txt")
-
-            emitter.emit(
-                EventKind.RUN_STARTED,
-                payload={
-                    "task": task.id,
-                    "variant": variant.id,
-                    "runner": config.runner,
-                    "model": config.model,
-                    "repetition": repetition,
-                    "base_commit": ctx.base_commit,
-                    "worktree": str(ctx.workdir),
-                },
-            )
-
             if runner is not None:
+                # 1. isolated worktree + setup
+                ctx = await self.sandbox.prepare(task, experiment_id=exp_id, run_id=run_id)
+                self.repo.update_run(
+                    run_id, base_commit=ctx.base_commit, worktree_path=str(ctx.workdir)
+                )
+                await self._run_setup(task, ctx, emitter)
+                (artifacts_dir / "prompt.txt").write_text(task.prompt, encoding="utf-8")
+                self.repo.add_artifact(run_id, "prompt", artifacts_dir / "prompt.txt")
+                emitter.emit(
+                    EventKind.RUN_STARTED,
+                    payload={
+                        "task": task.id,
+                        "variant": variant.id,
+                        "runner": config.runner,
+                        "model": config.model,
+                        "repetition": repetition,
+                        "base_commit": ctx.base_commit,
+                        "worktree": str(ctx.workdir),
+                    },
+                )
+
+                # 2. the agent
                 agent_t0 = time.monotonic()
                 try:
                     runner_result = await asyncio.wait_for(
@@ -286,7 +311,9 @@ class ExperimentService:
                         timeout=task.limits.agent_timeout_seconds + AGENT_TIMEOUT_GRACE_SECONDS,
                     )
                 except TimeoutError:
-                    msg = f"agent exceeded {task.limits.agent_timeout_seconds}s limit and was stopped"
+                    msg = (
+                        f"agent exceeded {task.limits.agent_timeout_seconds}s limit and was stopped"
+                    )
                     runner_result = RunnerResult(status=RunStatus.TIMEOUT, error=msg)
                     emitter.emit(EventKind.ERROR, name="agent_timeout", payload={"message": msg})
                 except asyncio.CancelledError:
@@ -294,15 +321,20 @@ class ExperimentService:
                 except Exception as exc:  # adapter bug or harness crash: keep the experiment going
                     msg = f"{type(exc).__name__}: {exc}"
                     runner_result = RunnerResult(status=RunStatus.CRASHED, error=msg)
-                    emitter.emit(EventKind.ERROR, name="runner_crashed", payload={"message": msg, "traceback": traceback.format_exc()[-4000:]})
+                    emitter.emit(
+                        EventKind.ERROR,
+                        name="runner_crashed",
+                        payload={"message": msg, "traceback": traceback.format_exc()[-4000:]},
+                    )
                 agent_seconds = time.monotonic() - agent_t0
                 close_orphaned_calls(emitter)
 
-            changes = await self.sandbox.capture_changes(ctx)
-            self._write_change_artifacts(run_id, artifacts_dir, changes)
-            self._flag_suite_access(task, emitter, runner_result)
+                # 3. capture what the agent changed
+                changes = await self.sandbox.capture_changes(ctx)
+                self._write_change_artifacts(run_id, artifacts_dir, changes)
+                self._flag_suite_access(task, emitter, runner_result)
 
-            if runner is not None:
+                # 4. independent verification
                 verifier_t0 = time.monotonic()
                 verifier_result = await self.verifier.verify(task, self.sandbox, ctx, changes)
                 verifier_seconds = time.monotonic() - verifier_t0
@@ -331,7 +363,11 @@ class ExperimentService:
             if runner_result.status in (RunStatus.RUNNING, RunStatus.PENDING, RunStatus.COMPLETED):
                 runner_result.status = RunStatus.CRASHED
             runner_result.error = runner_result.error or error
-            emitter.emit(EventKind.ERROR, name="pipeline_error", payload={"message": error, "traceback": traceback.format_exc()[-4000:]})
+            emitter.emit(
+                EventKind.ERROR,
+                name="pipeline_error",
+                payload={"message": error, "traceback": traceback.format_exc()[-4000:]},
+            )
         finally:
             wall_seconds = time.monotonic() - t0
             status = RunStatus.INTERRUPTED if interrupted else runner_result.status
@@ -342,7 +378,12 @@ class ExperimentService:
             emitter.emit(
                 EventKind.RUN_FINISHED,
                 duration_ms=int(wall_seconds * 1000),
-                payload={"status": status.value, "outcome": outcome.value, "error": error, "exit_code": runner_result.exit_code},
+                payload={
+                    "status": status.value,
+                    "outcome": outcome.value,
+                    "error": error,
+                    "exit_code": runner_result.exit_code,
+                },
             )
             emitter.flush()
             metrics = compute_metrics(
@@ -351,8 +392,12 @@ class ExperimentService:
                 verifier_result,
                 changes,
                 wall_time_seconds=round(wall_seconds, 3),
-                agent_wall_time_seconds=round(agent_seconds, 3) if agent_seconds is not None else None,
-                verifier_wall_time_seconds=round(verifier_seconds, 3) if verifier_seconds is not None else None,
+                agent_wall_time_seconds=round(agent_seconds, 3)
+                if agent_seconds is not None
+                else None,
+                verifier_wall_time_seconds=round(verifier_seconds, 3)
+                if verifier_seconds is not None
+                else None,
                 pricing=self.pricing,
             )
             if verifier_result is not None:
@@ -405,25 +450,41 @@ class ExperimentService:
         if not task.setup.commands:
             return
         for command in task.setup.commands:
-            proc = await self.sandbox.run_command(ctx, command, timeout=task.setup.timeout_seconds, include_auth=False)
+            proc = await self.sandbox.run_command(
+                ctx, command, timeout=task.setup.timeout_seconds, include_auth=False
+            )
             emitter.emit(
                 EventKind.SYSTEM,
                 name="setup_command",
                 duration_ms=proc.duration_ms,
-                payload={"command": command, "exit_code": proc.exit_code, "timed_out": proc.timed_out, "stderr_tail": proc.stderr_tail[-2000:]},
+                payload={
+                    "command": command,
+                    "exit_code": proc.exit_code,
+                    "timed_out": proc.timed_out,
+                    "stderr_tail": proc.stderr_tail[-2000:],
+                },
             )
             if not proc.ok:
-                raise SetupError(f"setup command failed ({command!r}): exit={proc.exit_code} timed_out={proc.timed_out} {proc.error or ''}")
+                raise SetupError(
+                    f"setup command failed ({command!r}): exit={proc.exit_code} timed_out={proc.timed_out} {proc.error or ''}"
+                )
         changes = await self.sandbox.capture_changes(ctx)
         if changes.files_changed:
             paths = ", ".join(f.path for f in changes.files[:10])
             raise SetupError(
-                "setup commands left the worktree dirty (add generated files to .gitignore): " + paths
+                "setup commands left the worktree dirty (add generated files to .gitignore): "
+                + paths
             )
 
-    def _write_change_artifacts(self, run_id: str, artifacts_dir: Path, changes: DiffSummary) -> None:
+    def _write_change_artifacts(
+        self, run_id: str, artifacts_dir: Path, changes: DiffSummary
+    ) -> None:
         files = {
-            "agent.diff": ("agent_diff", "text/x-diff", self.redactor.redact_text(changes.diff_text)),
+            "agent.diff": (
+                "agent_diff",
+                "text/x-diff",
+                self.redactor.redact_text(changes.diff_text),
+            ),
             "git_status.txt": ("git_status", "text/plain", changes.status_text),
             "diff_stat.txt": ("diff_stat", "text/plain", changes.stat_text),
         }
@@ -432,7 +493,9 @@ class ExperimentService:
             path.write_text(content, encoding="utf-8")
             self.repo.add_artifact(run_id, kind, path, media)
 
-    def _write_verifier_artifacts(self, run_id: str, artifacts_dir: Path, result: VerifierResult) -> None:
+    def _write_verifier_artifacts(
+        self, run_id: str, artifacts_dir: Path, result: VerifierResult
+    ) -> None:
         for filename, kind, content in (
             ("verifier_stdout.txt", "verifier_stdout", result.stdout),
             ("verifier_stderr.txt", "verifier_stderr", result.stderr),
@@ -442,12 +505,16 @@ class ExperimentService:
             self.repo.add_artifact(run_id, kind, path, "text/plain")
 
     @staticmethod
-    def _flag_suite_access(task: TaskSpec, emitter: EventEmitter, runner_result: RunnerResult) -> None:
+    def _flag_suite_access(
+        task: TaskSpec, emitter: EventEmitter, runner_result: RunnerResult
+    ) -> None:
         """Flag runs whose shell commands mention the suite directory (possible hidden-test peeking)."""
         needle = str(task.base_dir)
         hits = 0
         for event in emitter.events:
-            if event.kind == EventKind.COMMAND_STARTED and needle in str(event.payload.get("command", "")):
+            if event.kind == EventKind.COMMAND_STARTED and needle in str(
+                event.payload.get("command", "")
+            ):
                 hits += 1
         if hits:
             runner_result.metadata["possible_suite_access"] = hits

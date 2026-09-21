@@ -45,7 +45,15 @@ from harnesslab.runners._cli import SanitizedStreamWriter, option_list, probe_cl
 from harnesslab.runners.base import HarnessRunner, register_runner
 from harnesslab.trace.claude_parser import ClaudeStreamParser
 
-PERMISSION_MODES = {"default", "acceptEdits", "dontAsk", "auto", "plan", "bypassPermissions", "manual"}
+PERMISSION_MODES = {
+    "default",
+    "acceptEdits",
+    "dontAsk",
+    "auto",
+    "plan",
+    "bypassPermissions",
+    "manual",
+}
 DEFAULT_ALLOWED_TOOLS = [
     "Read",
     "Edit",
@@ -64,7 +72,20 @@ DEFAULT_ALLOWED_TOOLS = [
     "Bash(git log *)",
 ]
 DEFAULT_DISALLOWED_TOOLS = ["WebFetch", "WebSearch"]
-FORBIDDEN_EXTRA_ARGS = {"--include-partial-messages", "--forward-subagent-text", "--dangerously-skip-permissions"}
+FORBIDDEN_EXTRA_ARGS = {
+    "--include-partial-messages",
+    "--forward-subagent-text",
+    "--dangerously-skip-permissions",
+}
+
+
+def _tool_list(value: object) -> list[str]:
+    """Tool rules may contain spaces (``Bash(git diff *)``), so strings split on commas only."""
+    if value is None:
+        return []
+    if isinstance(value, str):
+        return [t.strip() for t in value.split(",") if t.strip()]
+    return [str(t) for t in value]  # type: ignore[union-attr]
 
 
 def build_claude_command(config: RunnerConfig, session_id: str | None = None) -> list[str]:
@@ -77,9 +98,13 @@ def build_claude_command(config: RunnerConfig, session_id: str | None = None) ->
         argv.extend(["--model", str(config.model)])
     mode = str(config.get("permission_mode", "acceptEdits"))
     if mode not in PERMISSION_MODES:
-        raise ValueError(f"invalid permission_mode {mode!r}; expected one of {sorted(PERMISSION_MODES)}")
+        raise ValueError(
+            f"invalid permission_mode {mode!r}; expected one of {sorted(PERMISSION_MODES)}"
+        )
     if mode == "bypassPermissions" and not config.get("allow_dangerous_permissions", False):
-        raise ValueError("permission_mode 'bypassPermissions' requires allow_dangerous_permissions: true (use only in isolated sandboxes)")
+        raise ValueError(
+            "permission_mode 'bypassPermissions' requires allow_dangerous_permissions: true (use only in isolated sandboxes)"
+        )
     argv.extend(["--permission-mode", mode])
     prompts = config.get("permission_prompts", "none")
     if prompts:
@@ -103,18 +128,20 @@ def build_claude_command(config: RunnerConfig, session_id: str | None = None) ->
     extra = option_list(config.get("extra_args"))
     forbidden = FORBIDDEN_EXTRA_ARGS.intersection(extra)
     if forbidden:
-        raise ValueError(f"extra_args contains flags Harness Lab refuses to pass: {sorted(forbidden)}")
+        raise ValueError(
+            f"extra_args contains flags Harness Lab refuses to pass: {sorted(forbidden)}"
+        )
     argv.extend(extra)
     tools = option_list(config.get("tools")) if config.get("tools") is not None else []
     if tools:
         argv.extend(["--tools", ",".join(tools)])
     disallowed = config.get("disallowed_tools", DEFAULT_DISALLOWED_TOOLS)
-    disallowed_list = option_list(disallowed) if isinstance(disallowed, str) else [str(t) for t in (disallowed or [])]
+    disallowed_list = _tool_list(disallowed)
     if disallowed_list:
         argv.append("--disallowedTools")
         argv.extend(disallowed_list)
     allowed = config.get("allowed_tools", DEFAULT_ALLOWED_TOOLS)
-    allowed_list = option_list(allowed) if isinstance(allowed, str) else [str(t) for t in (allowed or [])]
+    allowed_list = _tool_list(allowed)
     if allowed_list:
         argv.append("--allowedTools")
         argv.extend(allowed_list)
@@ -139,7 +166,9 @@ class ClaudeCodeRunner(HarnessRunner):
     ) -> RunnerResult:
         availability = await self.check_availability(config)
         if not availability.available:
-            emit.emit(EventKind.ERROR, name="claude_unavailable", payload={"message": availability.detail})
+            emit.emit(
+                EventKind.ERROR, name="claude_unavailable", payload={"message": availability.detail}
+            )
             return RunnerResult(status=RunStatus.UNAVAILABLE, error=availability.detail)
 
         session_id = str(uuid.uuid4())
@@ -151,11 +180,17 @@ class ClaudeCodeRunner(HarnessRunner):
 
         artifacts = self.artifacts_dir
         parser = ClaudeStreamParser(emit)
-        stream = SanitizedStreamWriter((artifacts / "agent_stream.sanitized.jsonl") if artifacts else None, emit.redactor)
+        stream = SanitizedStreamWriter(
+            (artifacts / "agent_stream.sanitized.jsonl") if artifacts else None, emit.redactor
+        )
         emit.emit(
             EventKind.SYSTEM,
             name="harness_launch",
-            payload={"argv": [Path(argv[0]).name] + argv[1:], "cli_version": availability.version, "session_id": session_id},
+            payload={
+                "argv": [Path(argv[0]).name] + argv[1:],
+                "cli_version": availability.version,
+                "session_id": session_id,
+            },
         )
 
         def on_line(line: str) -> None:
@@ -202,7 +237,12 @@ class ClaudeCodeRunner(HarnessRunner):
         }
         if proc.error:
             emit.emit(EventKind.ERROR, name="launch_failed", payload={"message": proc.error})
-            return RunnerResult(status=RunStatus.UNAVAILABLE, error=proc.error, cli_version=availability.version, metadata=metadata)
+            return RunnerResult(
+                status=RunStatus.UNAVAILABLE,
+                error=proc.error,
+                cli_version=availability.version,
+                metadata=metadata,
+            )
 
         error: str | None = None
         if proc.timed_out:

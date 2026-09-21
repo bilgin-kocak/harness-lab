@@ -99,7 +99,11 @@ class ScoreVerifier:
         except (ValueError, KeyError, TypeError, RuntimeError) as exc:
             result.score_error = self.redactor.redact_text(f"{exc}")
             if proc.stderr_tail:
-                result.stderr = (result.stderr + "\n[score] " + self.redactor.redact_text(proc.stderr_tail[-2000:])).strip()
+                result.stderr = (
+                    result.stderr
+                    + "\n[score] "
+                    + self.redactor.redact_text(proc.stderr_tail[-2000:])
+                ).strip()
             return result
         result.score = score
         result.max_score = max_score

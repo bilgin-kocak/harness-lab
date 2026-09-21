@@ -24,7 +24,14 @@ import shutil
 from pathlib import Path
 
 from harnesslab.core.events import EventEmitter, EventKind
-from harnesslab.core.models import Availability, RunnerConfig, RunnerResult, RunStatus, TaskSpec, UsageTotals
+from harnesslab.core.models import (
+    Availability,
+    RunnerConfig,
+    RunnerResult,
+    RunStatus,
+    TaskSpec,
+    UsageTotals,
+)
 from harnesslab.execution.process import build_child_env, run_process, shell_argv
 from harnesslab.runners.base import HarnessRunner, register_runner
 
@@ -39,7 +46,10 @@ class GenericCommandRunner(HarnessRunner):
     async def check_availability(self, config: RunnerConfig | None = None) -> Availability:
         exe = None
         if config is not None:
-            exe = config.get("executable_check") or (shlex.split(str(config.get("command", "")))[:1] or [None])[0]
+            exe = (
+                config.get("executable_check")
+                or (shlex.split(str(config.get("command", "")))[:1] or [None])[0]
+            )
         if not exe:
             return Availability(runner=self.name, available=True, detail="no executable configured")
         path = shutil.which(exe)
@@ -59,8 +69,14 @@ class GenericCommandRunner(HarnessRunner):
     ) -> RunnerResult:
         template = config.get("command")
         if not template:
-            emit.emit(EventKind.ERROR, name="config", payload={"message": "generic runner requires a 'command' option"})
-            return RunnerResult(status=RunStatus.UNAVAILABLE, error="generic runner requires a 'command' option")
+            emit.emit(
+                EventKind.ERROR,
+                name="config",
+                payload={"message": "generic runner requires a 'command' option"},
+            )
+            return RunnerResult(
+                status=RunStatus.UNAVAILABLE, error="generic runner requires a 'command' option"
+            )
         prompt_via = str(config.get("prompt_via", "stdin"))
         output_format = str(config.get("output_format", "text"))
         prompt_file = worktree.parent / f"{emit.run_id}.prompt.txt"
@@ -88,9 +104,15 @@ class GenericCommandRunner(HarnessRunner):
                         obj = None
                     if isinstance(obj, dict) and obj.get("kind") in set(EventKind):
                         kind = EventKind(obj["kind"])
-                        payload = obj.get("payload") if isinstance(obj.get("payload"), dict) else {
-                            k: v for k, v in obj.items() if k not in {"kind", "name", "call_id", "duration_ms"}
-                        }
+                        payload = (
+                            obj.get("payload")
+                            if isinstance(obj.get("payload"), dict)
+                            else {
+                                k: v
+                                for k, v in obj.items()
+                                if k not in {"kind", "name", "call_id", "duration_ms"}
+                            }
+                        )
                         if kind == EventKind.REASONING_EVENT:
                             payload = {"count": 1}
                         emit.emit(
@@ -103,16 +125,27 @@ class GenericCommandRunner(HarnessRunner):
                         )
                         counters["json_events"] += 1
                         if kind == EventKind.USAGE:
-                            usage = usage.add(UsageTotals(**{k: int(payload.get(k, 0)) for k in UsageTotals.model_fields}))
+                            usage = usage.add(
+                                UsageTotals(
+                                    **{k: int(payload.get(k, 0)) for k in UsageTotals.model_fields}
+                                )
+                            )
                         return
             if sum(len(t) for t in text_lines) < TEXT_CAP:
                 text_lines.append(line)
 
-        emit.emit(EventKind.COMMAND_STARTED, name="harness", call_id="generic-main", payload={"command": command})
+        emit.emit(
+            EventKind.COMMAND_STARTED,
+            name="harness",
+            call_id="generic-main",
+            payload={"command": command},
+        )
         proc = await run_process(
             shell_argv(command),
             cwd=worktree,
-            env=build_child_env(include_auth=True, passthrough=config.get("env_passthrough", []) or []),
+            env=build_child_env(
+                include_auth=True, passthrough=config.get("env_passthrough", []) or []
+            ),
             timeout=task.limits.agent_timeout_seconds,
             stdin_text=stdin_text,
             on_stdout_line=on_line,
@@ -124,14 +157,23 @@ class GenericCommandRunner(HarnessRunner):
             name="harness",
             call_id="generic-main",
             duration_ms=proc.duration_ms,
-            payload={"command": command, "exit_code": proc.exit_code, "timed_out": proc.timed_out, "stderr_tail": proc.stderr_tail[-2000:]},
+            payload={
+                "command": command,
+                "exit_code": proc.exit_code,
+                "timed_out": proc.timed_out,
+                "stderr_tail": proc.stderr_tail[-2000:],
+            },
         )
         final = "\n".join(text_lines).strip() or None
         if final:
-            emit.emit(EventKind.ASSISTANT_MESSAGE, name="assistant", payload={"text": final[:TEXT_CAP]})
+            emit.emit(
+                EventKind.ASSISTANT_MESSAGE, name="assistant", payload={"text": final[:TEXT_CAP]}
+            )
         if proc.error:
             emit.emit(EventKind.ERROR, name="launch", payload={"message": proc.error})
-            return RunnerResult(status=RunStatus.UNAVAILABLE, error=proc.error, exit_code=proc.exit_code)
+            return RunnerResult(
+                status=RunStatus.UNAVAILABLE, error=proc.error, exit_code=proc.exit_code
+            )
         status = RunStatus.TIMEOUT if proc.timed_out else RunStatus.COMPLETED
         return RunnerResult(
             status=status,

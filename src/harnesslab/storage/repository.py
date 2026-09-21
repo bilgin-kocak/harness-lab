@@ -108,7 +108,9 @@ class Repository:
             )
         return vid
 
-    def add_task(self, exp_id: str, task: TaskSpec, *, base_commit: str, task_hash: str, position: int) -> str:
+    def add_task(
+        self, exp_id: str, task: TaskSpec, *, base_commit: str, task_hash: str, position: int
+    ) -> str:
         tid = new_id("task")
         with self.db.session() as s:
             s.add(
@@ -254,7 +256,9 @@ class Repository:
 
     def save_verifier_result(self, run_id: str, result: VerifierResult) -> None:
         with self.db.session() as s:
-            existing = s.execute(select(VerifierResultRow).where(VerifierResultRow.run_id == run_id)).scalar_one_or_none()
+            existing = s.execute(
+                select(VerifierResultRow).where(VerifierResultRow.run_id == run_id)
+            ).scalar_one_or_none()
             if existing is not None:
                 s.delete(existing)
                 s.flush()
@@ -285,7 +289,9 @@ class Repository:
                 )
             )
 
-    def add_artifact(self, run_id: str, kind: str, path: Path, media_type: str = "text/plain") -> str:
+    def add_artifact(
+        self, run_id: str, kind: str, path: Path, media_type: str = "text/plain"
+    ) -> str:
         aid = new_id("art")
         data = path.read_bytes() if path.exists() else b""
         try:
@@ -322,12 +328,20 @@ class Repository:
 
     def mark_stale_runs_interrupted(self) -> int:
         with self.db.session() as s:
-            rows = s.execute(select(RunRow).where(RunRow.status.in_(["running", "pending"]))).scalars().all()
+            rows = (
+                s.execute(select(RunRow).where(RunRow.status.in_(["running", "pending"])))
+                .scalars()
+                .all()
+            )
             for row in rows:
                 row.status = RunStatus.INTERRUPTED.value
                 row.finished_at = row.finished_at or utcnow()
                 row.error_message = row.error_message or "run was interrupted before it finished"
-            exps = s.execute(select(ExperimentRow).where(ExperimentRow.status == "running")).scalars().all()
+            exps = (
+                s.execute(select(ExperimentRow).where(ExperimentRow.status == "running"))
+                .scalars()
+                .all()
+            )
             for exp in exps:
                 exp.status = "interrupted"
                 exp.finished_at = exp.finished_at or utcnow()
@@ -336,9 +350,15 @@ class Repository:
     # -- reads -------------------------------------------------------------
     def list_experiments(self) -> list[dict[str, Any]]:
         with self.db.session() as s:
-            exps = s.execute(
-                select(ExperimentRow).options(selectinload(ExperimentRow.variants)).order_by(ExperimentRow.created_at.desc())
-            ).scalars().all()
+            exps = (
+                s.execute(
+                    select(ExperimentRow)
+                    .options(selectinload(ExperimentRow.variants))
+                    .order_by(ExperimentRow.created_at.desc())
+                )
+                .scalars()
+                .all()
+            )
             summaries: list[dict[str, Any]] = []
             for exp in exps:
                 stats = s.execute(
@@ -387,11 +407,15 @@ class Repository:
         if exp is not None:
             return exp
         with self.db.session() as s:
-            row = s.execute(
-                select(ExperimentRow)
-                .where((ExperimentRow.id.like(f"{ref}%")) | (ExperimentRow.name == ref))
-                .order_by(ExperimentRow.created_at.desc())
-            ).scalars().first()
+            row = (
+                s.execute(
+                    select(ExperimentRow)
+                    .where((ExperimentRow.id.like(f"{ref}%")) | (ExperimentRow.name == ref))
+                    .order_by(ExperimentRow.created_at.desc())
+                )
+                .scalars()
+                .first()
+            )
             return self.get_experiment(row.id) if row else None
 
     def get_run(self, run_id: str) -> RunRow | None:
@@ -419,7 +443,13 @@ class Repository:
 
     def get_events(self, run_id: str) -> list[EventRow]:
         with self.db.session() as s:
-            return list(s.execute(select(EventRow).where(EventRow.run_id == run_id).order_by(EventRow.sequence)).scalars().all())
+            return list(
+                s.execute(
+                    select(EventRow).where(EventRow.run_id == run_id).order_by(EventRow.sequence)
+                )
+                .scalars()
+                .all()
+            )
 
     def count_experiments(self) -> int:
         with self.db.session() as s:

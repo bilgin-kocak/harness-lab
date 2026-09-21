@@ -60,7 +60,10 @@ def _title_for(kind: EventKind, name: str | None, payload: dict[str, Any]) -> tu
                 subtitle = ", ".join(f"{k}={str(v)[:60]}" for k, v in list(inp.items())[:3])
         return (name or str(payload.get("tool", "tool")), subtitle)
     if kind == EventKind.FILE_CHANGE:
-        return (f"{payload.get('kind', 'change')}: {payload.get('path', '')}", str(payload.get("tool") or ""))
+        return (
+            f"{payload.get('kind', 'change')}: {payload.get('path', '')}",
+            str(payload.get("tool") or ""),
+        )
     if kind == EventKind.USAGE:
         return (
             f"usage: in {payload.get('input_tokens', 0)} / cached {payload.get('cached_input_tokens', 0)} / out {payload.get('output_tokens', 0)}",
@@ -73,7 +76,10 @@ def _title_for(kind: EventKind, name: str | None, payload: dict[str, Any]) -> tu
     if kind == EventKind.ASSISTANT_MESSAGE:
         return ("assistant", "")
     if kind == EventKind.RUN_STARTED:
-        return ("run started", f"{payload.get('runner', '')} · {payload.get('variant', '')} · {payload.get('task', '')}")
+        return (
+            "run started",
+            f"{payload.get('runner', '')} · {payload.get('variant', '')} · {payload.get('task', '')}",
+        )
     if kind == EventKind.RUN_FINISHED:
         return ("run finished", f"status={payload.get('status')} outcome={payload.get('outcome')}")
     return (name or kind.value, "")
@@ -95,7 +101,10 @@ def build_timeline(events: list[Any]) -> list[TimelineItem]:
             if item is not None:
                 item.result = payload
                 item.duration_ms = e.duration_ms if e.duration_ms is not None else item.duration_ms
-                item.status = str(payload.get("status") or ("error" if payload.get("exit_code") not in (None, 0) else "completed"))
+                item.status = str(
+                    payload.get("status")
+                    or ("error" if payload.get("exit_code") not in (None, 0) else "completed")
+                )
                 exit_code = payload.get("exit_code")
                 if exit_code is not None:
                     item.subtitle = (item.subtitle + f"  exit {exit_code}").strip()
@@ -107,7 +116,23 @@ def build_timeline(events: list[Any]) -> list[TimelineItem]:
                     item.open_by_default = True
                 continue
             title, subtitle = (f"{name or 'tool'} finished", "no matching start event")
-            items.append(TimelineItem(sequence=e.sequence, timestamp=e.timestamp, kind=kind.value, group=GROUPS[kind], title=title, subtitle=subtitle, duration_ms=e.duration_ms, payload=payload, call_id=e.call_id, parent_call_id=e.parent_call_id, source=e.source, collapsible=True, status=str(payload.get("status") or "")))
+            items.append(
+                TimelineItem(
+                    sequence=e.sequence,
+                    timestamp=e.timestamp,
+                    kind=kind.value,
+                    group=GROUPS[kind],
+                    title=title,
+                    subtitle=subtitle,
+                    duration_ms=e.duration_ms,
+                    payload=payload,
+                    call_id=e.call_id,
+                    parent_call_id=e.parent_call_id,
+                    source=e.source,
+                    collapsible=True,
+                    status=str(payload.get("status") or ""),
+                )
+            )
             continue
         title, subtitle = _title_for(kind, name, payload)
         item = TimelineItem(
@@ -122,7 +147,14 @@ def build_timeline(events: list[Any]) -> list[TimelineItem]:
             call_id=e.call_id,
             parent_call_id=e.parent_call_id,
             source=e.source,
-            collapsible=kind in (EventKind.TOOL_STARTED, EventKind.COMMAND_STARTED, EventKind.SYSTEM, EventKind.ERROR, EventKind.USAGE),
+            collapsible=kind
+            in (
+                EventKind.TOOL_STARTED,
+                EventKind.COMMAND_STARTED,
+                EventKind.SYSTEM,
+                EventKind.ERROR,
+                EventKind.USAGE,
+            ),
             text=str(payload.get("text")) if kind == EventKind.ASSISTANT_MESSAGE else None,
             open_by_default=kind == EventKind.ERROR,
         )

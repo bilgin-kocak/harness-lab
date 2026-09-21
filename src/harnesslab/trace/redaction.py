@@ -17,7 +17,9 @@ from typing import Any
 
 REDACTED_TEMPLATE = "[REDACTED:{label}]"
 
-_SECRET_NAME = r"(?:[A-Z0-9_]*_)?(?:API_KEY|APIKEY|SECRET|TOKEN|PASSWORD|PASSWD|AUTHORIZATION)(?:_[A-Z0-9_]*)?"
+_SECRET_NAME = (
+    r"(?:[A-Z0-9_]*_)?(?:API_KEY|APIKEY|SECRET|TOKEN|PASSWORD|PASSWD|AUTHORIZATION)(?:_[A-Z0-9_]*)?"
+)
 
 # (label, compiled pattern, replacement template). Group references in the
 # replacement keep non-secret context (variable names, the word "Bearer").
@@ -34,7 +36,9 @@ _PATTERNS: list[tuple[str, re.Pattern[str], str]] = [
     ),
     (
         "github_token",
-        re.compile(r"\b(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{20,}\b|\bgithub_pat_[A-Za-z0-9_]{20,}\b"),
+        re.compile(
+            r"\b(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{20,}\b|\bgithub_pat_[A-Za-z0-9_]{20,}\b"
+        ),
         REDACTED_TEMPLATE.format(label="github_token"),
     ),
     (
@@ -60,7 +64,7 @@ _PATTERNS: list[tuple[str, re.Pattern[str], str]] = [
     (
         "secret_assignment",
         re.compile(
-            r"(?i)\b(" + _SECRET_NAME + r")\b(\"?'?\s*[=:]\s*[\"']?)([^\s\"'&;,]{6,})",
+            r"(?i)\b(" + _SECRET_NAME + r")\b(\"?'?\s*[=:]\s*[\"']?)(?!bearer\b)([^\s\"'&;,]{6,})",
         ),
         r"\1\2" + REDACTED_TEMPLATE.format(label="secret_assignment"),
     ),

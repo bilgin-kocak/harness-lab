@@ -12,7 +12,9 @@ from harnesslab.core.models import Availability
 from harnesslab.trace.redaction import Redactor, default_redactor
 
 
-async def probe_cli(runner: str, executable: str, version_args: list[str] | None = None) -> Availability:
+async def probe_cli(
+    runner: str, executable: str, version_args: list[str] | None = None
+) -> Availability:
     """Locate ``executable`` on PATH and ask it for its version."""
     path = shutil.which(executable)
     if path is None:
@@ -34,14 +36,25 @@ async def probe_cli(runner: str, executable: str, version_args: list[str] | None
             out, err = await asyncio.wait_for(proc.communicate(), timeout=20)
         except TimeoutError:
             proc.kill()
-            return Availability(runner=runner, available=True, executable=path, detail="version probe timed out")
+            return Availability(
+                runner=runner, available=True, executable=path, detail="version probe timed out"
+            )
     except OSError as exc:
-        return Availability(runner=runner, available=False, executable=path, detail=f"cannot execute {path}: {exc}")
+        return Availability(
+            runner=runner, available=False, executable=path, detail=f"cannot execute {path}: {exc}"
+        )
     text = (out or err).decode("utf-8", errors="replace").strip().splitlines()
     version = text[0].strip() if text else None
     if proc.returncode != 0:
-        return Availability(runner=runner, available=False, executable=path, detail=f"version probe failed: {version}")
-    return Availability(runner=runner, available=True, executable=path, version=version, detail="ok")
+        return Availability(
+            runner=runner,
+            available=False,
+            executable=path,
+            detail=f"version probe failed: {version}",
+        )
+    return Availability(
+        runner=runner, available=True, executable=path, version=version, detail="ok"
+    )
 
 
 class SanitizedStreamWriter:

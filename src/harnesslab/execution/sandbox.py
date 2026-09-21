@@ -17,7 +17,13 @@ from pathlib import Path
 from harnesslab.config import Settings
 from harnesslab.core.models import DiffSummary, TaskSpec
 from harnesslab.execution.fixture import RepoSnapshot, snapshot_repository
-from harnesslab.execution.process import LineCallback, ProcessResult, build_child_env, run_process, shell_argv
+from harnesslab.execution.process import (
+    LineCallback,
+    ProcessResult,
+    build_child_env,
+    run_process,
+    shell_argv,
+)
 from harnesslab.execution.worktree import WorktreeManager, capture_changes
 
 
@@ -39,7 +45,9 @@ class ExecutionSandbox(ABC):
     kind: str = "abstract"
 
     @abstractmethod
-    async def prepare(self, task: TaskSpec, *, experiment_id: str, run_id: str) -> SandboxContext: ...
+    async def prepare(
+        self, task: TaskSpec, *, experiment_id: str, run_id: str
+    ) -> SandboxContext: ...
 
     @abstractmethod
     async def run_command(
@@ -147,10 +155,14 @@ class DockerSandbox(ExecutionSandbox):
             "See README 'Roadmap' for container isolation."
         )
 
-    async def prepare(self, task: TaskSpec, *, experiment_id: str, run_id: str) -> SandboxContext:  # pragma: no cover
+    async def prepare(
+        self, task: TaskSpec, *, experiment_id: str, run_id: str
+    ) -> SandboxContext:  # pragma: no cover
         raise NotImplementedError
 
-    async def run_command(self, ctx: SandboxContext, command: str, **kwargs: object) -> ProcessResult:  # type: ignore[override]  # pragma: no cover
+    async def run_command(
+        self, ctx: SandboxContext, command: str, **kwargs: object
+    ) -> ProcessResult:  # type: ignore[override]  # pragma: no cover
         raise NotImplementedError
 
     async def capture_changes(self, ctx: SandboxContext) -> DiffSummary:  # pragma: no cover

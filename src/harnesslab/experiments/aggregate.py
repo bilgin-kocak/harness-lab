@@ -126,7 +126,9 @@ def aggregate_variant(variant_key: str, samples: list[RunSample]) -> VariantAggr
     return agg
 
 
-def aggregate_variants(samples: list[RunSample], variant_order: list[str] | None = None) -> dict[str, VariantAggregate]:
+def aggregate_variants(
+    samples: list[RunSample], variant_order: list[str] | None = None
+) -> dict[str, VariantAggregate]:
     grouped: dict[str, list[RunSample]] = defaultdict(list)
     for s in samples:
         grouped[s.variant_key].append(s)
@@ -184,12 +186,16 @@ class MatrixCell(BaseModel):
         return self.runs[0] if self.runs else None
 
 
-def build_matrix(samples: list[RunSample], task_order: list[str], variant_order: list[str]) -> dict[str, dict[str, MatrixCell]]:
+def build_matrix(
+    samples: list[RunSample], task_order: list[str], variant_order: list[str]
+) -> dict[str, dict[str, MatrixCell]]:
     matrix: dict[str, dict[str, MatrixCell]] = {
         t: {v: MatrixCell(task_key=t, variant_key=v) for v in variant_order} for t in task_order
     }
     for s in sorted(samples, key=lambda x: (x.repetition, x.run_id)):
-        matrix.setdefault(s.task_key, {}).setdefault(s.variant_key, MatrixCell(task_key=s.task_key, variant_key=s.variant_key)).runs.append(s)
+        matrix.setdefault(s.task_key, {}).setdefault(
+            s.variant_key, MatrixCell(task_key=s.task_key, variant_key=s.variant_key)
+        ).runs.append(s)
     return matrix
 
 
@@ -239,7 +245,9 @@ def _classify(a_rate: float | None, b_rate: float | None) -> str:
     return "mixed"
 
 
-def compare_variants(samples: list[RunSample], a: str, b: str, task_order: list[str]) -> VariantComparison:
+def compare_variants(
+    samples: list[RunSample], a: str, b: str, task_order: list[str]
+) -> VariantComparison:
     aggs = aggregate_variants(samples, [a, b])
     agg_a, agg_b = aggs[a], aggs[b]
     matrix = build_matrix(samples, task_order, [a, b])
@@ -260,27 +268,82 @@ def compare_variants(samples: list[RunSample], a: str, b: str, task_order: list[
             )
         )
 
-    def delta(metric: str, label: str, va: float | None, vb: float | None, lower_is_better: bool = False) -> MetricDelta:
+    def delta(
+        metric: str, label: str, va: float | None, vb: float | None, lower_is_better: bool = False
+    ) -> MetricDelta:
         d = (vb - va) if (va is not None and vb is not None) else None
-        return MetricDelta(metric=metric, label=label, a=va, b=vb, delta=d, lower_is_better=lower_is_better)
+        return MetricDelta(
+            metric=metric, label=label, a=va, b=vb, delta=d, lower_is_better=lower_is_better
+        )
 
     deltas = [
         delta("success_rate", "Pass rate", agg_a.success_rate, agg_b.success_rate),
         delta("score", "Mean verified score", agg_a.score.mean, agg_b.score.mean),
-        delta("input_tokens", "Median input tokens", agg_a.input_tokens.median, agg_b.input_tokens.median, True),
-        delta("output_tokens", "Median output tokens", agg_a.output_tokens.median, agg_b.output_tokens.median, True),
-        delta("wall_time_seconds", "Median wall time (s)", agg_a.wall_time_seconds.median, agg_b.wall_time_seconds.median, True),
-        delta("tool_calls", "Median tool calls", agg_a.tool_calls.median, agg_b.tool_calls.median, True),
-        delta("files_changed", "Median files changed", agg_a.files_changed.median, agg_b.files_changed.median),
-        delta("reported_cost_usd", "Median reported cost (USD)", agg_a.reported_cost_usd.median, agg_b.reported_cost_usd.median, True),
-        delta("estimated_cost_usd", "Median estimated cost (USD)", agg_a.estimated_cost_usd.median, agg_b.estimated_cost_usd.median, True),
+        delta(
+            "input_tokens",
+            "Median input tokens",
+            agg_a.input_tokens.median,
+            agg_b.input_tokens.median,
+            True,
+        ),
+        delta(
+            "output_tokens",
+            "Median output tokens",
+            agg_a.output_tokens.median,
+            agg_b.output_tokens.median,
+            True,
+        ),
+        delta(
+            "wall_time_seconds",
+            "Median wall time (s)",
+            agg_a.wall_time_seconds.median,
+            agg_b.wall_time_seconds.median,
+            True,
+        ),
+        delta(
+            "tool_calls",
+            "Median tool calls",
+            agg_a.tool_calls.median,
+            agg_b.tool_calls.median,
+            True,
+        ),
+        delta(
+            "files_changed",
+            "Median files changed",
+            agg_a.files_changed.median,
+            agg_b.files_changed.median,
+        ),
+        delta(
+            "reported_cost_usd",
+            "Median reported cost (USD)",
+            agg_a.reported_cost_usd.median,
+            agg_b.reported_cost_usd.median,
+            True,
+        ),
+        delta(
+            "estimated_cost_usd",
+            "Median estimated cost (USD)",
+            agg_a.estimated_cost_usd.median,
+            agg_b.estimated_cost_usd.median,
+            True,
+        ),
     ]
     for key in ("both_passed", "both_failed", "a_only", "b_only", "mixed", "unverified"):
         summary.setdefault(key, 0)
-    return VariantComparison(a=a, b=b, a_aggregate=agg_a, b_aggregate=agg_b, deltas=deltas, tasks=tasks, summary=dict(summary))
+    return VariantComparison(
+        a=a,
+        b=b,
+        a_aggregate=agg_a,
+        b_aggregate=agg_b,
+        deltas=deltas,
+        tasks=tasks,
+        summary=dict(summary),
+    )
 
 
-def samples_from_rows(runs: list[Any], tasks_by_id: dict[str, Any], variants_by_id: dict[str, Any]) -> list[RunSample]:
+def samples_from_rows(
+    runs: list[Any], tasks_by_id: dict[str, Any], variants_by_id: dict[str, Any]
+) -> list[RunSample]:
     """Build samples from ORM run rows (tasks/variants looked up by row id)."""
     samples: list[RunSample] = []
     for run in runs:

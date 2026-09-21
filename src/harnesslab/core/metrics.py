@@ -40,7 +40,9 @@ def compute_metrics(
     estimated = None
     pricing_version = None
     if pricing is not None:
-        estimated = pricing.estimate_by_model(runner_result.usage_by_model, runner_result.model_resolved, usage)
+        estimated = pricing.estimate_by_model(
+            runner_result.usage_by_model, runner_result.model_resolved, usage
+        )
         pricing_version = pricing.version if estimated is not None else None
 
     metrics = RunMetrics(

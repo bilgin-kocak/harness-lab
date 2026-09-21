@@ -48,7 +48,9 @@ class PricingTable(BaseModel):
     @classmethod
     def load(cls, path: Path) -> PricingTable:
         data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
-        models = {name: ModelPricing(**(cfg or {})) for name, cfg in (data.get("models") or {}).items()}
+        models = {
+            name: ModelPricing(**(cfg or {})) for name, cfg in (data.get("models") or {}).items()
+        }
         version = str(data.get("version") or hash_value(data, 12))
         return cls(version=version, currency=str(data.get("currency", "USD")), models=models)
 
@@ -70,13 +72,26 @@ class PricingTable(BaseModel):
         per_m = 1_000_000.0
         cost = usage.input_tokens / per_m * pricing.input_per_million
         cost += usage.output_tokens / per_m * pricing.output_per_million
-        cached_rate = pricing.cached_input_per_million if pricing.cached_input_per_million is not None else pricing.input_per_million
+        cached_rate = (
+            pricing.cached_input_per_million
+            if pricing.cached_input_per_million is not None
+            else pricing.input_per_million
+        )
         cost += usage.cached_input_tokens / per_m * cached_rate
-        write_rate = pricing.cache_write_per_million if pricing.cache_write_per_million is not None else pricing.input_per_million
+        write_rate = (
+            pricing.cache_write_per_million
+            if pricing.cache_write_per_million is not None
+            else pricing.input_per_million
+        )
         cost += usage.cache_write_tokens / per_m * write_rate
         return round(cost, 6)
 
-    def estimate_by_model(self, usage_by_model: dict[str, UsageTotals], fallback_model: str | None, fallback_usage: UsageTotals) -> float | None:
+    def estimate_by_model(
+        self,
+        usage_by_model: dict[str, UsageTotals],
+        fallback_model: str | None,
+        fallback_usage: UsageTotals,
+    ) -> float | None:
         if usage_by_model:
             total = 0.0
             for model, usage in usage_by_model.items():

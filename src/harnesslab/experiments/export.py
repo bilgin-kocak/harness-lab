@@ -39,7 +39,9 @@ def export_experiment(
         record: dict[str, Any] = {
             "id": full.id,
             "task": tasks_by_id[full.task_id].task_key if full.task_id in tasks_by_id else None,
-            "variant": variants_by_id[full.variant_id].variant_key if full.variant_id in variants_by_id else None,
+            "variant": variants_by_id[full.variant_id].variant_key
+            if full.variant_id in variants_by_id
+            else None,
             "repetition": full.repetition,
             "status": full.status,
             "outcome": full.outcome,

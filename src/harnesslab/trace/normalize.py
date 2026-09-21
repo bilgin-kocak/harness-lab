@@ -39,7 +39,11 @@ def close_orphaned_calls(emit: EventEmitter, source: str = "harnesslab") -> int:
         elif event.kind in (EventKind.TOOL_FINISHED, EventKind.COMMAND_FINISHED) and event.call_id:
             open_calls.pop(event.call_id, None)
     for call_id, (kind, name, parent) in open_calls.items():
-        finished_kind = EventKind.COMMAND_FINISHED if kind == EventKind.COMMAND_STARTED else EventKind.TOOL_FINISHED
+        finished_kind = (
+            EventKind.COMMAND_FINISHED
+            if kind == EventKind.COMMAND_STARTED
+            else EventKind.TOOL_FINISHED
+        )
         emit.emit(
             finished_kind,
             name=name,

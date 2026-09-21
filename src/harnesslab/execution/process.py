@@ -273,7 +273,9 @@ async def run_process(
                 *argv,
                 cwd=str(cwd),
                 env=dict(env),
-                stdin=asyncio.subprocess.PIPE if stdin_text is not None else asyncio.subprocess.DEVNULL,
+                stdin=asyncio.subprocess.PIPE
+                if stdin_text is not None
+                else asyncio.subprocess.DEVNULL,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=stderr_file if stderr_file is not None else asyncio.subprocess.PIPE,
                 start_new_session=True,
@@ -296,7 +298,9 @@ async def run_process(
             )
         ]
         if stderr_file is None and proc.stderr is not None:
-            readers.append(asyncio.create_task(_read_tail(proc.stderr, stderr_tail, stderr_cap_bytes)))
+            readers.append(
+                asyncio.create_task(_read_tail(proc.stderr, stderr_tail, stderr_cap_bytes))
+            )
 
         if stdin_text is not None and proc.stdin is not None:
             try:
@@ -319,7 +323,9 @@ async def run_process(
 
         # Readers may never see EOF if a grandchild inherited the pipe; bound the wait.
         try:
-            await asyncio.wait_for(asyncio.gather(*readers, return_exceptions=True), reader_deadline)
+            await asyncio.wait_for(
+                asyncio.gather(*readers, return_exceptions=True), reader_deadline
+            )
         except TimeoutError:
             for task in readers:
                 task.cancel()

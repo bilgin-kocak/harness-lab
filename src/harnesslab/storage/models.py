@@ -38,9 +38,15 @@ class ExperimentRow(Base):
     environment_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    variants: Mapped[list[VariantRow]] = relationship(back_populates="experiment", cascade="all, delete-orphan", order_by="VariantRow.position")
-    tasks: Mapped[list[TaskRow]] = relationship(back_populates="experiment", cascade="all, delete-orphan", order_by="TaskRow.position")
-    runs: Mapped[list[RunRow]] = relationship(back_populates="experiment", cascade="all, delete-orphan", order_by="RunRow.id")
+    variants: Mapped[list[VariantRow]] = relationship(
+        back_populates="experiment", cascade="all, delete-orphan", order_by="VariantRow.position"
+    )
+    tasks: Mapped[list[TaskRow]] = relationship(
+        back_populates="experiment", cascade="all, delete-orphan", order_by="TaskRow.position"
+    )
+    runs: Mapped[list[RunRow]] = relationship(
+        back_populates="experiment", cascade="all, delete-orphan", order_by="RunRow.id"
+    )
 
 
 class VariantRow(Base):
@@ -49,7 +55,9 @@ class VariantRow(Base):
     __tablename__ = "variants"
 
     id: Mapped[str] = mapped_column(String(64), primary_key=True)
-    experiment_id: Mapped[str] = mapped_column(ForeignKey("experiments.id", ondelete="CASCADE"), index=True)
+    experiment_id: Mapped[str] = mapped_column(
+        ForeignKey("experiments.id", ondelete="CASCADE"), index=True
+    )
     variant_key: Mapped[str] = mapped_column(String(128))
     position: Mapped[int] = mapped_column(Integer, default=0)
     runner: Mapped[str] = mapped_column(String(64))
@@ -72,7 +80,9 @@ class TaskRow(Base):
     __tablename__ = "tasks"
 
     id: Mapped[str] = mapped_column(String(64), primary_key=True)
-    experiment_id: Mapped[str] = mapped_column(ForeignKey("experiments.id", ondelete="CASCADE"), index=True)
+    experiment_id: Mapped[str] = mapped_column(
+        ForeignKey("experiments.id", ondelete="CASCADE"), index=True
+    )
     task_key: Mapped[str] = mapped_column(String(128))
     position: Mapped[int] = mapped_column(Integer, default=0)
     name: Mapped[str] = mapped_column(String(255))
@@ -95,8 +105,12 @@ class RunRow(Base):
     __tablename__ = "runs"
 
     id: Mapped[str] = mapped_column(String(64), primary_key=True)
-    experiment_id: Mapped[str] = mapped_column(ForeignKey("experiments.id", ondelete="CASCADE"), index=True)
-    variant_id: Mapped[str] = mapped_column(ForeignKey("variants.id", ondelete="CASCADE"), index=True)
+    experiment_id: Mapped[str] = mapped_column(
+        ForeignKey("experiments.id", ondelete="CASCADE"), index=True
+    )
+    variant_id: Mapped[str] = mapped_column(
+        ForeignKey("variants.id", ondelete="CASCADE"), index=True
+    )
     task_id: Mapped[str] = mapped_column(ForeignKey("tasks.id", ondelete="CASCADE"), index=True)
     repetition: Mapped[int] = mapped_column(Integer, default=0)
     status: Mapped[str] = mapped_column(String(32), default="pending")
@@ -149,9 +163,15 @@ class RunRow(Base):
     experiment: Mapped[ExperimentRow] = relationship(back_populates="runs")
     variant: Mapped[VariantRow] = relationship(back_populates="runs")
     task: Mapped[TaskRow] = relationship(back_populates="runs")
-    events: Mapped[list[EventRow]] = relationship(back_populates="run", cascade="all, delete-orphan", order_by="EventRow.sequence")
-    verifier_result: Mapped[VerifierResultRow | None] = relationship(back_populates="run", cascade="all, delete-orphan", uselist=False)
-    artifacts: Mapped[list[ArtifactRow]] = relationship(back_populates="run", cascade="all, delete-orphan", order_by="ArtifactRow.kind")
+    events: Mapped[list[EventRow]] = relationship(
+        back_populates="run", cascade="all, delete-orphan", order_by="EventRow.sequence"
+    )
+    verifier_result: Mapped[VerifierResultRow | None] = relationship(
+        back_populates="run", cascade="all, delete-orphan", uselist=False
+    )
+    artifacts: Mapped[list[ArtifactRow]] = relationship(
+        back_populates="run", cascade="all, delete-orphan", order_by="ArtifactRow.kind"
+    )
 
 
 class EventRow(Base):

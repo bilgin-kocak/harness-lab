@@ -5,7 +5,6 @@ from __future__ import annotations
 import fnmatch
 import os
 import shutil
-from pathlib import Path
 
 from harnesslab.core.models import DiffSummary, Outcome, TaskSpec, VerifierResult
 from harnesslab.execution.sandbox import ExecutionSandbox, SandboxContext
@@ -131,7 +130,9 @@ class CommandVerifier(Verifier):
         if proc.timed_out:
             result.passed = False
             result.outcome = Outcome.FAIL
-            result.stderr = (result.stderr + f"\n[verifier timed out after {spec.timeout_seconds}s]").strip()
+            result.stderr = (
+                result.stderr + f"\n[verifier timed out after {spec.timeout_seconds}s]"
+            ).strip()
         else:
             result.passed = proc.exit_code == 0
             result.outcome = Outcome.PASS if result.passed else Outcome.FAIL

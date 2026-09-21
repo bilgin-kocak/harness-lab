@@ -72,7 +72,9 @@ def experiment_page(request: Request, exp_id: str) -> HTMLResponse:
 
 
 @router.get("/experiments/{exp_id}/compare", response_class=HTMLResponse)
-def compare_page(request: Request, exp_id: str, a: str | None = None, b: str | None = None) -> HTMLResponse:
+def compare_page(
+    request: Request, exp_id: str, a: str | None = None, b: str | None = None
+) -> HTMLResponse:
     ctx = _experiment_context(_repo(request), exp_id)
     keys = ctx["variant_keys"]
     if not keys:
@@ -97,9 +99,17 @@ def run_page(request: Request, run_id: str) -> HTMLResponse:
         item.payload = dict(item.payload)
         item.payload["_offset_s"] = round((item.timestamp - t0).total_seconds(), 2) if t0 else None
     artifacts = {a.kind: a for a in run.artifacts}
-    diff_text = repo.read_artifact(artifacts["agent_diff"], cap=DIFF_VIEW_CAP) if "agent_diff" in artifacts else ""
-    diff_stat = repo.read_artifact(artifacts["diff_stat"], cap=20_000) if "diff_stat" in artifacts else ""
-    git_status = repo.read_artifact(artifacts["git_status"], cap=20_000) if "git_status" in artifacts else ""
+    diff_text = (
+        repo.read_artifact(artifacts["agent_diff"], cap=DIFF_VIEW_CAP)
+        if "agent_diff" in artifacts
+        else ""
+    )
+    diff_stat = (
+        repo.read_artifact(artifacts["diff_stat"], cap=20_000) if "diff_stat" in artifacts else ""
+    )
+    git_status = (
+        repo.read_artifact(artifacts["git_status"], cap=20_000) if "git_status" in artifacts else ""
+    )
     metrics = run.metrics_json or {}
     return _render(
         request,
@@ -129,23 +139,34 @@ def run_artifact(request: Request, run_id: str, kind: str) -> PlainTextResponse:
         raise HTTPException(status_code=404, detail="run not found")
     for artifact in run.artifacts:
         if artifact.kind == kind:
-            return PlainTextResponse(repo.read_artifact(artifact), media_type=artifact.media_type or "text/plain")
+            return PlainTextResponse(
+                repo.read_artifact(artifact), media_type=artifact.media_type or "text/plain"
+            )
     raise HTTPException(status_code=404, detail="artifact not found")
 
 
 @router.get("/api/experiments/{exp_id}/export.json")
-def api_export(request: Request, exp_id: str, events: bool = True, artifacts: bool = True) -> JSONResponse:
+def api_export(
+    request: Request, exp_id: str, events: bool = True, artifacts: bool = True
+) -> JSONResponse:
     repo = _repo(request)
     exp = repo.find_experiment(exp_id)
     if exp is None:
         raise HTTPException(status_code=404, detail="experiment not found")
-    return JSONResponse(export_experiment(repo, exp.id, include_events=events, include_artifacts=artifacts))
+    return JSONResponse(
+        export_experiment(repo, exp.id, include_events=events, include_artifacts=artifacts)
+    )
 
 
 @router.get("/api/experiments/{exp_id}/runs.json")
 def api_runs(request: Request, exp_id: str) -> JSONResponse:
     ctx = _experiment_context(_repo(request), exp_id)
-    return JSONResponse({"runs": [s.model_dump() for s in ctx["samples"]], "aggregates": {k: v.model_dump() for k, v in ctx["aggregates"].items()}})
+    return JSONResponse(
+        {
+            "runs": [s.model_dump() for s in ctx["samples"]],
+            "aggregates": {k: v.model_dump() for k, v in ctx["aggregates"].items()},
+        }
+    )
 
 
 @router.get("/api/runs/{run_id}/events.json")

@@ -92,7 +92,18 @@ def highlight_diff(text: str | None) -> Markup:
     out: list[str] = []
     for line in text.splitlines():
         cls = "diff-ctx"
-        if line.startswith(("diff --git", "index ", "--- ", "+++ ", "new file", "deleted file", "similarity", "rename ")):
+        if line.startswith(
+            (
+                "diff --git",
+                "index ",
+                "--- ",
+                "+++ ",
+                "new file",
+                "deleted file",
+                "similarity",
+                "rename ",
+            )
+        ):
             cls = "diff-meta"
         elif line.startswith("@@"):
             cls = "diff-hunk"

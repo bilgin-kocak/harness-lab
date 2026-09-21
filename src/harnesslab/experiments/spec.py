@@ -13,10 +13,31 @@ from harnesslab.core.models import ExperimentSpec, SuiteSpec, TaskSpec, VariantS
 # Variants available even when a suite does not define any, so the quickstart
 # commands work out of the box.
 BUILTIN_VARIANTS: list[VariantSpec] = [
-    VariantSpec(id="fake-reference", runner="fake", description="Deterministic fake agent applying the reference solution", behavior="solve"),
-    VariantSpec(id="fake-noop", runner="fake", description="Fake agent that changes nothing (control)", behavior="noop"),
-    VariantSpec(id="codex-default", runner="codex", model=None, description="OpenAI Codex CLI, default model, workspace-write sandbox"),
-    VariantSpec(id="claude-default", runner="claude", model=None, description="Claude Code CLI, default model, acceptEdits", max_turns=30),
+    VariantSpec(
+        id="fake-reference",
+        runner="fake",
+        description="Deterministic fake agent applying the reference solution",
+        behavior="solve",
+    ),
+    VariantSpec(
+        id="fake-noop",
+        runner="fake",
+        description="Fake agent that changes nothing (control)",
+        behavior="noop",
+    ),
+    VariantSpec(
+        id="codex-default",
+        runner="codex",
+        model=None,
+        description="OpenAI Codex CLI, default model, workspace-write sandbox",
+    ),
+    VariantSpec(
+        id="claude-default",
+        runner="claude",
+        model=None,
+        description="Claude Code CLI, default model, acceptEdits",
+        max_turns=30,
+    ),
 ]
 
 
@@ -119,7 +140,9 @@ def resolve_variants(
         chosen: list[VariantSpec] = []
         for vid in requested:
             if vid not in catalogue:
-                raise SpecError(f"unknown variant {vid!r}; available: {', '.join(sorted(catalogue))}")
+                raise SpecError(
+                    f"unknown variant {vid!r}; available: {', '.join(sorted(catalogue))}"
+                )
             chosen.append(catalogue[vid])
         return chosen
     if experiment.variants:

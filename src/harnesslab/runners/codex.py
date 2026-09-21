@@ -39,11 +39,15 @@ from harnesslab.trace.codex_parser import CodexStreamParser
 SANDBOX_MODES = {"workspace-write", "read-only", "danger-full-access"}
 
 
-def build_codex_command(config: RunnerConfig, worktree: Path, last_message_path: Path | None = None) -> list[str]:
+def build_codex_command(
+    config: RunnerConfig, worktree: Path, last_message_path: Path | None = None
+) -> list[str]:
     exe = str(config.get("executable", "codex"))
     sandbox = str(config.get("sandbox", "workspace-write"))
     if sandbox not in SANDBOX_MODES:
-        raise ValueError(f"invalid codex sandbox {sandbox!r}; expected one of {sorted(SANDBOX_MODES)}")
+        raise ValueError(
+            f"invalid codex sandbox {sandbox!r}; expected one of {sorted(SANDBOX_MODES)}"
+        )
     argv = [exe, "exec", "--json"]
     if sandbox == "danger-full-access":
         # Explicit opt-in only: never selected by default.
@@ -62,7 +66,9 @@ def build_codex_command(config: RunnerConfig, worktree: Path, last_message_path:
         argv.extend(["--profile", str(config.get("profile"))])
     network = config.get("network_access", False)
     if sandbox == "workspace-write":
-        argv.extend(["-c", f"sandbox_workspace_write.network_access={'true' if network else 'false'}"])
+        argv.extend(
+            ["-c", f"sandbox_workspace_write.network_access={'true' if network else 'false'}"]
+        )
     if config.get("reasoning_effort"):
         argv.extend(["-c", f"model_reasoning_effort={config.get('reasoning_effort')}"])
     overrides = config.get("config_overrides") or {}
@@ -95,7 +101,9 @@ class CodexRunner(HarnessRunner):
     ) -> RunnerResult:
         availability = await self.check_availability(config)
         if not availability.available:
-            emit.emit(EventKind.ERROR, name="codex_unavailable", payload={"message": availability.detail})
+            emit.emit(
+                EventKind.ERROR, name="codex_unavailable", payload={"message": availability.detail}
+            )
             return RunnerResult(status=RunStatus.UNAVAILABLE, error=availability.detail)
 
         artifacts = self.artifacts_dir
@@ -107,11 +115,16 @@ class CodexRunner(HarnessRunner):
             return RunnerResult(status=RunStatus.CRASHED, error=str(exc))
 
         parser = CodexStreamParser(emit, worktree=str(worktree))
-        stream = SanitizedStreamWriter((artifacts / "agent_stream.sanitized.jsonl") if artifacts else None, emit.redactor)
+        stream = SanitizedStreamWriter(
+            (artifacts / "agent_stream.sanitized.jsonl") if artifacts else None, emit.redactor
+        )
         emit.emit(
             EventKind.SYSTEM,
             name="harness_launch",
-            payload={"argv": [a if not a.startswith("/") else Path(a).name for a in argv[:1]] + argv[1:], "cli_version": availability.version},
+            payload={
+                "argv": [a if not a.startswith("/") else Path(a).name for a in argv[:1]] + argv[1:],
+                "cli_version": availability.version,
+            },
         )
 
         def on_line(line: str) -> None:
@@ -156,7 +169,12 @@ class CodexRunner(HarnessRunner):
         }
         if proc.error:
             emit.emit(EventKind.ERROR, name="launch_failed", payload={"message": proc.error})
-            return RunnerResult(status=RunStatus.UNAVAILABLE, error=proc.error, cli_version=availability.version, metadata=metadata)
+            return RunnerResult(
+                status=RunStatus.UNAVAILABLE,
+                error=proc.error,
+                cli_version=availability.version,
+                metadata=metadata,
+            )
 
         status = RunStatus.TIMEOUT if proc.timed_out else RunStatus.COMPLETED
         error = None
@@ -164,7 +182,11 @@ class CodexRunner(HarnessRunner):
             error = f"codex exceeded the {task.limits.agent_timeout_seconds}s limit and was killed"
             emit.emit(EventKind.ERROR, name="agent_timeout", payload={"message": error})
         elif proc.exit_code != 0:
-            error = parser.errors[-1] if parser.errors else f"codex exited with code {proc.exit_code}: {metadata['stderr_tail'][-500:]}".strip()
+            error = (
+                parser.errors[-1]
+                if parser.errors
+                else f"codex exited with code {proc.exit_code}: {metadata['stderr_tail'][-500:]}".strip()
+            )
         elif parser.errors:
             error = parser.errors[-1]
 
@@ -173,7 +195,9 @@ class CodexRunner(HarnessRunner):
             exit_code=proc.exit_code,
             final_message=final_message,
             usage=parser.usage,
-            usage_by_model={config.model or parser.model or "codex-default": parser.usage} if parser.usage.total_tokens else {},
+            usage_by_model={config.model or parser.model or "codex-default": parser.usage}
+            if parser.usage.total_tokens
+            else {},
             reported_cost_usd=None,  # Codex CLI does not report cost
             provider_session_id=parser.thread_id,
             model_resolved=config.model or parser.model,

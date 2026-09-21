@@ -24,7 +24,14 @@ import shutil
 from pathlib import Path
 
 from harnesslab.core.events import EventEmitter, EventKind
-from harnesslab.core.models import Availability, RunnerConfig, RunnerResult, RunStatus, TaskSpec, UsageTotals
+from harnesslab.core.models import (
+    Availability,
+    RunnerConfig,
+    RunnerResult,
+    RunStatus,
+    TaskSpec,
+    UsageTotals,
+)
 from harnesslab.execution.fixture import iter_fixture_files
 from harnesslab.execution.process import build_child_env, run_process, shell_argv
 from harnesslab.runners.base import HarnessRunner, register_runner
@@ -44,7 +51,9 @@ class FakeRunner(HarnessRunner):
     description = "Deterministic simulated agent (no API access required)."
 
     async def check_availability(self, config: RunnerConfig | None = None) -> Availability:
-        return Availability(runner=self.name, available=True, version=FAKE_VERSION, detail="always available")
+        return Availability(
+            runner=self.name, available=True, version=FAKE_VERSION, detail="always available"
+        )
 
     # -- helpers -------------------------------------------------------------
     @staticmethod
@@ -74,7 +83,10 @@ class FakeRunner(HarnessRunner):
                 EventKind.TOOL_STARTED,
                 name="edit_file",
                 call_id=call_id,
-                payload={"tool": "edit_file", "input": {"path": rel.as_posix(), "bytes": len(data)}},
+                payload={
+                    "tool": "edit_file",
+                    "input": {"path": rel.as_posix(), "bytes": len(data)},
+                },
             )
             shutil.copyfile(src, dest)
             shutil.copymode(src, dest)
@@ -89,7 +101,11 @@ class FakeRunner(HarnessRunner):
                 name="edit_file",
                 call_id=call_id,
                 duration_ms=int(delay * 1000),
-                payload={"tool": "edit_file", "status": "completed", "output": f"wrote {len(data)} bytes"},
+                payload={
+                    "tool": "edit_file",
+                    "status": "completed",
+                    "output": f"wrote {len(data)} bytes",
+                },
             )
         return written
 
@@ -119,7 +135,9 @@ class FakeRunner(HarnessRunner):
         emit.emit(
             EventKind.ASSISTANT_MESSAGE,
             name="assistant",
-            payload={"text": f"I'll start by reading the repository to understand the task '{task.id}'."},
+            payload={
+                "text": f"I'll start by reading the repository to understand the task '{task.id}'."
+            },
         )
         if delay:
             await asyncio.sleep(delay)
@@ -144,7 +162,9 @@ class FakeRunner(HarnessRunner):
         )
 
         if behavior == "crash":
-            emit.emit(EventKind.ERROR, name="fake_crash", payload={"message": "simulated adapter crash"})
+            emit.emit(
+                EventKind.ERROR, name="fake_crash", payload={"message": "simulated adapter crash"}
+            )
             raise FakeRunnerCrash("simulated adapter crash")
 
         # 2. edit files
@@ -157,29 +177,57 @@ class FakeRunner(HarnessRunner):
                 emit.emit(
                     EventKind.SYSTEM,
                     name="no_reference_solution",
-                    payload={"message": f"task {task.id} has no reference solution for behavior {behavior}"},
+                    payload={
+                        "message": f"task {task.id} has no reference solution for behavior {behavior}"
+                    },
                 )
         elif behavior == "fail":
             # A confident but wrong change: break the first Python file we find.
-            target = next((worktree / p for p in iter_fixture_files(worktree) if p.suffix == ".py" and "test" not in p.as_posix()), None)
+            target = next(
+                (
+                    worktree / p
+                    for p in iter_fixture_files(worktree)
+                    if p.suffix == ".py" and "test" not in p.as_posix()
+                ),
+                None,
+            )
             if target is not None:
                 call_id = "fake-edit-broken"
                 rel = target.relative_to(worktree).as_posix()
-                emit.emit(EventKind.TOOL_STARTED, name="edit_file", call_id=call_id, payload={"tool": "edit_file", "input": {"path": rel}})
+                emit.emit(
+                    EventKind.TOOL_STARTED,
+                    name="edit_file",
+                    call_id=call_id,
+                    payload={"tool": "edit_file", "input": {"path": rel}},
+                )
                 with target.open("a", encoding="utf-8") as fh:
                     fh.write("\nraise RuntimeError('fake runner deliberately broke this module')\n")
-                emit.emit(EventKind.FILE_CHANGE, name="update", payload={"path": rel, "kind": "update"})
-                emit.emit(EventKind.TOOL_FINISHED, name="edit_file", call_id=call_id, payload={"tool": "edit_file", "status": "completed"})
+                emit.emit(
+                    EventKind.FILE_CHANGE, name="update", payload={"path": rel, "kind": "update"}
+                )
+                emit.emit(
+                    EventKind.TOOL_FINISHED,
+                    name="edit_file",
+                    call_id=call_id,
+                    payload={"tool": "edit_file", "status": "completed"},
+                )
                 written = 64
 
         # 3. run a real shell command in the worktree
         command = config.get("command")
         if command is None:
-            command = "python -m unittest discover -s tests" if (worktree / "tests").is_dir() else "ls"
+            command = (
+                "python -m unittest discover -s tests" if (worktree / "tests").is_dir() else "ls"
+            )
         exit_code = 0
         if config.get("run_command", True):
             call_id = "fake-cmd-1"
-            emit.emit(EventKind.COMMAND_STARTED, name="shell", call_id=call_id, payload={"command": command})
+            emit.emit(
+                EventKind.COMMAND_STARTED,
+                name="shell",
+                call_id=call_id,
+                payload={"command": command},
+            )
             proc = await run_process(
                 shell_argv(str(command)),
                 cwd=worktree,
@@ -214,7 +262,11 @@ class FakeRunner(HarnessRunner):
         rate = config.get("simulate_cost_usd_per_1k_tokens")
         if rate is not None:
             cost = round(usage.total_tokens / 1000.0 * float(rate), 6)
-            emit.emit(EventKind.SYSTEM, name="simulated_cost", payload={"reported_cost_usd": cost, "simulated": True})
+            emit.emit(
+                EventKind.SYSTEM,
+                name="simulated_cost",
+                payload={"reported_cost_usd": cost, "simulated": True},
+            )
 
         if behavior == "noop":
             final = "The repository already satisfies the requirements; no changes were necessary."

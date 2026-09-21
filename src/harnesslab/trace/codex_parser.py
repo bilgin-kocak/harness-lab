@@ -126,10 +126,20 @@ class CodexStreamParser:
         etype = obj.get("type")
         if etype == "thread.started":
             self.thread_id = obj.get("thread_id")
-            self.emit.emit(EventKind.SYSTEM, name="thread_started", source=self.source, payload={"thread_id": self.thread_id})
+            self.emit.emit(
+                EventKind.SYSTEM,
+                name="thread_started",
+                source=self.source,
+                payload={"thread_id": self.thread_id},
+            )
         elif etype == "turn.started":
             self.turns += 1
-            self.emit.emit(EventKind.SYSTEM, name="turn_started", source=self.source, payload={"turn": self.turns})
+            self.emit.emit(
+                EventKind.SYSTEM,
+                name="turn_started",
+                source=self.source,
+                payload={"turn": self.turns},
+            )
         elif etype == "turn.completed":
             raw = obj.get("usage") or {}
             usage = usage_from_codex(raw) if isinstance(raw, dict) else UsageTotals()
@@ -138,28 +148,44 @@ class CodexStreamParser:
                 EventKind.USAGE,
                 name="turn_usage",
                 source=self.source,
-                payload={**usage.model_dump(), "turn": self.turns, "raw_input_tokens": raw.get("input_tokens")},
+                payload={
+                    **usage.model_dump(),
+                    "turn": self.turns,
+                    "raw_input_tokens": raw.get("input_tokens"),
+                },
             )
         elif etype == "turn.failed":
             message = str((obj.get("error") or {}).get("message", "turn failed"))
             self.errors.append(message)
-            self.emit.emit(EventKind.ERROR, name="turn_failed", source=self.source, payload={"message": message})
+            self.emit.emit(
+                EventKind.ERROR,
+                name="turn_failed",
+                source=self.source,
+                payload={"message": message},
+            )
         elif etype == "error":
             message = str(obj.get("message", "error"))
             self.errors.append(message)
-            self.emit.emit(EventKind.ERROR, name="error", source=self.source, payload={"message": message})
+            self.emit.emit(
+                EventKind.ERROR, name="error", source=self.source, payload={"message": message}
+            )
         elif etype in ("item.started", "item.updated", "item.completed"):
             item = obj.get("item")
             if isinstance(item, dict):
                 self._handle_item(etype.split(".", 1)[1], item)
         else:
             self.unknown_records += 1
-            self.emit.emit(EventKind.SYSTEM, name="unknown_event", source=self.source, payload=safe_unknown_summary(obj, ""))
+            self.emit.emit(
+                EventKind.SYSTEM,
+                name="unknown_event",
+                source=self.source,
+                payload=safe_unknown_summary(obj, ""),
+            )
 
     def _rel(self, path: Any) -> str:
         text = str(path)
         if self.worktree and text.startswith(self.worktree):
-            return text[len(self.worktree):]
+            return text[len(self.worktree) :]
         return text
 
     def _start(self, item_id: str, item: dict[str, Any]) -> None:
@@ -178,19 +204,41 @@ class CodexStreamParser:
             if phase == "completed":
                 text = str(item.get("text", ""))
                 self.last_message = text
-                self.emit.emit(EventKind.ASSISTANT_MESSAGE, name="assistant", source=self.source, payload={"text": text})
+                self.emit.emit(
+                    EventKind.ASSISTANT_MESSAGE,
+                    name="assistant",
+                    source=self.source,
+                    payload={"text": text},
+                )
         elif itype == "reasoning":
             if phase == "completed":
                 self.reasoning_count += 1
-                self.emit.emit(EventKind.REASONING_EVENT, name="reasoning", source=self.source, payload={"count": 1})
+                self.emit.emit(
+                    EventKind.REASONING_EVENT,
+                    name="reasoning",
+                    source=self.source,
+                    payload={"count": 1},
+                )
         elif itype == "command_execution":
             command = str(item.get("command", ""))
             if phase == "started":
                 self._start(item_id, item)
-                self.emit.emit(EventKind.COMMAND_STARTED, name="shell", source=self.source, call_id=item_id, payload={"command": command})
+                self.emit.emit(
+                    EventKind.COMMAND_STARTED,
+                    name="shell",
+                    source=self.source,
+                    call_id=item_id,
+                    payload={"command": command},
+                )
             elif phase == "completed":
                 if item_id not in self._open:
-                    self.emit.emit(EventKind.COMMAND_STARTED, name="shell", source=self.source, call_id=item_id, payload={"command": command})
+                    self.emit.emit(
+                        EventKind.COMMAND_STARTED,
+                        name="shell",
+                        source=self.source,
+                        call_id=item_id,
+                        payload={"command": command},
+                    )
                 duration = self._finish_duration(item_id)
                 self.emit.emit(
                     EventKind.COMMAND_FINISHED,
@@ -207,16 +255,37 @@ class CodexStreamParser:
                 )
         elif itype == "file_change":
             changes = item.get("changes") or []
-            paths = [{"path": self._rel(c.get("path")), "kind": c.get("kind")} for c in changes if isinstance(c, dict)]
+            paths = [
+                {"path": self._rel(c.get("path")), "kind": c.get("kind")}
+                for c in changes
+                if isinstance(c, dict)
+            ]
             if phase == "started":
                 self._start(item_id, item)
-                self.emit.emit(EventKind.TOOL_STARTED, name="apply_patch", source=self.source, call_id=item_id, payload={"tool": "apply_patch", "input": {"files": paths}})
+                self.emit.emit(
+                    EventKind.TOOL_STARTED,
+                    name="apply_patch",
+                    source=self.source,
+                    call_id=item_id,
+                    payload={"tool": "apply_patch", "input": {"files": paths}},
+                )
             elif phase == "completed":
                 if item_id not in self._open:
-                    self.emit.emit(EventKind.TOOL_STARTED, name="apply_patch", source=self.source, call_id=item_id, payload={"tool": "apply_patch", "input": {"files": paths}})
+                    self.emit.emit(
+                        EventKind.TOOL_STARTED,
+                        name="apply_patch",
+                        source=self.source,
+                        call_id=item_id,
+                        payload={"tool": "apply_patch", "input": {"files": paths}},
+                    )
                 duration = self._finish_duration(item_id)
                 for change in paths:
-                    self.emit.emit(EventKind.FILE_CHANGE, name=str(change["kind"] or "update"), source=self.source, payload=change)
+                    self.emit.emit(
+                        EventKind.FILE_CHANGE,
+                        name=str(change["kind"] or "update"),
+                        source=self.source,
+                        payload=change,
+                    )
                 self.emit.emit(
                     EventKind.TOOL_FINISHED,
                     name="apply_patch",
@@ -229,10 +298,22 @@ class CodexStreamParser:
             name = f"{item.get('server', 'mcp')}.{item.get('tool', 'tool')}"
             if phase == "started":
                 self._start(item_id, item)
-                self.emit.emit(EventKind.TOOL_STARTED, name=name, source=self.source, call_id=item_id, payload={"tool": name, "input": preview(item.get("arguments"))})
+                self.emit.emit(
+                    EventKind.TOOL_STARTED,
+                    name=name,
+                    source=self.source,
+                    call_id=item_id,
+                    payload={"tool": name, "input": preview(item.get("arguments"))},
+                )
             elif phase == "completed":
                 if item_id not in self._open:
-                    self.emit.emit(EventKind.TOOL_STARTED, name=name, source=self.source, call_id=item_id, payload={"tool": name, "input": preview(item.get("arguments"))})
+                    self.emit.emit(
+                        EventKind.TOOL_STARTED,
+                        name=name,
+                        source=self.source,
+                        call_id=item_id,
+                        payload={"tool": name, "input": preview(item.get("arguments"))},
+                    )
                 duration = self._finish_duration(item_id)
                 error = item.get("error")
                 self.emit.emit(
@@ -241,29 +322,69 @@ class CodexStreamParser:
                     source=self.source,
                     call_id=item_id,
                     duration_ms=duration,
-                    payload={"tool": name, "status": item.get("status"), "output": preview(item.get("result")), "error": preview(error) if error else None},
+                    payload={
+                        "tool": name,
+                        "status": item.get("status"),
+                        "output": preview(item.get("result")),
+                        "error": preview(error) if error else None,
+                    },
                 )
         elif itype == "web_search":
             query = str(item.get("query", ""))
             if phase == "started":
                 self._start(item_id, item)
-                self.emit.emit(EventKind.TOOL_STARTED, name="web_search", source=self.source, call_id=item_id, payload={"tool": "web_search", "input": {"query": query}})
+                self.emit.emit(
+                    EventKind.TOOL_STARTED,
+                    name="web_search",
+                    source=self.source,
+                    call_id=item_id,
+                    payload={"tool": "web_search", "input": {"query": query}},
+                )
             elif phase == "completed":
                 if item_id not in self._open:
-                    self.emit.emit(EventKind.TOOL_STARTED, name="web_search", source=self.source, call_id=item_id, payload={"tool": "web_search", "input": {"query": query}})
+                    self.emit.emit(
+                        EventKind.TOOL_STARTED,
+                        name="web_search",
+                        source=self.source,
+                        call_id=item_id,
+                        payload={"tool": "web_search", "input": {"query": query}},
+                    )
                 duration = self._finish_duration(item_id)
-                self.emit.emit(EventKind.TOOL_FINISHED, name="web_search", source=self.source, call_id=item_id, duration_ms=duration, payload={"tool": "web_search", "status": "completed"})
+                self.emit.emit(
+                    EventKind.TOOL_FINISHED,
+                    name="web_search",
+                    source=self.source,
+                    call_id=item_id,
+                    duration_ms=duration,
+                    payload={"tool": "web_search", "status": "completed"},
+                )
         elif itype == "todo_list":
             if phase in ("updated", "completed"):
-                items = [{"text": preview(t.get("text"), 300), "completed": bool(t.get("completed"))} for t in (item.get("items") or []) if isinstance(t, dict)]
-                self.emit.emit(EventKind.SYSTEM, name="todo_list", source=self.source, payload={"items": items, "phase": phase})
+                items = [
+                    {"text": preview(t.get("text"), 300), "completed": bool(t.get("completed"))}
+                    for t in (item.get("items") or [])
+                    if isinstance(t, dict)
+                ]
+                self.emit.emit(
+                    EventKind.SYSTEM,
+                    name="todo_list",
+                    source=self.source,
+                    payload={"items": items, "phase": phase},
+                )
         elif itype == "error":
             message = str(item.get("message", "error"))
             self.errors.append(message)
-            self.emit.emit(EventKind.ERROR, name="item_error", source=self.source, payload={"message": message})
+            self.emit.emit(
+                EventKind.ERROR, name="item_error", source=self.source, payload={"message": message}
+            )
         else:
             self.unknown_records += 1
-            self.emit.emit(EventKind.SYSTEM, name="unknown_item", source=self.source, payload={"item_type": str(itype)[:64], "phase": phase})
+            self.emit.emit(
+                EventKind.SYSTEM,
+                name="unknown_item",
+                source=self.source,
+                payload={"item_type": str(itype)[:64], "phase": phase},
+            )
 
     # -- legacy schema -----------------------------------------------------
     def _handle_legacy(self, obj: dict[str, Any]) -> None:
@@ -273,26 +394,56 @@ class CodexStreamParser:
         if mtype == "session_configured":
             self.thread_id = msg.get("session_id")
             self.model = msg.get("model")
-            self.emit.emit(EventKind.SYSTEM, name="session_configured", source=self.source, payload={"session_id": self.thread_id, "model": self.model})
+            self.emit.emit(
+                EventKind.SYSTEM,
+                name="session_configured",
+                source=self.source,
+                payload={"session_id": self.thread_id, "model": self.model},
+            )
         elif mtype == "task_started":
             self.turns += 1
-            self.emit.emit(EventKind.SYSTEM, name="turn_started", source=self.source, payload={"turn": self.turns})
+            self.emit.emit(
+                EventKind.SYSTEM,
+                name="turn_started",
+                source=self.source,
+                payload={"turn": self.turns},
+            )
         elif mtype == "agent_message":
             text = str(msg.get("message", ""))
             self.last_message = text
-            self.emit.emit(EventKind.ASSISTANT_MESSAGE, name="assistant", source=self.source, payload={"text": text})
+            self.emit.emit(
+                EventKind.ASSISTANT_MESSAGE,
+                name="assistant",
+                source=self.source,
+                payload={"text": text},
+            )
         elif "reasoning" in mtype:
             if not mtype.endswith("_delta"):
                 self.reasoning_count += 1
-                self.emit.emit(EventKind.REASONING_EVENT, name="reasoning", source=self.source, payload={"count": 1})
+                self.emit.emit(
+                    EventKind.REASONING_EVENT,
+                    name="reasoning",
+                    source=self.source,
+                    payload={"count": 1},
+                )
         elif mtype == "exec_command_begin":
             command = msg.get("command")
-            command_text = " ".join(str(c) for c in command) if isinstance(command, list) else str(command)
+            command_text = (
+                " ".join(str(c) for c in command) if isinstance(command, list) else str(command)
+            )
             self._start(call_id, msg)
-            self.emit.emit(EventKind.COMMAND_STARTED, name="shell", source=self.source, call_id=call_id, payload={"command": command_text, "cwd": self._rel(msg.get("cwd", ""))})
+            self.emit.emit(
+                EventKind.COMMAND_STARTED,
+                name="shell",
+                source=self.source,
+                call_id=call_id,
+                payload={"command": command_text, "cwd": self._rel(msg.get("cwd", ""))},
+            )
         elif mtype == "exec_command_end":
             duration = self._finish_duration(call_id)
-            output = str(msg.get("stdout", "")) + (("\n" + str(msg.get("stderr"))) if msg.get("stderr") else "")
+            output = str(msg.get("stdout", "")) + (
+                ("\n" + str(msg.get("stderr"))) if msg.get("stderr") else ""
+            )
             self.emit.emit(
                 EventKind.COMMAND_FINISHED,
                 name="shell",
@@ -306,12 +457,24 @@ class CodexStreamParser:
             files = []
             if isinstance(changes, dict):
                 for path, change in changes.items():
-                    kind = next(iter(change.keys()), "update") if isinstance(change, dict) else "update"
+                    kind = (
+                        next(iter(change.keys()), "update")
+                        if isinstance(change, dict)
+                        else "update"
+                    )
                     files.append({"path": self._rel(path), "kind": kind})
             self._start(call_id, msg)
-            self.emit.emit(EventKind.TOOL_STARTED, name="apply_patch", source=self.source, call_id=call_id, payload={"tool": "apply_patch", "input": {"files": files}})
+            self.emit.emit(
+                EventKind.TOOL_STARTED,
+                name="apply_patch",
+                source=self.source,
+                call_id=call_id,
+                payload={"tool": "apply_patch", "input": {"files": files}},
+            )
             for f in files:
-                self.emit.emit(EventKind.FILE_CHANGE, name=str(f["kind"]), source=self.source, payload=f)
+                self.emit.emit(
+                    EventKind.FILE_CHANGE, name=str(f["kind"]), source=self.source, payload=f
+                )
         elif mtype == "patch_apply_end":
             duration = self._finish_duration(call_id)
             self.emit.emit(
@@ -320,19 +483,37 @@ class CodexStreamParser:
                 source=self.source,
                 call_id=call_id,
                 duration_ms=duration,
-                payload={"tool": "apply_patch", "status": "completed" if msg.get("success", True) else "failed", "output": preview(msg.get("stdout", ""), 1000)},
+                payload={
+                    "tool": "apply_patch",
+                    "status": "completed" if msg.get("success", True) else "failed",
+                    "output": preview(msg.get("stdout", ""), 1000),
+                },
             )
         elif mtype == "token_count":
             info = msg.get("info")
             if isinstance(info, dict) and isinstance(info.get("total_token_usage"), dict):
                 self.usage = usage_from_codex(info["total_token_usage"])  # cumulative form
                 self._legacy_cumulative_usage = True
-                last = info.get("last_token_usage") if isinstance(info.get("last_token_usage"), dict) else info["total_token_usage"]
-                self.emit.emit(EventKind.USAGE, name="token_count", source=self.source, payload={**usage_from_codex(last).model_dump(), "cumulative": True})
+                last = (
+                    info.get("last_token_usage")
+                    if isinstance(info.get("last_token_usage"), dict)
+                    else info["total_token_usage"]
+                )
+                self.emit.emit(
+                    EventKind.USAGE,
+                    name="token_count",
+                    source=self.source,
+                    payload={**usage_from_codex(last).model_dump(), "cumulative": True},
+                )
             else:
                 usage = usage_from_codex(msg)
                 self.usage = self.usage.add(usage)
-                self.emit.emit(EventKind.USAGE, name="token_count", source=self.source, payload=usage.model_dump())
+                self.emit.emit(
+                    EventKind.USAGE,
+                    name="token_count",
+                    source=self.source,
+                    payload=usage.model_dump(),
+                )
         elif mtype == "task_complete":
             last = msg.get("last_agent_message")
             if isinstance(last, str) and last:
@@ -341,7 +522,14 @@ class CodexStreamParser:
         elif mtype == "error":
             message = str(msg.get("message", "error"))
             self.errors.append(message)
-            self.emit.emit(EventKind.ERROR, name="error", source=self.source, payload={"message": message})
+            self.emit.emit(
+                EventKind.ERROR, name="error", source=self.source, payload={"message": message}
+            )
         else:
             self.unknown_records += 1
-            self.emit.emit(EventKind.SYSTEM, name="unknown_event", source=self.source, payload={"legacy_type": mtype[:64]})
+            self.emit.emit(
+                EventKind.SYSTEM,
+                name="unknown_event",
+                source=self.source,
+                payload={"legacy_type": mtype[:64]},
+            )

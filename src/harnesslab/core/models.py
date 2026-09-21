@@ -313,7 +313,9 @@ class EnvironmentSpec(BaseModel):
     hostname_hash: str | None = None
 
     @classmethod
-    def detect(cls, sandbox: str = "local-worktree", git_version: str | None = None) -> EnvironmentSpec:
+    def detect(
+        cls, sandbox: str = "local-worktree", git_version: str | None = None
+    ) -> EnvironmentSpec:
         import socket
 
         return cls(

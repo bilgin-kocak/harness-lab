@@ -33,6 +33,7 @@ from harnesslab.core.models import (
     UsageTotals,
 )
 from harnesslab.execution.process import build_child_env, run_process, shell_argv
+from harnesslab.runners._cli import redact_file_in_place
 from harnesslab.runners.base import HarnessRunner, register_runner
 
 TEXT_CAP = 20_000
@@ -152,6 +153,8 @@ class GenericCommandRunner(HarnessRunner):
             stderr_path=(self.artifacts_dir / "agent.stderr.log") if self.artifacts_dir else None,
         )
         prompt_file.unlink(missing_ok=True)
+        if self.artifacts_dir:
+            redact_file_in_place(self.artifacts_dir / "agent.stderr.log", emit.redactor)
         emit.emit(
             EventKind.COMMAND_FINISHED,
             name="harness",

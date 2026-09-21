@@ -33,6 +33,7 @@ PASSTHROUGH = [
     "FAKE_CLI_TOUCH",
     "FAKE_CLI_PROMPT_OUT",
     "FAKE_CLI_VERSION",
+    "FAKE_CLI_STDERR_SECRET",
 ]
 
 
@@ -141,6 +142,7 @@ async def test_codex_runner_end_to_end_with_fake_cli(fake_cli: Path, tmp_path: P
     monkeypatch.setenv("FAKE_CLI_STREAM", str(FIXTURES / "codex" / "exec_success.jsonl"))
     monkeypatch.setenv("FAKE_CLI_PROMPT_OUT", str(tmp_path / "prompt.txt"))
     monkeypatch.setenv("FAKE_CLI_VERSION", "codex-cli 0.99.0")
+    monkeypatch.setenv("FAKE_CLI_STDERR_SECRET", "1")
     emitter = _emitter()
     runner = CodexRunner(artifacts_dir=artifacts)
     result = await runner.run(
@@ -169,7 +171,12 @@ async def test_codex_runner_end_to_end_with_fake_cli(fake_cli: Path, tmp_path: P
         and "sk-proj-abcdefghijklmnopqrstuvwxyz" not in sanitized
         and sanitized.count("\n") >= 15
     )
-    assert (artifacts / "agent.stderr.log").read_text().strip() == "fake cli finished"
+    stderr_log = (artifacts / "agent.stderr.log").read_text()
+    assert (
+        stderr_log.startswith("fake cli finished")
+        and "ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ab" not in stderr_log
+        and "[REDACTED:github_token]" in stderr_log
+    )
     launch = next(e for e in emitter.events if e.name == "harness_launch")
     assert launch.payload["argv"][1:3] == ["exec", "--json"]
     assert emitter.count(EventKind.COMMAND_STARTED) == 2

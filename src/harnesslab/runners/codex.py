@@ -32,7 +32,12 @@ from typing import Any
 from harnesslab.core.events import EventEmitter, EventKind
 from harnesslab.core.models import Availability, RunnerConfig, RunnerResult, RunStatus, TaskSpec
 from harnesslab.execution.process import build_child_env, run_process
-from harnesslab.runners._cli import SanitizedStreamWriter, option_list, probe_cli
+from harnesslab.runners._cli import (
+    SanitizedStreamWriter,
+    option_list,
+    probe_cli,
+    redact_file_in_place,
+)
 from harnesslab.runners.base import HarnessRunner, register_runner
 from harnesslab.trace.codex_parser import CodexStreamParser
 
@@ -149,6 +154,9 @@ class CodexRunner(HarnessRunner):
             )
         finally:
             stream.close()
+        if artifacts:
+            redact_file_in_place(artifacts / "agent.stderr.log", emit.redactor)
+            redact_file_in_place(last_message_path, emit.redactor)
 
         final_message = parser.last_message
         if last_message_path is not None and last_message_path.exists():

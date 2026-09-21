@@ -41,7 +41,12 @@ from typing import Any
 from harnesslab.core.events import EventEmitter, EventKind
 from harnesslab.core.models import Availability, RunnerConfig, RunnerResult, RunStatus, TaskSpec
 from harnesslab.execution.process import build_child_env, run_process
-from harnesslab.runners._cli import SanitizedStreamWriter, option_list, probe_cli
+from harnesslab.runners._cli import (
+    SanitizedStreamWriter,
+    option_list,
+    probe_cli,
+    redact_file_in_place,
+)
 from harnesslab.runners.base import HarnessRunner, register_runner
 from harnesslab.trace.claude_parser import ClaudeStreamParser
 
@@ -220,6 +225,8 @@ class ClaudeCodeRunner(HarnessRunner):
             )
         finally:
             stream.close()
+        if artifacts:
+            redact_file_in_place(artifacts / "agent.stderr.log", emit.redactor)
 
         metadata: dict[str, Any] = {
             "result_subtype": parser.result_subtype,

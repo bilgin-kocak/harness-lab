@@ -65,6 +65,8 @@ def main() -> int:
         with open(path, "w", encoding="utf-8") as fh:
             fh.write("final message from -o file\n")
     sys.stderr.write("fake cli finished\n")
+    if os.environ.get("FAKE_CLI_STDERR_SECRET"):
+        sys.stderr.write("leaked token ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ab\n")
     return int(os.environ.get("FAKE_CLI_EXIT", "0"))
 
 

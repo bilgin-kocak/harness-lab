@@ -374,7 +374,9 @@ class ExperimentService:
             if status in (RunStatus.PENDING, RunStatus.RUNNING):
                 status = RunStatus.COMPLETED
             outcome = verifier_result.outcome if verifier_result else Outcome.NOT_VERIFIED
-            error = error or runner_result.error
+            error = self.redactor.redact_text(error or runner_result.error or "") or None
+            if runner_result.final_message:
+                runner_result.final_message = self.redactor.redact_text(runner_result.final_message)
             emitter.emit(
                 EventKind.RUN_FINISHED,
                 duration_ms=int(wall_seconds * 1000),

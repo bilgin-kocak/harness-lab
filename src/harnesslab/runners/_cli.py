@@ -89,3 +89,27 @@ def option_list(value: Any) -> list[str]:
     if isinstance(value, str):
         return [v for v in value.replace(",", " ").split() if v]
     return [str(v) for v in value]
+
+
+def redact_file_in_place(
+    path: Path | None, redactor: Redactor | None = None, cap_bytes: int = 2_000_000
+) -> None:
+    """Rewrite a file a child process produced (stderr log, last-message file) through the redactor.
+
+    Files larger than ``cap_bytes`` keep only their tail so a runaway log cannot fill the disk.
+    """
+    if path is None or not path.exists():
+        return
+    redactor = redactor or default_redactor()
+    try:
+        data = path.read_bytes()
+    except OSError:
+        return
+    truncated = len(data) > cap_bytes
+    if truncated:
+        data = data[-cap_bytes:]
+    text = data.decode("utf-8", errors="replace")
+    out = redactor.redact_text(text)
+    if truncated:
+        out = f"[truncated to the last {cap_bytes} bytes]\n" + out
+    path.write_text(out, encoding="utf-8")

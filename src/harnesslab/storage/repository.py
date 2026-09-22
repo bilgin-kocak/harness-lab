@@ -77,6 +77,18 @@ class Repository:
             )
         return exp_id
 
+    def skip_run(self, run_id: str, reason: str) -> None:
+        """Mark a run that never started (e.g. sweep budget exhausted)."""
+        with self.db.session() as s:
+            row = s.get(RunRow, run_id)
+            if row is None:
+                raise KeyError(run_id)
+            row.status = RunStatus.SKIPPED.value
+            row.outcome = "not_verified"
+            row.finished_at = utcnow()
+            row.error_message = reason
+            row.metrics_json = RunMetrics().model_dump(mode="json")
+
     def finish_experiment(self, exp_id: str, status: str = "completed") -> None:
         with self.db.session() as s:
             row = s.get(ExperimentRow, exp_id)
@@ -104,6 +116,7 @@ class Repository:
                     tool_policy_json=variant.tool_policy,
                     config_json=config.model_dump(mode="json"),
                     config_hash=config.config_hash(),
+                    factors_json=variant.factors,
                 )
             )
         return vid

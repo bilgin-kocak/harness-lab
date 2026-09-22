@@ -42,6 +42,8 @@ and every trace is stored in one provider-neutral schema.
 - [Running the fake demo](#running-the-fake-demo)
 - [Running Codex](#running-codex)
 - [Running Claude Code](#running-claude-code)
+- [Test your own harness in five minutes](#test-your-own-harness-in-five-minutes)
+- [Configuration sweeps: the cheapest verified configuration](#configuration-sweeps-the-cheapest-verified-configuration)
 - [Creating a task suite](#creating-a-task-suite)
 - [Creating a harness variant](#creating-a-harness-variant)
 - [Interpreting metrics](#interpreting-metrics)
@@ -152,46 +154,57 @@ Everything lives under one directory (default `./.harnesslab`, override with `HA
 
 ## Installation
 
-Requirements: Python 3.12+, git 2.20+, [uv](https://docs.astral.sh/uv/) (recommended).
+Requirements: Python 3.12+, git 2.20+, Linux or macOS (Windows: use WSL).
+
+```bash
+pip install harnesslab            # or: pipx install harnesslab  /  uv tool install harnesslab
+harnesslab doctor
+```
+
+`doctor` reports Python, git, the Codex and Claude Code CLIs (missing CLIs are a warning, not an
+error), `uv` and the database. Nothing else is needed for the demo: the fake runner works without any
+API keys.
+
+Developing Harness Lab itself:
 
 ```bash
 git clone https://github.com/bilgin-kocak/harness-lab
 cd harness-lab
-uv sync
+uv sync                           # or: pip install -e '.[dev]'
+uv run pytest
 uv run harnesslab doctor
 ```
-
-`doctor` reports Python, git, the Codex and Claude Code CLIs (missing CLIs are a warning, not an
-error), `uv` and the database. Without `uv`: `python3.12 -m venv .venv && . .venv/bin/activate &&
-pip install -e '.[dev]'`.
 
 ## Quickstart
 
 ```bash
-uv sync
-uv run harnesslab doctor
-uv run harnesslab suite list suites/demo/suite.yaml
-uv run harnesslab run suites/demo/suite.yaml --variants fake-reference,fake-noop
-uv run harnesslab serve
-# open http://localhost:8000
+harnesslab doctor
+harnesslab run demo --variants fake-reference,fake-noop      # bundled demo suite, no credentials needed
+harnesslab serve                                             # open http://localhost:8000
 ```
 
-Other commands:
+`harnesslab run demo` runs the three bundled tasks against two fake agents (one applies a known solution,
+one changes nothing but claims success) so you can see the verifier, the matrix and the run pages
+before spending a single token. Then:
 
 ```bash
-uv run harnesslab suite check suites/demo/suite.yaml       # verifier sanity: reference passes, untouched fails
-uv run harnesslab experiment list
-uv run harnesslab experiment show <experiment-id>           # terminal matrix + aggregates + runs
-uv run harnesslab experiment export <experiment-id> > experiment.json
-uv run harnesslab run suites/demo/experiments/baseline.yaml # experiment YAML instead of suite YAML
-uv run harnesslab run suites/demo/suite.yaml --variants fake-reference --repetitions 3 --parallelism 2
-uv run pytest                                               # full test suite (no API access needed)
+harnesslab init my-lab && cd my-lab           # copies the demo suite + sweep templates so you can edit them
+harnesslab suite check suites/demo/suite.yaml # verifiers fail on the untouched repo, pass with the reference solution
+harnesslab run suites/demo/suite.yaml --variants claude-default      # real harness (needs the claude CLI)
+harnesslab sweep run sweeps/demo-fake.yaml    # cheapest verified configuration, fake runner, seconds
+harnesslab experiment list
+harnesslab experiment show <experiment-id>
+harnesslab experiment export <experiment-id> > experiment.json
+python -m harnesslab --help
 ```
+
+All state (SQLite database, worktrees, artifacts) lives in `./.harnesslab` (override with
+`HARNESSLAB_HOME` or `--home`).
 
 ## Running the fake demo
 
-The demo suite (`suites/demo`) targets `ledgerlite`, a tiny standard-library Python package,
-with three tasks:
+The bundled demo suite (`harnesslab run demo`, or `suites/demo` after `harnesslab init`) targets
+`ledgerlite`, a tiny standard-library Python package, with three tasks:
 
 | Task | Kind | Hidden verifier checks |
 | --- | --- | --- |
@@ -199,7 +212,7 @@ with three tasks:
 | `add-tag-budgets` | feature across two modules | budget maths on unseen data (income ignored, multi-tag entries, exact limits), exact report formatting; partial score = fraction of hidden tests |
 | `consolidate-money-formatting` | refactor with invariant | byte-identical golden output *and* a single formatting implementation (`report.py` no longer defines its own) |
 
-Hidden tests live in `suites/demo/tasks/<task>/verify/` and are copied into the worktree only
+Hidden tests live in `tasks/<task>/verify/` next to each task and are copied into the worktree only
 when the verifier runs; visible tests are `protected_paths`, so an agent that edits them fails.
 
 The fake runner (`runner: fake`) needs no credentials. `fake-reference` applies each task's
@@ -208,8 +221,8 @@ it), `fake-partial` solves one task. Other behaviours: `partial`, `fail` (a conf
 edit), `crash`, `timeout`. The whole dashboard can be explored with fake data:
 
 ```bash
-uv run harnesslab run suites/demo/suite.yaml --variants fake-reference,fake-noop,fake-partial --parallelism 3
-uv run harnesslab serve
+harnesslab run demo --variants fake-reference,fake-noop,fake-partial --parallelism 3
+harnesslab serve
 ```
 
 ## Running Codex
@@ -218,8 +231,8 @@ Requires the [OpenAI Codex CLI](https://github.com/openai/codex) on `PATH` and i
 (`OPENAI_API_KEY` or a `codex login`; `CODEX_HOME` is forwarded).
 
 ```bash
-uv run harnesslab doctor                      # shows "codex cli ok <version>"
-uv run harnesslab run suites/demo/suite.yaml --variants codex-default
+harnesslab doctor                      # shows "codex cli ok <version>"
+harnesslab run demo --variants codex-default
 ```
 
 The adapter runs `codex exec --json --full-auto --sandbox workspace-write --skip-git-repo-check
@@ -233,12 +246,13 @@ is also understood. Codex does not report cost, so `reported_cost_usd` stays `nu
 
 Variant options: `model`, `sandbox` (`workspace-write` default, `read-only`, or the explicit
 opt-in `danger-full-access`), `network_access` (default `false`), `reasoning_effort`, `profile`,
-`config_overrides` (`-c key=value`), `extra_args`, `env_passthrough`, `executable`.
+`config_overrides` (`-c key=value`, e.g. a compaction limit), `action_policy` (prepended to the
+prompt), `extra_args`, `env_passthrough`, `executable`.
 
 Codex is not installed in the environment where this MVP was built, so the adapter is verified
 against recorded JSONL fixtures (`tests/fixtures/codex/`) and against a stand-in executable that
 replays them through the real adapter code (`tests/test_adapters.py`). To exercise the real CLI:
-`HARNESSLAB_INTEGRATION=1 uv run pytest tests/test_integration_real.py`.
+`HARNESSLAB_INTEGRATION=1 uv run pytest tests/test_integration_real.py` (from a clone).
 
 ## Running Claude Code
 
@@ -247,8 +261,8 @@ either `ANTHROPIC_API_KEY` / `CLAUDE_CODE_OAUTH_TOKEN` in the environment or a c
 `claude auth login` (Bedrock/Vertex variables are forwarded too).
 
 ```bash
-uv run harnesslab doctor                      # shows "claude cli ok 2.x.y"
-uv run harnesslab run suites/demo/suite.yaml --variants claude-default
+harnesslab doctor                      # shows "claude cli ok 2.x.y"
+harnesslab run demo --variants claude-default
 ```
 
 The adapter runs `claude -p --output-format stream-json --verbose --max-turns 30
@@ -272,15 +286,149 @@ per run, and a run that ends unsuccessfully after denials is marked `blocked` ra
 
 Variant options: `model`, `max_turns`, `permission_mode`, `allowed_tools`, `disallowed_tools`,
 `tools`, `max_budget_usd`, `bare` (skips hooks/CLAUDE.md/plugins; requires an API key),
-`setting_sources`, `append_system_prompt`, `effort`, `extra_args`, `env_passthrough`,
-`executable`.
+`setting_sources`, `append_system_prompt`, `effort` (alias `reasoning_effort`), `autocompact`
+(`--autocompact auto|100k…`), `action_policy` (`batched`, `fine` or free text appended to the system
+prompt), `extra_args`, `env_passthrough`, `executable`.
+
+## Test your own harness in five minutes
+
+Three routes, from zero code to a distributable plugin.
+
+**1. YAML only: wrap a command.** Any CLI that takes a prompt and edits files in its working
+directory can be benchmarked with the generic runner:
+
+```yaml
+# my-suite.yaml (or a variant inside any suite)
+variants:
+  - id: my-agent
+    runner: generic
+    command: "my-agent --repo {worktree} --model {model} --effort {opt_effort}"
+    effort: high                # every option is available as {opt_<name>}
+    prompt_via: stdin           # stdin | file ({prompt_file}) | arg ({prompt})
+    output_format: text         # or jsonl (see below)
+    env_passthrough: [MY_AGENT_API_KEY]
+```
+
+```bash
+harnesslab run my-suite.yaml --variants my-agent
+```
+
+With `output_format: jsonl`, any stdout line shaped like
+`{"kind": "tool_started", "call_id": "1", "name": "edit", "payload": {...}}` (kinds:
+`assistant_message`, `tool_started`, `tool_finished`, `command_started`, `command_finished`,
+`file_change`, `usage`, `error`, `reasoning_event`) becomes a normalized event and shows up in the
+timeline and metrics; `usage` lines feed token totals. Everything else is captured as text.
+
+**2. A Python module: a real adapter.** Subclass `HarnessRunner`, emit normalized events, and point
+Harness Lab at the module:
+
+```python
+# my_harness.py  (anywhere on PYTHONPATH)
+from harnesslab.api import EventKind, HarnessRunner, RunnerResult, RunStatus, UsageTotals, register_runner
+from harnesslab.api import build_child_env, run_process
+
+@register_runner
+class MyHarness(HarnessRunner):
+    name = "my-harness"
+
+    async def run(self, task, worktree, config, emit):
+        emit.emit(EventKind.COMMAND_STARTED, call_id="1", payload={"command": "my-agent"})
+        proc = await run_process(["my-agent", "--prompt", task.prompt], cwd=worktree,
+                                 env=build_child_env(include_auth=True), timeout=task.limits.agent_timeout_seconds)
+        emit.emit(EventKind.COMMAND_FINISHED, call_id="1", duration_ms=proc.duration_ms, payload={"exit_code": proc.exit_code})
+        return RunnerResult(status=RunStatus.TIMEOUT if proc.timed_out else RunStatus.COMPLETED,
+                            exit_code=proc.exit_code, final_message=proc.stdout[-2000:], usage=UsageTotals())
+```
+
+```yaml
+# suite.yaml / experiment.yaml / sweep.yaml
+plugins: [my_harness]
+variants:
+  - id: mine
+    runner: my-harness
+```
+
+or `harnesslab run my-suite.yaml --plugin my_harness --variants mine`. Options on the variant
+arrive as `config.options`; `config.model` carries the model.
+
+**3. A package: entry point.** Distribute the adapter and let `pip install` register it:
+
+```toml
+[project.entry-points."harnesslab.runners"]
+my-harness = "my_package.harness:MyHarness"
+```
+
+In all three cases the verifier, worktree isolation, redaction, metrics, dashboard and sweeps work
+unchanged. The Codex and Claude adapters (`src/harnesslab/runners/`) are the reference
+implementations.
+
+## Configuration sweeps: the cheapest verified configuration
+
+Models are increasingly tuned for particular action styles and runtimes. A sweep tests
+`model × reasoning effort × toolset × compaction × action policy` (any factors you like) on a
+workload and reports the **cheapest configuration that still passes verification**:
+
+```yaml
+# sweeps/claude-config-search.yaml (bundled template; harnesslab init copies it)
+name: claude-config-search
+suite: demo
+base_variant: { runner: claude, max_turns: 30 }
+factors:
+  model: [claude-haiku-4-5, claude-sonnet-5]
+  reasoning_effort: [low, high]                       # --effort
+  toolset:
+    minimal: { allowed_tools: [Read, Edit, "Bash(python *)"] }
+    full:    { allowed_tools: [Read, Edit, Write, MultiEdit, Glob, Grep, LS, "Bash(python *)", "Bash(git diff *)"] }
+  compaction:
+    default: {}
+    tight:   { autocompact: 100k }                     # --autocompact
+  action_granularity:
+    batched: { action_policy: batched }                # appended system prompt
+    fine:    { action_policy: fine }
+repetitions: 2                 # "verified" means the pass-rate requirement holds over repetitions
+workload_by: suite             # suite | task | tag  -> one recommendation per workload
+holdout_tasks: [consolidate-money-formatting]   # selected on the other tasks, reported on these
+sample: { max_configs: 8, seed: 7 }             # random subset of the 32-configuration grid
+budget: { max_runs: 60, max_cost_usd: 15 }      # remaining runs are recorded as "skipped"
+objective:
+  require: { min_pass_rate: 1.0 }               # also min_valid_runs (default: every planned run)
+  minimize: cost               # reported cost -> pricing.yaml estimate -> total tokens
+  tie_breaker: wall_time_seconds
+```
+
+```bash
+harnesslab sweep run sweeps/demo-fake.yaml           # fake runner: seconds, no credentials
+harnesslab sweep run sweeps/claude-config-search.yaml --dry-run   # print the expanded grid
+harnesslab sweep run sweeps/claude-config-search.yaml             # real API usage!
+harnesslab sweep report <experiment-id>              # recompute from the database
+```
+
+The report (terminal, dashboard and JSON export) contains, per workload: the recommended
+configuration, the runner-up, its holdout pass rate, every configuration with its eligibility
+reason, the pass-rate/cost Pareto front, and **factor effects** (marginal mean pass rate and median
+cost per factor level), which is the component-ablation view. A sweep is an ordinary experiment
+whose variants carry `factors`, so `experiment show`, the compare view and the export work on it too.
+
+Honest limits:
+
+- **Action granularity** cannot be switched inside closed CLI harnesses. `action_policy` steers it
+  through an appended system prompt (Claude Code) or a prompt prefix (Codex), and the *realized*
+  granularity is measured per run (`tool_calls_per_turn`, `mean_command_chars`,
+  `edits_per_changed_file`). Compaction and effort are real flags for Claude Code; for Codex use
+  `reasoning_effort` and `config_overrides`.
+- Cost is only reported by Claude Code. Give Codex or custom harnesses a `pricing.yaml` for
+  estimates; otherwise sweeps rank by total tokens and say so.
+- Grids explode: use `sample`, `budget`, `tasks:` and `holdout_tasks`. Smarter search (successive
+  halving, Bayesian) is on the roadmap.
 
 ## Creating a task suite
 
-A suite is a YAML file listing task files and (optionally) variants:
+Run `harnesslab init my-lab` to get an editable copy of the demo suite. A suite is a YAML file
+listing task files and (optionally) variants and plugin modules:
 
 ```yaml
 name: my-suite
+plugins: []                    # python modules registering custom runners
 tasks:
   - tasks/add-health-endpoint.yaml
 variants:
@@ -462,10 +610,11 @@ Phase 2 builds on this substrate (nothing below is implemented yet):
 
 - **Container isolation** (`DockerSandbox`): run harness CLIs inside containers with an executor
   abstraction so hidden tests and the host are unreachable.
+- **Smarter configuration search**: successive halving / Bayesian search over sweep grids,
+  per-runner concurrency limits, cost-aware early stopping.
 - **Harness Autotuner / Skill A/B lab**: candidate harness mutation → cheap diagnostic suite →
   full hidden regression suite → cost/latency comparison → promote or reject.
-- **Model × Harness matrix experiments** and controlled component ablations (context policy,
-  planning policy, action space) as first-class experiment designs.
+- **Native Windows support** (process groups and worktree cleanup are POSIX-only today; WSL works).
 - **Agent causal debugger / delta replay**: replay a trace, locate the first divergence between a
   passing and a failing run, counterfactual interventions on stable event ids.
 - **Failure clustering** over normalized traces and verifier output.
@@ -474,6 +623,18 @@ Phase 2 builds on this substrate (nothing below is implemented yet):
 
 Not in scope by design: prompt optimization, RL, LLM judges, accounts, teams, billing,
 distributed workers, Kubernetes, vector databases, model routing.
+
+## Releasing (maintainers)
+
+```bash
+uv sync && uv run pytest && uv run ruff check src tests
+uv build && uv run twine check dist/*
+uv publish                     # needs a PyPI token, or:
+git tag v0.1.0 && git push origin v0.1.0   # the release workflow publishes via PyPI trusted publishing
+```
+
+One-time setup for the workflow: on pypi.org add a *trusted publisher* for
+`bilgin-kocak/harness-lab`, workflow `release.yml`, environment `pypi`.
 
 ## License
 

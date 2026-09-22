@@ -67,3 +67,5 @@ pre.diff { background: #fbfbfc; color: var(--ink); border: 1px solid var(--line)
 .compare-form { display: flex; gap: 16px; align-items: center; margin: 10px 0 16px; } .compare-form select { padding: 4px 8px; font-size: 14px; }
 td.better { color: var(--pass); font-weight: 600; } td.worse { color: var(--fail); font-weight: 600; }
 ul.artifacts { padding-left: 18px; }
+
+.sweep details { margin: 8px 0; } .sweep summary { cursor: pointer; padding: 6px 0; } tr.eligible td { background: #f0fdf4; }

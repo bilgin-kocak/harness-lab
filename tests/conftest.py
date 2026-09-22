@@ -13,7 +13,7 @@ from harnesslab.storage.database import Database
 
 ROOT = Path(__file__).resolve().parent.parent
 FIXTURES = Path(__file__).resolve().parent / "fixtures"
-DEMO_SUITE = ROOT / "suites" / "demo" / "suite.yaml"
+DEMO_SUITE = ROOT / "src" / "harnesslab" / "bundled" / "suites" / "demo" / "suite.yaml"
 FAKE_CLI = Path(__file__).resolve().parent / "fake_clis" / "fake_cli.py"
 
 

@@ -6,7 +6,7 @@ from pathlib import Path
 from typer.testing import CliRunner
 
 from harnesslab.cli import app
-from tests.conftest import DEMO_SUITE, ROOT
+from tests.conftest import DEMO_SUITE
 
 runner = CliRunner()
 
@@ -98,7 +98,7 @@ def test_run_accepts_experiment_yaml(tmp_path: Path):
         app,
         [
             "run",
-            str(ROOT / "suites" / "demo" / "experiments" / "baseline.yaml"),
+            str(DEMO_SUITE.parent / "experiments" / "baseline.yaml"),
             "--tasks",
             "fix-month-boundary",
         ],

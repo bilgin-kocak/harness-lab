@@ -82,12 +82,28 @@ class GenericCommandRunner(HarnessRunner):
         output_format = str(config.get("output_format", "text"))
         prompt_file = worktree.parent / f"{emit.run_id}.prompt.txt"
         prompt_file.write_text(task.prompt, encoding="utf-8")
-        command = str(template).format(
-            worktree=shlex.quote(str(worktree)),
-            model=shlex.quote(config.model or ""),
-            prompt_file=shlex.quote(str(prompt_file)),
-            prompt=shlex.quote(task.prompt) if prompt_via == "arg" else "",
-        )
+        placeholders = {
+            "worktree": shlex.quote(str(worktree)),
+            "model": shlex.quote(config.model or ""),
+            "prompt_file": shlex.quote(str(prompt_file)),
+            "prompt": shlex.quote(task.prompt) if prompt_via == "arg" else "",
+            "task_id": shlex.quote(task.id),
+        }
+        # Every runner option is available as {opt_<name>} (shell-quoted), so sweep factors
+        # and variant settings can be forwarded to a custom harness command line.
+        for key, value in config.options.items():
+            placeholders[f"opt_{key}"] = (
+                shlex.quote(str(value))
+                if not isinstance(value, (list, dict))
+                else shlex.quote(json.dumps(value))
+            )
+        try:
+            command = str(template).format(**placeholders)
+        except (KeyError, IndexError, ValueError) as exc:
+            msg = f"invalid command template {template!r}: unknown placeholder {exc}"
+            emit.emit(EventKind.ERROR, name="config", payload={"message": msg})
+            prompt_file.unlink(missing_ok=True)
+            return RunnerResult(status=RunStatus.CRASHED, error=msg)
         stdin_text = task.prompt if prompt_via == "stdin" else None
 
         usage = UsageTotals()

@@ -72,6 +72,7 @@ class VariantAggregate(BaseModel):
     n_failed: int = 0
     n_not_verified: int = 0
     n_infra_failures: int = 0  # timeout / crashed / unavailable / blocked / interrupted
+    n_skipped: int = 0  # never started (sweep budget)
     success_rate: float | None = None
     score: Stat = Field(default_factory=Stat)
     wall_time_seconds: Stat = Field(default_factory=Stat)
@@ -106,6 +107,7 @@ def aggregate_variant(variant_key: str, samples: list[RunSample]) -> VariantAggr
         n_failed=len(valid) - len(passed),
         n_not_verified=len(samples) - len(valid),
         n_infra_failures=sum(1 for s in samples if s.status in INFRA_FAILURE_STATUSES),
+        n_skipped=sum(1 for s in samples if s.status == RunStatus.SKIPPED.value),
         success_rate=(len(passed) / len(valid)) if valid else None,
         score=describe([s.verified_score for s in valid]),
         wall_time_seconds=describe([s.wall_time_seconds for s in samples]),

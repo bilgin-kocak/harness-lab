@@ -14,6 +14,7 @@ from harnesslab.experiments.aggregate import (
     samples_from_rows,
 )
 from harnesslab.experiments.export import export_experiment
+from harnesslab.experiments.sweep import report_for_experiment
 from harnesslab.storage.repository import Repository
 from harnesslab.web.timeline import build_timeline
 
@@ -51,6 +52,10 @@ def _experiment_context(repo: Repository, exp_ref: str) -> dict[str, Any]:
         "runs_by_id": {r.id: r for r in exp.runs},
         "tasks_by_id": tasks_by_id,
         "variants_by_id": variants_by_id,
+        "sweep_report": report_for_experiment(exp),
+        "factors_by_variant": {
+            v.variant_key: v.factors_json for v in exp.variants if v.factors_json
+        },
     }
 
 

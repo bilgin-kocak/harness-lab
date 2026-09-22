@@ -17,6 +17,7 @@ Options::
     full_auto: true                      -> --full-auto (ignored when sandbox is read-only)
     network_access: false                -> -c sandbox_workspace_write.network_access=<bool>
     reasoning_effort: null               -> -c model_reasoning_effort=<value>
+    action_policy: null                  -> batched|fine|<free text>, prepended to the prompt
     config_overrides: {key: value}       -> -c key=value ...
     profile: null                        -> --profile <name>
     extra_args: []
@@ -25,6 +26,7 @@ Options::
 
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 from typing import Any
@@ -39,6 +41,7 @@ from harnesslab.runners._cli import (
     redact_file_in_place,
 )
 from harnesslab.runners.base import HarnessRunner, register_runner
+from harnesslab.runners.policies import action_policy_text
 from harnesslab.trace.codex_parser import CodexStreamParser
 
 SANDBOX_MODES = {"workspace-write", "read-only", "danger-full-access"}
@@ -119,6 +122,8 @@ class CodexRunner(HarnessRunner):
             emit.emit(EventKind.ERROR, name="config", payload={"message": str(exc)})
             return RunnerResult(status=RunStatus.CRASHED, error=str(exc))
 
+        policy = action_policy_text(config.get("action_policy"))
+        prompt = f"{policy}\n\n{task.prompt}" if policy else task.prompt
         parser = CodexStreamParser(emit, worktree=str(worktree))
         stream = SanitizedStreamWriter(
             (artifacts / "agent_stream.sanitized.jsonl") if artifacts else None, emit.redactor
@@ -129,6 +134,9 @@ class CodexRunner(HarnessRunner):
             payload={
                 "argv": [a if not a.startswith("/") else Path(a).name for a in argv[:1]] + argv[1:],
                 "cli_version": availability.version,
+                "prompt_prefix_hash": hashlib.sha256(policy.encode()).hexdigest()[:16]
+                if policy
+                else None,
             },
         )
 
@@ -148,7 +156,7 @@ class CodexRunner(HarnessRunner):
                 cwd=worktree,
                 env=env,
                 timeout=task.limits.agent_timeout_seconds,
-                stdin_text=task.prompt,
+                stdin_text=prompt,
                 on_stdout_line=on_line,
                 stderr_path=(artifacts / "agent.stderr.log") if artifacts else None,
             )

@@ -1,0 +1,22 @@
+# Configuration sweep on the fake runner: runs in seconds, needs no API keys.
+# Demonstrates "cheapest verified configuration": only behavior=solve passes the verifier,
+# and among the passing configurations the cheapest simulated cost wins.
+name: demo-fake-sweep
+suite: demo
+base_variant:
+  runner: fake
+factors:
+  behavior: [solve, partial]
+  cost:
+    cheap: { simulate_cost_usd_per_1k_tokens: 0.001 }
+    pricey: { simulate_cost_usd_per_1k_tokens: 0.01 }
+  granularity:
+    batched: { action_policy: batched }
+    fine: { action_policy: fine, simulate_token_multiplier: 1.5 }
+repetitions: 2
+parallelism: 3
+workload_by: task
+objective:
+  require: { min_pass_rate: 1.0 }
+  minimize: cost
+  tie_breaker: wall_time_seconds

@@ -35,6 +35,11 @@ def compute_metrics(
             if event.payload.get("status") == "interrupted":
                 unfinished += 1
     unfinished = max(unfinished, len(started_calls - finished_calls))
+    command_lengths = [
+        len(str(e.payload.get("command", "")))
+        for e in events
+        if e.kind == EventKind.COMMAND_STARTED and e.payload.get("command")
+    ]
 
     usage = runner_result.usage
     estimated = None
@@ -77,4 +82,13 @@ def compute_metrics(
         verifier_exit_code=verifier_result.exit_code if verifier_result else None,
         events_total=len(events),
     )
+    tool_calls = metrics.tool_calls
+    if runner_result.num_turns:
+        metrics.tool_calls_per_turn = round(tool_calls / runner_result.num_turns, 3)
+    if command_lengths:
+        metrics.mean_command_chars = round(sum(command_lengths) / len(command_lengths), 1)
+    if metrics.files_changed:
+        metrics.edits_per_changed_file = round(
+            metrics.file_change_events / metrics.files_changed, 3
+        )
     return metrics

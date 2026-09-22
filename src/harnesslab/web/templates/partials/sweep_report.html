@@ -1,0 +1,62 @@
+{% set sr = sweep_report %}
+{% set kind = sr.objective_kind %}
+<section class="sweep">
+  <h2>Cheapest verified configuration
+    <span class="muted small">sweep · minimize <strong>{{ kind }}</strong> subject to verified pass rate ≥ {{ sr.min_pass_rate|pct }} · {{ sr.n_configs }} configurations · {{ sr.n_runs }} runs{% if sr.n_skipped %} · {{ sr.n_skipped }} skipped by budget{% endif %}</span>
+  </h2>
+  {% for note in sr.notes %}<p class="muted small">{{ note }}</p>{% endfor %}
+  <div class="cards">
+  {% for w in sr.workloads %}
+    <div class="card metric">
+      <div class="label">workload: {{ w.workload }} <span class="muted">({{ w.kind }})</span></div>
+      {% if w.recommended %}
+        <div class="value badge-pass">{{ w.recommended.variant_key }}</div>
+        <div class="sub">pass {{ w.recommended.pass_rate|pct }} ({{ w.recommended.n_passed }}/{{ w.recommended.n_valid }}) ·
+          {% if kind.endswith("cost_usd") %}{{ w.recommended.objective|cost }}{% elif kind == "wall_time_seconds" %}{{ w.recommended.objective|seconds }}{% else %}{{ w.recommended.objective|int }} tokens{% endif %}
+          · tokens {{ w.recommended.median_tokens|int }} · {{ w.recommended.median_wall_time|seconds }}</div>
+        {% if w.runner_up %}<div class="sub">runner-up: {{ w.runner_up.variant_key }}</div>{% endif %}
+        {% if w.holdout %}<div class="sub">holdout ({{ w.holdout.task_keys|join(", ") }}): pass {{ w.holdout.pass_rate|pct }} over {{ w.holdout.n_valid }} runs</div>{% endif %}
+      {% else %}
+        <div class="value badge-fail">none eligible</div>
+        <div class="sub">no configuration met the requirement{% if w.best_effort %} · best effort {{ w.best_effort.variant_key }} at {{ w.best_effort.pass_rate|pct }}{% endif %}</div>
+      {% endif %}
+    </div>
+  {% endfor %}
+  </div>
+  {% for w in sr.workloads %}
+  <details {% if loop.first %}open{% endif %}>
+    <summary><strong>{{ w.workload }}</strong> <span class="muted small">{{ w.configs|length }} configurations · ✔ eligible · ◆ Pareto front (pass rate vs {{ kind }})</span></summary>
+    <table class="data compact">
+      <thead><tr><th></th><th>configuration</th>{% for f in sr.factor_effects|map(attribute="factor")|unique %}<th>{{ f }}</th>{% endfor %}<th class="num">pass</th><th class="num">valid</th><th class="num">{{ kind }}</th><th class="num">tokens</th><th class="num">wall</th><th class="num">tools</th><th class="num">files</th><th>note</th></tr></thead>
+      <tbody>
+      {% for c in w.configs %}
+        <tr class="{% if c.eligible %}eligible{% endif %}">
+          <td>{% if c.eligible %}<span class="badge badge-pass">✔</span>{% elif c.variant_key in w.pareto %}<span class="badge badge-warn">◆</span>{% endif %}</td>
+          <td class="mono small">{{ c.variant_key }}</td>
+          {% for f in sr.factor_effects|map(attribute="factor")|unique %}<td>{{ c.factors.get(f, "") }}</td>{% endfor %}
+          <td class="num">{{ c.pass_rate|pct }}</td>
+          <td class="num">{{ c.n_valid }}/{{ c.n_total }}</td>
+          <td class="num">{% if kind.endswith("cost_usd") %}{{ c.objective|cost }}{% elif kind == "wall_time_seconds" %}{{ c.objective|seconds }}{% else %}{{ c.objective|int }}{% endif %}</td>
+          <td class="num">{{ c.median_tokens|int }}</td>
+          <td class="num">{{ c.median_wall_time|seconds }}</td>
+          <td class="num">{{ c.median_tool_calls|int }}</td>
+          <td class="num">{{ c.median_files_changed|int }}</td>
+          <td class="small muted">{{ c.reason or "" }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </details>
+  {% endfor %}
+  {% if sr.factor_effects %}
+  <h3 class="small muted">Factor effects (marginal means over configurations)</h3>
+  <table class="data compact">
+    <thead><tr><th>factor</th><th>level</th><th class="num">configs</th><th class="num">mean pass rate</th><th class="num">median {{ kind }}</th></tr></thead>
+    <tbody>
+    {% for e in sr.factor_effects %}
+      <tr><td>{{ e.factor }}</td><td>{{ e.level }}</td><td class="num">{{ e.n_configs }}</td><td class="num">{{ e.mean_pass_rate|pct }}</td><td class="num">{% if kind.endswith("cost_usd") %}{{ e.median_objective|cost }}{% elif kind == "wall_time_seconds" %}{{ e.median_objective|seconds }}{% else %}{{ e.median_objective|int }}{% endif %}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</section>

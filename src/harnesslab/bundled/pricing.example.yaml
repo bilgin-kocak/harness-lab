@@ -1,0 +1,26 @@
+# Optional pricing table for *estimated* costs.
+#
+# Harness Lab never hard-codes API prices. Copy this file to `pricing.yaml`
+# (next to your suites, in your Harness Lab home directory, or pass
+# `harnesslab run ... --pricing path/to/pricing.yaml`) and fill in the rates
+# from your provider's current price list. Estimates are stored separately
+# from the cost a harness reports itself (`reported_cost_usd`) and always carry
+# the `version` below so they stay attributable.
+#
+# THE NUMBERS BELOW ARE PLACEHOLDERS, NOT CURRENT PRICES.
+
+version: "example-placeholder"
+currency: USD
+
+models:
+  # Exact model ids match first; otherwise the longest matching prefix wins,
+  # so "claude-sonnet-5" also covers "claude-sonnet-5-20260101".
+  claude-sonnet-5:
+    input_per_million: 0.0        # uncached input tokens
+    cached_input_per_million: 0.0 # cache-read input tokens
+    cache_write_per_million: 0.0  # cache-creation input tokens
+    output_per_million: 0.0
+  gpt-5-codex:
+    input_per_million: 0.0
+    cached_input_per_million: 0.0
+    output_per_million: 0.0

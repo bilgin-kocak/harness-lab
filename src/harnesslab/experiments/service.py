@@ -128,7 +128,15 @@ class ExperimentService:
         *,
         keep_worktrees: bool = False,
         progress: ProgressCallback | None = None,
+        gate: Callable[[], str | None] | None = None,
+        on_run_finished: Callable[[RunOutcome], None] | None = None,
     ) -> ExperimentOutcome:
+        """Run every task x variant x repetition cell.
+
+        ``gate`` is consulted before each cell starts; a non-empty string skips the
+        cell with that reason (used for sweep budgets).  ``on_run_finished`` sees
+        every completed cell (used to account spend).
+        """
         if not tasks:
             raise ValueError("experiment has no tasks")
         if not variants:
@@ -175,7 +183,21 @@ class ExperimentService:
 
         async def guarded(task: TaskSpec, variant: VariantSpec, rep: int) -> RunOutcome:
             async with semaphore:
-                return await self.execute_run(
+                reason = gate() if gate is not None else None
+                if reason:
+                    return self._skip_run(
+                        exp_id=exp_id,
+                        task=task,
+                        variant=variant,
+                        repetition=rep,
+                        task_row_id=task_rows[task.id][0],
+                        task_hash=task_rows[task.id][2],
+                        variant_row_id=variant_rows[variant.id],
+                        environment=environment,
+                        reason=reason,
+                        progress=progress,
+                    )
+                outcome = await self.execute_run(
                     exp_id=exp_id,
                     task=task,
                     variant=variant,
@@ -187,6 +209,9 @@ class ExperimentService:
                     keep_worktree=keep_worktrees or experiment.keep_worktrees,
                     progress=progress,
                 )
+                if on_run_finished is not None:
+                    on_run_finished(outcome)
+                return outcome
 
         status = "completed"
         try:
@@ -201,6 +226,62 @@ class ExperimentService:
         finally:
             self.repo.finish_experiment(exp_id, status)
         return ExperimentOutcome(experiment_id=exp_id, name=experiment.name, runs=list(outcomes))
+
+    # ------------------------------------------------------------------
+    def _skip_run(
+        self,
+        *,
+        exp_id: str,
+        task: TaskSpec,
+        variant: VariantSpec,
+        repetition: int,
+        task_row_id: str,
+        task_hash: str,
+        variant_row_id: str,
+        environment: EnvironmentSpec,
+        reason: str,
+        progress: ProgressCallback | None,
+    ) -> RunOutcome:
+        config = variant.runner_config()
+        run_id = self.repo.create_run(
+            exp_id=exp_id,
+            variant_row_id=variant_row_id,
+            task_row_id=task_row_id,
+            repetition=repetition,
+            config=config,
+            environment=environment,
+            task_hash=task_hash,
+            prompt_hash=task.prompt_hash(),
+            base_commit=None,
+            harnesslab_commit=self.harnesslab_commit,
+            harnesslab_version=self.harnesslab_version,
+            parser_version=PARSER_VERSION,
+            metrics_version=METRICS_VERSION,
+        )
+        self.repo.skip_run(run_id, reason)
+        if progress:
+            progress(
+                RunProgress(
+                    run_id=run_id,
+                    task_key=task.id,
+                    variant_key=variant.id,
+                    repetition=repetition,
+                    phase="finished",
+                    status=RunStatus.SKIPPED.value,
+                    outcome=Outcome.NOT_VERIFIED.value,
+                    error=reason,
+                )
+            )
+        return RunOutcome(
+            run_id=run_id,
+            task_key=task.id,
+            variant_key=variant.id,
+            repetition=repetition,
+            status=RunStatus.SKIPPED,
+            outcome=Outcome.NOT_VERIFIED,
+            metrics=RunMetrics(),
+            error=reason,
+        )
 
     # ------------------------------------------------------------------
     async def execute_run(

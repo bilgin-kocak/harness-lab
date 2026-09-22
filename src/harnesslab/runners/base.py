@@ -7,8 +7,11 @@ normalized events.  Runners never touch the database or the UI.
 
 from __future__ import annotations
 
+import importlib
+import warnings
 from abc import ABC, abstractmethod
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
+from importlib import metadata
 from pathlib import Path
 
 from harnesslab.core.events import EventEmitter
@@ -69,6 +72,55 @@ def available_runners() -> list[str]:
     return sorted(_REGISTRY)
 
 
+ENTRY_POINT_GROUP = "harnesslab.runners"
+_ENTRY_POINTS_LOADED = False
+
+
+class PluginError(RuntimeError):
+    pass
+
+
+def load_plugins(modules: Iterable[str]) -> list[str]:
+    """Import plugin modules so their ``@register_runner`` decorators run."""
+    loaded: list[str] = []
+    for name in modules:
+        name = name.strip()
+        if not name:
+            continue
+        try:
+            importlib.import_module(name)
+        except Exception as exc:  # ImportError or an error inside the plugin
+            raise PluginError(
+                f"could not import plugin module {name!r}: {type(exc).__name__}: {exc}"
+            ) from exc
+        loaded.append(name)
+    return loaded
+
+
+def _load_entry_point_runners() -> None:
+    """Load third-party adapters advertised via the ``harnesslab.runners`` entry-point group."""
+    global _ENTRY_POINTS_LOADED
+    if _ENTRY_POINTS_LOADED:
+        return
+    _ENTRY_POINTS_LOADED = True
+    try:
+        entry_points = metadata.entry_points(group=ENTRY_POINT_GROUP)
+    except Exception:  # pragma: no cover - defensive: broken metadata must not break the CLI
+        return
+    for ep in entry_points:
+        try:
+            obj = ep.load()
+        except Exception as exc:
+            warnings.warn(
+                f"harnesslab plugin {ep.name!r} ({ep.value}) failed to load: {exc}", stacklevel=2
+            )
+            continue
+        if isinstance(obj, type) and issubclass(obj, HarnessRunner) and obj.name not in _REGISTRY:
+            register_runner(obj)
+
+
 def _ensure_builtin_runners() -> None:
     # Import side effects register the built-in adapters.
     from harnesslab.runners import claude, codex, fake, generic  # noqa: F401
+
+    _load_entry_point_runners()

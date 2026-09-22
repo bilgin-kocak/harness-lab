@@ -6,7 +6,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
-from sqlalchemy import create_engine, event
+from sqlalchemy import create_engine, event, inspect, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
@@ -45,6 +45,25 @@ class Database:
 
     def create_all(self) -> None:
         Base.metadata.create_all(self.engine)
+        self._add_missing_columns()
+
+    def _add_missing_columns(self) -> None:
+        """Forward-only schema migration: add columns that newer versions introduced.
+
+        SQLite cannot add constraints in ``ALTER TABLE``, so only nullable/defaulted
+        columns are ever added this way (all additions so far qualify).
+        """
+        inspector = inspect(self.engine)
+        with self.engine.begin() as conn:
+            for table in Base.metadata.sorted_tables:
+                existing = {col["name"] for col in inspector.get_columns(table.name)}
+                for column in table.columns:
+                    if column.name in existing:
+                        continue
+                    col_type = column.type.compile(dialect=self.engine.dialect)
+                    conn.execute(
+                        text(f'ALTER TABLE "{table.name}" ADD COLUMN "{column.name}" {col_type}')
+                    )
 
     @contextmanager
     def session(self) -> Iterator[Session]:

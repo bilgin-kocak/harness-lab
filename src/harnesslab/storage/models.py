@@ -71,6 +71,7 @@ class VariantRow(Base):
     tool_policy_json: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
     config_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     config_hash: Mapped[str] = mapped_column(String(64))
+    factors_json: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
 
     experiment: Mapped[ExperimentRow] = relationship(back_populates="variants")
     runs: Mapped[list[RunRow]] = relationship(back_populates="variant")

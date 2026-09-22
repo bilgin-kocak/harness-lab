@@ -15,6 +15,8 @@ Options (all optional)::
     delay_ms: artificial latency per step (default 0)
     solve_tasks: [task ids]   only solve these tasks, noop on the others
     simulate_cost_usd_per_1k_tokens: float   report a *simulated* cost (clearly labelled)
+    simulate_token_multiplier: float         scale the deterministic token usage (sweep demos)
+    action_policy: str                       accepted for parity with real adapters (recorded, no effect)
 """
 
 from __future__ import annotations
@@ -126,7 +128,12 @@ class FakeRunner(HarnessRunner):
         emit.emit(
             EventKind.SYSTEM,
             name="session_started",
-            payload={"model": model, "behavior": behavior, "cli_version": FAKE_VERSION},
+            payload={
+                "model": model,
+                "behavior": behavior,
+                "cli_version": FAKE_VERSION,
+                "action_policy": config.get("action_policy"),
+            },
         )
         if behavior == "timeout":
             # Hang far longer than any task limit; the service enforces the timeout.
@@ -251,10 +258,11 @@ class FakeRunner(HarnessRunner):
             )
 
         # 4. deterministic usage
+        multiplier = float(config.get("simulate_token_multiplier", 1.0))
         usage = UsageTotals(
-            input_tokens=200 + len(task.prompt) // 4 + read_bytes // 4,
+            input_tokens=int((200 + len(task.prompt) // 4 + read_bytes // 4) * multiplier),
             cached_input_tokens=128,
-            output_tokens=40 + written // 4,
+            output_tokens=int((40 + written // 4) * multiplier),
         )
         emit.emit(EventKind.USAGE, name="usage", payload={**usage.model_dump(), "model": model})
 

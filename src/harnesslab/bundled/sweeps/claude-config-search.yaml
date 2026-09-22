@@ -1,0 +1,31 @@
+# Configuration sweep on Claude Code: model x reasoning effort x toolset x compaction x action policy.
+# WARNING: every configuration runs every task `repetitions` times with real API usage.
+# 2 x 2 x 2 x 2 x 2 = 32 configurations x 3 tasks x 2 repetitions = 192 runs before sampling/budget.
+name: claude-config-search
+suite: demo
+base_variant:
+  runner: claude
+  max_turns: 30
+  permission_mode: acceptEdits
+factors:
+  model: [claude-haiku-4-5, claude-sonnet-5]
+  reasoning_effort: [low, high]            # --effort
+  toolset:
+    minimal: { allowed_tools: [Read, Edit, "Bash(python *)"] }
+    full: { allowed_tools: [Read, Edit, Write, MultiEdit, Glob, Grep, LS, "Bash(python *)", "Bash(python3 *)", "Bash(git diff *)", "Bash(git status *)"] }
+  compaction:
+    default: {}
+    tight: { autocompact: 100k }           # --autocompact
+  action_granularity:
+    batched: { action_policy: batched }    # appended system prompt: few, batched actions
+    fine: { action_policy: fine }          # appended system prompt: small, incremental actions
+repetitions: 2
+parallelism: 2
+workload_by: suite
+holdout_tasks: [consolidate-money-formatting]
+sample: { max_configs: 8, seed: 7 }        # random subset of the 32-configuration grid
+budget: { max_runs: 60, max_cost_usd: 15 }
+objective:
+  require: { min_pass_rate: 1.0 }
+  minimize: cost                           # reported by Claude Code; falls back to pricing.yaml estimates, then tokens
+  tie_breaker: wall_time_seconds

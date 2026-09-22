@@ -6,6 +6,7 @@ from datetime import datetime
 from typing import Any
 
 from harnesslab.experiments.aggregate import aggregate_variants, samples_from_rows
+from harnesslab.experiments.sweep import report_for_experiment
 from harnesslab.storage.repository import Repository
 
 EXPORT_SCHEMA_VERSION = "1"
@@ -157,6 +158,7 @@ def export_experiment(
                 "tool_policy": v.tool_policy_json,
                 "config": v.config_json,
                 "config_hash": v.config_hash,
+                "factors": v.factors_json,
             }
             for v in exp.variants
         ],
@@ -176,5 +178,9 @@ def export_experiment(
             for t in exp.tasks
         ],
         "aggregates": {k: v.model_dump(mode="json") for k, v in aggregates.items()},
+        "sweep": (exp.spec_json or {}).get("sweep"),
+        "sweep_report": (
+            report.model_dump(mode="json") if (report := report_for_experiment(exp)) else None
+        ),
         "runs": runs,
     }

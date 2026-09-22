@@ -15,6 +15,10 @@
   <a class="button secondary" href="/api/experiments/{{ exp.id }}/export.json">Export JSON</a>
 </p>
 
+{% if sweep_report %}
+  {% include "partials/sweep_report.html" %}
+{% endif %}
+
 <section>
   <h2>Variants</h2>
   <table class="data compact">

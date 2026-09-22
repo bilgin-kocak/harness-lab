@@ -15,6 +15,13 @@ from rich.console import Console
 from rich.table import Table
 
 import harnesslab
+from harnesslab.bundled import (
+    bundled_pricing_example,
+    bundled_suites_dir,
+    bundled_sweeps_dir,
+    list_bundled_suites,
+    list_bundled_sweeps,
+)
 from harnesslab.config import Settings
 from harnesslab.core.models import ExperimentSpec, RunStatus, TaskSpec, VariantSpec
 from harnesslab.core.pricing import PricingTable, find_pricing_table
@@ -25,9 +32,18 @@ from harnesslab.experiments.spec import (
     SpecError,
     load_run_target,
     load_suite,
+    load_sweep_target,
+    resolve_suite_target,
     resolve_variants,
     select_tasks,
 )
+from harnesslab.experiments.sweep import (
+    BudgetGate,
+    SweepReport,
+    expand_sweep,
+    report_for_experiment,
+)
+from harnesslab.runners.base import PluginError, load_plugins
 from harnesslab.storage.database import Database
 from harnesslab.storage.repository import Repository
 
@@ -38,8 +54,13 @@ app = typer.Typer(
 )
 suite_app = typer.Typer(help="Inspect and sanity-check task suites.", no_args_is_help=True)
 experiment_app = typer.Typer(help="Inspect and export past experiments.", no_args_is_help=True)
+sweep_app = typer.Typer(
+    help="Configuration sweeps: search model x effort x toolset x compaction x action policy for the cheapest verified configuration.",
+    no_args_is_help=True,
+)
 app.add_typer(suite_app, name="suite")
 app.add_typer(experiment_app, name="experiment")
+app.add_typer(sweep_app, name="sweep")
 
 console = Console()
 err_console = Console(stderr=True)
@@ -77,13 +98,91 @@ def main(
         ),
     ] = None,
 ) -> None:
+    if sys.platform == "win32":
+        err_console.print(
+            "[red]Harness Lab does not support native Windows yet (it relies on POSIX process groups and git worktrees). "
+            "Please run it inside WSL.[/]"
+        )
+        raise typer.Exit(code=2)
     ctx.obj = Settings.from_env(home)
+
+
+def _load_plugins_or_exit(modules: list[str]) -> None:
+    try:
+        load_plugins(modules)
+    except PluginError as exc:
+        err_console.print(f"[red]{exc}[/]")
+        raise typer.Exit(code=2) from exc
 
 
 @app.command()
 def version() -> None:
     """Print the Harness Lab version."""
     console.print(f"harnesslab {harnesslab.__version__}")
+
+
+# ---------------------------------------------------------------------------
+# init
+# ---------------------------------------------------------------------------
+
+INIT_README = """# My Harness Lab
+
+Scaffolded by `harnesslab init`. Everything here is yours to edit.
+
+```bash
+harnesslab doctor                                              # check python, git, codex, claude, database
+harnesslab suite check suites/demo/suite.yaml                  # verifiers fail on the untouched repo, pass with the solution
+harnesslab run suites/demo/suite.yaml --variants fake-reference,fake-noop
+harnesslab sweep run sweeps/demo-fake.yaml                     # cheapest verified configuration (no API keys)
+harnesslab serve                                               # http://127.0.0.1:8000
+```
+
+- `suites/demo/` - a copy of the bundled demo suite: tasks, hidden tests (`tasks/<id>/verify`), reference solutions.
+- `sweeps/` - configuration-sweep templates (`claude-config-search.yaml` costs real API usage).
+- `pricing.example.yaml` - copy to `pricing.yaml` and fill in rates to get estimated costs for harnesses that do not report cost.
+
+Data (database, worktrees, artifacts) is written to `./.harnesslab`.
+"""
+
+
+@app.command()
+def init(
+    ctx: typer.Context,
+    directory: Annotated[
+        Path, typer.Argument(help="Directory to scaffold (created if missing).")
+    ] = Path("."),
+    force: Annotated[bool, typer.Option("--force", help="Overwrite existing files.")] = False,
+) -> None:
+    """Scaffold a lab directory with the demo suite, sweep templates and a pricing example."""
+    directory = directory.expanduser().resolve()
+    targets = {
+        directory / "suites" / "demo": bundled_suites_dir() / "demo",
+        directory / "sweeps": bundled_sweeps_dir(),
+        directory / "pricing.example.yaml": bundled_pricing_example(),
+        directory / "README.md": None,
+    }
+    existing = [str(t.relative_to(directory)) for t in targets if t.exists()]
+    if existing and not force:
+        err_console.print(
+            f"[red]refusing to overwrite existing paths in {directory}: {', '.join(existing)} (use --force)[/]"
+        )
+        raise typer.Exit(code=1)
+    directory.mkdir(parents=True, exist_ok=True)
+    for target, source in targets.items():
+        if source is None:
+            target.write_text(INIT_README, encoding="utf-8")
+        elif source.is_dir():
+            if target.exists():
+                shutil.rmtree(target)
+            shutil.copytree(source, target, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+        else:
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source, target)
+    gitignore = directory / ".gitignore"
+    if not gitignore.exists():
+        gitignore.write_text(".harnesslab/\n__pycache__/\n", encoding="utf-8")
+    console.print(f"Scaffolded Harness Lab project in [bold]{directory}[/]")
+    console.print("Next: harnesslab run suites/demo/suite.yaml --variants fake-reference,fake-noop")
 
 
 # ---------------------------------------------------------------------------
@@ -168,23 +267,37 @@ def doctor(ctx: typer.Context) -> None:
 # ---------------------------------------------------------------------------
 
 
-def _find_suites(path: Path) -> list[Path]:
+def _find_suites(target: str | None) -> list[Path]:
+    if target is None:
+        found = list(list_bundled_suites().values())
+        local = Path("suites")
+        if local.is_dir():
+            found.extend(sorted(p for p in local.rglob("suite.yaml")))
+        return found
+    path = Path(target)
     if path.is_file():
         return [path]
-    return sorted(p for p in path.rglob("suite.yaml"))
+    if path.is_dir():
+        return sorted(p for p in path.rglob("suite.yaml"))
+    bundled = list_bundled_suites().get(target)
+    return [bundled] if bundled else []
 
 
 @suite_app.command("list")
 def suite_list(
     ctx: typer.Context,
-    path: Annotated[Path, typer.Argument(help="A suite.yaml or a directory to search.")] = Path(
-        "suites"
-    ),
+    target: Annotated[
+        str | None,
+        typer.Argument(
+            help="A suite.yaml, a directory, or a bundled suite name (default: bundled suites and ./suites)."
+        ),
+    ] = None,
 ) -> None:
     """List suites, their tasks and variants."""
-    suites = _find_suites(path)
+    suites = _find_suites(target)
     if not suites:
-        err_console.print(f"no suite.yaml found under {path}")
+        names = ", ".join(list_bundled_suites()) or "none"
+        err_console.print(f"no suite found for {target!r} (bundled suites: {names})")
         raise typer.Exit(code=1)
     for suite_path in suites:
         try:
@@ -192,7 +305,12 @@ def suite_list(
         except SpecError as exc:
             err_console.print(f"[red]{exc}[/]")
             continue
-        console.print(f"[bold]{suite.name}[/]  [dim]{suite_path}[/]")
+        bundled_tag = (
+            " [dim](bundled: use the name '" + suite_path.parent.name + "')[/]"
+            if suite_path.is_relative_to(bundled_suites_dir())
+            else ""
+        )
+        console.print(f"[bold]{suite.name}[/]  [dim]{suite_path}[/]{bundled_tag}")
         if suite.description:
             console.print(f"  {suite.description.strip()}")
         table = Table(show_header=True, box=None, padding=(0, 2))
@@ -280,7 +398,12 @@ def _load_pricing(settings: Settings, explicit: Path | None) -> PricingTable | N
 @app.command()
 def run(
     ctx: typer.Context,
-    target: Annotated[Path, typer.Argument(help="A suite.yaml or an experiment.yaml.")],
+    target: Annotated[
+        str,
+        typer.Argument(
+            help="A suite.yaml, an experiment.yaml, or a bundled suite name such as 'demo'."
+        ),
+    ],
     variants: Annotated[
         str | None, typer.Option("--variants", "-v", help="Comma-separated variant ids.")
     ] = None,
@@ -296,11 +419,16 @@ def run(
     pricing: Annotated[
         Path | None, typer.Option("--pricing", help="pricing.yaml for cost estimates.")
     ] = None,
+    plugin: Annotated[
+        list[str] | None,
+        typer.Option("--plugin", help="Python module that registers custom runners (repeatable)."),
+    ] = None,
 ) -> None:
     """Run every task of a suite against one or more harness variants."""
     settings = _settings(ctx)
     try:
         experiment, suite, all_tasks = load_run_target(target)
+        _load_plugins_or_exit(list(plugin or []) + suite.plugins + experiment.plugins)
         chosen_variants = resolve_variants(
             [v.strip() for v in variants.split(",")] if variants else None, experiment, suite
         )
@@ -356,11 +484,12 @@ def run(
 @suite_app.command("check")
 def suite_check(
     ctx: typer.Context,
-    suite_path: Annotated[Path, typer.Argument(help="suite.yaml to validate.")],
+    target: Annotated[str, typer.Argument(help="suite.yaml to validate, or a bundled suite name.")],
 ) -> None:
     """Sanity-check verifiers: reference solutions must pass, the untouched repo must fail."""
     settings = _settings(ctx)
     try:
+        suite_path = resolve_suite_target(target)
         suite, tasks = load_suite(suite_path)
     except SpecError as exc:
         err_console.print(f"[red]{exc}[/]")
@@ -640,6 +769,244 @@ def experiment_export(
         console.print(f"wrote {output}")
     else:
         sys.stdout.write(text + "\n")
+
+
+# ---------------------------------------------------------------------------
+# sweep
+# ---------------------------------------------------------------------------
+
+
+def _fmt_objective(value: float | None, kind: str) -> str:
+    if value is None:
+        return "—"
+    if kind.endswith("cost_usd"):
+        return f"${value:,.4f}"
+    if kind == "wall_time_seconds":
+        return f"{value:,.1f}s"
+    return f"{value:,.0f}"
+
+
+def _print_sweep_report(report: SweepReport) -> None:
+    kind = report.objective_kind
+    console.print(
+        f"[bold]sweep {report.name}[/]: {report.n_configs} configuration(s), {report.n_runs} run(s)"
+        + (f", {report.n_skipped} skipped by budget" if report.n_skipped else "")
+        + f" · objective: minimize [bold]{kind}[/] subject to pass rate ≥ {report.min_pass_rate:.0%}"
+    )
+    for note in report.notes:
+        console.print(f"[dim]note: {note}[/]")
+    for w in report.workloads:
+        console.print()
+        title = f"workload [bold]{w.workload}[/] ({w.kind}: {', '.join(w.task_keys)})"
+        if w.recommended:
+            r = w.recommended
+            console.print(
+                f"{title}\n  [green]cheapest verified configuration:[/] [bold]{r.variant_key}[/]"
+                f"  pass {r.pass_rate:.0%} ({r.n_passed}/{r.n_valid}) · {kind} {_fmt_objective(r.objective, kind)}"
+                f" · tokens {_fmt(r.median_tokens, 0)} · wall {_fmt(r.median_wall_time, 1)}s"
+            )
+            if w.runner_up:
+                u = w.runner_up
+                console.print(
+                    f"  runner-up: {u.variant_key}  {kind} {_fmt_objective(u.objective, kind)}"
+                )
+            if w.holdout:
+                h = w.holdout
+                rate = f"{h.pass_rate:.0%}" if h.pass_rate is not None else "—"
+                console.print(
+                    f"  holdout ({', '.join(h.task_keys)}): pass {rate} over {h.n_valid} run(s) · {kind} {_fmt_objective(h.objective, kind)}"
+                )
+        else:
+            console.print(f"{title}\n  [red]no configuration met the requirement[/]")
+            if w.best_effort:
+                b = w.best_effort
+                console.print(
+                    f"  best effort: {b.variant_key}  pass {b.pass_rate:.0%} · {kind} {_fmt_objective(b.objective, kind)}"
+                )
+        table = Table(show_header=True, box=None, padding=(0, 1))
+        for col in (
+            "",
+            "configuration",
+            "pass",
+            "valid",
+            kind,
+            "tokens",
+            "wall (s)",
+            "tools",
+            "note",
+        ):
+            table.add_column(
+                col,
+                justify="right"
+                if col in (kind, "tokens", "wall (s)", "tools", "pass", "valid")
+                else "left",
+            )
+        for c in w.configs:
+            mark = (
+                "[green]✔[/]"
+                if c.eligible
+                else ("[yellow]◆[/]" if c.variant_key in w.pareto else "")
+            )
+            table.add_row(
+                mark,
+                c.variant_key,
+                f"{c.pass_rate:.0%}" if c.pass_rate is not None else "—",
+                f"{c.n_valid}/{c.n_total}",
+                _fmt_objective(c.objective, kind),
+                _fmt(c.median_tokens, 0),
+                _fmt(c.median_wall_time, 1),
+                _fmt(c.median_tool_calls, 0),
+                c.reason or "",
+            )
+        console.print(table)
+    if report.factor_effects:
+        console.print()
+        ft = Table(
+            title="factor effects (marginal means over configurations)", box=None, padding=(0, 1)
+        )
+        for col in ("factor", "level", "configs", "mean pass rate", f"median {kind}"):
+            ft.add_column(
+                col,
+                justify="right"
+                if col in ("configs", "mean pass rate", f"median {kind}")
+                else "left",
+            )
+        for e in report.factor_effects:
+            ft.add_row(
+                e.factor,
+                e.level,
+                str(e.n_configs),
+                f"{e.mean_pass_rate:.0%}" if e.mean_pass_rate is not None else "—",
+                _fmt_objective(e.median_objective, kind),
+            )
+        console.print(ft)
+    console.print("[dim]✔ eligible · ◆ on the pass-rate/cost Pareto front[/]")
+
+
+@sweep_app.command("list")
+def sweep_list() -> None:
+    """List bundled sweep templates and ./sweeps/*.yaml."""
+    for name, path in list_bundled_sweeps().items():
+        console.print(f"[bold]{name}[/]  [dim]{path}[/]  (bundled)")
+    local = Path("sweeps")
+    if local.is_dir():
+        for path in sorted(local.glob("*.yaml")):
+            console.print(f"[bold]{path.stem}[/]  [dim]{path}[/]")
+
+
+@sweep_app.command("run")
+def sweep_run(
+    ctx: typer.Context,
+    target: Annotated[
+        str, typer.Argument(help="A sweep.yaml or a bundled sweep name (e.g. demo-fake).")
+    ],
+    repetitions: Annotated[int | None, typer.Option("--repetitions", "-r", min=1)] = None,
+    parallelism: Annotated[int | None, typer.Option("--parallelism", "-p", min=1)] = None,
+    name: Annotated[str | None, typer.Option("--name", "-n", help="Experiment name.")] = None,
+    keep_worktrees: Annotated[bool, typer.Option("--keep-worktrees")] = False,
+    pricing: Annotated[
+        Path | None, typer.Option("--pricing", help="pricing.yaml for cost estimates.")
+    ] = None,
+    plugin: Annotated[
+        list[str] | None, typer.Option("--plugin", help="Python module registering custom runners.")
+    ] = None,
+    dry_run: Annotated[
+        bool, typer.Option("--dry-run", help="Print the expanded configurations and exit.")
+    ] = False,
+) -> None:
+    """Run every configuration of a sweep and report the cheapest verified one per workload."""
+    settings = _settings(ctx)
+    try:
+        spec, suite, tasks = load_sweep_target(target)
+        _load_plugins_or_exit(list(plugin or []) + suite.plugins + spec.plugins)
+        variants = expand_sweep(spec)
+    except SpecError as exc:
+        err_console.print(f"[red]{exc}[/]")
+        raise typer.Exit(code=2) from exc
+    if repetitions is not None:
+        spec.repetitions = repetitions
+    if parallelism is not None:
+        spec.parallelism = parallelism
+    total = len(variants) * len(tasks) * spec.repetitions
+    console.print(
+        f"[bold]{name or spec.name}[/]: {len(variants)} configuration(s) × {len(tasks)} task(s) × {spec.repetitions} repetition(s) = {total} run(s)"
+        + (
+            f" · budget max_runs={spec.budget.max_runs} max_cost_usd={spec.budget.max_cost_usd}"
+            if spec.budget
+            else ""
+        )
+    )
+    if dry_run:
+        for v in variants:
+            console.print(f"  {v.id}")
+        return
+    if spec.budget and spec.budget.max_runs is not None and total > spec.budget.max_runs:
+        console.print(
+            f"[yellow]{total - spec.budget.max_runs} run(s) will be skipped by max_runs; add `sample:` to subset the grid instead.[/]"
+        )
+    experiment = ExperimentSpec(
+        name=name or spec.name,
+        suite=spec.suite,
+        description=spec.description,
+        repetitions=spec.repetitions,
+        parallelism=spec.parallelism,
+        variants=variants,
+        keep_worktrees=keep_worktrees or spec.keep_worktrees,
+        plugins=spec.plugins,
+        sweep=spec.model_dump(mode="json"),
+        source_path=spec.source_path,
+    )
+    gate = BudgetGate(spec.budget.max_runs, spec.budget.max_cost_usd) if spec.budget else None
+    db = _open_db(settings)
+    service = ExperimentService(settings, db, pricing=_load_pricing(settings, pricing))
+    try:
+        outcome = asyncio.run(
+            service.run_experiment(
+                experiment,
+                suite,
+                tasks,
+                variants,
+                keep_worktrees=keep_worktrees,
+                progress=_progress_printer(total),
+                gate=gate.check if gate else None,
+                on_run_finished=(
+                    lambda o: gate.on_finished(
+                        o.metrics.reported_cost_usd, o.metrics.estimated_cost_usd
+                    )
+                )
+                if gate
+                else None,
+            )
+        )
+        exp = service.repo.get_experiment(outcome.experiment_id)
+        report = report_for_experiment(exp)
+    finally:
+        db.dispose()
+    console.print()
+    if report is not None:
+        _print_sweep_report(report)
+    console.print(
+        f"experiment id: [bold]{outcome.experiment_id}[/]  ·  harnesslab sweep report {outcome.experiment_id}  ·  harnesslab serve"
+    )
+
+
+@sweep_app.command("report")
+def sweep_report(ctx: typer.Context, experiment_id: Annotated[str, typer.Argument()]) -> None:
+    """Recompute the recommendation of a past sweep from the database."""
+    settings = _settings(ctx)
+    db = _open_db(settings)
+    try:
+        exp = Repository(db, settings.home).find_experiment(experiment_id)
+        if exp is None:
+            err_console.print(f"[red]experiment not found: {experiment_id}[/]")
+            raise typer.Exit(code=1)
+        report = report_for_experiment(exp)
+    finally:
+        db.dispose()
+    if report is None:
+        err_console.print(f"[red]experiment {exp.id} is not a sweep (no factor grid recorded)[/]")
+        raise typer.Exit(code=1)
+    _print_sweep_report(report)
 
 
 if __name__ == "__main__":  # pragma: no cover

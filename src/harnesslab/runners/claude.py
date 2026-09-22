@@ -27,7 +27,9 @@ Options::
     bare: false                             (skips hooks/CLAUDE.md/plugins; needs ANTHROPIC_API_KEY)
     setting_sources: null                   (e.g. "project" to ignore user settings)
     append_system_prompt: null
-    effort: null
+    effort: null                            (alias: reasoning_effort; low|medium|high|xhigh|max)
+    autocompact: null                       (--autocompact auto|<tokens>, e.g. 100k)
+    action_policy: null                     (batched|fine|<free text>, appended to the system prompt)
     extra_args: []
     env_passthrough: []
 """
@@ -48,6 +50,7 @@ from harnesslab.runners._cli import (
     redact_file_in_place,
 )
 from harnesslab.runners.base import HarnessRunner, register_runner
+from harnesslab.runners.policies import action_policy_text
 from harnesslab.trace.claude_parser import ClaudeStreamParser
 
 PERMISSION_MODES = {
@@ -124,10 +127,18 @@ def build_claude_command(config: RunnerConfig, session_id: str | None = None) ->
         argv.append("--bare")
     if config.get("setting_sources") is not None:
         argv.extend(["--setting-sources", str(config.get("setting_sources"))])
-    if config.get("append_system_prompt"):
-        argv.extend(["--append-system-prompt", str(config.get("append_system_prompt"))])
-    if config.get("effort"):
-        argv.extend(["--effort", str(config.get("effort"))])
+    system_additions = [
+        str(config.get("append_system_prompt")) if config.get("append_system_prompt") else None,
+        action_policy_text(config.get("action_policy")),
+    ]
+    joined = "\n\n".join(part for part in system_additions if part)
+    if joined:
+        argv.extend(["--append-system-prompt", joined])
+    effort = config.get("effort") or config.get("reasoning_effort")
+    if effort:
+        argv.extend(["--effort", str(effort)])
+    if config.get("autocompact") is not None:
+        argv.extend(["--autocompact", str(config.get("autocompact"))])
     if session_id:
         argv.extend(["--session-id", session_id])
     extra = option_list(config.get("extra_args"))

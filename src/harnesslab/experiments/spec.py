@@ -8,7 +8,8 @@ from typing import Any
 import yaml
 from pydantic import ValidationError
 
-from harnesslab.core.models import ExperimentSpec, SuiteSpec, TaskSpec, VariantSpec
+from harnesslab.bundled import list_bundled_suites, list_bundled_sweeps
+from harnesslab.core.models import ExperimentSpec, SuiteSpec, SweepSpec, TaskSpec, VariantSpec
 
 # Variants available even when a suite does not define any, so the quickstart
 # commands work out of the box.
@@ -55,6 +56,20 @@ def _read_yaml(path: Path) -> dict[str, Any]:
     if not isinstance(data, dict):
         raise SpecError(f"{path}: expected a mapping at the top level")
     return data
+
+
+def resolve_suite_target(ref: str | Path) -> Path:
+    """Accept a path to a suite/experiment YAML or the name of a bundled suite (e.g. ``demo``)."""
+    path = Path(ref).expanduser()
+    if path.exists():
+        return path.resolve()
+    bundled = list_bundled_suites()
+    if str(ref) in bundled:
+        return bundled[str(ref)]
+    names = ", ".join(sorted(bundled)) or "none"
+    raise SpecError(
+        f"suite not found: {ref!r} is neither a file nor a bundled suite (bundled: {names})"
+    )
 
 
 def load_task(path: Path) -> TaskSpec:
@@ -108,15 +123,22 @@ def is_experiment_file(path: Path) -> bool:
     return "suite" in data and "tasks" not in data
 
 
-def load_run_target(path: Path) -> tuple[ExperimentSpec, SuiteSpec, list[TaskSpec]]:
-    """Accept either a suite YAML or an experiment YAML."""
-    path = Path(path).resolve()
+def resolve_suite_reference(ref: str, base_dir: Path) -> Path:
+    """Resolve a ``suite:`` reference from an experiment/sweep file (relative path or bundled name)."""
+    candidate = Path(ref).expanduser()
+    if not candidate.is_absolute():
+        relative = base_dir / candidate
+        if relative.exists():
+            return relative.resolve()
+    return resolve_suite_target(ref)
+
+
+def load_run_target(target: str | Path) -> tuple[ExperimentSpec, SuiteSpec, list[TaskSpec]]:
+    """Accept a suite YAML, an experiment YAML, or a bundled suite name."""
+    path = resolve_suite_target(target)
     if is_experiment_file(path):
         exp = load_experiment(path)
-        suite_path = Path(exp.suite)
-        if not suite_path.is_absolute():
-            suite_path = exp.base_dir / suite_path
-        suite, tasks = load_suite(suite_path)
+        suite, tasks = load_suite(resolve_suite_reference(exp.suite, exp.base_dir))
     else:
         suite, tasks = load_suite(path)
         exp = ExperimentSpec(name=suite.name, suite=str(path), variants=[], source_path=path)
@@ -160,3 +182,39 @@ def select_tasks(tasks: list[TaskSpec], requested: list[str] | None) -> list[Tas
     if missing:
         raise SpecError(f"unknown task id(s): {', '.join(missing)}; available: {', '.join(by_id)}")
     return [by_id[t] for t in requested]
+
+
+def resolve_sweep_target(ref: str | Path) -> Path:
+    """A sweep YAML path or the name of a bundled sweep template (e.g. ``demo-fake``)."""
+    path = Path(ref).expanduser()
+    if path.exists():
+        return path.resolve()
+    bundled = list_bundled_sweeps()
+    if str(ref) in bundled:
+        return bundled[str(ref)]
+    names = ", ".join(sorted(bundled)) or "none"
+    raise SpecError(
+        f"sweep not found: {ref!r} is neither a file nor a bundled sweep (bundled: {names})"
+    )
+
+
+def load_sweep(path: Path) -> SweepSpec:
+    path = Path(path).resolve()
+    data = _read_yaml(path)
+    try:
+        spec = SweepSpec(**data)
+    except ValidationError as exc:
+        raise SpecError(f"invalid sweep spec {path}:\n{exc}") from exc
+    spec.source_path = path
+    return spec
+
+
+def load_sweep_target(target: str | Path) -> tuple[SweepSpec, SuiteSpec, list[TaskSpec]]:
+    """Load a sweep and the suite it refers to (tasks filtered by ``tasks:`` if given)."""
+    spec = load_sweep(resolve_sweep_target(target))
+    suite, tasks = load_suite(resolve_suite_reference(spec.suite, spec.base_dir))
+    tasks = select_tasks(tasks, spec.tasks)
+    missing = [t for t in spec.holdout_tasks if t not in {task.id for task in tasks}]
+    if missing:
+        raise SpecError(f"holdout_tasks not in suite: {', '.join(missing)}")
+    return spec, suite, tasks

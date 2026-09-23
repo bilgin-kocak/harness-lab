@@ -36,6 +36,7 @@ from harnesslab.core.models import (
 )
 from harnesslab.execution.fixture import iter_fixture_files
 from harnesslab.execution.process import build_child_env, run_process, shell_argv
+from harnesslab.harness.bundle import HarnessBundle
 from harnesslab.runners.base import HarnessRunner, register_runner
 
 FAKE_MODEL = "fake-model-v1"
@@ -124,6 +125,12 @@ class FakeRunner(HarnessRunner):
         solve_tasks = config.get("solve_tasks")
         if solve_tasks is not None and behavior == "solve" and task.id not in solve_tasks:
             behavior = "noop"
+        bundle = HarnessBundle.load(config.harness_dir) if config.harness_dir else None
+        fake_cfg = bundle.fake_config if bundle else {}
+        if task.id in set(fake_cfg.get("solve_tasks") or []):
+            behavior = "solve"
+        elif task.id in set(fake_cfg.get("fail_tasks") or []):
+            behavior = "fail"
         model = config.model or FAKE_MODEL
 
         emit.emit(
@@ -134,6 +141,7 @@ class FakeRunner(HarnessRunner):
                 "behavior": behavior,
                 "cli_version": FAKE_VERSION,
                 "action_policy": config.get("action_policy"),
+                "harness_hash": config.harness_hash,
             },
         )
         if behavior == "timeout":
@@ -284,7 +292,9 @@ class FakeRunner(HarnessRunner):
         else:
             final = f"I implemented the change for '{task.id}' and ran `{command}` (exit code {exit_code})."
         emit.emit(EventKind.ASSISTANT_MESSAGE, name="assistant", payload={"text": final})
-        llm_calls = int(config.get("llm_calls", DEFAULT_LLM_CALLS.get(behavior, 2)))
+        llm_calls = int(
+            fake_cfg.get("llm_calls", config.get("llm_calls", DEFAULT_LLM_CALLS.get(behavior, 2)))
+        )
 
         return RunnerResult(
             status=RunStatus.COMPLETED,

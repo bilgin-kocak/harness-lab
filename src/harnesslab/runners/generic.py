@@ -33,6 +33,7 @@ from harnesslab.core.models import (
     UsageTotals,
 )
 from harnesslab.execution.process import build_child_env, run_process, shell_argv
+from harnesslab.harness.bundle import HarnessBundle
 from harnesslab.runners._cli import redact_file_in_place
 from harnesslab.runners.base import HarnessRunner, register_runner
 
@@ -80,14 +81,21 @@ class GenericCommandRunner(HarnessRunner):
             )
         prompt_via = str(config.get("prompt_via", "stdin"))
         output_format = str(config.get("output_format", "text"))
+        bundle = HarnessBundle.load(config.harness_dir) if config.harness_dir else None
+        prompt_text = (
+            f"{bundle.system_prompt}\n\n{task.prompt}"
+            if bundle is not None and bundle.system_prompt
+            else task.prompt
+        )
         prompt_file = worktree.parent / f"{emit.run_id}.prompt.txt"
-        prompt_file.write_text(task.prompt, encoding="utf-8")
+        prompt_file.write_text(prompt_text, encoding="utf-8")
         placeholders = {
             "worktree": shlex.quote(str(worktree)),
             "model": shlex.quote(config.model or ""),
             "prompt_file": shlex.quote(str(prompt_file)),
-            "prompt": shlex.quote(task.prompt) if prompt_via == "arg" else "",
+            "prompt": shlex.quote(prompt_text) if prompt_via == "arg" else "",
             "task_id": shlex.quote(task.id),
+            "harness_dir": shlex.quote(str(config.harness_dir or "")),
         }
         # Every runner option is available as {opt_<name>} (shell-quoted), so sweep factors
         # and variant settings can be forwarded to a custom harness command line.
@@ -104,7 +112,7 @@ class GenericCommandRunner(HarnessRunner):
             emit.emit(EventKind.ERROR, name="config", payload={"message": msg})
             prompt_file.unlink(missing_ok=True)
             return RunnerResult(status=RunStatus.CRASHED, error=msg)
-        stdin_text = task.prompt if prompt_via == "stdin" else None
+        stdin_text = prompt_text if prompt_via == "stdin" else None
 
         usage = UsageTotals()
         text_lines: list[str] = []
@@ -162,7 +170,11 @@ class GenericCommandRunner(HarnessRunner):
             shell_argv(command),
             cwd=worktree,
             env=build_child_env(
-                include_auth=True, passthrough=config.get("env_passthrough", []) or []
+                include_auth=True,
+                passthrough=config.get("env_passthrough", []) or [],
+                overrides={"HARNESSLAB_HARNESS_DIR": str(config.harness_dir)}
+                if config.harness_dir
+                else None,
             ),
             timeout=task.limits.agent_timeout_seconds,
             stdin_text=stdin_text,

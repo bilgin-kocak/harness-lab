@@ -331,3 +331,102 @@ async def test_generic_runner_jsonl_protocol(tmp_path: Path):
         _task(worktree), worktree, RunnerConfig(runner="generic", options={}), _emitter()
     )
     assert bad.status == RunStatus.UNAVAILABLE
+
+
+# -- harness bundles -----------------------------------------------------------
+
+
+def _bundle(tmp_path: Path, **extra: str) -> Path:
+    root = tmp_path / "bundle"
+    root.mkdir(exist_ok=True)
+    (root / "system_prompt.md").write_text("Always run the tests.\n")
+    for rel, content in extra.items():
+        p = root / rel
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(content)
+    return root
+
+
+def test_claude_command_with_bundle_uses_file_and_plugin(tmp_path: Path):
+    argv = build_claude_command(
+        RunnerConfig(runner="claude", options={"append_system_prompt": "x"}),
+        "sid",
+        system_prompt_file=tmp_path / "sp.txt",
+        plugin_dir=tmp_path / "plugin",
+    )
+    assert "--append-system-prompt-file" in argv and "--append-system-prompt" not in argv
+    assert argv[argv.index("--plugin-dir") + 1] == str(tmp_path / "plugin")
+    plain = build_claude_command(RunnerConfig(runner="claude"), "sid")
+    assert "--plugin-dir" not in plain and "--append-system-prompt-file" not in plain
+
+
+async def test_claude_runner_applies_bundle(fake_cli: Path, tmp_path: Path, monkeypatch):
+    worktree = tmp_path / "wt"
+    worktree.mkdir()
+    artifacts = tmp_path / "artifacts"
+    artifacts.mkdir()
+    bundle = _bundle(tmp_path, **{"skills/tdd/SKILL.md": "---\nname: tdd\n---\nTest first."})
+    monkeypatch.setenv("FAKE_CLI_STREAM", str(FIXTURES / "claude" / "stream_success.jsonl"))
+    emitter = _emitter()
+    config = RunnerConfig(
+        runner="claude",
+        harness_dir=bundle,
+        harness_hash="h" * 64,
+        options={
+            "executable": str(fake_cli),
+            "env_passthrough": PASSTHROUGH,
+            "action_policy": "batched",
+        },
+    )
+    runner = ClaudeCodeRunner(artifacts_dir=artifacts)
+    result = await runner.run(_task(worktree), worktree, config, emitter)
+    assert result.status == RunStatus.COMPLETED
+    launch = next(e for e in emitter.events if e.name == "harness_launch")
+    assert launch.payload["harness_hash"] == "h" * 64
+    assert launch.payload["harness_components"] == ["system_prompt", "plugin"]
+    assert "--plugin-dir" in launch.payload["argv"]
+    text = (artifacts / "system_prompt.txt").read_text()
+    assert text.startswith("Always run the tests.") and "batched" in text
+    assert (artifacts / "plugin" / "skills" / "tdd" / "SKILL.md").exists()
+    assert (artifacts / "plugin" / ".claude-plugin" / "plugin.json").exists()
+
+
+async def test_codex_runner_prefixes_prompt_with_bundle(
+    fake_cli: Path, tmp_path: Path, monkeypatch
+):
+    worktree = tmp_path / "wt"
+    worktree.mkdir()
+    bundle = _bundle(tmp_path, **{"hooks.json": '{"hooks": {}}', "agents/r.md": "review"})
+    out = tmp_path / "prompt.txt"
+    monkeypatch.setenv("FAKE_CLI_STREAM", str(FIXTURES / "codex" / "exec_success.jsonl"))
+    monkeypatch.setenv("FAKE_CLI_PROMPT_OUT", str(out))
+    emitter = _emitter()
+    config = RunnerConfig(
+        runner="codex",
+        harness_dir=bundle,
+        harness_hash="c" * 64,
+        options={"executable": str(fake_cli), "env_passthrough": PASSTHROUGH},
+    )
+    (tmp_path / "a").mkdir()
+    await CodexRunner(artifacts_dir=tmp_path / "a").run(_task(worktree), worktree, config, emitter)
+    assert out.read_text().startswith("Always run the tests.")
+    assert out.read_text().rstrip().endswith("Fix the bug please")
+    ignored = next(e for e in emitter.events if e.name == "harness_components_ignored")
+    assert ignored.payload["components"] == ["agents/", "hooks.json"]
+    launch = next(e for e in emitter.events if e.name == "harness_launch")
+    assert launch.payload["harness_hash"] == "c" * 64
+
+
+async def test_generic_runner_sees_bundle(tmp_path: Path):
+    worktree = tmp_path / "wt"
+    worktree.mkdir()
+    bundle = _bundle(tmp_path)
+    config = RunnerConfig(
+        runner="generic",
+        harness_dir=bundle,
+        options={"command": "echo dir={harness_dir} env=$HARNESSLAB_HARNESS_DIR; cat"},
+    )
+    result = await GenericCommandRunner().run(_task(worktree), worktree, config, _emitter())
+    assert result.final_message.startswith(f"dir={bundle} env={bundle}")
+    assert "Always run the tests." in result.final_message
+    assert result.final_message.rstrip().endswith("Fix the bug please")

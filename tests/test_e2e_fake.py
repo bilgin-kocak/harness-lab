@@ -149,3 +149,28 @@ async def test_keep_worktrees_timeout_and_repetitions(settings: Settings, db: Da
     } == {0, 1}
     exp = service.repo.get_experiment(outcome.experiment_id)
     assert all(r.worktree_kept for r in exp.runs)
+
+
+async def test_fake_runner_honours_bundle_fake_yaml(settings: Settings, db: Database, tmp_path):
+    from harnesslab.experiments.spec import resolve_variant_harness
+
+    bundle = tmp_path / "b"
+    bundle.mkdir()
+    (bundle / "fake.yaml").write_text(
+        "solve_tasks: [fix-month-boundary]\nfail_tasks: [add-tag-budgets]\nllm_calls: 7\n"
+    )
+    suite, tasks = load_suite(DEMO_SUITE)
+    variant = VariantSpec(id="grown", runner="fake", behavior="noop", harness=str(bundle))
+    resolve_variant_harness(variant, tmp_path)
+    outcome = await ExperimentService(settings, db).run_experiment(
+        ExperimentSpec(name="b", suite=str(DEMO_SUITE), parallelism=3, source_path=DEMO_SUITE),
+        suite,
+        tasks,
+        [variant],
+    )
+    by = {r.task_key: r for r in outcome.runs}
+    assert by["fix-month-boundary"].outcome == Outcome.PASS
+    assert by["add-tag-budgets"].outcome == Outcome.FAIL
+    assert by["add-tag-budgets"].metrics.files_changed == 1
+    assert by["consolidate-money-formatting"].metrics.files_changed == 0
+    assert all(r.metrics.llm_calls == 7 for r in outcome.runs)

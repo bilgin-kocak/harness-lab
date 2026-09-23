@@ -36,6 +36,7 @@ Options::
 
 from __future__ import annotations
 
+import tempfile
 import uuid
 from pathlib import Path
 from typing import Any
@@ -43,6 +44,7 @@ from typing import Any
 from harnesslab.core.events import EventEmitter, EventKind
 from harnesslab.core.models import Availability, RunnerConfig, RunnerResult, RunStatus, TaskSpec
 from harnesslab.execution.process import build_child_env, run_process
+from harnesslab.harness.bundle import HarnessBundle, materialize_claude_plugin
 from harnesslab.runners._cli import (
     SanitizedStreamWriter,
     option_list,
@@ -96,7 +98,13 @@ def _tool_list(value: object) -> list[str]:
     return [str(t) for t in value]  # type: ignore[union-attr]
 
 
-def build_claude_command(config: RunnerConfig, session_id: str | None = None) -> list[str]:
+def build_claude_command(
+    config: RunnerConfig,
+    session_id: str | None = None,
+    *,
+    system_prompt_file: Path | None = None,
+    plugin_dir: Path | None = None,
+) -> list[str]:
     exe = str(config.get("executable", "claude"))
     argv = [exe, "-p", "--output-format", "stream-json", "--verbose"]
     max_turns = config.get("max_turns", 30)
@@ -127,13 +135,18 @@ def build_claude_command(config: RunnerConfig, session_id: str | None = None) ->
         argv.append("--bare")
     if config.get("setting_sources") is not None:
         argv.extend(["--setting-sources", str(config.get("setting_sources"))])
-    system_additions = [
-        str(config.get("append_system_prompt")) if config.get("append_system_prompt") else None,
-        action_policy_text(config.get("action_policy")),
-    ]
-    joined = "\n\n".join(part for part in system_additions if part)
-    if joined:
-        argv.extend(["--append-system-prompt", joined])
+    if system_prompt_file is not None:
+        argv.extend(["--append-system-prompt-file", str(system_prompt_file)])
+    else:
+        system_additions = [
+            str(config.get("append_system_prompt")) if config.get("append_system_prompt") else None,
+            action_policy_text(config.get("action_policy")),
+        ]
+        joined = "\n\n".join(part for part in system_additions if part)
+        if joined:
+            argv.extend(["--append-system-prompt", joined])
+    if plugin_dir is not None:
+        argv.extend(["--plugin-dir", str(plugin_dir)])
     effort = config.get("effort") or config.get("reasoning_effort")
     if effort:
         argv.extend(["--effort", str(effort)])
@@ -188,8 +201,29 @@ class ClaudeCodeRunner(HarnessRunner):
             return RunnerResult(status=RunStatus.UNAVAILABLE, error=availability.detail)
 
         session_id = str(uuid.uuid4())
+        bundle = HarnessBundle.load(config.harness_dir) if config.harness_dir else None
+        system_prompt_file: Path | None = None
+        plugin_dir: Path | None = None
+        components: list[str] = []
+        if bundle is not None:
+            base_dir = self.artifacts_dir or Path(tempfile.mkdtemp(prefix="harnesslab-claude-"))
+            parts = [
+                bundle.system_prompt,
+                str(config.get("append_system_prompt") or ""),
+                action_policy_text(config.get("action_policy")) or "",
+            ]
+            joined = "\n\n".join(p for p in parts if p)
+            if joined:
+                system_prompt_file = base_dir / "system_prompt.txt"
+                system_prompt_file.write_text(joined, encoding="utf-8")
+                components.append("system_prompt")
+            plugin_dir = materialize_claude_plugin(bundle, base_dir / "plugin")
+            if plugin_dir is not None:
+                components.append("plugin")
         try:
-            argv = build_claude_command(config, session_id)
+            argv = build_claude_command(
+                config, session_id, system_prompt_file=system_prompt_file, plugin_dir=plugin_dir
+            )
         except ValueError as exc:
             emit.emit(EventKind.ERROR, name="config", payload={"message": str(exc)})
             return RunnerResult(status=RunStatus.CRASHED, error=str(exc))
@@ -206,6 +240,8 @@ class ClaudeCodeRunner(HarnessRunner):
                 "argv": [Path(argv[0]).name] + argv[1:],
                 "cli_version": availability.version,
                 "session_id": session_id,
+                "harness_hash": config.harness_hash,
+                "harness_components": components,
             },
         )
 

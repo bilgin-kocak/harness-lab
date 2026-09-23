@@ -34,6 +34,7 @@ from typing import Any
 from harnesslab.core.events import EventEmitter, EventKind
 from harnesslab.core.models import Availability, RunnerConfig, RunnerResult, RunStatus, TaskSpec
 from harnesslab.execution.process import build_child_env, run_process
+from harnesslab.harness.bundle import HarnessBundle, prompt_prefix
 from harnesslab.runners._cli import (
     SanitizedStreamWriter,
     option_list,
@@ -122,8 +123,24 @@ class CodexRunner(HarnessRunner):
             emit.emit(EventKind.ERROR, name="config", payload={"message": str(exc)})
             return RunnerResult(status=RunStatus.CRASHED, error=str(exc))
 
+        bundle = HarnessBundle.load(config.harness_dir) if config.harness_dir else None
+        prefix = prompt_prefix(bundle) if bundle is not None else ""
         policy = action_policy_text(config.get("action_policy"))
-        prompt = f"{policy}\n\n{task.prompt}" if policy else task.prompt
+        prompt = "\n\n".join(p for p in (prefix, policy, task.prompt) if p)
+        if bundle is not None:
+            ignored = sorted(
+                {
+                    "hooks.json" if rel == "hooks.json" else "agents/"
+                    for rel in bundle.files
+                    if rel == "hooks.json" or rel.startswith("agents/")
+                }
+            )
+            if ignored:
+                emit.emit(
+                    EventKind.SYSTEM,
+                    name="harness_components_ignored",
+                    payload={"components": ignored, "reason": "codex has no plugin mechanism"},
+                )
         parser = CodexStreamParser(emit, worktree=str(worktree))
         stream = SanitizedStreamWriter(
             (artifacts / "agent_stream.sanitized.jsonl") if artifacts else None, emit.redactor
@@ -137,6 +154,7 @@ class CodexRunner(HarnessRunner):
                 "prompt_prefix_hash": hashlib.sha256(policy.encode()).hexdigest()[:16]
                 if policy
                 else None,
+                "harness_hash": config.harness_hash,
             },
         )
 

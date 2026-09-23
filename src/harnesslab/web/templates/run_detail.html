@@ -99,6 +99,7 @@
     <tr><th>runner</th><td>{{ run.runner }} · cli {{ run.cli_version or "—" }} · provider session <span class="mono">{{ run.provider_session_id or "—" }}</span></td></tr>
     <tr><th>model</th><td>requested {{ run.model_requested or "default" }} · resolved {{ run.model_resolved or "—" }}</td></tr>
     <tr><th>runner config</th><td><pre class="small">{{ run.runner_config_json|json }}</pre><span class="muted small">hash {{ run.config_hash }}</span></td></tr>
+    <tr><th>harness bundle</th><td class="mono small">{{ run.harness_hash or "(none)" }}</td></tr>
     <tr><th>environment</th><td><span class="mono small">{{ run.environment_json|json }}</span></td></tr>
     <tr><th>versions</th><td>parser {{ run.parser_version }} · metrics {{ run.metrics_version }}{% if verifier %} · verifier {{ verifier.verifier_version }}{% endif %}</td></tr>
     <tr><th>worktree</th><td class="mono small">{{ run.worktree_path or "—" }}{% if run.worktree_kept %} (kept){% else %} (removed after the run){% endif %}</td></tr>

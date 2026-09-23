@@ -158,3 +158,34 @@ def test_nothing_persisted_contains_hidden_reasoning(settings: Settings, db: Dat
                 assert marker not in text, f"{marker} found in {path}"
     stream = next(settings.artifacts_dir.rglob("agent_stream.sanitized.jsonl"))
     assert '"redacted": true' in stream.read_text()
+
+
+async def test_grow_pages(settings: Settings, db: Database):
+    from harnesslab.grow.service import GrowService
+    from harnesslab.grow.spec import load_grow_target
+
+    spec, suite, tasks, split = load_grow_target("demo-fake")
+    outcome = await GrowService(settings, db).run(spec, suite, tasks, split)
+    with TestClient(create_app(settings, db)) as client:
+        home = client.get("/")
+        assert home.status_code == 200 and 'href="/grow"' in home.text
+        assert "baseline_gate" in home.text  # role chip on session experiments
+        listing = client.get("/grow")
+        assert listing.status_code == 200 and outcome.session_id in listing.text
+        page = client.get(f"/grow/{outcome.session_id}")
+        assert page.status_code == 200
+        for needle in ("accepted", "v1", "gate pass rate", "fake optimizer: solve", "window"):
+            assert needle in page.text, needle
+        data = client.get(f"/api/grow/{outcome.session_id}.json").json()
+        assert data["versions"][1]["status"] == "accepted"
+        assert data["current"]["number"] == 1 and data["session_id"] == outcome.session_id
+        exp_id = data["versions"][1]["gate_experiment_id"]
+        exp_page = client.get(f"/experiments/{exp_id}")
+        assert exp_page.status_code == 200
+        assert data["versions"][1]["harness_hash"][:12] in exp_page.text
+        assert f"/grow/{outcome.session_id}" in exp_page.text
+        run_id = re.search(r'href="/runs/(run_[a-z0-9]+)"', exp_page.text).group(1)
+        run_page = client.get(f"/runs/{run_id}")
+        assert run_page.status_code == 200 and data["versions"][1]["harness_hash"] in run_page.text
+        assert client.get("/grow/nope").status_code == 404
+        assert client.get("/api/grow/nope.json").status_code == 404

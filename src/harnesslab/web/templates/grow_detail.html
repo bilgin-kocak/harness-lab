@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% set r = report %}
+{% block title %}{{ r.name }} · Grow · Harness Lab{% endblock %}
+{% block content %}
+<nav class="crumbs"><a href="/grow">Grow</a> › {{ r.name }}</nav>
+<h1>{{ r.name }} <span class="badge {{ r.status|status_class }}">{{ r.status }}</span></h1>
+<p class="muted">
+  <span class="mono">{{ r.session_id }}</span> · suite <strong>{{ r.suite_name }}</strong> · phase {{ r.phase or "—" }}
+  · created {{ session.created_at|dt }}{% if session.finished_at %} · finished {{ session.finished_at|dt }}{% endif %}
+  · minimize <strong>{{ r.minimize }}</strong>
+</p>
+<p class="actions"><a class="button secondary" href="/api/grow/{{ r.session_id }}.json">Lineage JSON</a></p>
+
+<div class="cards">
+  <div class="card metric"><div class="label">iterations</div><div class="value">{{ r.iterations }}</div><div class="sub">{{ r.runs_started }} deployed runs</div></div>
+  <div class="card metric"><div class="label">versions</div><div class="value">{{ r.versions|length }}</div><div class="sub">{{ r.versions|selectattr("status", "equalto", "accepted")|list|length }} accepted · {{ r.versions|selectattr("status", "equalto", "rejected")|list|length }} rejected · {{ r.versions|selectattr("status", "equalto", "invalid")|list|length }} invalid</div></div>
+  <div class="card metric"><div class="label">gate pass rate</div><div class="value">{{ r.initial.gate_pass_rate|pct if r.initial else "—" }} → {{ r.current.gate_pass_rate|pct if r.current else "—" }}</div><div class="sub">v{{ r.initial.number if r.initial else "?" }} → v{{ r.current.number if r.current else "?" }} (current)</div></div>
+  <div class="card metric"><div class="label">median LLM calls (gate)</div><div class="value">{{ r.initial.llm_calls_median|int if r.initial else "—" }} → {{ r.current.llm_calls_median|int if r.current else "—" }}</div><div class="sub">lower is better</div></div>
+  <div class="card metric"><div class="label">cost</div><div class="value">{{ r.deployed_cost_usd|cost }}</div><div class="sub">deployed · optimizer {{ r.optimizer_cost_usd|cost }}</div></div>
+</div>
+
+<section>
+  <h2>Harness versions <span class="muted small">accepted versions form the lineage; rejected and invalid ones were rolled back</span></h2>
+  <table class="data compact">
+    <thead><tr><th>version</th><th>status</th><th>parent</th><th>window fixed</th><th class="num">gate pass</th><th class="num">gate n</th><th class="num">llm calls</th><th class="num">cost</th><th class="num">optimizer cost</th><th>experiments</th><th>reason / rationale</th></tr></thead>
+    <tbody>
+    {% for v in r.versions %}
+      <tr>
+        <td><strong>v{{ v.number }}</strong><div class="muted mono small">{{ v.harness_hash[:12] }}</div></td>
+        <td><span class="badge {{ 'badge-pass' if v.status == 'accepted' else ('badge-fail' if v.status == 'rejected' else ('badge-info' if v.status == 'initial' else 'badge-warn')) }}">{{ v.status }}</span></td>
+        <td>{% if v.parent_number is not none %}v{{ v.parent_number }}{% else %}—{% endif %}</td>
+        <td>{% if v.window_task_keys %}{{ v.window_fixed|length }}/{{ v.window_task_keys|length }} <span class="muted small">{{ v.window_task_keys|join(", ") }}</span>{% else %}—{% endif %}</td>
+        <td class="num">{{ v.gate_pass_rate|pct }}</td>
+        <td class="num">{{ v.gate_n_valid if v.gate_n_valid is not none else "—" }}</td>
+        <td class="num">{{ v.llm_calls_median|int }}</td>
+        <td class="num">{{ v.cost_median|cost }}</td>
+        <td class="num">{{ v.optimizer_cost_usd|cost }}</td>
+        <td class="small">{% if v.window_experiment_id %}<a href="/experiments/{{ v.window_experiment_id }}">window</a>{% endif %}{% if v.gate_experiment_id %} <a href="/experiments/{{ v.gate_experiment_id }}">gate</a>{% endif %}</td>
+        <td class="small">{% if v.reason %}<span class="error-text">{{ v.reason }}</span>{% endif %}{% if v.rationale %}<details><summary class="muted">rationale</summary><pre class="wrap small">{{ v.rationale }}</pre></details>{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+{% if r.final %}
+<section>
+  <h2>Final holdout <span class="muted small">{{ r.final.task_keys|join(", ") }}</span></h2>
+  <table class="data compact">
+    <thead><tr><th>version</th><th class="num">pass rate</th><th class="num">valid runs</th><th class="num">median llm calls</th><th class="num">median cost</th><th>experiment</th></tr></thead>
+    <tbody>
+    {% for side in (r.final.initial, r.final.current) %}
+      <tr><td>v{{ side.version_number }}</td><td class="num">{{ side.pass_rate|pct }}</td><td class="num">{{ side.n_valid }}</td><td class="num">{{ side.llm_calls_median|int }}</td><td class="num">{{ side.cost_median|cost }}</td><td><a href="/experiments/{{ side.experiment_id }}">open</a></td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
+
+{% if r.notes %}
+<section>
+  <h2>Notes</h2>
+  <ul>{% for n in r.notes %}{% if not n.startswith("Traceback") %}<li class="small">{{ n }}</li>{% endif %}{% endfor %}</ul>
+</section>
+{% endif %}
+{% endblock %}

@@ -15,7 +15,7 @@
   <tbody>
   {% for e in experiments %}
     <tr>
-      <td><a href="/experiments/{{ e.id }}"><strong>{{ e.name }}</strong></a><div class="muted mono small">{{ e.id }}</div></td>
+      <td><a href="/experiments/{{ e.id }}"><strong>{{ e.name }}</strong></a>{% if e.grow_role %} <a class="chip" href="/grow/{{ e.grow_session_id }}" title="grow session {{ e.grow_session_id }}">{{ e.grow_role }}</a>{% endif %}<div class="muted mono small">{{ e.id }}</div></td>
       <td>{{ e.created_at|dt }}</td>
       <td>{{ e.suite_name }}</td>
       <td>{% for v in e.variants %}<span class="chip">{{ v }}</span>{% endfor %}</td>

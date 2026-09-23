@@ -9,6 +9,7 @@
   · repetitions {{ exp.repetitions }} · parallelism {{ exp.parallelism }}
   · harnesslab {{ exp.harnesslab_version }}{% if exp.harnesslab_commit %} @ <span class="mono">{{ exp.harnesslab_commit[:12] }}</span>{% endif %}
   · env <span class="mono">{{ exp.environment_hash }}</span>
+  {% if exp.grow_session_id %} · grow <a href="/grow/{{ exp.grow_session_id }}">{{ exp.grow_role }}</a>{% endif %}
 </p>
 <p class="actions">
   {% if variant_keys|length >= 2 %}<a class="button" href="/experiments/{{ exp.id }}/compare">Compare variants</a>{% endif %}
@@ -22,7 +23,7 @@
 <section>
   <h2>Variants</h2>
   <table class="data compact">
-    <thead><tr><th>variant</th><th>harness</th><th>model</th><th>config</th><th>description</th></tr></thead>
+    <thead><tr><th>variant</th><th>harness</th><th>model</th><th>config</th><th>bundle</th><th>description</th></tr></thead>
     <tbody>
     {% for v in variants %}
       <tr>
@@ -30,6 +31,7 @@
         <td>{{ v.runner }}{% if v.harness_version %} <span class="muted">{{ v.harness_version }}</span>{% endif %}</td>
         <td>{{ v.model_requested or "default" }}</td>
         <td><details><summary class="mono small">{{ v.config_hash }}</summary><pre class="small">{{ v.config_json.options|json }}</pre></details></td>
+        <td>{% if v.harness_hash %}<details><summary class="mono small">{{ v.harness_hash[:12] }}</summary><pre class="small">{{ v.harness_json|json }}</pre></details>{% else %}<span class="muted">—</span>{% endif %}</td>
         <td class="muted">{{ v.description or "" }}</td>
       </tr>
     {% endfor %}

@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Grow · Harness Lab{% endblock %}
+{% block content %}
+<h1>Grow sessions</h1>
+{% if not sessions %}
+  <div class="card empty">
+    <p>No grow sessions yet. Run one:</p>
+    <pre>harnesslab grow run demo-fake</pre>
+  </div>
+{% else %}
+<table class="data">
+  <thead>
+    <tr><th>name</th><th>date</th><th>suite</th><th>status</th><th>phase</th><th class="num">iterations</th><th class="num">versions</th><th class="num">accepted</th></tr>
+  </thead>
+  <tbody>
+  {% for s in sessions %}
+    <tr>
+      <td><a href="/grow/{{ s.id }}"><strong>{{ s.name }}</strong></a><div class="muted mono small">{{ s.id }}</div></td>
+      <td>{{ s.created_at|dt }}</td>
+      <td>{{ s.suite_name }}</td>
+      <td><span class="badge {{ s.status|status_class }}">{{ s.status }}</span></td>
+      <td>{{ s.phase or "—" }}</td>
+      <td class="num">{{ s.iterations }}</td>
+      <td class="num">{{ s.n_versions }}</td>
+      <td class="num">{{ s.n_accepted }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+{% endblock %}

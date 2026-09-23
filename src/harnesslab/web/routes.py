@@ -15,6 +15,7 @@ from harnesslab.experiments.aggregate import (
 )
 from harnesslab.experiments.export import export_experiment
 from harnesslab.experiments.sweep import report_for_experiment
+from harnesslab.grow.report import lineage_json, report_for_session
 from harnesslab.storage.repository import Repository
 from harnesslab.web.timeline import build_timeline
 
@@ -200,3 +201,31 @@ def api_events(request: Request, run_id: str) -> JSONResponse:
             ],
         }
     )
+
+
+# -- grow sessions -----------------------------------------------------------
+
+
+def _grow_report(repo: Repository, session_ref: str) -> dict[str, Any]:
+    session = repo.find_grow_session(session_ref)
+    if session is None:
+        raise HTTPException(status_code=404, detail="grow session not found")
+    return {"session": session, "report": report_for_session(repo, session)}
+
+
+@router.get("/grow", response_class=HTMLResponse)
+def grow_list_page(request: Request) -> HTMLResponse:
+    rows = _repo(request).list_grow_sessions()
+    return _render(request, "grow_list.html", {"sessions": rows})
+
+
+@router.get("/grow/{session_id}", response_class=HTMLResponse)
+def grow_page(request: Request, session_id: str) -> HTMLResponse:
+    ctx = _grow_report(_repo(request), session_id)
+    return _render(request, "grow_detail.html", ctx)
+
+
+@router.get("/api/grow/{session_id}.json")
+def api_grow(request: Request, session_id: str) -> JSONResponse:
+    ctx = _grow_report(_repo(request), session_id)
+    return JSONResponse(lineage_json(ctx["report"]))

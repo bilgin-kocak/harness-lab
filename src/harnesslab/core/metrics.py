@@ -74,6 +74,7 @@ def compute_metrics(
         error_events=counts[EventKind.ERROR],
         file_change_events=counts[EventKind.FILE_CHANGE],
         num_turns=runner_result.num_turns,
+        llm_calls=runner_result.llm_calls,
         permission_denials=runner_result.permission_denials,
         files_changed=changes.files_changed if changes else 0,
         lines_added=changes.lines_added if changes else 0,

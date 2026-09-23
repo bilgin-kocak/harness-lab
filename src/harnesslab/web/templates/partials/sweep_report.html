@@ -12,7 +12,7 @@
       {% if w.recommended %}
         <div class="value badge-pass">{{ w.recommended.variant_key }}</div>
         <div class="sub">pass {{ w.recommended.pass_rate|pct }} ({{ w.recommended.n_passed }}/{{ w.recommended.n_valid }}) ·
-          {% if kind.endswith("cost_usd") %}{{ w.recommended.objective|cost }}{% elif kind == "wall_time_seconds" %}{{ w.recommended.objective|seconds }}{% else %}{{ w.recommended.objective|int }} tokens{% endif %}
+          {% if kind.endswith("cost_usd") %}{{ w.recommended.objective|cost }}{% elif kind == "wall_time_seconds" %}{{ w.recommended.objective|seconds }}{% elif kind == "llm_calls" %}{{ w.recommended.objective|int }} calls{% else %}{{ w.recommended.objective|int }} tokens{% endif %}
           · tokens {{ w.recommended.median_tokens|int }} · {{ w.recommended.median_wall_time|seconds }}</div>
         {% if w.runner_up %}<div class="sub">runner-up: {{ w.runner_up.variant_key }}</div>{% endif %}
         {% if w.holdout %}<div class="sub">holdout ({{ w.holdout.task_keys|join(", ") }}): pass {{ w.holdout.pass_rate|pct }} over {{ w.holdout.n_valid }} runs</div>{% endif %}

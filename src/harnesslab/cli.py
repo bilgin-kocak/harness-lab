@@ -783,6 +783,8 @@ def _fmt_objective(value: float | None, kind: str) -> str:
         return f"${value:,.4f}"
     if kind == "wall_time_seconds":
         return f"{value:,.1f}s"
+    if kind == "llm_calls":
+        return f"{value:,.0f} calls"
     return f"{value:,.0f}"
 
 

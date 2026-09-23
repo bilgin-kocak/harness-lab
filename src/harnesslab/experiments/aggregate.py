@@ -30,6 +30,7 @@ class RunSample(BaseModel):
     output_tokens: int | None = None
     cached_input_tokens: int | None = None
     tool_calls: int | None = None
+    llm_calls: int | None = None
     shell_commands: int | None = None
     files_changed: int | None = None
     reported_cost_usd: float | None = None
@@ -80,6 +81,7 @@ class VariantAggregate(BaseModel):
     output_tokens: Stat = Field(default_factory=Stat)
     cached_input_tokens: Stat = Field(default_factory=Stat)
     tool_calls: Stat = Field(default_factory=Stat)
+    llm_calls: Stat = Field(default_factory=Stat)
     shell_commands: Stat = Field(default_factory=Stat)
     files_changed: Stat = Field(default_factory=Stat)
     reported_cost_usd: Stat = Field(default_factory=Stat)
@@ -115,6 +117,7 @@ def aggregate_variant(variant_key: str, samples: list[RunSample]) -> VariantAggr
         output_tokens=describe([s.output_tokens for s in samples]),
         cached_input_tokens=describe([s.cached_input_tokens for s in samples]),
         tool_calls=describe([s.tool_calls for s in samples]),
+        llm_calls=describe([s.llm_calls for s in samples]),
         shell_commands=describe([s.shell_commands for s in samples]),
         files_changed=describe([s.files_changed for s in samples]),
         reported_cost_usd=describe([s.reported_cost_usd for s in samples]),
@@ -368,6 +371,7 @@ def samples_from_rows(
                 output_tokens=run.output_tokens,
                 cached_input_tokens=run.cached_input_tokens,
                 tool_calls=run.tool_calls,
+                llm_calls=run.llm_calls,
                 shell_commands=run.shell_commands,
                 files_changed=run.files_changed,
                 reported_cost_usd=run.reported_cost_usd,

@@ -77,6 +77,7 @@
       <tr><td>median input tokens</td>{% for vk in variant_keys %}<td class="num">{{ aggregates[vk].input_tokens.median|int }}</td>{% endfor %}</tr>
       <tr><td>median cached input tokens</td>{% for vk in variant_keys %}<td class="num">{{ aggregates[vk].cached_input_tokens.median|int }}</td>{% endfor %}</tr>
       <tr><td>median output tokens</td>{% for vk in variant_keys %}<td class="num">{{ aggregates[vk].output_tokens.median|int }}</td>{% endfor %}</tr>
+      <tr><td>median LLM calls</td>{% for vk in variant_keys %}<td class="num">{{ aggregates[vk].llm_calls.median|int }}</td>{% endfor %}</tr>
       <tr><td>median tool calls</td>{% for vk in variant_keys %}<td class="num">{{ aggregates[vk].tool_calls.median|int }}</td>{% endfor %}</tr>
       <tr><td>median shell commands</td>{% for vk in variant_keys %}<td class="num">{{ aggregates[vk].shell_commands.median|int }}</td>{% endfor %}</tr>
       <tr><td>median files changed</td>{% for vk in variant_keys %}<td class="num">{{ aggregates[vk].files_changed.median|int }}</td>{% endfor %}</tr>

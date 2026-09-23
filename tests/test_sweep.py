@@ -392,3 +392,19 @@ def test_schema_migration_adds_missing_columns(settings: Settings):
     assert "factors_json" in [r[1] for r in conn.execute("PRAGMA table_info(variants)")]
     conn.close()
     json.dumps({"ok": True})
+
+
+def test_sweep_can_minimize_llm_calls():
+    spec = _spec(
+        objective={"minimize": "llm_calls", "tie_breaker": "llm_calls"},
+        repetitions=1,
+        factors={"g": ["a", "b"]},
+    )
+    samples = [
+        RunSample(run_id="1", task_key="t", variant_key="g=a", verified_pass=True, llm_calls=9),
+        RunSample(run_id="2", task_key="t", variant_key="g=b", verified_pass=True, llm_calls=3),
+    ]
+    report = analyze_sweep(spec, samples, {"g=a": {"g": "a"}, "g=b": {"g": "b"}}, {"t": []})
+    assert report.objective_kind == "llm_calls"
+    assert report.workloads[0].recommended.variant_key == "g=b"
+    assert report.workloads[0].recommended.median_llm_calls == 3

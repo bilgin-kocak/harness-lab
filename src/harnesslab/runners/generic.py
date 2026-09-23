@@ -108,7 +108,7 @@ class GenericCommandRunner(HarnessRunner):
 
         usage = UsageTotals()
         text_lines: list[str] = []
-        counters = {"json_events": 0}
+        counters = {"json_events": 0, "usage": 0}
 
         def on_line(line: str) -> None:
             nonlocal usage
@@ -142,6 +142,7 @@ class GenericCommandRunner(HarnessRunner):
                         )
                         counters["json_events"] += 1
                         if kind == EventKind.USAGE:
+                            counters["usage"] += 1
                             usage = usage.add(
                                 UsageTotals(
                                     **{k: int(payload.get(k, 0)) for k in UsageTotals.model_fields}
@@ -199,6 +200,7 @@ class GenericCommandRunner(HarnessRunner):
             exit_code=proc.exit_code,
             final_message=final,
             usage=usage,
+            llm_calls=counters["usage"] or None,
             model_resolved=config.model,
             metadata={"json_events": counters["json_events"]},
         )

@@ -238,6 +238,7 @@ class Repository:
             row.reported_cost_usd = metrics.reported_cost_usd
             row.estimated_cost_usd = metrics.estimated_cost_usd
             row.tool_calls = metrics.tool_calls
+            row.llm_calls = metrics.llm_calls
             row.shell_commands = metrics.shell_commands
             row.files_changed = metrics.files_changed
             row.lines_added = metrics.lines_added

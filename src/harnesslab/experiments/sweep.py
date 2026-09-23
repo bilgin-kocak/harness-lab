@@ -123,6 +123,7 @@ class ConfigResult(BaseModel):
     median_wall_time: float | None = None
     median_tokens: float | None = None
     median_tool_calls: float | None = None
+    median_llm_calls: float | None = None
     median_files_changed: float | None = None
     eligible: bool = False
     reason: str | None = None
@@ -170,6 +171,8 @@ class SweepReport(BaseModel):
 
 
 def _objective_kind(spec: SweepSpec, samples: list[RunSample]) -> str:
+    if spec.objective.minimize == "llm_calls":
+        return "llm_calls"
     if spec.objective.minimize == "tokens":
         return "total_tokens"
     if spec.objective.minimize == "wall_time":
@@ -194,6 +197,8 @@ def _value(kind: str, s: RunSample) -> float | None:
         return s.estimated_cost_usd
     if kind == "wall_time_seconds":
         return s.wall_time_seconds
+    if kind == "llm_calls":
+        return float(s.llm_calls) if s.llm_calls is not None else None
     return _tokens(s)
 
 
@@ -208,6 +213,7 @@ def _tie_value(spec: SweepSpec, c: ConfigResult) -> float:
         "wall_time_seconds": c.median_wall_time,
         "tokens": c.median_tokens,
         "cost": c.objective,
+        "llm_calls": c.median_llm_calls,
     }[key]
     return float("inf") if value is None else float(value)
 
@@ -235,6 +241,7 @@ def _config_result(
         median_wall_time=_median([r.wall_time_seconds for r in valid]),
         median_tokens=_median([_tokens(r) for r in valid]),
         median_tool_calls=_median([r.tool_calls for r in valid]),
+        median_llm_calls=_median([r.llm_calls for r in valid]),
         median_files_changed=_median([r.files_changed for r in valid]),
     )
     if not valid:

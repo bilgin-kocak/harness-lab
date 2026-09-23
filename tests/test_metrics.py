@@ -142,3 +142,10 @@ def test_pricing_table_prefix_match_and_unknown(tmp_path: Path):
         )
         is None
     )
+
+
+def test_llm_calls_pass_through_metrics():
+    metrics = compute_metrics([], RunnerResult(llm_calls=5), None, None, wall_time_seconds=1.0)
+    assert metrics.llm_calls == 5
+    empty = compute_metrics([], RunnerResult(), None, None, wall_time_seconds=1.0)
+    assert empty.llm_calls is None

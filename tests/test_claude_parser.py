@@ -138,3 +138,8 @@ def test_sanitize_unknown_and_tool_result_caps():
     }
     out = sanitize_record(big, "")
     assert len(out["message"]["content"][0]["content"]) < 25_000
+
+
+def test_parser_counts_distinct_assistant_messages_as_llm_calls():
+    _, parser, _ = _parse("stream_success.jsonl")
+    assert parser.api_calls == 7

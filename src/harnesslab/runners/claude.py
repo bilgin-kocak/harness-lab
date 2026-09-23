@@ -290,6 +290,7 @@ class ClaudeCodeRunner(HarnessRunner):
             model_resolved=parser.model or config.model,
             cli_version=parser.cli_version or availability.version,
             num_turns=parser.num_turns,
+            llm_calls=parser.api_calls or None,
             permission_denials=len(parser.permission_denials),
             error=error,
             metadata=metadata,

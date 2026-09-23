@@ -170,6 +170,8 @@ class ClaudeStreamParser:
         self.api_retries = 0
         self.saw_result = False
         self._seen_message_ids: set[str] = set()
+        self._assistant_ids: set[str] = set()
+        self.api_calls = 0
         self._open: dict[str, tuple[float, str, bool]] = {}
         self._per_message_usage = UsageTotals()
 
@@ -294,6 +296,10 @@ class ClaudeStreamParser:
         message = obj.get("message") if isinstance(obj.get("message"), dict) else {}
         parent = obj.get("parent_tool_use_id")
         message_id = str(message.get("id") or "")
+        if not message_id or message_id not in self._assistant_ids:
+            self.api_calls += 1
+            if message_id:
+                self._assistant_ids.add(message_id)
         model = message.get("model")
         if model and not parent:
             self.model = self.model or model

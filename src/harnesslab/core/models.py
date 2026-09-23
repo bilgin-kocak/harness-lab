@@ -212,8 +212,8 @@ class SweepRequirement(BaseModel):
 
 class SweepObjective(BaseModel):
     require: SweepRequirement = Field(default_factory=SweepRequirement)
-    minimize: Literal["cost", "tokens", "wall_time"] = "cost"
-    tie_breaker: Literal["wall_time_seconds", "tokens", "cost"] = "wall_time_seconds"
+    minimize: Literal["cost", "tokens", "wall_time", "llm_calls"] = "cost"
+    tie_breaker: Literal["wall_time_seconds", "tokens", "cost", "llm_calls"] = "wall_time_seconds"
 
 
 class SweepSample(BaseModel):
@@ -372,6 +372,7 @@ class RunnerResult(BaseModel):
     model_resolved: str | None = None
     cli_version: str | None = None
     num_turns: int | None = None
+    llm_calls: int | None = None
     permission_denials: int = 0
     error: str | None = None
     metadata: dict[str, Any] = Field(default_factory=dict)
@@ -505,6 +506,7 @@ class RunMetrics(BaseModel):
     error_events: int = 0
     file_change_events: int = 0
     num_turns: int | None = None
+    llm_calls: int | None = None
     permission_denials: int = 0
     files_changed: int = 0
     lines_added: int = 0

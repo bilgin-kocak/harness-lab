@@ -39,6 +39,7 @@ from harnesslab.execution.process import build_child_env, run_process, shell_arg
 from harnesslab.runners.base import HarnessRunner, register_runner
 
 FAKE_MODEL = "fake-model-v1"
+DEFAULT_LLM_CALLS = {"solve": 3, "partial": 2, "fail": 2, "noop": 1, "crash": 1, "timeout": 1}
 FAKE_VERSION = "fake/1.0"
 OUTPUT_PREVIEW = 4000
 
@@ -283,6 +284,7 @@ class FakeRunner(HarnessRunner):
         else:
             final = f"I implemented the change for '{task.id}' and ran `{command}` (exit code {exit_code})."
         emit.emit(EventKind.ASSISTANT_MESSAGE, name="assistant", payload={"text": final})
+        llm_calls = int(config.get("llm_calls", DEFAULT_LLM_CALLS.get(behavior, 2)))
 
         return RunnerResult(
             status=RunStatus.COMPLETED,
@@ -295,5 +297,6 @@ class FakeRunner(HarnessRunner):
             model_resolved=model,
             cli_version=FAKE_VERSION,
             num_turns=3,
+            llm_calls=llm_calls,
             metadata={"behavior": behavior, "simulated_cost": cost is not None},
         )

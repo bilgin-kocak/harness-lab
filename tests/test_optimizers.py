@@ -112,3 +112,110 @@ async def test_view_builds_scrubbed_failure_case(settings, db):
     assert ctx.previous_rejections == ["r2", "r3", "r4", "r5", "r6"] and ctx.iteration == 3
     assert "fake.yaml" in ctx.constraints.allowed_paths
     ctx.model_dump_json()
+
+
+# -- claude-cli optimizer --------------------------------------------------------
+
+
+def test_registry_lists_builtin_optimizers():
+    assert {"fake", "claude-cli", "manual"} <= set(available_optimizers())
+
+
+async def test_claude_cli_optimizer_parses_structured_output(fake_cli, tmp_path, monkeypatch):
+    from harnesslab.grow.optimizers.claude_cli import build_optimizer_argv
+    from tests.conftest import FIXTURES
+
+    monkeypatch.setenv("FAKE_CLI_STREAM", str(FIXTURES / "claude" / "optimizer_proposal.json"))
+    out = tmp_path / "prompt.txt"
+    monkeypatch.setenv("FAKE_CLI_PROMPT_OUT", str(out))
+    opt = create_optimizer(
+        "claude-cli",
+        {
+            "executable": str(fake_cli),
+            "model": "claude-sonnet-5",
+            "env_passthrough": ["FAKE_CLI_STREAM", "FAKE_CLI_PROMPT_OUT"],
+        },
+        artifacts_dir=tmp_path,
+    )
+    proposal = await opt.propose(_ctx({"fake.yaml": "", "hooks.json": '{"hooks": {}}'}, "b"))
+    assert proposal.files["system_prompt.md"] == "Run tests twice.\n"
+    assert proposal.files["hooks.json"] == '{"hooks": {}}'  # unchanged files are carried over
+    assert proposal.rationale == "added the failing task"
+    assert proposal.cost_usd == 0.0123 and proposal.usage.input_tokens == 1000
+    assert proposal.raw["session_id"] == "opt-1"
+    assert '"task_id": "b"' in out.read_text()
+    assert (tmp_path / "optimizer_attempt_1.json").exists()
+    argv = build_optimizer_argv({"model": "m"}, "{}")
+    assert "--json-schema" in argv and "--max-turns" in argv and "--output-format" in argv
+    assert argv[argv.index("--tools") + 1] == "" and "--model" in argv
+
+
+async def test_claude_cli_optimizer_retries_then_fails(fake_cli, tmp_path, monkeypatch):
+    import pytest
+
+    from harnesslab.grow.optimizers.base import OptimizerError
+    from tests.conftest import FIXTURES
+
+    monkeypatch.setenv("FAKE_CLI_STREAM", str(FIXTURES / "claude" / "optimizer_bad.json"))
+    opt = create_optimizer(
+        "claude-cli",
+        {"executable": str(fake_cli), "env_passthrough": ["FAKE_CLI_STREAM"]},
+        artifacts_dir=tmp_path,
+    )
+    with pytest.raises(OptimizerError, match="unparseable"):
+        await opt.propose(_ctx({"fake.yaml": ""}, "b"))
+    assert (tmp_path / "optimizer_attempt_2.json").exists()
+
+
+async def test_claude_cli_optimizer_missing_executable():
+    import pytest
+
+    from harnesslab.grow.optimizers.base import OptimizerError
+
+    opt = create_optimizer("claude-cli", {"executable": "claude-does-not-exist-xyz"})
+    with pytest.raises(OptimizerError, match="could not start"):
+        await opt.propose(_ctx({"fake.yaml": ""}, "b"))
+
+
+def test_parse_proposal_falls_back_to_result_text():
+    from harnesslab.grow.optimizers.claude_cli import parse_proposal
+
+    text = 'Here you go: {"files": {"a": "b"}, "rationale": "r"} thanks'
+    assert parse_proposal({"result": text}) == {"files": {"a": "b"}, "rationale": "r"}
+    assert parse_proposal({"result": "nope"}) is None
+    assert parse_proposal({"structured_output": {"files": "not a dict"}}) is None
+
+
+# -- manual optimizer ------------------------------------------------------------
+
+
+async def test_manual_optimizer_reads_candidate(tmp_path, monkeypatch):
+    opt = create_optimizer("manual", {}, artifacts_dir=tmp_path / "v1")
+    ctx = _ctx({"fake.yaml": "solve_tasks: []\n", "system_prompt.md": "old"}, "b")
+
+    def fake_input(*_):
+        proposal_dir = tmp_path / "v1-proposal"
+        assert (proposal_dir / "context.json").exists() and (proposal_dir / "README.txt").exists()
+        (proposal_dir / "candidate" / "system_prompt.md").write_text("new")
+        (proposal_dir / "candidate" / "skills" / "x").mkdir(parents=True)
+        (proposal_dir / "candidate" / "skills" / "x" / "SKILL.md").write_text("---\nname: x\n---\n")
+        (proposal_dir / "RATIONALE.md").write_text("human edit\n")
+        return ""
+
+    monkeypatch.setattr("builtins.input", fake_input)
+    monkeypatch.setattr("sys.stdin.isatty", lambda: True)
+    proposal = await opt.propose(ctx)
+    assert proposal.files["system_prompt.md"] == "new" and proposal.rationale == "human edit"
+    assert proposal.files["fake.yaml"] == "solve_tasks: []\n"
+    assert "skills/x/SKILL.md" in proposal.files and "RATIONALE.md" not in proposal.files
+
+
+async def test_manual_optimizer_requires_tty(tmp_path, monkeypatch):
+    import pytest
+
+    from harnesslab.grow.optimizers.base import OptimizerError
+
+    monkeypatch.setattr("sys.stdin.isatty", lambda: False)
+    opt = create_optimizer("manual", {}, artifacts_dir=tmp_path / "v1")
+    with pytest.raises(OptimizerError, match="interactive"):
+        await opt.propose(_ctx({"fake.yaml": ""}, "b"))

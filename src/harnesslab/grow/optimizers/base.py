@@ -129,14 +129,9 @@ def _load_entry_point_optimizers() -> None:
 
 
 def _ensure_builtin_optimizers() -> None:
-    from harnesslab.grow.optimizers import fake  # noqa: F401
+    # Import side effects register the built-in optimizers.
+    from harnesslab.grow.optimizers import claude_cli, fake, manual  # noqa: F401
 
-    for module in ("harnesslab.grow.optimizers.claude_cli", "harnesslab.grow.optimizers.manual"):
-        try:
-            importlib.import_module(module)
-        except ModuleNotFoundError as exc:  # pragma: no cover - only while modules are absent
-            if exc.name != module:
-                raise
     _load_entry_point_optimizers()
 
 

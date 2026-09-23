@@ -24,6 +24,7 @@ from harnesslab.harness.bundle import (
 MIN_VERBATIM_LINE = 24
 MIN_HIDDEN_NAME = 6
 HIDDEN_PLACEHOLDER = "[hidden-test]"
+HIDDEN_LINE_PLACEHOLDER = "[hidden-test-line]"
 _IMPORT_PREFIXES = ("import ", "from ")
 
 
@@ -68,10 +69,20 @@ class SuiteSecrets:
         )
 
     def scrub(self, text: str) -> str:
+        """Remove hidden test names and hidden source lines (tracebacks quote them)."""
         for name in self.hidden_names:
             if name in text:
                 text = text.replace(name, HIDDEN_PLACEHOLDER)
-        return text
+        if not self.hidden_lines:
+            return text
+        out: list[str] = []
+        for line in text.splitlines(keepends=True):
+            stripped = line.strip()
+            if len(stripped) >= MIN_VERBATIM_LINE and stripped in self.hidden_lines:
+                out.append(line.replace(stripped, HIDDEN_LINE_PLACEHOLDER))
+            else:
+                out.append(line)
+        return "".join(out)
 
 
 @dataclass

@@ -146,3 +146,25 @@ async def test_grow_final_holdout_comparison(settings, db):
         if e["grow_session_id"] == session.id
     ]
     assert roles.count("final") == 2
+
+
+async def test_no_hidden_test_content_leaks_from_grow(settings, db):
+    import json as _json
+
+    from harnesslab.harness.lint import SuiteSecrets
+
+    spec, suite, tasks, split = _spec()
+    outcome = await GrowService(settings, db).run(spec, suite, tasks, split)
+    secrets = SuiteSecrets.from_tasks(tasks)
+    grow_dir = settings.home / "grow" / outcome.session_id
+    audited = list(grow_dir.rglob("context.json")) + list(grow_dir.rglob("proposal.json"))
+    assert audited, "expected context.json and proposal.json under the session directory"
+    for path in audited:
+        text = path.read_text()
+        _json.loads(text)
+        assert not any(line in text for line in secrets.hidden_lines), path
+        assert not any(name in text for name in secrets.hidden_names), path
+    # The optimizer view for a failed task must still carry the verifier's verdict.
+    context = _json.loads((grow_dir / "v1" / "context.json").read_text())
+    assert context["failures"][0]["outcome"] == "fail"
+    assert "[hidden-test]" in context["failures"][0]["verifier_stderr"]

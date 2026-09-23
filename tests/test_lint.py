@@ -52,3 +52,15 @@ def test_lint_rejects_leaks_and_rule_violations():
     assert any("harness.yaml" in e for e in lint_candidate(cur, manifest, s, c))
     escape = {**cur, "../x": "y"}
     assert any("not allowed" in e for e in lint_candidate(cur, escape, s, EditConstraints()))
+
+
+def test_scrub_removes_hidden_source_lines_from_tracebacks():
+    s = _secrets()
+    line = next(iter(s.hidden_lines))
+    traceback = (
+        f'  File "tests/test_hidden_budgets.py", line 39, in test_x\n    {line}\nAssertionError'
+    )
+    scrubbed = s.scrub(traceback)
+    assert line not in scrubbed and "[hidden-test]" in scrubbed
+    assert "[hidden-test-line]" in scrubbed and scrubbed.endswith("AssertionError")
+    assert s.scrub("plain text stays") == "plain text stays"

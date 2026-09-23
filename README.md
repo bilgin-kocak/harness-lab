@@ -44,6 +44,7 @@ and every trace is stored in one provider-neutral schema.
 - [Running Claude Code](#running-claude-code)
 - [Test your own harness in five minutes](#test-your-own-harness-in-five-minutes)
 - [Configuration sweeps: the cheapest verified configuration](#configuration-sweeps-the-cheapest-verified-configuration)
+- [Growing the harness](#growing-the-harness)
 - [Creating a task suite](#creating-a-task-suite)
 - [Creating a harness variant](#creating-a-harness-variant)
 - [Interpreting metrics](#interpreting-metrics)
@@ -114,7 +115,16 @@ src/harnesslab/
     service.py           orchestration: worktree → agent → diff → verifier → metrics → persist
     aggregate.py         per-variant aggregates, task×variant matrix, pairwise comparison
     export.py            JSON export
-  web/                   FastAPI + Jinja2 + HTMX dashboard
+  harness/
+    bundle.py            harness bundles (system prompt, skills, hooks, agents, fake.yaml) + hashing
+    lint.py              leak lint: task ids, hidden test names and hidden source lines never reach an optimizer
+  grow/
+    spec.py              GrowSpec: split, window (K, Q, R_max), optimizer, budget
+    service.py           the Growing Harness loop: baseline -> window -> optimizer -> gate -> accept/rollback
+    view.py              what the optimizer may see (scrubbed traces, diffs, verifier output)
+    report.py            version lineage + final holdout comparison
+    optimizers/          Optimizer ABC + registry; claude-cli, manual, fake
+  web/                   FastAPI + Jinja2 + HTMX dashboard (experiments, runs, compare, grow sessions)
 suites/demo/             the demo benchmark (fixture repo, 3 tasks, hidden tests, reference solutions)
 tests/                   unit, parser (recorded JSONL fixtures), end-to-end, CLI, web, opt-in integration
 ```
@@ -421,6 +431,93 @@ Honest limits:
 - Grids explode: use `sample`, `budget`, `tasks:` and `holdout_tasks`. Smarter search (successive
   halving, Bayesian) is on the roadmap.
 
+## Growing the harness
+
+Harness Lab can run the loop from *Grow the Harness, Not the Context* (Li et al., 2026,
+arXiv 2609.26760) for coding agents: failures drive edits to a **harness bundle**, a held-out
+**gate** rejects edits that regress, accepted versions accumulate, and the growth curve is
+recorded with the same reproducibility guarantees as every other run.
+
+### Harness bundles
+
+A bundle is a plain directory, git-trackable and hand-editable, that any variant can carry
+with `harness: path/to/bundle`:
+
+```text
+harnesses/baseline/
+  harness.yaml         optional: name, description
+  system_prompt.md     appended to the agent's system prompt
+  skills/<name>/SKILL.md
+  hooks.json           Claude Code hooks (plugin format)
+  agents/<name>.md
+  fake.yaml            simulation only: solve_tasks, fail_tasks, llm_calls (fake runner)
+```
+
+Claude Code and Codex are closed, so the bundle is the *outer* harness. The Claude adapter
+passes `system_prompt.md` with `--append-system-prompt-file` and materializes skills, hooks and
+agents as a plugin loaded with `--plugin-dir`. Codex gets the system prompt and skills as a prompt
+prefix (hooks and agents are recorded as ignored). The generic runner gets `{harness_dir}` and
+`HARNESSLAB_HARNESS_DIR`. Every run records `harness_hash`, and the hash is part of `config_hash`,
+so `factors: {harness: {baseline: {harness: ../a}, grown: {harness: ../b}}}` works as a sweep
+factor with no extra code: that is the paper's "grown harness × model" table for coding agents.
+
+### The grow loop
+
+```bash
+harnesslab grow run demo-fake                       # fake runner + fake optimizer: seconds, no keys
+harnesslab grow run grow/claude-grow.yaml --dry-run # print split, window, first optimizer view
+harnesslab grow run grow/claude-grow.yaml           # Claude Code deployed, Claude optimizer: real API usage
+harnesslab grow show <session-id>                   # version lineage, gate pass rates, llm_calls
+harnesslab grow export <session-id> harnesses/grown # copy the current bundle + lineage.json
+harnesslab grow resume <session-id>                 # continue after Ctrl-C or a crash
+harnesslab harness check harnesses/grown --suite demo   # validate + leak lint
+```
+
+A grow spec (`harnesslab init` copies two templates into `grow/`):
+
+```yaml
+name: claude-grow
+suite: demo
+base_variant: { runner: claude, model: claude-haiku-4-5, max_turns: 30 }
+harness: ../harnesses/baseline           # initial bundle; omit for an empty one
+split:                                   # explicit lists, or fractions: {train: .6, gate: .2, final: .2} + seed
+  train: [fix-month-boundary, add-tag-budgets]
+  gate:  [consolidate-money-formatting]
+window: { size: 2, min_fixed: 1, max_attempts: 3 }    # K, Q, R_max from the paper
+optimizer: { kind: claude-cli, model: claude-sonnet-5, max_files: 4 }
+budget: { max_runs: 40, max_cost_usd: 10, max_optimizer_cost_usd: 5 }
+report: { minimize: llm_calls }
+```
+
+Per iteration: fill the window with up to K failing train tasks (fewest attempts first), ask the
+optimizer for a candidate, validate and lint it, run the window (a task counts as fixed only if
+every repetition passes; fewer than Q fixed → rejected), run the gate (pass rate below the current
+version's → rejected), otherwise accept. Rollback is implicit: "current" only moves on accept, and
+the pool and attempt counters are snapshotted per version. Tasks retire at `max_attempts`. Every
+window and gate evaluation is an ordinary experiment (tagged with its role in the dashboard), each
+version's bundle, the exact optimizer view (`context.json`) and the raw proposal live under
+`.harnesslab/grow/<session>/v<N>/`, and `grow resume` continues from the saved state.
+
+Optimizers are plugins (`harnesslab.grow.optimizers.base.Optimizer`, entry-point group
+`harnesslab.optimizers`). Built in: `claude-cli` (the Claude Code binary in print mode, no tools,
+one turn, structured JSON output; its cost is recorded separately as optimizer cost), `manual`
+(you edit `candidate/`, Harness Lab runs window, gate and rollback) and `fake` (tests and demo).
+
+### What the optimizer sees, and never sees
+
+The optimizer view holds the current bundle's content files, each failing task's prompt, a
+compact trace digest, the agent's diff, the verifier's output and metrics, the edit constraints,
+and the reasons of recent rejections. It never contains injected hidden files: their names are
+replaced by `[hidden-test]` and their source lines (which unittest tracebacks quote) by
+`[hidden-test-line]`. Every candidate is linted before it runs and rejected if it deletes a file,
+edits `harness.yaml`, exceeds `max_files` or the size caps, mentions a task id or hidden test name,
+or contains a line copied verbatim from a hidden test.
+
+Honest limits: with the bundled 3-task suite the loop only proves the mechanics; the paper uses
+200 train, 50 gate and 50 final tasks. `llm_calls` is exact for Claude Code (distinct assistant
+messages) and the generic JSONL protocol, and `null` for Codex, whose stream does not expose model
+invocations. The optimizer's own cost is reported next to the deployed cost, not hidden in it.
+
 ## Creating a task suite
 
 Run `harnesslab init my-lab` to get an editable copy of the demo suite. A suite is a YAML file
@@ -538,6 +635,7 @@ Per run (`runs` table / run page):
 | `reported_cost_usd` | what the harness itself reported (Claude Code does, Codex CLI does not) — never invented |
 | `estimated_cost_usd` + `pricing_version` | computed only from your `pricing.yaml` (see `pricing.example.yaml`) |
 | `tool_calls` / `shell_commands` / `tool_calls_unfinished` / `subagent_tool_calls` | counted from normalized events |
+| `llm_calls` | model invocations: distinct assistant messages (Claude Code), `usage` events (generic JSONL), `null` for Codex |
 | `files_changed` / `lines_added` / `lines_deleted` | from `git diff --numstat` against the base commit |
 | `agent_exit_code` / `verifier_exit_code` / `num_turns` / `permission_denials` | raw process facts |
 
@@ -612,8 +710,9 @@ Phase 2 builds on this substrate (nothing below is implemented yet):
   abstraction so hidden tests and the host are unreachable.
 - **Smarter configuration search**: successive halving / Bayesian search over sweep grids,
   per-runner concurrency limits, cost-aware early stopping.
-- **Harness Autotuner / Skill A/B lab**: candidate harness mutation → cheap diagnostic suite →
-  full hidden regression suite → cost/latency comparison → promote or reject.
+- ~~Harness Autotuner~~: shipped as `harnesslab grow` (see [Growing the harness](#growing-the-harness)).
+  Next: bootstrap confidence intervals, hook/skill events as trace components, a growth-curve
+  chart, and a task corpus generator so sessions run on hundreds of tasks.
 - **Native Windows support** (process groups and worktree cleanup are POSIX-only today; WSL works).
 - **Agent causal debugger / delta replay**: replay a trace, locate the first divergence between a
   passing and a failing run, counterfactual interventions on stable event ids.

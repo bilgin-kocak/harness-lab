@@ -44,3 +44,25 @@ def list_bundled_sweeps() -> dict[str, Path]:
 
 def bundled_pricing_example() -> Path:
     return bundled_root() / "pricing.example.yaml"
+
+
+def bundled_grow_dir() -> Path:
+    return bundled_root() / "grow"
+
+
+def list_bundled_grows() -> dict[str, Path]:
+    root = bundled_grow_dir()
+    if not root.is_dir():
+        return {}
+    return {p.stem: p for p in sorted(root.glob("*.yaml"))}
+
+
+def bundled_harnesses_dir() -> Path:
+    return bundled_root() / "harnesses"
+
+
+def list_bundled_harnesses() -> dict[str, Path]:
+    root = bundled_harnesses_dir()
+    if not root.is_dir():
+        return {}
+    return {d.name: d for d in sorted(root.iterdir()) if d.is_dir()}

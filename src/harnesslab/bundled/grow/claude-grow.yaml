@@ -1,0 +1,16 @@
+# Growing Harness on Claude Code. WARNING: real API usage for every window and gate run,
+# plus the optimizer model's usage for every proposal. Budgets cap both.
+name: claude-grow
+suite: demo
+base_variant: { runner: claude, model: claude-haiku-4-5, max_turns: 30, permission_mode: acceptEdits }
+harness: ../harnesses/baseline
+split:
+  train: [fix-month-boundary, add-tag-budgets]
+  gate: [consolidate-money-formatting]
+window: { size: 2, min_fixed: 1, max_attempts: 3 }
+repetitions: 1
+parallelism: 2
+max_iterations: 5
+optimizer: { kind: claude-cli, model: claude-sonnet-5, max_files: 4 }
+budget: { max_runs: 40, max_cost_usd: 10, max_optimizer_cost_usd: 5 }
+report: { minimize: llm_calls }

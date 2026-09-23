@@ -1,0 +1,16 @@
+# Growing Harness demo on the fake runner: runs in seconds, needs no API keys.
+# The fake optimizer "learns" by adding failing tasks to fake.yaml; the gate task stays
+# unsolved so the gate pass rate is a flat 0% -> 0% (never a regression).
+name: demo-fake-grow
+suite: demo
+base_variant: { runner: fake, behavior: noop }
+harness: ../harnesses/baseline
+split:
+  train: [fix-month-boundary, add-tag-budgets]
+  gate: [consolidate-money-formatting]
+window: { size: 2, min_fixed: 1, max_attempts: 3 }
+repetitions: 1
+parallelism: 3
+max_iterations: 3
+optimizer: { kind: fake }
+report: { minimize: llm_calls }

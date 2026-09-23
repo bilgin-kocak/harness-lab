@@ -41,6 +41,8 @@ class FakeOptimizer(Optimizer):
         data["solve_tasks"] = solve
         regress = self.options.get("regress_gate_task")
         if regress:
+            solve = [t for t in solve if t != regress]
+            data["solve_tasks"] = solve
             fail = list(data.get("fail_tasks") or [])
             if regress not in fail:
                 fail.append(regress)

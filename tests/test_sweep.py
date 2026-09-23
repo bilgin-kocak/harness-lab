@@ -408,3 +408,34 @@ def test_sweep_can_minimize_llm_calls():
     assert report.objective_kind == "llm_calls"
     assert report.workloads[0].recommended.variant_key == "g=b"
     assert report.workloads[0].recommended.median_llm_calls == 3
+
+
+def test_harness_bundle_as_sweep_factor(tmp_path: Path):
+    from harnesslab.experiments.spec import resolve_variant_harnesses
+
+    for name, prompt in (("a", "Be terse."), ("b", "Be thorough.")):
+        (tmp_path / name).mkdir()
+        (tmp_path / name / "system_prompt.md").write_text(prompt)
+    spec = _spec(
+        factors={
+            "harness": {"a": {"harness": "a"}, "b": {"harness": "b"}},
+            "model": ["m-small", "m-big"],
+        },
+        source_path=tmp_path / "sweep.yaml",
+    )
+    variants = expand_sweep(spec)
+    resolve_variant_harnesses(variants, spec.base_dir)
+    assert len(variants) == 4 and all(v.harness_hash for v in variants)
+    by_key = {v.id: v for v in variants}
+    assert by_key["harness=a|model=m-small"].harness_dir == (tmp_path / "a").resolve()
+    assert (
+        by_key["harness=a|model=m-small"].harness_hash
+        != by_key["harness=b|model=m-small"].harness_hash
+    )
+    assert (
+        by_key["harness=a|model=m-small"].runner_config().config_hash()
+        != by_key["harness=b|model=m-small"].runner_config().config_hash()
+    )
+    assert "harness_dir" not in by_key["harness=a|model=m-big"].runner_config().model_dump(
+        mode="json"
+    )

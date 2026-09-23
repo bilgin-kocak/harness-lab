@@ -106,3 +106,55 @@ def test_run_accepts_experiment_yaml(tmp_path: Path):
     )
     assert result.exit_code == 0, result.output
     assert "baseline-comparison" in result.output and "2 run(s)" in result.output
+
+
+def test_grow_run_show_export_and_resume(tmp_path: Path):
+    env = _env(tmp_path)
+    dry = runner.invoke(app, ["grow", "run", "demo-fake", "--dry-run"], env=env)
+    assert dry.exit_code == 0, dry.output
+    assert "train:" in dry.output and "window size" in dry.output and "optimizer view" in dry.output
+    result = runner.invoke(app, ["grow", "run", "demo-fake"], env=env)
+    assert result.exit_code == 0, result.output
+    assert "accepted" in result.output and "session id:" in result.output
+    sid = re.search(r"session id: (\S+)", result.output).group(1)
+    listing = runner.invoke(app, ["grow", "list"], env=env)
+    assert listing.exit_code == 0 and sid in listing.output and "completed" in listing.output
+    show = runner.invoke(app, ["grow", "show", sid], env=env)
+    assert show.exit_code == 0, show.output
+    assert "v1" in show.output and "gate" in show.output and "accepted" in show.output
+    exported = runner.invoke(app, ["grow", "export", sid, str(tmp_path / "out")], env=env)
+    assert exported.exit_code == 0, exported.output
+    assert (tmp_path / "out" / "fake.yaml").exists()
+    lineage = json.loads((tmp_path / "out" / "lineage.json").read_text())
+    assert lineage["versions"][1]["status"] == "accepted"
+    resumed = runner.invoke(app, ["grow", "resume", sid], env=env)
+    assert resumed.exit_code == 1 and "not resumable" in resumed.output
+    missing = runner.invoke(app, ["grow", "show", "nope"], env=env)
+    assert missing.exit_code == 1 and "not found" in missing.output
+    bad = runner.invoke(app, ["grow", "run", "nope"], env=env)
+    assert bad.exit_code == 2 and "bundled" in bad.output
+
+
+def test_harness_check_and_init_scaffold(tmp_path: Path):
+    env = _env(tmp_path)
+    target = tmp_path / "lab"
+    assert runner.invoke(app, ["init", str(target)], env=env).exit_code == 0
+    assert (target / "harnesses" / "baseline" / "system_prompt.md").exists()
+    assert (target / "grow" / "demo-fake.yaml").exists()
+    assert "grow run" in (target / "README.md").read_text()
+    bundle = target / "harnesses" / "baseline"
+    ok = runner.invoke(app, ["harness", "check", str(bundle), "--suite", "demo"], env=env)
+    assert ok.exit_code == 0, ok.output
+    assert "ok" in ok.output and "system_prompt.md" in ok.output
+    (bundle / "system_prompt.md").write_text("solve fix-month-boundary")
+    bad = runner.invoke(app, ["harness", "check", str(bundle), "--suite", "demo"], env=env)
+    assert bad.exit_code == 1 and "task id" in bad.output
+    (bundle / "system_prompt.md").write_text("Run the tests.\n")
+    grown = runner.invoke(
+        app,
+        ["grow", "run", str(target / "grow" / "demo-fake.yaml"), "--max-iterations", "1"],
+        env=env,
+    )
+    assert grown.exit_code == 0, grown.output
+    broken = runner.invoke(app, ["harness", "check", str(tmp_path / "missing")], env=env)
+    assert broken.exit_code == 1 and "not a directory" in broken.output

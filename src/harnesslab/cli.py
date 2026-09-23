@@ -16,9 +16,12 @@ from rich.table import Table
 
 import harnesslab
 from harnesslab.bundled import (
+    bundled_grow_dir,
+    bundled_harnesses_dir,
     bundled_pricing_example,
     bundled_suites_dir,
     bundled_sweeps_dir,
+    list_bundled_grows,
     list_bundled_suites,
     list_bundled_sweeps,
 )
@@ -44,6 +47,19 @@ from harnesslab.experiments.sweep import (
     expand_sweep,
     report_for_experiment,
 )
+from harnesslab.grow.optimizers.base import (
+    EditConstraintsSpec,
+    FailureCase,
+    FailureMetrics,
+    OptimizerContext,
+    load_optimizer_plugins,
+)
+from harnesslab.grow.report import GrowReport, lineage_json, report_for_session
+from harnesslab.grow.service import GrowError, GrowProgress, GrowService
+from harnesslab.grow.spec import load_grow_target
+from harnesslab.grow.view import ALLOWED_PATHS
+from harnesslab.harness.bundle import BundleError, HarnessBundle
+from harnesslab.harness.lint import EditConstraints, SuiteSecrets, lint_candidate
 from harnesslab.runners.base import PluginError, load_plugins
 from harnesslab.storage.database import Database
 from harnesslab.storage.repository import Repository
@@ -59,9 +75,16 @@ sweep_app = typer.Typer(
     help="Configuration sweeps: search model x effort x toolset x compaction x action policy for the cheapest verified configuration.",
     no_args_is_help=True,
 )
+grow_app = typer.Typer(
+    help="Growing Harness: grow a harness bundle from failures with a held-out gate.",
+    no_args_is_help=True,
+)
+harness_app = typer.Typer(help="Inspect and validate harness bundles.", no_args_is_help=True)
 app.add_typer(suite_app, name="suite")
 app.add_typer(experiment_app, name="experiment")
 app.add_typer(sweep_app, name="sweep")
+app.add_typer(grow_app, name="grow")
+app.add_typer(harness_app, name="harness")
 
 console = Console()
 err_console = Console(stderr=True)
@@ -111,6 +134,7 @@ def main(
 def _load_plugins_or_exit(modules: list[str]) -> None:
     try:
         load_plugins(modules)
+        load_optimizer_plugins(modules)
     except PluginError as exc:
         err_console.print(f"[red]{exc}[/]")
         raise typer.Exit(code=2) from exc
@@ -135,11 +159,14 @@ harnesslab doctor                                              # check python, g
 harnesslab suite check suites/demo/suite.yaml                  # verifiers fail on the untouched repo, pass with the solution
 harnesslab run suites/demo/suite.yaml --variants fake-reference,fake-noop
 harnesslab sweep run sweeps/demo-fake.yaml                     # cheapest verified configuration (no API keys)
+harnesslab grow run grow/demo-fake.yaml                        # grow a harness from failures (no API keys)
 harnesslab serve                                               # http://127.0.0.1:8000
 ```
 
 - `suites/demo/` - a copy of the bundled demo suite: tasks, hidden tests (`tasks/<id>/verify`), reference solutions.
 - `sweeps/` - configuration-sweep templates (`claude-config-search.yaml` costs real API usage).
+- `harnesses/baseline/` - a starting harness bundle (system prompt, skills, hooks, fake.yaml).
+- `grow/` - Growing Harness session templates (`claude-grow.yaml` costs real API usage).
 - `pricing.example.yaml` - copy to `pricing.yaml` and fill in rates to get estimated costs for harnesses that do not report cost.
 
 Data (database, worktrees, artifacts) is written to `./.harnesslab`.
@@ -159,6 +186,8 @@ def init(
     targets = {
         directory / "suites" / "demo": bundled_suites_dir() / "demo",
         directory / "sweeps": bundled_sweeps_dir(),
+        directory / "harnesses" / "baseline": bundled_harnesses_dir() / "baseline",
+        directory / "grow": bundled_grow_dir(),
         directory / "pricing.example.yaml": bundled_pricing_example(),
         directory / "README.md": None,
     }
@@ -1011,6 +1040,361 @@ def sweep_report(ctx: typer.Context, experiment_id: Annotated[str, typer.Argumen
         err_console.print(f"[red]experiment {exp.id} is not a sweep (no factor grid recorded)[/]")
         raise typer.Exit(code=1)
     _print_sweep_report(report)
+
+
+# ---------------------------------------------------------------------------
+# grow
+# ---------------------------------------------------------------------------
+
+
+def _fmt_rate(value: float | None) -> str:
+    return "—" if value is None else f"{value:.0%}"
+
+
+def _print_grow_report(report: GrowReport) -> None:
+    console.print(
+        f"[bold]grow {report.name}[/]  session={report.session_id}  status={report.status}"
+        f"  phase={report.phase}  iterations={report.iterations}"
+        f"  runs={report.runs_started}  deployed cost ${report.deployed_cost_usd:,.4f}"
+        f"  optimizer cost ${report.optimizer_cost_usd:,.4f}"
+    )
+    if report.initial and report.current:
+        console.print(
+            f"gate pass rate: {_fmt_rate(report.initial.gate_pass_rate)} (v{report.initial.number})"
+            f" → {_fmt_rate(report.current.gate_pass_rate)} (v{report.current.number})"
+            f" · median {report.minimize}: {_fmt(report.initial.llm_calls_median, 0)}"
+            f" → {_fmt(report.current.llm_calls_median, 0)}"
+        )
+    table = Table(title="harness versions", box=None, padding=(0, 1))
+    for col in (
+        "version",
+        "status",
+        "window fixed",
+        "gate pass",
+        "gate n",
+        "llm calls",
+        "cost",
+        "opt cost",
+        "reason",
+    ):
+        table.add_column(
+            col,
+            justify="right"
+            if col in ("gate pass", "gate n", "llm calls", "cost", "opt cost")
+            else "left",
+        )
+    for v in report.versions:
+        colour = {
+            "accepted": "green",
+            "rejected": "red",
+            "invalid": "yellow",
+            "initial": "cyan",
+        }.get(v.status, "white")
+        fixed = f"{len(v.window_fixed)}/{len(v.window_task_keys)}" if v.window_task_keys else "—"
+        table.add_row(
+            f"v{v.number}",
+            f"[{colour}]{v.status}[/]",
+            fixed,
+            _fmt_rate(v.gate_pass_rate),
+            str(v.gate_n_valid) if v.gate_n_valid is not None else "—",
+            _fmt(v.llm_calls_median, 0),
+            _fmt(v.cost_median, 4),
+            _fmt(v.optimizer_cost_usd, 4),
+            (v.reason or "")[:80],
+        )
+    console.print(table)
+    if report.final:
+        ft = Table(
+            title=f"final holdout ({', '.join(report.final.task_keys)})", box=None, padding=(0, 1)
+        )
+        for col in ("version", "pass rate", "valid", "llm calls", "cost"):
+            ft.add_column(col, justify="right" if col != "version" else "left")
+        for side in (report.final.initial, report.final.current):
+            ft.add_row(
+                f"v{side.version_number}",
+                _fmt_rate(side.pass_rate),
+                str(side.n_valid),
+                _fmt(side.llm_calls_median, 0),
+                _fmt(side.cost_median, 4),
+            )
+        console.print(ft)
+    for note in report.notes:
+        if not note.startswith("Traceback"):
+            console.print(f"[dim]note: {note}[/]")
+
+
+def _grow_progress(p: GrowProgress) -> None:
+    if p.kind == "version":
+        colour = (
+            "green" if "accepted" in p.message else ("red" if "rejected" in p.message else "yellow")
+        )
+        console.print(f"[{colour}]{p.message}[/]")
+    else:
+        console.print(f"[dim]▶ {p.message}[/]")
+
+
+@grow_app.command("list")
+def grow_list(ctx: typer.Context) -> None:
+    """List grow sessions and bundled grow templates."""
+    for name, path in list_bundled_grows().items():
+        console.print(f"[bold]{name}[/]  [dim]{path}[/]  (bundled template)")
+    settings = _settings(ctx)
+    db = _open_db(settings)
+    try:
+        rows = Repository(db, settings.home).list_grow_sessions()
+    finally:
+        db.dispose()
+    table = Table()
+    for col in (
+        "id",
+        "name",
+        "created",
+        "suite",
+        "status",
+        "phase",
+        "iterations",
+        "versions",
+        "accepted",
+    ):
+        table.add_column(col)
+    for r in rows:
+        table.add_row(
+            r["id"],
+            r["name"],
+            r["created_at"].strftime("%Y-%m-%d %H:%M"),
+            r["suite_name"],
+            r["status"],
+            r["phase"] or "—",
+            str(r["iterations"]),
+            str(r["n_versions"]),
+            str(r["n_accepted"]),
+        )
+    console.print(table)
+
+
+def _synthetic_context(spec, suite, split, bundle: HarnessBundle) -> OptimizerContext:
+    cases = [
+        FailureCase(
+            task_id=t,
+            task_name=t,
+            prompt="(task prompt)",
+            attempts=0,
+            run_id="(dry-run)",
+            status="completed",
+            outcome="fail",
+            verified_score=0.0,
+            final_message="",
+            trace_digest=["(no runs yet)"],
+            diff="",
+            verifier_stdout="",
+            verifier_stderr="",
+            metrics=FailureMetrics(),
+        )
+        for t in split.train[: spec.window.size]
+    ]
+    return OptimizerContext(
+        session_name=spec.name,
+        iteration=1,
+        runner=spec.base_variant["runner"],
+        model=spec.base_variant.get("model"),
+        bundle=bundle.content_files,
+        constraints=EditConstraintsSpec(
+            allowed_paths=list(ALLOWED_PATHS),
+            max_files=spec.optimizer.max_files,
+            max_file_bytes=EditConstraints().max_file_bytes,
+            max_bundle_bytes=EditConstraints().max_bundle_bytes,
+        ),
+        failures=cases,
+        previous_rejections=[],
+        suite_description=suite.description,
+    )
+
+
+@grow_app.command("run")
+def grow_run(
+    ctx: typer.Context,
+    target: Annotated[
+        str, typer.Argument(help="A grow.yaml or a bundled grow name (e.g. demo-fake).")
+    ],
+    max_iterations: Annotated[int | None, typer.Option("--max-iterations", min=1)] = None,
+    name: Annotated[str | None, typer.Option("--name", "-n", help="Session name.")] = None,
+    keep_worktrees: Annotated[bool, typer.Option("--keep-worktrees")] = False,
+    pricing: Annotated[
+        Path | None, typer.Option("--pricing", help="pricing.yaml for cost estimates.")
+    ] = None,
+    plugin: Annotated[
+        list[str] | None,
+        typer.Option("--plugin", help="Python module registering custom runners or optimizers."),
+    ] = None,
+    dry_run: Annotated[
+        bool,
+        typer.Option(
+            "--dry-run", help="Print the split, window and first optimizer view; run nothing."
+        ),
+    ] = False,
+) -> None:
+    """Grow a harness: failures -> optimizer -> window check -> gate check -> accept or roll back."""
+    settings = _settings(ctx)
+    try:
+        spec, suite, tasks, split = load_grow_target(target)
+        _load_plugins_or_exit(list(plugin or []) + suite.plugins + spec.plugins)
+    except SpecError as exc:
+        err_console.print(f"[red]{exc}[/]")
+        raise typer.Exit(code=2) from exc
+    if max_iterations is not None:
+        spec.max_iterations = max_iterations
+    if name:
+        spec.name = name
+    if keep_worktrees:
+        spec.keep_worktrees = True
+    bundle = (
+        HarnessBundle.load(spec.harness_dir)
+        if spec.harness_dir
+        else HarnessBundle(path=Path("."), files={})
+    )
+    console.print(
+        f"[bold]{spec.name}[/]: train {len(split.train)} · gate {len(split.gate)} · final {len(split.final)}"
+        f" · window size {spec.window.size} (Q={spec.window.min_fixed}, R_max={spec.window.max_attempts})"
+        f" · max {spec.max_iterations} iteration(s) · optimizer {spec.optimizer.kind}"
+        f"{' (' + spec.optimizer.model + ')' if spec.optimizer.model else ''}"
+        f" · initial harness {bundle.hash[:12]} ({len(bundle.files)} file(s))"
+    )
+    if dry_run:
+        console.print(f"train: {', '.join(split.train)}")
+        console.print(f"gate:  {', '.join(split.gate)}")
+        console.print(f"final: {', '.join(split.final) or '(none)'}")
+        console.print("[bold]first optimizer view (synthetic failures):[/]")
+        console.print(_synthetic_context(spec, suite, split, bundle).model_dump_json(indent=2))
+        return
+    db = _open_db(settings)
+    service = GrowService(settings, db, pricing=_load_pricing(settings, pricing))
+    try:
+        outcome = asyncio.run(service.run(spec, suite, tasks, split, progress=_grow_progress))
+        session = service.repo.get_grow_session(outcome.session_id)
+        report = report_for_session(service.repo, session)
+    except KeyboardInterrupt:  # pragma: no cover - interactive
+        err_console.print("[red]interrupted; resume with: harnesslab grow resume <session id>[/]")
+        raise typer.Exit(code=130) from None
+    except GrowError as exc:
+        err_console.print(f"[red]{exc}[/]")
+        raise typer.Exit(code=1) from exc
+    finally:
+        db.dispose()
+    console.print()
+    _print_grow_report(report)
+    console.print(
+        f"session id: [bold]{outcome.session_id}[/]  ·  harnesslab grow show {outcome.session_id}  ·  harnesslab serve"
+    )
+
+
+@grow_app.command("resume")
+def grow_resume(ctx: typer.Context, session_id: Annotated[str, typer.Argument()]) -> None:
+    """Continue an interrupted or failed grow session from its saved state."""
+    settings = _settings(ctx)
+    db = _open_db(settings)
+    service = GrowService(settings, db)
+    try:
+        outcome = asyncio.run(service.resume(session_id, progress=_grow_progress))
+        report = report_for_session(service.repo, service.repo.get_grow_session(outcome.session_id))
+    except GrowError as exc:
+        err_console.print(f"[red]{exc}[/]")
+        raise typer.Exit(code=1) from exc
+    finally:
+        db.dispose()
+    _print_grow_report(report)
+    console.print(f"session id: [bold]{outcome.session_id}[/]")
+
+
+@grow_app.command("show")
+def grow_show(ctx: typer.Context, session_id: Annotated[str, typer.Argument()]) -> None:
+    """Print the version lineage and gate results of a grow session."""
+    settings = _settings(ctx)
+    db = _open_db(settings)
+    try:
+        repo = Repository(db, settings.home)
+        session = repo.find_grow_session(session_id)
+        if session is None:
+            err_console.print(f"[red]grow session not found: {session_id}[/]")
+            raise typer.Exit(code=1)
+        report = report_for_session(repo, session)
+    finally:
+        db.dispose()
+    _print_grow_report(report)
+
+
+@grow_app.command("export")
+def grow_export(
+    ctx: typer.Context,
+    session_id: Annotated[str, typer.Argument()],
+    directory: Annotated[Path, typer.Argument(help="Directory to write the current bundle into.")],
+) -> None:
+    """Copy the session's current accepted bundle to a directory and write lineage.json."""
+    settings = _settings(ctx)
+    db = _open_db(settings)
+    try:
+        repo = Repository(db, settings.home)
+        session = repo.find_grow_session(session_id)
+        if session is None:
+            err_console.print(f"[red]grow session not found: {session_id}[/]")
+            raise typer.Exit(code=1)
+        current = (
+            repo.get_harness_version(session.current_version_id)
+            if session.current_version_id
+            else None
+        )
+        if current is None:
+            err_console.print("[red]session has no current harness version[/]")
+            raise typer.Exit(code=1)
+        report = report_for_session(repo, session)
+    finally:
+        db.dispose()
+    directory = directory.expanduser().resolve()
+    HarnessBundle.load(settings.home / current.bundle_path).write_to(directory)
+    (directory / "lineage.json").write_text(json.dumps(lineage_json(report), indent=2, default=str))
+    console.print(
+        f"wrote v{current.number} ({current.harness_hash[:12]}) and lineage.json to {directory}"
+    )
+
+
+# ---------------------------------------------------------------------------
+# harness
+# ---------------------------------------------------------------------------
+
+
+@harness_app.command("check")
+def harness_check(
+    ctx: typer.Context,
+    bundle_dir: Annotated[Path, typer.Argument(help="Harness bundle directory.")],
+    suite: Annotated[
+        str | None,
+        typer.Option("--suite", help="Suite (path or bundled name) to run the leak lint against."),
+    ] = None,
+) -> None:
+    """Validate a harness bundle and, with --suite, lint it for hidden-test leaks."""
+    try:
+        bundle = HarnessBundle.load(bundle_dir)
+    except BundleError as exc:
+        err_console.print(f"[red]{exc}[/]")
+        raise typer.Exit(code=1) from exc
+    console.print(f"[bold]{bundle.name or bundle_dir.name}[/]  hash {bundle.hash}")
+    for entry in bundle.file_summary():
+        console.print(f"  {entry['path']}  [dim]{entry['bytes']} bytes[/]")
+    if suite:
+        try:
+            _, tasks = load_suite(resolve_suite_target(suite))
+        except SpecError as exc:
+            err_console.print(f"[red]{exc}[/]")
+            raise typer.Exit(code=2) from exc
+        secrets = SuiteSecrets.from_tasks(tasks)
+        content = bundle.content_files
+        errors = lint_candidate({}, content, secrets, EditConstraints(max_files=10**6))
+        if errors:
+            for error in errors:
+                console.print(f"[red]✘ {error}[/]")
+            raise typer.Exit(code=1)
+        console.print(f"[green]ok[/] no leaks against suite {suite} ({len(tasks)} task(s))")
+    else:
+        console.print("[green]ok[/] valid bundle (pass --suite to lint for hidden-test leaks)")
 
 
 if __name__ == "__main__":  # pragma: no cover

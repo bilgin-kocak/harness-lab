@@ -37,6 +37,8 @@ class ExperimentRow(Base):
     environment_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     environment_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    grow_session_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    grow_role: Mapped[str | None] = mapped_column(String(32), nullable=True)
 
     variants: Mapped[list[VariantRow]] = relationship(
         back_populates="experiment", cascade="all, delete-orphan", order_by="VariantRow.position"
@@ -241,3 +243,67 @@ class ArtifactRow(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
     run: Mapped[RunRow] = relationship(back_populates="artifacts")
+
+
+class GrowSessionRow(Base):
+    """One Growing Harness session: a lineage of harness versions grown on a suite."""
+
+    __tablename__ = "grow_sessions"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    name: Mapped[str] = mapped_column(String(255))
+    suite_name: Mapped[str] = mapped_column(String(255))
+    suite_path: Mapped[str | None] = mapped_column(Text, nullable=True)
+    spec_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    status: Mapped[str] = mapped_column(String(32), default="running")
+    phase: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    state_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    initial_version_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    current_version_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    iterations: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    harnesslab_version: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    harnesslab_commit: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    versions: Mapped[list[HarnessVersionRow]] = relationship(
+        back_populates="session",
+        cascade="all, delete-orphan",
+        order_by="HarnessVersionRow.number",
+    )
+
+
+class HarnessVersionRow(Base):
+    """One candidate/accepted harness bundle in a grow session."""
+
+    __tablename__ = "harness_versions"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    session_id: Mapped[str] = mapped_column(
+        ForeignKey("grow_sessions.id", ondelete="CASCADE"), index=True
+    )
+    number: Mapped[int] = mapped_column(Integer)
+    parent_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    harness_hash: Mapped[str] = mapped_column(String(64))
+    bundle_path: Mapped[str] = mapped_column(Text)  # relative to the Harness Lab home
+    status: Mapped[str] = mapped_column(String(32), default="candidate")
+    reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    window_task_keys_json: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
+    window_fixed_json: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
+    window_experiment_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    gate_experiment_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    gate_pass_rate: Mapped[float | None] = mapped_column(Float, nullable=True)
+    gate_n_valid: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    gate_n_passed: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    gate_llm_calls_median: Mapped[float | None] = mapped_column(Float, nullable=True)
+    gate_cost_median: Mapped[float | None] = mapped_column(Float, nullable=True)
+    optimizer_kind: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    optimizer_model: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    optimizer_usage_json: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    optimizer_cost_usd: Mapped[float | None] = mapped_column(Float, nullable=True)
+    rationale: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    session: Mapped[GrowSessionRow] = relationship(back_populates="versions")

@@ -261,3 +261,81 @@ def test_missing_or_invalid_harness_is_a_spec_error(tmp_path):
     (bad / "hooks.json").write_text("{")
     with pytest.raises(SpecError, match="invalid JSON"):
         resolve_variant_harness(VariantSpec(id="x", runner="fake", harness="bad"), tmp_path)
+
+
+def test_grow_session_and_version_rows(settings: Settings, db: Database):
+    repo = Repository(db, settings.home)
+    sid = repo.create_grow_session(
+        name="g",
+        suite_name="demo",
+        suite_path="/x",
+        spec_json={"a": 1},
+        harnesslab_version="0.1.0",
+        harnesslab_commit=None,
+    )
+    v0 = repo.create_harness_version(
+        session_id=sid,
+        number=0,
+        parent_id=None,
+        harness_hash="h0",
+        bundle_path="grow/x/v0",
+        status="initial",
+    )
+    v1 = repo.create_harness_version(
+        session_id=sid,
+        number=1,
+        parent_id=v0,
+        harness_hash="h1",
+        bundle_path="grow/x/v1",
+        status="candidate",
+        optimizer_kind="fake",
+    )
+    repo.update_harness_version(v1, status="accepted", gate_pass_rate=1.0, window_fixed_json=["t"])
+    repo.update_grow_session(
+        sid,
+        status="completed",
+        phase="done",
+        current_version_id=v1,
+        initial_version_id=v0,
+        iterations=1,
+        state_json={"pool": []},
+    )
+    row = repo.get_grow_session(sid)
+    assert [v.number for v in row.versions] == [0, 1] and row.versions[1].status == "accepted"
+    assert row.versions[1].parent_id == v0 and row.versions[1].optimizer_kind == "fake"
+    assert row.current_version_id == v1 and row.state_json == {"pool": []}
+    assert repo.get_harness_version(v1).window_fixed_json == ["t"]
+    assert repo.find_grow_session(sid[:10]).id == sid and repo.find_grow_session("g").id == sid
+    assert repo.find_grow_session("nope") is None
+    listing = repo.list_grow_sessions()
+    assert listing[0]["id"] == sid and listing[0]["n_versions"] == 2
+    assert listing[0]["n_accepted"] == 1 and listing[0]["status"] == "completed"
+    exp_id = repo.create_experiment(
+        ExperimentSpec(name="e", suite="demo"),
+        SuiteSpec(name="demo"),
+        environment=EnvironmentSpec(),
+        harnesslab_version="0",
+        harnesslab_commit=None,
+    )
+    repo.tag_experiment_grow(exp_id, sid, "gate")
+    assert repo.get_experiment(exp_id).grow_role == "gate"
+    assert repo.list_experiments()[0]["grow_role"] == "gate"
+    assert repo.list_experiments()[0]["grow_session_id"] == sid
+
+
+def test_add_missing_columns_on_old_schema(settings: Settings):
+    from sqlalchemy import inspect, text
+
+    db = Database(settings.resolved_database_url)
+    with db.engine.begin() as conn:
+        conn.execute(
+            text(
+                "CREATE TABLE runs (id VARCHAR(64) PRIMARY KEY, experiment_id VARCHAR(64), "
+                "variant_id VARCHAR(64), task_id VARCHAR(64), runner VARCHAR(64))"
+            )
+        )
+    db.create_all()
+    cols = {c["name"] for c in inspect(db.engine).get_columns("runs")}
+    assert {"llm_calls", "harness_hash"} <= cols
+    assert "harness_versions" in inspect(db.engine).get_table_names()
+    db.dispose()

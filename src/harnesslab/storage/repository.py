@@ -29,6 +29,8 @@ from harnesslab.storage.models import (
     ArtifactRow,
     EventRow,
     ExperimentRow,
+    GrowSessionRow,
+    HarnessVersionRow,
     RunRow,
     TaskRow,
     VariantRow,
@@ -410,6 +412,8 @@ class Repository:
                         "best_score": stats[1],
                         "tasks": int(stats[2] or 0),
                         "passed": int(stats[3] or 0),
+                        "grow_session_id": exp.grow_session_id,
+                        "grow_role": exp.grow_role,
                     }
                 )
             return summaries
@@ -479,3 +483,155 @@ class Repository:
     def count_experiments(self) -> int:
         with self.db.session() as s:
             return int(s.execute(select(func.count(ExperimentRow.id))).scalar_one())
+
+    # -- grow sessions and harness versions --------------------------------
+    def create_grow_session(
+        self,
+        *,
+        name: str,
+        suite_name: str,
+        suite_path: str | None,
+        spec_json: dict[str, Any],
+        harnesslab_version: str,
+        harnesslab_commit: str | None,
+    ) -> str:
+        sid = new_id("grow")
+        with self.db.session() as s:
+            s.add(
+                GrowSessionRow(
+                    id=sid,
+                    name=name,
+                    suite_name=suite_name,
+                    suite_path=suite_path,
+                    spec_json=spec_json,
+                    status="running",
+                    phase="baseline_gate",
+                    state_json={},
+                    created_at=utcnow(),
+                    harnesslab_version=harnesslab_version,
+                    harnesslab_commit=harnesslab_commit,
+                )
+            )
+        return sid
+
+    def update_grow_session(self, session_id: str, **fields: Any) -> None:
+        with self.db.session() as s:
+            row = s.get(GrowSessionRow, session_id)
+            if row is None:
+                raise KeyError(session_id)
+            for key, value in fields.items():
+                setattr(row, key, value)
+
+    def get_grow_session(self, session_id: str) -> GrowSessionRow | None:
+        with self.db.session() as s:
+            return s.execute(
+                select(GrowSessionRow)
+                .where(GrowSessionRow.id == session_id)
+                .options(selectinload(GrowSessionRow.versions))
+            ).scalar_one_or_none()
+
+    def find_grow_session(self, ref: str) -> GrowSessionRow | None:
+        """Look up by full id, id prefix, or exact name (most recent)."""
+        row = self.get_grow_session(ref)
+        if row is not None:
+            return row
+        with self.db.session() as s:
+            match = (
+                s.execute(
+                    select(GrowSessionRow)
+                    .where((GrowSessionRow.id.like(f"{ref}%")) | (GrowSessionRow.name == ref))
+                    .order_by(GrowSessionRow.created_at.desc())
+                )
+                .scalars()
+                .first()
+            )
+            return self.get_grow_session(match.id) if match else None
+
+    def list_grow_sessions(self) -> list[dict[str, Any]]:
+        with self.db.session() as s:
+            rows = (
+                s.execute(
+                    select(GrowSessionRow)
+                    .options(selectinload(GrowSessionRow.versions))
+                    .order_by(GrowSessionRow.created_at.desc())
+                )
+                .scalars()
+                .all()
+            )
+            return [
+                {
+                    "id": row.id,
+                    "name": row.name,
+                    "suite_name": row.suite_name,
+                    "status": row.status,
+                    "phase": row.phase,
+                    "iterations": row.iterations,
+                    "n_versions": len(row.versions),
+                    "n_accepted": sum(1 for v in row.versions if v.status == "accepted"),
+                    "created_at": row.created_at,
+                    "finished_at": row.finished_at,
+                }
+                for row in rows
+            ]
+
+    def create_harness_version(
+        self,
+        *,
+        session_id: str,
+        number: int,
+        parent_id: str | None,
+        harness_hash: str,
+        bundle_path: str,
+        status: str,
+        optimizer_kind: str | None = None,
+        optimizer_model: str | None = None,
+    ) -> str:
+        vid = new_id("hv")
+        with self.db.session() as s:
+            s.add(
+                HarnessVersionRow(
+                    id=vid,
+                    session_id=session_id,
+                    number=number,
+                    parent_id=parent_id,
+                    harness_hash=harness_hash,
+                    bundle_path=bundle_path,
+                    status=status,
+                    optimizer_kind=optimizer_kind,
+                    optimizer_model=optimizer_model,
+                    created_at=utcnow(),
+                )
+            )
+        return vid
+
+    def update_harness_version(self, version_id: str, **fields: Any) -> None:
+        with self.db.session() as s:
+            row = s.get(HarnessVersionRow, version_id)
+            if row is None:
+                raise KeyError(version_id)
+            for key, value in fields.items():
+                setattr(row, key, value)
+
+    def get_harness_version(self, version_id: str) -> HarnessVersionRow | None:
+        with self.db.session() as s:
+            return s.get(HarnessVersionRow, version_id)
+
+    def tag_experiment_grow(self, exp_id: str, session_id: str, role: str) -> None:
+        with self.db.session() as s:
+            row = s.get(ExperimentRow, exp_id)
+            if row is None:
+                raise KeyError(exp_id)
+            row.grow_session_id = session_id
+            row.grow_role = role
+
+    def latest_run_for_task(self, session_id: str, task_key: str) -> RunRow | None:
+        """Most recent finished run of ``task_key`` in any experiment of a grow session."""
+        with self.db.session() as s:
+            run_id = s.execute(
+                select(RunRow.id)
+                .join(ExperimentRow, ExperimentRow.id == RunRow.experiment_id)
+                .join(TaskRow, TaskRow.id == RunRow.task_id)
+                .where(ExperimentRow.grow_session_id == session_id, TaskRow.task_key == task_key)
+                .order_by(RunRow.finished_at.desc(), RunRow.id.desc())
+            ).scalar()
+        return self.get_run(run_id) if run_id else None

@@ -57,6 +57,7 @@ def export_experiment(
                 "runner": full.runner,
                 "runner_config": full.runner_config_json,
                 "config_hash": full.config_hash,
+                "harness_hash": full.harness_hash,
                 "model_requested": full.model_requested,
                 "model_resolved": full.model_resolved,
                 "cli_version": full.cli_version,
@@ -159,6 +160,8 @@ def export_experiment(
                 "config": v.config_json,
                 "config_hash": v.config_hash,
                 "factors": v.factors_json,
+                "harness_hash": v.harness_hash,
+                "harness": v.harness_json,
             }
             for v in exp.variants
         ],

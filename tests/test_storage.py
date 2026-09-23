@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import pytest
+
 from harnesslab.config import Settings
 from harnesslab.core.events import EventEmitter, EventKind
 from harnesslab.core.models import (
@@ -19,6 +21,7 @@ from harnesslab.core.models import (
 from harnesslab.storage.database import Database
 from harnesslab.storage.repository import Repository
 from harnesslab.trace.redaction import Redactor
+from tests.conftest import DEMO_SUITE
 
 
 def _populate(repo: Repository, artifacts_dir: Path) -> tuple[str, str]:
@@ -205,3 +208,56 @@ def test_mark_stale_runs(settings: Settings, db: Database):
         repo.get_run(run_id).status == "interrupted"
         and repo.get_experiment(exp_id).status == "interrupted"
     )
+
+
+async def test_variant_harness_is_snapshotted_and_hashed(settings, db, tmp_path):
+    from harnesslab.experiments.export import export_experiment
+    from harnesslab.experiments.service import ExperimentService
+    from harnesslab.experiments.spec import load_suite, resolve_variant_harness
+
+    bundle = tmp_path / "bundle"
+    bundle.mkdir()
+    (bundle / "system_prompt.md").write_text("Be careful.\n")
+    (bundle / "fake.yaml").write_text("solve_tasks: [fix-month-boundary]\n")
+    suite, tasks = load_suite(DEMO_SUITE)
+    variant = VariantSpec(id="grown", runner="fake", behavior="noop", harness=str(bundle))
+    resolve_variant_harness(variant, tmp_path)
+    assert variant.harness_dir == bundle.resolve() and len(variant.harness_hash or "") == 64
+    plain = VariantSpec(id="plain", runner="fake", behavior="noop")
+    assert variant.runner_config().config_hash() != plain.runner_config().config_hash()
+    assert "harness_dir" not in variant.runner_config().model_dump(mode="json")
+
+    service = ExperimentService(settings, db)
+    outcome = await service.run_experiment(
+        ExperimentSpec(name="h", suite=str(DEMO_SUITE), source_path=DEMO_SUITE),
+        suite,
+        tasks[:1],
+        [variant, plain],
+    )
+    exp = service.repo.get_experiment(outcome.experiment_id)
+    grown = next(v for v in exp.variants if v.variant_key == "grown")
+    assert grown.harness_hash == variant.harness_hash
+    assert [f["path"] for f in grown.harness_json["files"]] == ["fake.yaml", "system_prompt.md"]
+    snapshot = settings.artifacts_dir / exp.id / "harness" / variant.harness_hash
+    assert (snapshot / "system_prompt.md").read_text() == "Be careful.\n"
+    keys = {v.id: v.variant_key for v in exp.variants}
+    runs = {keys[r.variant_id]: r for r in exp.runs}
+    assert runs["grown"].harness_hash == variant.harness_hash
+    assert runs["plain"].harness_hash is None
+    export = export_experiment(service.repo, exp.id, include_events=False, include_artifacts=False)
+    assert export["variants"][0]["harness_hash"] == variant.harness_hash
+    assert export["variants"][0]["harness"]["files"][1]["path"] == "system_prompt.md"
+    by_variant = {r["variant"]: r for r in export["runs"]}
+    assert by_variant["grown"]["reproducibility"]["harness_hash"] == variant.harness_hash
+
+
+def test_missing_or_invalid_harness_is_a_spec_error(tmp_path):
+    from harnesslab.experiments.spec import SpecError, resolve_variant_harness
+
+    with pytest.raises(SpecError, match="not found"):
+        resolve_variant_harness(VariantSpec(id="x", runner="fake", harness="nope"), tmp_path)
+    bad = tmp_path / "bad"
+    bad.mkdir()
+    (bad / "hooks.json").write_text("{")
+    with pytest.raises(SpecError, match="invalid JSON"):
+        resolve_variant_harness(VariantSpec(id="x", runner="fake", harness="bad"), tmp_path)

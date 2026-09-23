@@ -48,6 +48,7 @@ from harnesslab.core.models import (
 from harnesslab.core.pricing import PricingTable
 from harnesslab.execution.git import git_version, head_commit
 from harnesslab.execution.sandbox import ExecutionSandbox, LocalWorktreeSandbox, SandboxContext
+from harnesslab.harness.bundle import HarnessBundle
 from harnesslab.runners.base import HarnessRunner, create_runner
 from harnesslab.storage.database import Database
 from harnesslab.storage.repository import Repository
@@ -171,7 +172,22 @@ class ExperimentService:
 
         variant_rows: dict[str, str] = {}
         for position, variant in enumerate(variants):
-            variant_rows[variant.id] = self.repo.add_variant(exp_id, variant, position)
+            harness_json = None
+            if variant.harness_dir is not None:
+                bundle = HarnessBundle.load(variant.harness_dir)
+                variant.harness_hash = bundle.hash
+                snapshot_dir = self.settings.artifacts_dir / exp_id / "harness" / bundle.hash
+                if not snapshot_dir.exists():
+                    bundle.write_to(snapshot_dir)
+                harness_json = {
+                    "name": bundle.name,
+                    "description": bundle.description,
+                    "source": str(variant.harness_dir),
+                    "files": bundle.file_summary(),
+                }
+            variant_rows[variant.id] = self.repo.add_variant(
+                exp_id, variant, position, harness_json=harness_json
+            )
 
         cells = [
             (task, variant, rep)
@@ -257,6 +273,7 @@ class ExperimentService:
             harnesslab_version=self.harnesslab_version,
             parser_version=PARSER_VERSION,
             metrics_version=METRICS_VERSION,
+            harness_hash=config.harness_hash,
         )
         self.repo.skip_run(run_id, reason)
         if progress:
@@ -313,6 +330,7 @@ class ExperimentService:
             harnesslab_version=self.harnesslab_version,
             parser_version=PARSER_VERSION,
             metrics_version=METRICS_VERSION,
+            harness_hash=config.harness_hash,
         )
         if progress:
             progress(

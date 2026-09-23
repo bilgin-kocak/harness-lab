@@ -96,7 +96,14 @@ class Repository:
                 row.status = status
                 row.finished_at = utcnow()
 
-    def add_variant(self, exp_id: str, variant: VariantSpec, position: int) -> str:
+    def add_variant(
+        self,
+        exp_id: str,
+        variant: VariantSpec,
+        position: int,
+        *,
+        harness_json: dict[str, Any] | None = None,
+    ) -> str:
         vid = new_id("var")
         config = variant.runner_config()
         with self.db.session() as s:
@@ -117,6 +124,8 @@ class Repository:
                     config_json=config.model_dump(mode="json"),
                     config_hash=config.config_hash(),
                     factors_json=variant.factors,
+                    harness_hash=variant.harness_hash,
+                    harness_json=harness_json,
                 )
             )
         return vid
@@ -162,6 +171,7 @@ class Repository:
         harnesslab_version: str,
         parser_version: str,
         metrics_version: str,
+        harness_hash: str | None = None,
     ) -> str:
         run_id = new_id("run")
         with self.db.session() as s:
@@ -180,6 +190,7 @@ class Repository:
                     runner=config.runner,
                     runner_config_json=config.model_dump(mode="json"),
                     config_hash=config.config_hash(),
+                    harness_hash=harness_hash,
                     environment_json=environment.model_dump(mode="json"),
                     environment_hash=environment.environment_hash(),
                     task_hash=task_hash,

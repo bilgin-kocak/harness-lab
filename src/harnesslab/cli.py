@@ -34,6 +34,7 @@ from harnesslab.experiments.spec import (
     load_suite,
     load_sweep_target,
     resolve_suite_target,
+    resolve_variant_harnesses,
     resolve_variants,
     select_tasks,
 )
@@ -922,6 +923,7 @@ def sweep_run(
         spec, suite, tasks = load_sweep_target(target)
         _load_plugins_or_exit(list(plugin or []) + suite.plugins + spec.plugins)
         variants = expand_sweep(spec)
+        resolve_variant_harnesses(variants, spec.base_dir)
     except SpecError as exc:
         err_console.print(f"[red]{exc}[/]")
         raise typer.Exit(code=2) from exc

@@ -10,6 +10,7 @@ from pydantic import ValidationError
 
 from harnesslab.bundled import list_bundled_suites, list_bundled_sweeps
 from harnesslab.core.models import ExperimentSpec, SuiteSpec, SweepSpec, TaskSpec, VariantSpec
+from harnesslab.harness.bundle import BundleError, HarnessBundle
 
 # Variants available even when a suite does not define any, so the quickstart
 # commands work out of the box.
@@ -72,6 +73,28 @@ def resolve_suite_target(ref: str | Path) -> Path:
     )
 
 
+def resolve_variant_harness(variant: VariantSpec, base_dir: Path) -> None:
+    """Resolve ``variant.harness`` (relative to ``base_dir``) and record the bundle hash."""
+    if not variant.harness:
+        return
+    path = Path(variant.harness).expanduser()
+    if not path.is_absolute():
+        path = base_dir / path
+    if not path.is_dir():
+        raise SpecError(f"variant {variant.id!r}: harness bundle not found: {path}")
+    try:
+        bundle = HarnessBundle.load(path)
+    except BundleError as exc:
+        raise SpecError(f"variant {variant.id!r}: {exc}") from exc
+    variant.harness_dir = path.resolve()
+    variant.harness_hash = bundle.hash
+
+
+def resolve_variant_harnesses(variants: list[VariantSpec], base_dir: Path) -> None:
+    for variant in variants:
+        resolve_variant_harness(variant, base_dir)
+
+
 def load_task(path: Path) -> TaskSpec:
     path = Path(path).resolve()
     data = _read_yaml(path)
@@ -104,6 +127,7 @@ def load_suite(path: Path) -> tuple[SuiteSpec, list[TaskSpec]]:
             raise SpecError(f"duplicate task id {task.id!r} in suite {suite.name}")
         seen.add(task.id)
         tasks.append(task)
+    resolve_variant_harnesses(suite.variants, suite.base_dir)
     return suite, tasks
 
 
@@ -115,6 +139,7 @@ def load_experiment(path: Path) -> ExperimentSpec:
     except ValidationError as exc:
         raise SpecError(f"invalid experiment spec {path}:\n{exc}") from exc
     spec.source_path = path
+    resolve_variant_harnesses(spec.variants, spec.base_dir)
     return spec
 
 

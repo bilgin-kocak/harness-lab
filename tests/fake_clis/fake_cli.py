@@ -29,6 +29,10 @@ def main() -> int:
     if out:
         with open(out, "w", encoding="utf-8") as fh:
             fh.write(prompt)
+    cwd_out = os.environ.get("FAKE_CLI_CWD_OUT")
+    if cwd_out:
+        with open(cwd_out, "w", encoding="utf-8") as fh:
+            fh.write(os.getcwd())
     touch = os.environ.get("FAKE_CLI_TOUCH")
     if touch:
         with open(touch, "a", encoding="utf-8") as fh:

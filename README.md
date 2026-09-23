@@ -507,9 +507,10 @@ one turn, structured JSON output; its cost is recorded separately as optimizer c
 
 The optimizer view holds the current bundle's content files, each failing task's prompt, a
 compact trace digest, the agent's diff, the verifier's output and metrics, the edit constraints,
-and the reasons of recent rejections. It never contains injected hidden files: their names are
-replaced by `[hidden-test]` and their source lines (which unittest tracebacks quote) by
-`[hidden-test-line]`. Every candidate is linted before it runs and rejected if it deletes a file,
+and the reasons of recent rejections. It never contains injected hidden files: their file names
+and test identifiers (`test_*` functions, `*Tests` classes) are replaced by `[hidden-test]` and
+their source lines (which unittest and pytest tracebacks quote) by `[hidden-test-line]`; text is
+scrubbed before it is truncated, and rejection reasons are scrubbed before they are shown again. Every candidate is linted before it runs and rejected if it deletes a file,
 edits `harness.yaml`, exceeds `max_files` or the size caps, mentions a task id or hidden test name,
 or contains a line copied verbatim from a hidden test.
 

@@ -141,9 +141,14 @@ def report_for_session(repo: Repository, session: Any) -> GrowReport:
                 continue
         initial_row = by_id.get(session.initial_version_id)
         current_row = by_id.get(session.current_version_id)
-        if initial_row and current_row and initial_row.number in by_version:
+        if (
+            initial_row
+            and current_row
+            and initial_row.number in by_version
+            and current_row.number in by_version
+        ):
             initial_exp = by_version[initial_row.number]
-            current_exp = by_version.get(current_row.number, initial_exp)
+            current_exp = by_version[current_row.number]
             task_keys = [t.task_key for t in repo.get_experiment(initial_exp.id).tasks]
             final = FinalComparison(
                 task_keys=task_keys,

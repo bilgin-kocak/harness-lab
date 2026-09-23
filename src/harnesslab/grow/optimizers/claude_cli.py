@@ -16,6 +16,7 @@ needed.  Options::
 from __future__ import annotations
 
 import json
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -153,7 +154,9 @@ class ClaudeCliOptimizer(Optimizer):
             },
         )
         prompt = render_prompt(context)
-        cwd = self.artifacts_dir or Path.cwd()
+        # An empty temporary directory: the optimizer must not pick up the user's project
+        # CLAUDE.md, settings or hooks from the lab directory it would otherwise run in.
+        cwd = Path(tempfile.mkdtemp(prefix="harnesslab-optimizer-"))
         last_error = "optimizer produced no output"
         for attempt in (1, 2):
             proc = await run_process(

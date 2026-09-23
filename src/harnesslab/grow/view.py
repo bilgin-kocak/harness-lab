@@ -35,6 +35,14 @@ ALLOWED_PATHS = [
 ]
 
 
+def capped_scrub(secrets: SuiteSecrets, text: str, cap: int, *, tail: bool = False) -> str:
+    """Scrub first, then truncate, so a hidden name cut at the boundary cannot slip through."""
+    scrubbed = secrets.scrub(text)
+    if len(scrubbed) <= cap:
+        return scrubbed
+    return scrubbed[-cap:] if tail else scrubbed[:cap]
+
+
 def trace_digest(events: list[Any], secrets: SuiteSecrets, limit: int = DIGEST_LIMIT) -> list[str]:
     """One compact, scrubbed line per tool/command/message/error event."""
     lines: list[str] = []
@@ -52,11 +60,12 @@ def trace_digest(events: list[Any], secrets: SuiteSecrets, limit: int = DIGEST_L
         if e.duration_ms is not None:
             extra.append(f"{e.duration_ms}ms")
         out = payload.get("output") or payload.get("stdout") or payload.get("text") or ""
-        preview = " ".join(str(out).split())[:PREVIEW_CHARS]
-        line = f"#{e.sequence} {kind} {str(head)[:120]} {' '.join(extra)}".rstrip()
+        preview = capped_scrub(secrets, " ".join(str(out).split()), PREVIEW_CHARS)
+        line = f"#{e.sequence} {kind} {capped_scrub(secrets, str(head), 120)} {' '.join(extra)}"
+        line = line.rstrip()
         if preview:
             line += f" | {preview}"
-        lines.append(secrets.scrub(line))
+        lines.append(line)
         if len(lines) >= limit:
             lines.append(f"... ({len(events)} events total)")
             break
@@ -69,7 +78,7 @@ def build_failure_case(
     artifacts = {a.kind: a for a in run.artifacts}
     diff = ""
     if "agent_diff" in artifacts:
-        diff = repo.read_artifact(artifacts["agent_diff"], cap=DIFF_CAP)
+        diff = repo.read_artifact(artifacts["agent_diff"], cap=DIFF_CAP * 2)
     verifier = run.verifier_result
     metrics = run.metrics_json or {}
     return FailureCase(
@@ -81,11 +90,15 @@ def build_failure_case(
         status=run.status,
         outcome=run.outcome,
         verified_score=run.verified_score,
-        final_message=secrets.scrub((run.final_message or "")[:MESSAGE_CAP]),
+        final_message=capped_scrub(secrets, run.final_message or "", MESSAGE_CAP),
         trace_digest=trace_digest(run.events, secrets),
-        diff=secrets.scrub(diff),
-        verifier_stdout=secrets.scrub((verifier.stdout if verifier else "")[-VERIFIER_CAP:]),
-        verifier_stderr=secrets.scrub((verifier.stderr if verifier else "")[-VERIFIER_CAP:]),
+        diff=capped_scrub(secrets, diff, DIFF_CAP),
+        verifier_stdout=capped_scrub(
+            secrets, verifier.stdout if verifier else "", VERIFIER_CAP, tail=True
+        ),
+        verifier_stderr=capped_scrub(
+            secrets, verifier.stderr if verifier else "", VERIFIER_CAP, tail=True
+        ),
         metrics=FailureMetrics(
             llm_calls=metrics.get("llm_calls"),
             total_tokens=metrics.get("total_tokens"),

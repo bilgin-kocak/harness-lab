@@ -114,20 +114,23 @@ async def test_grow_resume_after_interruption(settings, db, monkeypatch):
 
     async def flaky(*args, **kwargs):
         calls["n"] += 1
+        result = await original(*args, **kwargs)
         if calls["n"] == 4:  # baseline_gate, baseline_train, window, then the gate experiment
-            raise asyncio.CancelledError()
-        return await original(*args, **kwargs)
+            raise asyncio.CancelledError()  # after the gate runs completed: spend must be recorded
+        return result
 
     monkeypatch.setattr(service, "_run_role", flaky)
     with pytest.raises(asyncio.CancelledError):
         await service.run(spec, suite, tasks, split)
     listing = service.repo.list_grow_sessions()[0]
     assert listing["status"] == "interrupted"
+    interrupted = service.repo.get_grow_session(listing["id"])
+    assert interrupted.state_json["runs_started"] == 6  # 1 gate + 2 train + 2 window + 1 gate
     resumed = await GrowService(settings, db).resume(listing["id"])
     assert resumed.status == "completed" and resumed.versions_accepted == 1
     row = service.repo.get_grow_session(listing["id"])
     assert [v.status for v in row.versions] == ["initial", "discarded", "accepted"]
-    assert row.versions[2].number == 2
+    assert row.versions[2].number == 2 and row.state_json["runs_started"] == 9
 
 
 async def test_grow_final_holdout_comparison(settings, db):
@@ -168,3 +171,75 @@ async def test_no_hidden_test_content_leaks_from_grow(settings, db):
     context = _json.loads((grow_dir / "v1" / "context.json").read_text())
     assert context["failures"][0]["outcome"] == "fail"
     assert "[hidden-test]" in context["failures"][0]["verifier_stderr"]
+
+
+async def test_optimizer_cost_counted_once_and_budget_stops(settings, db):
+    spec, suite, tasks, split = _spec(invalid=True, cost_usd=0.5)
+    spec = spec.model_copy(update={"max_iterations": 1})
+    outcome = await GrowService(settings, db).run(spec, suite, tasks, split)
+    row = GrowService(settings, db).repo.get_grow_session(outcome.session_id)
+    assert row.state_json["optimizer_cost_usd"] == 0.5
+    assert row.versions[1].optimizer_cost_usd == 0.5
+
+    spec, suite, tasks, split = _spec(fix_none=True, cost_usd=0.5)
+    spec = spec.model_copy(
+        update={"max_iterations": 3, "budget": GrowBudget(max_optimizer_cost_usd=0.4)}
+    )
+    outcome = await GrowService(settings, db).run(spec, suite, tasks, split)
+    assert outcome.iterations == 1 and outcome.status == "completed"
+    assert any("max_optimizer_cost_usd" in n for n in outcome.notes)
+
+
+async def test_rejection_reasons_are_scrubbed(settings, db):
+    spec, suite, tasks, split = _spec(mention="see test_hidden_budgets and InclusiveRangeTests")
+    spec = spec.model_copy(update={"max_iterations": 2})
+    service = GrowService(settings, db)
+    outcome = await service.run(spec, suite, tasks, split)
+    row = service.repo.get_grow_session(outcome.session_id)
+    assert row.versions[1].status == "invalid"
+    for text in [row.versions[1].reason, *row.state_json["previous_rejections"]]:
+        assert "test_hidden_budgets" not in text and "InclusiveRangeTests" not in text
+        assert "[hidden-test]" in text
+    context = (settings.home / "grow" / row.id / "v2" / "context.json").read_text()
+    assert "test_hidden_budgets" not in context and "InclusiveRangeTests" not in context
+
+
+async def test_unverified_window_runs_do_not_burn_attempts(settings, db):
+    spec, suite, tasks, split = _spec()
+    base = {"runner": "codex", "executable": "codex-does-not-exist-xyz"}
+    spec = spec.model_copy(update={"base_variant": base, "max_iterations": 2})
+    service = GrowService(settings, db)
+    outcome = await service.run(spec, suite, tasks, split)
+    row = service.repo.get_grow_session(outcome.session_id)
+    assert [v.status for v in row.versions] == ["initial", "rejected", "rejected"]
+    assert row.state_json["attempts"] == {"fix-month-boundary": 0, "add-tag-budgets": 0}
+    assert row.state_json["retired"] == [] and sorted(row.state_json["pool"]) == sorted(split.train)
+
+
+async def test_failure_case_uses_current_bundle_after_gate_rollback(settings, db, tmp_path):
+    bundle = tmp_path / "b"
+    bundle.mkdir()
+    (bundle / "fake.yaml").write_text("solve_tasks: [consolidate-money-formatting]\n")
+    spec, suite, tasks, split = _spec(regress_gate_task="consolidate-money-formatting")
+    spec = spec.model_copy(update={"harness_dir": bundle, "max_iterations": 2})
+    service = GrowService(settings, db)
+    outcome = await service.run(spec, suite, tasks, split)
+    row = service.repo.get_grow_session(outcome.session_id)
+    assert row.versions[1].status == "rejected" and row.versions[1].reason.startswith("gate:")
+    import json as _json
+
+    context = _json.loads((settings.home / "grow" / row.id / "v2" / "context.json").read_text())
+    assert all(f["outcome"] == "fail" for f in context["failures"])
+    for f in context["failures"]:
+        assert service.repo.get_run(f["run_id"]).harness_hash == row.versions[0].harness_hash
+
+
+async def test_final_report_is_none_when_current_final_missing(settings, db):
+    spec, suite, tasks, split = _spec()
+    split = split.model_copy(update={"train": ["fix-month-boundary"], "final": ["add-tag-budgets"]})
+    spec = spec.model_copy(update={"budget": GrowBudget(max_runs=5)})
+    service = GrowService(settings, db)
+    outcome = await service.run(spec, suite, tasks, split)
+    row = service.repo.get_grow_session(outcome.session_id)
+    assert outcome.versions_accepted == 1 and any("max_runs" in n for n in outcome.notes)
+    assert report_for_session(service.repo, row).final is None

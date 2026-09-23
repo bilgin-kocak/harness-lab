@@ -269,6 +269,8 @@ class GrowService:
                 planned = (len(window) + len(gate_tasks)) * spec.repetitions
                 if self._over_budget(state, budget, planned):
                     break
+                if self._optimizer_over_budget(state, budget):
+                    break
                 current = self.repo.get_harness_version(state.current_version_id)
                 current_bundle = HarnessBundle.load(self.settings.home / current.bundle_path)
                 state.iteration += 1
@@ -281,7 +283,9 @@ class GrowService:
                 cases = [
                     build_failure_case(
                         self.repo,
-                        self.repo.latest_run_for_task(session_id, t),
+                        self.repo.latest_run_for_task(
+                            session_id, t, harness_hash=current.harness_hash
+                        ),
                         by_id[t],
                         secrets,
                         state.attempts.get(t, 0),
@@ -301,8 +305,6 @@ class GrowService:
                     suite_description=suite.description,
                 )
                 (vdir / "context.json").write_text(context.model_dump_json(indent=2))
-                if self._optimizer_over_budget(state, budget):
-                    break
                 optimizer = self.optimizer_factory(
                     spec.optimizer.kind, spec.optimizer.options, artifacts_dir=vdir
                 )
@@ -311,9 +313,9 @@ class GrowService:
                 except asyncio.CancelledError:
                     raise
                 except Exception as exc:
-                    reason = f"optimizer error: {type(exc).__name__}: {exc}"
+                    reason = secrets.scrub(f"optimizer error: {type(exc).__name__}: {exc}")
                     self._record_invalid(
-                        session_id, state, number, current, vdir, reason, window, spec, None
+                        session_id, state, number, current, reason, window, spec, None
                     )
                     report("version", f"v{number} invalid: {reason}", number)
                     save()
@@ -337,9 +339,9 @@ class GrowService:
                     except BundleError as exc:
                         errors = [str(exc)]
                 if errors:
-                    reason = "lint: " + "; ".join(errors)
+                    reason = secrets.scrub("lint: " + "; ".join(errors))
                     self._record_invalid(
-                        session_id, state, number, current, vdir, reason, window, spec, proposal
+                        session_id, state, number, current, reason, window, spec, proposal
                     )
                     report("version", f"v{number} invalid: {reason}", number)
                     save()
@@ -377,9 +379,14 @@ class GrowService:
                 self.repo.update_harness_version(
                     vid, window_experiment_id=window_exp, window_fixed_json=fixed
                 )
+                unverified = {
+                    r.task_key
+                    for r in runs
+                    if r.metrics.verified_pass is None and r.task_key in window
+                }
                 if len(fixed) < spec.window.min_fixed:
                     reason = f"window: fixed {len(fixed)}/{len(window)} < {spec.window.min_fixed}"
-                    self._reject(state, vid, reason, window, spec)
+                    self._reject(state, vid, reason, window, spec, unverified)
                     report("version", f"v{number} rejected: {reason}", number)
                     save()
                     continue
@@ -398,7 +405,7 @@ class GrowService:
                 else:
                     reason = None
                 if reason:
-                    self._reject(state, vid, reason, window, spec)
+                    self._reject(state, vid, reason, window, spec, unverified)
                     report("version", f"v{number} rejected: {reason}", number)
                     save()
                     continue
@@ -410,7 +417,7 @@ class GrowService:
                 for t in window:
                     if t in fixed:
                         state.pool.remove(t)
-                    else:
+                    elif t not in unverified:
                         self._bump(state, t, spec)
                 report(
                     "version",
@@ -502,14 +509,21 @@ class GrowService:
             plugins=spec.plugins,
             source_path=suite.source_path,
         )
-        outcome = await self.experiments.run_experiment(experiment, suite, tasks, [variant])
-        self.repo.tag_experiment_grow(outcome.experiment_id, session_id, role)
-        state.runs_started += len(outcome.runs)
-        for r in outcome.runs:
-            cost = r.metrics.reported_cost_usd
+
+        def account(run: RunOutcome) -> None:
+            # Charged per run and persisted at once, so an interruption mid-experiment never
+            # loses spend from the budget.
+            state.runs_started += 1
+            cost = run.metrics.reported_cost_usd
             if cost is None:
-                cost = r.metrics.estimated_cost_usd
+                cost = run.metrics.estimated_cost_usd
             state.deployed_cost_usd += float(cost or 0.0)
+            self.repo.update_grow_session(session_id, state_json=state.model_dump(mode="json"))
+
+        outcome = await self.experiments.run_experiment(
+            experiment, suite, tasks, [variant], on_run_finished=account
+        )
+        self.repo.tag_experiment_grow(outcome.experiment_id, session_id, role)
         return outcome.runs, outcome.experiment_id
 
     async def _evaluate(
@@ -545,7 +559,13 @@ class GrowService:
             state.retired.append(task_id)
 
     def _reject(
-        self, state: GrowState, vid: str, reason: str, window: list[str], spec: GrowSpec
+        self,
+        state: GrowState,
+        vid: str,
+        reason: str,
+        window: list[str],
+        spec: GrowSpec,
+        unverified: set[str] | None = None,
     ) -> None:
         self.repo.update_harness_version(
             vid, status="rejected", reason=reason, finished_at=utcnow()
@@ -554,7 +574,8 @@ class GrowService:
         state.pending_version_id = None
         state.previous_rejections = (state.previous_rejections + [reason])[-5:]
         for t in window:
-            self._bump(state, t, spec)
+            if t not in (unverified or set()):  # infra failures are not the harness's fault
+                self._bump(state, t, spec)
 
     def _record_invalid(
         self,
@@ -562,15 +583,12 @@ class GrowService:
         state: GrowState,
         number: int,
         current: Any,
-        vdir: Path,
         reason: str,
         window: list[str],
         spec: GrowSpec,
         proposal: Proposal | None,
     ) -> None:
-        if proposal is not None:
-            self._write_proposal(vdir, proposal)
-            state.optimizer_cost_usd += proposal.cost_usd or 0.0
+        """Record an invalid candidate; the proposal (if any) was already written and charged."""
         vid = self.repo.create_harness_version(
             session_id=session_id,
             number=number,

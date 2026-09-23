@@ -26,6 +26,27 @@ MIN_HIDDEN_NAME = 6
 HIDDEN_PLACEHOLDER = "[hidden-test]"
 HIDDEN_LINE_PLACEHOLDER = "[hidden-test-line]"
 _IMPORT_PREFIXES = ("import ", "from ")
+_TEST_FUNCTION = re.compile(r"^\s*(?:async\s+)?def\s+(test\w*)\s*\(", re.M)
+_TEST_CLASS = re.compile(r"^\s*class\s+(\w+)\s*(?:\(([^)]*)\))?\s*:", re.M)
+_TRACEBACK_MARKERS = ("> ", "E ")
+
+
+def hidden_identifiers(source: str) -> set[str]:
+    """Test function and test-class names defined in a hidden test source."""
+    names = set(_TEST_FUNCTION.findall(source))
+    for name, bases in _TEST_CLASS.findall(source):
+        if "TestCase" in (bases or "") or name.endswith(("Test", "Tests")):
+            names.add(name)
+    return {n for n in names if len(n) >= MIN_HIDDEN_NAME}
+
+
+def _core_line(line: str) -> str:
+    """A traceback line without pytest's ``>``/``E`` markers, for hidden-line matching."""
+    stripped = line.strip()
+    for marker in _TRACEBACK_MARKERS:
+        if stripped.startswith(marker):
+            return stripped[len(marker) :].strip()
+    return stripped
 
 
 @dataclass
@@ -58,6 +79,7 @@ class SuiteSecrets:
                         text = path.read_text(encoding="utf-8")
                     except (UnicodeDecodeError, OSError):
                         continue
+                    names.update(hidden_identifiers(text))
                     for line in text.splitlines():
                         stripped = line.strip()
                         if len(stripped) >= MIN_VERBATIM_LINE and not stripped.startswith(
@@ -77,9 +99,9 @@ class SuiteSecrets:
             return text
         out: list[str] = []
         for line in text.splitlines(keepends=True):
-            stripped = line.strip()
-            if len(stripped) >= MIN_VERBATIM_LINE and stripped in self.hidden_lines:
-                out.append(line.replace(stripped, HIDDEN_LINE_PLACEHOLDER))
+            core = _core_line(line)
+            if len(core) >= MIN_VERBATIM_LINE and core in self.hidden_lines:
+                out.append(line.replace(core, HIDDEN_LINE_PLACEHOLDER))
             else:
                 out.append(line)
         return "".join(out)
@@ -125,10 +147,8 @@ def lint_candidate(
                 if _task_id_pattern(task_id).search(text):
                     errors.append(f"{path}: mentions task id {task_id!r}")
                     break
-        for name in secrets.hidden_names:
-            if name in text:
-                errors.append(f"{path}: mentions hidden test name {name!r}")
-                break
+        if any(name in text for name in secrets.hidden_names):
+            errors.append(f"{path}: mentions a hidden test name ({HIDDEN_PLACEHOLDER})")
         for line in text.splitlines():
             stripped = line.strip()
             if len(stripped) >= MIN_VERBATIM_LINE and stripped in secrets.hidden_lines:

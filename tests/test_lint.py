@@ -64,3 +64,45 @@ def test_scrub_removes_hidden_source_lines_from_tracebacks():
     assert line not in scrubbed and "[hidden-test]" in scrubbed
     assert "[hidden-test-line]" in scrubbed and scrubbed.endswith("AssertionError")
     assert s.scrub("plain text stays") == "plain text stays"
+
+
+def test_secrets_harvest_hidden_test_identifiers():
+    s = _secrets()
+    assert "test_january_includes_last_day" in s.hidden_names
+    assert "InclusiveRangeTests" in s.hidden_names and "BudgetModuleTests" in s.hidden_names
+    assert "ledger" not in s.hidden_names  # plain helpers are not test identifiers
+    assert s.scrub("ledgerlite/report.py") == "ledgerlite/report.py"
+    out = s.scrub(
+        "test_january_includes_last_day (test_hidden_month_boundary.InclusiveRangeTests) ... FAIL"
+    )
+    assert "InclusiveRangeTests" not in out and "test_january" not in out and "FAIL" in out
+
+
+def test_scrub_handles_pytest_traceback_markers():
+    s = _secrets()
+    line = next(iter(s.hidden_lines))
+    pytest_style = (
+        f"tests/x.py:12: in test_x\n>       {line}\nE       {line}\nE         where 1 = f()\n"
+    )
+    out = s.scrub(pytest_style)
+    assert line not in out and out.count("[hidden-test-line]") == 2 and "where 1 = f()" in out
+
+
+def test_lint_messages_do_not_echo_hidden_names():
+    s = _secrets()
+    cur = {"system_prompt.md": "Run tests.", "fake.yaml": ""}
+    errors = lint_candidate(
+        cur, {**cur, "system_prompt.md": "see test_hidden_budgets"}, s, EditConstraints()
+    )
+    joined = " ".join(errors)
+    assert "test_hidden_budgets" not in joined and "[hidden-test]" in joined
+
+
+def test_view_scrubs_before_truncating():
+    from harnesslab.grow.view import capped_scrub
+
+    s = _secrets()
+    text = "a" * 10 + " test_hidden_budgets tail"
+    assert "test_hidden" not in capped_scrub(s, text, 20)
+    assert "test_hidden" not in capped_scrub(s, text, 12, tail=True)
+    assert capped_scrub(s, "short", 100) == "short"

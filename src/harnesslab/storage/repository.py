@@ -624,14 +624,33 @@ class Repository:
             row.grow_session_id = session_id
             row.grow_role = role
 
-    def latest_run_for_task(self, session_id: str, task_key: str) -> RunRow | None:
-        """Most recent finished run of ``task_key`` in any experiment of a grow session."""
+    def latest_run_for_task(
+        self,
+        session_id: str,
+        task_key: str,
+        *,
+        harness_hash: str | None = None,
+        exclude_passed: bool = True,
+    ) -> RunRow | None:
+        """Most recent run of ``task_key`` in a grow session, preferring the given bundle.
+
+        With ``harness_hash`` the newest run under that bundle wins; otherwise (or when the
+        bundle has none) the newest non-passing run, so a failure case never shows the
+        optimizer a run that passed under a rejected candidate.
+        """
+        base = (
+            select(RunRow.id)
+            .join(ExperimentRow, ExperimentRow.id == RunRow.experiment_id)
+            .join(TaskRow, TaskRow.id == RunRow.task_id)
+            .where(ExperimentRow.grow_session_id == session_id, TaskRow.task_key == task_key)
+            .order_by(RunRow.finished_at.desc(), RunRow.id.desc())
+        )
         with self.db.session() as s:
-            run_id = s.execute(
-                select(RunRow.id)
-                .join(ExperimentRow, ExperimentRow.id == RunRow.experiment_id)
-                .join(TaskRow, TaskRow.id == RunRow.task_id)
-                .where(ExperimentRow.grow_session_id == session_id, TaskRow.task_key == task_key)
-                .order_by(RunRow.finished_at.desc(), RunRow.id.desc())
-            ).scalar()
+            run_id = None
+            if harness_hash is not None:
+                run_id = s.execute(base.where(RunRow.harness_hash == harness_hash)).scalar()
+            if run_id is None and exclude_passed:
+                run_id = s.execute(base.where(RunRow.verified_pass.is_not(True))).scalar()
+            if run_id is None:
+                run_id = s.execute(base).scalar()
         return self.get_run(run_id) if run_id else None

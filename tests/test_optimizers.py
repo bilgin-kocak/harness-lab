@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import yaml
 
 from harnesslab.grow.optimizers.base import (
@@ -128,12 +130,13 @@ async def test_claude_cli_optimizer_parses_structured_output(fake_cli, tmp_path,
     monkeypatch.setenv("FAKE_CLI_STREAM", str(FIXTURES / "claude" / "optimizer_proposal.json"))
     out = tmp_path / "prompt.txt"
     monkeypatch.setenv("FAKE_CLI_PROMPT_OUT", str(out))
+    monkeypatch.setenv("FAKE_CLI_CWD_OUT", str(tmp_path / "cwd.txt"))
     opt = create_optimizer(
         "claude-cli",
         {
             "executable": str(fake_cli),
             "model": "claude-sonnet-5",
-            "env_passthrough": ["FAKE_CLI_STREAM", "FAKE_CLI_PROMPT_OUT"],
+            "env_passthrough": ["FAKE_CLI_STREAM", "FAKE_CLI_PROMPT_OUT", "FAKE_CLI_CWD_OUT"],
         },
         artifacts_dir=tmp_path,
     )
@@ -145,6 +148,8 @@ async def test_claude_cli_optimizer_parses_structured_output(fake_cli, tmp_path,
     assert proposal.raw["session_id"] == "opt-1"
     assert '"task_id": "b"' in out.read_text()
     assert (tmp_path / "optimizer_attempt_1.json").exists()
+    cwd = Path((tmp_path / "cwd.txt").read_text().strip())
+    assert cwd.exists() and tmp_path not in cwd.parents and cwd != tmp_path
     argv = build_optimizer_argv({"model": "m"}, "{}")
     assert "--json-schema" in argv and "--max-turns" in argv and "--output-format" in argv
     assert argv[argv.index("--tools") + 1] == "" and "--model" in argv

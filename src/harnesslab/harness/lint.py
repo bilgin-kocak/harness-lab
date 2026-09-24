@@ -91,20 +91,24 @@ class SuiteSecrets:
         )
 
     def scrub(self, text: str) -> str:
-        """Remove hidden test names and hidden source lines (tracebacks quote them)."""
+        """Remove hidden source lines (tracebacks quote them), then hidden test names.
+
+        Whole lines go first: a hidden line that contains a test identifier would otherwise
+        be altered by the name pass and survive as a recognisable fragment.
+        """
+        if self.hidden_lines:
+            out: list[str] = []
+            for line in text.splitlines(keepends=True):
+                core = _core_line(line)
+                if len(core) >= MIN_VERBATIM_LINE and core in self.hidden_lines:
+                    out.append(line.replace(core, HIDDEN_LINE_PLACEHOLDER))
+                else:
+                    out.append(line)
+            text = "".join(out)
         for name in self.hidden_names:
             if name in text:
                 text = text.replace(name, HIDDEN_PLACEHOLDER)
-        if not self.hidden_lines:
-            return text
-        out: list[str] = []
-        for line in text.splitlines(keepends=True):
-            core = _core_line(line)
-            if len(core) >= MIN_VERBATIM_LINE and core in self.hidden_lines:
-                out.append(line.replace(core, HIDDEN_LINE_PLACEHOLDER))
-            else:
-                out.append(line)
-        return "".join(out)
+        return text
 
 
 @dataclass

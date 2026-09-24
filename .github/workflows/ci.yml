@@ -26,3 +26,44 @@ jobs:
         run: uv run pytest -q
       - name: Build distributions
         run: uv build
+
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+      - name: Sync dependencies
+        run: uv sync
+      - name: CLI reference is current
+        run: uv run python scripts/gen_cli_reference.py --check
+      - name: Build docs (strict)
+        run: uv run mkdocs build --strict
+        env:
+          DISABLE_MKDOCS_2_WARNING: "true"
+
+  docs-deploy:
+    needs: [docs, test]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+      - name: Sync dependencies
+        run: uv sync
+      - name: Deploy to GitHub Pages
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          uv run mkdocs gh-deploy --force --no-history
+        env:
+          DISABLE_MKDOCS_2_WARNING: "true"

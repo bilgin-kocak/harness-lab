@@ -59,6 +59,12 @@ dev = [
     "ruff>=0.5",
     "twine>=5.0",
 ]
+docs = [
+    "mkdocs-material>=9.7.7",
+]
+
+[tool.uv]
+default-groups = ["dev", "docs"]
 
 [build-system]
 requires = ["hatchling"]

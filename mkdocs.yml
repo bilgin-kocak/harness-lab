@@ -1,0 +1,94 @@
+site_name: Harness Lab
+site_description: Local-first experimentation platform for evaluating AI coding-agent harnesses.
+site_url: https://bilgin-kocak.github.io/harness-lab/
+repo_url: https://github.com/bilgin-kocak/harness-lab
+repo_name: bilgin-kocak/harness-lab
+edit_uri: edit/main/docs/
+docs_dir: docs
+strict: true
+exclude_docs: |
+  superpowers/
+  SUMMARY.md
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - navigation.footer
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.action.edit
+    - toc.follow
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+
+plugins:
+  - search
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+
+# GitBook reads docs/SUMMARY.md; tests/test_docs.py keeps this nav and SUMMARY.md in sync.
+nav:
+  - Start here:
+      - Harness Lab: index.md
+      - Install: start/install.md
+      - Quickstart: start/quickstart.md
+      - Concepts: start/concepts.md
+  - Guides:
+      - Run Claude Code: guides/claude-code.md
+      - Run Codex: guides/codex.md
+      - Test your own harness: guides/your-own-harness.md
+      - Write a task suite: guides/task-suites.md
+      - Configuration sweeps: guides/sweeps.md
+      - Grow the harness: guides/growing.md
+      - The dashboard: guides/dashboard.md
+      - Read and export results: guides/results.md
+  - Reference:
+      - CLI: reference/cli.md
+      - Task and suite YAML: reference/task-and-suite-format.md
+      - Experiment YAML: reference/experiment-format.md
+      - Sweep YAML: reference/sweep-format.md
+      - Grow YAML: reference/grow-format.md
+      - Harness bundle: reference/bundle-format.md
+      - Metrics: reference/metrics.md
+      - Events: reference/events.md
+      - Python API: reference/python-api.md
+      - Storage and data layout: reference/storage.md
+      - Pricing table: reference/pricing.md
+  - Explanations:
+      - Research principles: explanations/research-principles.md
+      - Security model: explanations/security-model.md
+      - What the optimizer sees: explanations/optimizer-view.md
+      - The Growing Harness paper: explanations/growing-harness-paper.md
+      - Honest limits: explanations/limits.md
+  - Project:
+      - Changelog: project/changelog.md
+      - Roadmap: project/roadmap.md
+      - Contributing: project/contributing.md
+      - Releasing: project/releasing.md

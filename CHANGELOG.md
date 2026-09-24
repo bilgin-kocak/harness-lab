@@ -16,6 +16,8 @@
   optimizer; `harnesslab harness check`.
 - Bundled `harnesses/baseline` and `grow/demo-fake.yaml`, `grow/claude-grow.yaml` templates
   (copied by `harnesslab init`).
+- Documentation site (`docs/`, GitBook-compatible, built with MkDocs Material and deployed to
+  GitHub Pages), a generated CLI reference and docs consistency tests.
 
 ## 0.1.0 (2026-09-22)
 

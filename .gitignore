@@ -13,3 +13,5 @@ dist/
 .vscode/
 .idea/
 .DS_Store
+# MkDocs build output (deployed to gh-pages by CI)
+site/

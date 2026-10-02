@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 import platform
+import shlex
 import shutil
 import sys
 from pathlib import Path
@@ -12,6 +13,7 @@ from typing import Annotated, Any
 
 import typer
 from rich.console import Console
+from rich.markup import escape
 from rich.table import Table
 
 import harnesslab
@@ -28,6 +30,13 @@ from harnesslab.bundled import (
 from harnesslab.config import Settings
 from harnesslab.core.models import ExperimentSpec, RunStatus, TaskSpec, VariantSpec
 from harnesslab.core.pricing import PricingTable, find_pricing_table
+from harnesslab.corpus.mine import (
+    DEFAULT_TEST_COMMAND,
+    CommitRecord,
+    MineOptions,
+    MiningError,
+    mine_repository,
+)
 from harnesslab.experiments.ablation import AblationReport, plan_ablation
 from harnesslab.experiments.ablation import report_for_experiment as ablation_report_for
 from harnesslab.experiments.aggregate import aggregate_variants, build_matrix, samples_from_rows
@@ -622,6 +631,150 @@ def suite_check(
         )
     console.print(table)
     raise typer.Exit(code=1 if problems else 0)
+
+
+@suite_app.command("mine")
+def suite_mine(
+    repo: Annotated[Path, typer.Argument(help="A local git repository to mine (only read).")],
+    out: Annotated[Path, typer.Option("--out", "-o", help="Directory to write the suite to.")],
+    rev: Annotated[
+        str, typer.Option("--rev", help="Mine commits reachable from this ref.")
+    ] = "HEAD",
+    max_commits: Annotated[
+        int, typer.Option("--max-commits", min=1, help="Newest non-merge commits to scan.")
+    ] = 200,
+    max_tasks: Annotated[
+        int | None, typer.Option("--max-tasks", min=1, help="Stop after this many kept tasks.")
+    ] = None,
+    test_command: Annotated[
+        str,
+        typer.Option(
+            "--test-command",
+            help="Verifier command; {tests} becomes the commit's test files (shell-quoted).",
+        ),
+    ] = DEFAULT_TEST_COMMAND,
+    test_glob: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--test-glob", help="Glob marking test files (repeatable; replaces defaults)."
+        ),
+    ] = None,
+    ignore_glob: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--ignore-glob",
+            help="Glob for files that are neither tests nor source, e.g. docs (repeatable; replaces defaults).",
+        ),
+    ] = None,
+    max_files: Annotated[
+        int, typer.Option("--max-files", min=1, help="Skip commits changing more source files.")
+    ] = 6,
+    max_lines: Annotated[
+        int, typer.Option("--max-lines", min=1, help="Skip commits changing more source lines.")
+    ] = 400,
+    setup: Annotated[
+        list[str] | None,
+        typer.Option("--setup", help="Setup command run before the tests (repeatable)."),
+    ] = None,
+    prompt_template: Annotated[
+        Path | None,
+        typer.Option("--prompt-template", help="Text file with a {message} placeholder."),
+    ] = None,
+    validate: Annotated[
+        bool,
+        typer.Option(
+            "--validate/--no-validate",
+            help="Keep only commits whose tests fail at the parent and pass at the commit.",
+        ),
+    ] = True,
+    timeout: Annotated[
+        int, typer.Option("--timeout", min=1, help="Seconds per setup or test command.")
+    ] = 300,
+    parallelism: Annotated[int, typer.Option("--parallelism", "-p", min=1)] = 4,
+    name: Annotated[str | None, typer.Option("--name", help="Suite name.")] = None,
+    force: Annotated[
+        bool, typer.Option("--force", help="Replace a previous suite in --out.")
+    ] = False,
+) -> None:
+    """Mine verifier-backed tasks from a repository's git history.
+
+    Every commit that changes source code and its tests becomes a candidate task: start at the
+    parent, the commit's tests are the hidden verifier, its source change is the reference
+    solution, its message is the prompt.  Candidates are kept when the tests fail at the parent
+    and pass at the commit.
+    """
+    options = MineOptions(
+        rev=rev,
+        max_commits=max_commits,
+        max_tasks=max_tasks,
+        test_command=test_command,
+        max_files=max_files,
+        max_lines=max_lines,
+        setup=list(setup or []),
+        validate_tasks=validate,
+        timeout_seconds=timeout,
+        parallelism=parallelism,
+        suite_name=name,
+    )
+    if test_glob:
+        options.test_globs = list(test_glob)
+    if ignore_glob:
+        options.ignore_globs = list(ignore_glob)
+    if prompt_template is not None:
+        template = prompt_template.read_text(encoding="utf-8")
+        if "{message}" not in template:
+            err_console.print(f"[red]{prompt_template} has no {{message}} placeholder[/]")
+            raise typer.Exit(code=2)
+        options.prompt_template = template
+
+    def on_record(record: CommitRecord) -> None:
+        if record.status == "skipped" and record.reason != "max tasks reached":
+            return
+        label = {"kept": "[green]kept[/]", "rejected": "[yellow]rejected[/]"}.get(
+            record.status, "[dim]skipped[/]"
+        )
+        reason = f"  [dim]{escape(record.reason)}[/]" if record.reason else ""
+        console.print(
+            f"  {label} {record.commit[:10]} {escape(record.subject[:70])}{reason}", soft_wrap=True
+        )
+
+    console.print(
+        f"Mining {escape(str(repo))} ({escape(rev)}, up to {max_commits} commits"
+        + (", validating fail-to-pass" if validate else ", without validation")
+        + ")",
+        soft_wrap=True,
+    )
+    try:
+        report = mine_repository(repo, out, options, force=force, on_record=on_record)
+    except MiningError as exc:
+        err_console.print(f"[red]{exc}[/]")
+        raise typer.Exit(code=2) from exc
+
+    console.print()
+    console.print(f"[bold]{report.kept} task(s) kept[/] from {report.scanned} commit(s) scanned")
+    counts = report.reason_counts()
+    if counts:
+        table = Table(show_header=True, box=None, padding=(0, 2))
+        table.add_column("not kept because")
+        table.add_column("commits", justify="right")
+        for reason, count in counts.items():
+            table.add_row(reason, str(count))
+        console.print(table)
+    console.print(f"suite:  {escape(str(report.suite))}", soft_wrap=True)
+    console.print(f"report: {escape(str(Path(out) / 'mining_report.json'))}", soft_wrap=True)
+    if report.kept:
+        suite_path = escape(shlex.quote(str(report.suite)))
+        console.print("\nNext:")
+        console.print(f"  harnesslab suite check {suite_path}", soft_wrap=True)
+        console.print(
+            f"  harnesslab run {suite_path} --variants fake-reference,fake-noop", soft_wrap=True
+        )
+        console.print("  then add your own variants and compare them (or `harnesslab ablate run`)")
+    else:
+        console.print(
+            "[yellow]No task kept.[/] Check the reasons above; --test-command, --test-glob or "
+            "--setup usually need adjusting to the project."
+        )
 
 
 # ---------------------------------------------------------------------------

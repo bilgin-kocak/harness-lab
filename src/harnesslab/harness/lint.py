@@ -124,15 +124,12 @@ class SuiteSecrets:
     @classmethod
     def from_tasks(cls, tasks: list[TaskSpec]) -> SuiteSecrets:
         ids: list[str] = []
-        names: set[str] = set()
-        lines: set[str] = set()
+        dests: list[str] = []
+        texts: list[str] = []
         for task in tasks:
             ids.append(task.id)
             for item in task.verification.inject:
-                dest = Path(item.dest)
-                for candidate in (dest.name, dest.stem):
-                    if len(candidate) >= MIN_HIDDEN_NAME:
-                        names.add(candidate)
+                dests.append(item.dest)
                 src = task.resolve(item.source)
                 if src.is_file():
                     sources = [src]
@@ -142,18 +139,33 @@ class SuiteSecrets:
                     sources = []
                 for path in sources:
                     try:
-                        text = path.read_text(encoding="utf-8")
+                        texts.append(path.read_text(encoding="utf-8"))
                     except (UnicodeDecodeError, OSError):
                         continue
-                    names.update(hidden_identifiers(text))
-                    for line in text.splitlines():
-                        stripped = line.strip()
-                        if len(stripped) >= MIN_VERBATIM_LINE and not stripped.startswith(
-                            _IMPORT_PREFIXES
-                        ):
-                            lines.add(stripped)
+        return cls.from_sources(dests, texts, task_ids=ids)
+
+    @classmethod
+    def from_sources(
+        cls, dests: list[str], texts: list[str], *, task_ids: list[str] | None = None
+    ) -> SuiteSecrets:
+        """Secrets of hidden files given their worktree paths and their text content."""
+        names: set[str] = set()
+        lines: set[str] = set()
+        for dest in dests:
+            path = Path(dest)
+            for candidate in (path.name, path.stem):
+                if len(candidate) >= MIN_HIDDEN_NAME:
+                    names.add(candidate)
+        for text in texts:
+            names.update(hidden_identifiers(text))
+            for line in text.splitlines():
+                stripped = line.strip()
+                if len(stripped) >= MIN_VERBATIM_LINE and not stripped.startswith(_IMPORT_PREFIXES):
+                    lines.add(stripped)
         return cls(
-            task_ids=ids, hidden_names=sorted(names, key=len, reverse=True), hidden_lines=lines
+            task_ids=list(task_ids or []),
+            hidden_names=sorted(names, key=len, reverse=True),
+            hidden_lines=lines,
         )
 
     def scrub(self, text: str) -> str:

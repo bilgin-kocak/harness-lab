@@ -140,6 +140,7 @@ $ harnesslab suite [OPTIONS] COMMAND [ARGS]...
 
 * `list`: List suites, their tasks and variants.
 * `check`: Sanity-check verifiers: reference...
+* `mine`: Mine verifier-backed tasks from a...
 
 ### `harnesslab suite list`
 
@@ -175,6 +176,45 @@ $ harnesslab suite check [OPTIONS] {target}
 
 **Options**:
 
+* `--help`: Show this message and exit.
+
+### `harnesslab suite mine`
+
+Mine verifier-backed tasks from a repository&#x27;s git history.
+
+Every commit that changes source code and its tests becomes a candidate task: start at the
+parent, the commit&#x27;s tests are the hidden verifier, its source change is the reference
+solution, its message is the prompt.  Candidates are kept when the tests fail at the parent
+and pass at the commit.
+
+**Usage**:
+
+```console
+$ harnesslab suite mine [OPTIONS] {repo}
+```
+
+**Arguments**:
+
+* `repo`: A local git repository to mine (only read).  [required]
+
+**Options**:
+
+* `-o, --out <path>`: Directory to write the suite to.  [required]
+* `--rev <str>`: Mine commits reachable from this ref.  [default: HEAD]
+* `--max-commits <int range>`: Newest non-merge commits to scan.  [default: 200; x&gt;=1]
+* `--max-tasks <int range>`: Stop after this many kept tasks.  [x&gt;=1]
+* `--test-command <str>`: Verifier command; {tests} becomes the commit&#x27;s test files (shell-quoted).  [default: python -m pytest -q {tests}]
+* `--test-glob <str>`: Glob marking test files (repeatable; replaces defaults).
+* `--ignore-glob <str>`: Glob for files that are neither tests nor source, e.g. docs (repeatable; replaces defaults).
+* `--max-files <int range>`: Skip commits changing more source files.  [default: 6; x&gt;=1]
+* `--max-lines <int range>`: Skip commits changing more source lines.  [default: 400; x&gt;=1]
+* `--setup <str>`: Setup command run before the tests (repeatable).
+* `--prompt-template <path>`: Text file with a {message} placeholder.
+* `--validate / --no-validate`: Keep only commits whose tests fail at the parent and pass at the commit.  [default: validate]
+* `--timeout <int range>`: Seconds per setup or test command.  [default: 300; x&gt;=1]
+* `-p, --parallelism <int range>`: [default: 4; x&gt;=1]
+* `--name <str>`: Suite name.
+* `--force`: Replace a previous suite in --out.
 * `--help`: Show this message and exit.
 
 ## `harnesslab experiment`

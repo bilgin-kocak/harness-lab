@@ -7,9 +7,11 @@ A task's ``repo.path`` can be either
   config), keyed by a content hash, so the base commit SHA is identical on
   every machine for identical content; or
 * an existing git repository: the requested ``base_ref`` is resolved to a
-  commit and the repository is cloned into Harness Lab's home.  The clone's
-  ``origin`` remote is removed so nothing an agent does (even ``git push``)
-  can reach the source repository.
+  commit and *only that commit and its ancestors* are fetched into an internal
+  repository in Harness Lab's home.  It has no remote, so nothing an agent does
+  (even ``git push``) can reach the source repository, and no later commits,
+  other branches or tags, so an agent cannot read the answer out of the future
+  history (which matters for tasks mined from a repository's own commits).
 
 Worktrees are always created from the internal repository, never from the
 user's source checkout.
@@ -136,12 +138,16 @@ def _materialize_plain_dir(source: Path, settings: Settings) -> RepoSnapshot:
     )
 
 
+CLONE_LAYOUT = "h1"  # bump when the internal clone layout changes, so old clones are not reused
+BASE_REF = "refs/heads/harnesslab-base"
+
+
 def _clone_git_repo(source: Path, base_ref: str, settings: Settings) -> RepoSnapshot:
     try:
         base_commit = rev_parse(source, base_ref)
     except GitError as exc:
         raise GitError(f"cannot resolve base_ref {base_ref!r} in {source}: {exc}") from exc
-    key = f"{hash_value(str(source.resolve()), 12)}-{base_commit[:12]}"
+    key = f"{hash_value(str(source.resolve()), 12)}-{base_commit[:12]}-{CLONE_LAYOUT}"
     target = settings.repos_dir / key
     with _locked(settings.repos_dir / ".lock"):
         if not is_git_repo(target):
@@ -150,10 +156,24 @@ def _clone_git_repo(source: Path, base_ref: str, settings: Settings) -> RepoSnap
             settings.repos_dir.mkdir(parents=True, exist_ok=True)
             tmp = Path(tempfile.mkdtemp(prefix=f".{key}-", dir=settings.repos_dir))
             try:
-                shutil.rmtree(tmp)
-                run_git(["clone", "-q", "--no-checkout", str(source), str(tmp)], deterministic=True)
-                run_git(["remote", "remove", "origin"], cwd=tmp, deterministic=True)
-                # Make sure the resolved commit exists in the clone (branches only clone reachable refs).
+                run_git(["init", "-q", "-b", "main", str(tmp)], deterministic=True)
+                # Fetch the base commit by SHA (the source needs no ref for it, and is never
+                # written to): its ancestors come along, later commits and other refs do not.
+                run_git(
+                    [
+                        "fetch",
+                        "-q",
+                        "--no-tags",
+                        "--upload-pack",
+                        "git -c uploadpack.allowAnySHA1InWant=true upload-pack",
+                        str(source.resolve()),
+                        base_commit,
+                    ],
+                    cwd=tmp,
+                    deterministic=True,
+                    timeout=600.0,
+                )
+                run_git(["update-ref", BASE_REF, base_commit], cwd=tmp, deterministic=True)
                 run_git(["cat-file", "-e", f"{base_commit}^{{commit}}"], cwd=tmp)
                 os.rename(tmp, target)
             finally:

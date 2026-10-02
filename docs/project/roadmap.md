@@ -31,9 +31,9 @@ statistics already in place.
 
 ## Scaling the corpus
 
-- **Task corpus generator**: from a real repository's history (commit reverted, prompt from the
-  message, verifier from the commit's own tests), so grow sessions and sweeps run on hundreds of
-  tasks instead of three.
+- **Corpus mining beyond Python defaults**: issue-linked prompts (PR and issue text instead of the
+  commit message), per-language test-file presets, and a contamination check that flags commits
+  older than a model's training cutoff.
 - **Verifier generation** and multi-verifier scoring.
 
 ## Isolation and platforms

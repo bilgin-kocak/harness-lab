@@ -13,6 +13,7 @@
 * [Run Codex](guides/codex.md)
 * [Test your own harness](guides/your-own-harness.md)
 * [Write a task suite](guides/task-suites.md)
+* [Mine tasks from git history](guides/task-corpus.md)
 * [Configuration sweeps](guides/sweeps.md)
 * [Grow the harness](guides/growing.md)
 * [Ablate a harness](guides/ablation.md)

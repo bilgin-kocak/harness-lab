@@ -10,8 +10,12 @@ before pointing it at anything you care about.
   denies everything else. Neither is a security boundary against a determined agent.
 - Use only trusted benchmark repositories and throwaway credentials until container isolation
   (`DockerSandbox`, on the [roadmap](../project/roadmap.md)) exists.
-- Fixture repositories are cloned into Harness Lab's home with their `origin` remote removed, so
-  nothing an agent does, not even `git push`, reaches your source.
+- Git fixture repositories are copied into Harness Lab's home with no remote, so nothing an agent
+  does, not even `git push`, reaches your source. Only the base commit and its ancestors are
+  copied, so later commits (for a [mined task](../guides/task-corpus.md), the answer) are not in
+  the agent's repository at all.
+- `harnesslab suite mine` runs the mined repository's tests and `--setup` commands on your
+  machine while validating; mine only repositories you trust.
 
 ## Hidden tests
 

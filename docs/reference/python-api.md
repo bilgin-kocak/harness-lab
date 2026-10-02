@@ -135,5 +135,23 @@ outcome = await service.run_experiment(
 )
 ```
 
+## Mining tasks
+
+```python
+from pathlib import Path
+from harnesslab.corpus import MineOptions, mine_repository
+
+report = mine_repository(
+    Path("../myproject"),
+    Path("suites/myproject-mined"),
+    MineOptions(test_command="python -m unittest {tests}", max_tasks=50),
+)
+print(report.kept, report.reason_counts())
+```
+
+`MiningReport.commits` holds one `CommitRecord` per scanned commit (`status`: `kept`, `skipped` or
+`rejected`, with `reason`, `detail` and the checks at the parent and the commit). See
+[Mine tasks from git history](../guides/task-corpus.md).
+
 `ExperimentService`, `GrowService` and `Repository` are stable enough to script against but are
 not yet part of the frozen public API.

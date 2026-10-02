@@ -87,9 +87,10 @@ Paths are relative to the task file. Every field is listed in
   and config, keyed by a content hash, so the base commit SHA is identical on every machine for
   identical content. Caches and editor files (`__pycache__`, `.DS_Store`, `.venv`,
   `node_modules`, and so on) are excluded.
-- A **git repository** has `base_ref` resolved to a commit and is cloned into Harness Lab's home
-  with its `origin` remote removed, so nothing an agent does, not even `git push`, can reach the
-  source.
+- A **git repository** has `base_ref` resolved to a commit, and only that commit and its
+  ancestors are fetched into Harness Lab's home: no remote, so nothing an agent does, not even
+  `git push`, can reach the source, and no later commits, so the agent cannot read a future fix
+  out of the history.
 
 Worktrees are always created from the internal copy, never from your checkout.
 
@@ -103,6 +104,12 @@ harnesslab suite check suites/my-suite/suite.yaml
 `suite check` runs the fake runner twice per task: with the reference solution, which must pass,
 and on the untouched repository, which must fail. A verifier that passes on the untouched
 repository is a broken task. Run it after every edit to a task, its hidden tests or its solution.
+
+## Generate tasks from git history
+
+Writing many tasks by hand is slow. `harnesslab suite mine` builds a suite from a repository's
+commits that changed source code together with its tests; see
+[Mine tasks from git history](task-corpus.md).
 
 ## Tips for good tasks
 

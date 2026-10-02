@@ -57,6 +57,12 @@ def test_git_repo_source_is_cloned_without_origin(tmp_path: Path, settings: Sett
     assert snap.base_commit == first and not snap.materialized
     remotes = run_git(["remote"], cwd=snap.repo_dir).stdout.strip()
     assert remotes == ""
+    # Only the base commit's history is copied: the later commit (a mined task's answer)
+    # is not reachable and its objects are not in the clone at all.
+    second = run_git(["rev-parse", "HEAD"], cwd=src).stdout.strip()
+    log = run_git(["log", "--all", "--format=%H"], cwd=snap.repo_dir).stdout.split()
+    assert log == [first]
+    assert run_git(["cat-file", "-e", second], cwd=snap.repo_dir, check=False).returncode != 0
     with pytest.raises(GitError):
         snapshot_repository(src, "no-such-ref", settings)
 

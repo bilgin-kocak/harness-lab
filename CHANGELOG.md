@@ -2,6 +2,14 @@
 
 ## 0.2.0 (unreleased)
 
+- `harnesslab suite mine`: builds a task suite from a repository's git history. Every commit that
+  changes source and tests becomes a candidate (start at the parent, the commit's tests as hidden
+  verifier, its source change as reference solution, its message as prompt with hidden test names
+  scrubbed); kept only when the tests fail at the parent and pass at the commit. Writes
+  `suite.yaml`, task files and `mining_report.json` with the reason for every skipped commit.
+- Git fixture repositories are now copied with only the base commit and its ancestors (fetched by
+  SHA; no later commits, branches, tags or remote), so an agent cannot read a mined task's answer
+  out of the history. Existing internal clones are not reused.
 - Paired statistics (`harnesslab.experiments.stats`): task-level cluster bootstrap intervals and an
   exact sign test, with verdicts only above a minimum number of paired tasks. Shown on the compare
   view and by `harnesslab experiment compare`, in sweep reports (recommendation vs runner-up and vs

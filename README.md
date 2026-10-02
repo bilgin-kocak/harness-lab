@@ -73,6 +73,9 @@ until then install from `main`: `pip install git+https://github.com/bilgin-kocak
 - **Grows a harness from its failures**: the `grow` loop edits a harness bundle with an optimizer,
   keeps only edits that fix failures without regressing a held-out gate, and records the lineage
   (after *Grow the Harness, Not the Context*, arXiv 2609.26760).
+- **Mines tasks from your repository**: `suite mine` turns commits that changed code and tests
+  into verifier-backed tasks (fail at the parent, pass at the commit), so comparisons run on dozens
+  of tasks from your own code.
 - **Proves each component earns its place**: `ablate` tests every part of a harness bundle against
   its own absence, and every comparison carries paired, task-level confidence intervals.
 

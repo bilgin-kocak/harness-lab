@@ -7,7 +7,7 @@ Everything lives under one directory, by default `./.harnesslab` (override with
 .harnesslab/
   harnesslab.db            SQLite (WAL mode)
   fixtures/<hash>/         materialized fixture repositories (plain directories → deterministic commit)
-  repos/<hash>/            internal clones of git fixture repositories (origin removed)
+  repos/<hash>-<commit>/   internal copies of git fixture repositories: base commit and ancestors, no remote
   worktrees/<exp>/<run>/   one detached worktree per run, removed after the run unless kept
   artifacts/<exp>/<run>/   prompt.txt · agent.diff · diff_stat.txt · git_status.txt
                            verifier_stdout.txt · verifier_stderr.txt

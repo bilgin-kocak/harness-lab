@@ -289,10 +289,13 @@ class GrowService:
                         by_id[t],
                         secrets,
                         state.attempts.get(t, 0),
+                        verifier_detail=spec.optimizer.verifier_detail,
                     )
                     for t in window
                 ]
-                constraints = EditConstraints(max_files=spec.optimizer.max_files)
+                constraints = EditConstraints(
+                    max_files=spec.optimizer.max_files, allow_hooks=spec.optimizer.allow_hooks
+                )
                 context = build_context(
                     session_name=spec.name,
                     iteration=state.iteration,
@@ -314,8 +317,10 @@ class GrowService:
                     raise
                 except Exception as exc:
                     reason = secrets.scrub(f"optimizer error: {type(exc).__name__}: {exc}")
+                    spent = getattr(exc, "cost_usd", None)
+                    state.optimizer_cost_usd += float(spent or 0.0)
                     self._record_invalid(
-                        session_id, state, number, current, reason, window, spec, None
+                        session_id, state, number, current, reason, window, spec, None, spent
                     )
                     report("version", f"v{number} invalid: {reason}", number)
                     save()
@@ -587,8 +592,9 @@ class GrowService:
         window: list[str],
         spec: GrowSpec,
         proposal: Proposal | None,
+        error_cost_usd: float | None = None,
     ) -> None:
-        """Record an invalid candidate; the proposal (if any) was already written and charged."""
+        """Record an invalid candidate; its spend (proposal or failed attempts) is already charged."""
         vid = self.repo.create_harness_version(
             session_id=session_id,
             number=number,
@@ -604,7 +610,7 @@ class GrowService:
             reason=reason,
             window_task_keys_json=list(window),
             rationale=proposal.rationale if proposal else None,
-            optimizer_cost_usd=proposal.cost_usd if proposal else None,
+            optimizer_cost_usd=proposal.cost_usd if proposal else error_cost_usd,
             finished_at=utcnow(),
         )
         state.versions_invalid += 1

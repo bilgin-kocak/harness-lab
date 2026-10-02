@@ -46,12 +46,22 @@ dropped at parse time and only `reasoning_event {count}` metadata survives. The 
 stream is a sanitized copy. The test suite scans the database and every artifact for leaked
 markers.
 
+## Harness bundles and hooks
+
+A bundle's `hooks.json` is materialized as a Claude Code plugin, and Claude Code runs hook
+commands on your machine with your privileges, outside the agent's tool allowlist. A hook can do
+anything you can, including reading a suite's hidden tests from disk. Treat a bundle with hooks
+like a script you are about to run; `harnesslab harness check` warns when a bundle has one.
+
 ## The optimizer
 
 A grow session gives an LLM optimizer a view of failing runs. That view never contains hidden
-test content, and every candidate bundle is linted before it runs. The `claude-cli` optimizer
-runs with no tools in an empty temporary directory, so it can neither read your files nor pick up
-your project's CLAUDE.md and hooks. See [What the optimizer sees](optimizer-view.md).
+test sources, names or quoted lines, and by default not the expected values that assertions
+print; every candidate bundle is linted before it runs. An optimizer may not write `hooks.json`
+unless the grow spec sets `optimizer.allow_hooks: true`, because otherwise LLM-written shell
+commands would run on your machine unreviewed. The `claude-cli` optimizer runs with no tools in an
+empty temporary directory, which is removed afterwards, so it can neither read your files nor pick
+up your project's CLAUDE.md and hooks. See [What the optimizer sees](optimizer-view.md).
 
 ## Runaway processes
 

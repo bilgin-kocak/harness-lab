@@ -1,5 +1,9 @@
 # Harness bundle
 
+> **Requires Harness Lab 0.2.0 (unreleased).** `pip install harnesslab` currently installs 0.1.0,
+> which has no `grow` command and no harness bundles. Until 0.2.0 is on PyPI, install from `main`:
+> `pip install git+https://github.com/bilgin-kocak/harness-lab`.
+
 A harness bundle is the growable outer layer of a coding-agent harness: a plain directory that a
 variant carries with `harness: <path>` and that a grow session edits.
 
@@ -42,9 +46,17 @@ recorded on every variant and run that used the bundle, and it is part of the va
 | `generic` | prepended to the prompt | available to the command through `{harness_dir}` and `HARNESSLAB_HARNESS_DIR` | ignored |
 | `fake` | ignored | ignored | `solve_tasks` and `fail_tasks` override the variant's `behavior` per task (solve wins); `llm_calls` sets the simulated count |
 
+## Hooks are code
+
+`hooks.json` is not text the agent reads: Claude Code executes its commands on your machine, with
+your privileges, outside the agent's `--allowedTools` allowlist, and they can read anything you
+can, including a suite's hidden tests. `harnesslab harness check` prints a warning for every bundle
+that contains one. Review hook commands like any other code you run.
+
 ## Optimizer edit rules
 
 An optimizer may edit or add content files only. It may not delete a file, edit `harness.yaml`,
-change more than `optimizer.max_files` files, exceed the caps, mention a suite task id or a hidden
-test name, or copy a line of 24 characters or more verbatim from a hidden test. `fake.yaml` is
+add or edit `hooks.json` (unless the grow spec sets `optimizer.allow_hooks: true`), change more
+than `optimizer.max_files` files, exceed the caps, mention a suite task id or a hidden test name,
+or copy a line of 24 characters or more verbatim from a hidden test. `fake.yaml` is
 exempt from the task-id rule only, because real runners ignore it and the fake optimizer needs it.

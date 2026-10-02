@@ -26,7 +26,11 @@ ENTRY_POINT_GROUP = "harnesslab.optimizers"
 
 
 class OptimizerError(RuntimeError):
-    pass
+    """An optimizer could not produce a proposal; ``cost_usd`` is what it spent trying."""
+
+    def __init__(self, message: str, *, cost_usd: float | None = None) -> None:
+        super().__init__(message)
+        self.cost_usd = cost_usd
 
 
 class FailureMetrics(BaseModel):

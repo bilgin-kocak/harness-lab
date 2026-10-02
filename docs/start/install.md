@@ -24,6 +24,13 @@ pipx install harnesslab
 uv tool install harnesslab
 ```
 
+Pages marked *Requires Harness Lab 0.2.0* describe features that are on `main` but not yet on
+PyPI (harness bundles, `harnesslab grow`). To use them before the release:
+
+```bash
+pip install git+https://github.com/bilgin-kocak/harness-lab
+```
+
 Then check the environment:
 
 ```bash

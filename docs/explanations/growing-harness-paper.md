@@ -34,7 +34,8 @@ success halved.
 
 ## Where Harness Lab is stricter
 
-- Hidden tests never reach the optimizer, enforced by scrubbing and a lint, not only by an
+- Hidden tests never reach the optimizer (sources, names, quoted lines and, by default,
+  assertion details), enforced by scrubbing and a lint, not only by an
   instruction to the model.
 - Every window and gate evaluation is a normal experiment with an independent verifier, base
   commit and reproducibility record.

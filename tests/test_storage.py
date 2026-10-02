@@ -339,3 +339,69 @@ def test_add_missing_columns_on_old_schema(settings: Settings):
     assert {"llm_calls", "harness_hash"} <= cols
     assert "harness_versions" in inspect(db.engine).get_table_names()
     db.dispose()
+
+
+def test_latest_run_for_task_prefers_failing_repetition(settings: Settings, db: Database):
+    """With repetitions, a failure case must show a failing run even if a newer one passed."""
+    repo = Repository(db, settings.home)
+    env = EnvironmentSpec.detect()
+    session_id = repo.create_grow_session(
+        name="g",
+        suite_name="s",
+        suite_path=None,
+        spec_json={},
+        harnesslab_version="0",
+        harnesslab_commit=None,
+    )
+    exp_id = repo.create_experiment(
+        ExperimentSpec(name="e", suite="s"),
+        SuiteSpec(name="s"),
+        environment=env,
+        harnesslab_version="0",
+        harnesslab_commit=None,
+    )
+    repo.tag_experiment_grow(exp_id, session_id, "window")
+    variant = VariantSpec(id="v1", runner="fake")
+    vid = repo.add_variant(exp_id, variant, 0)
+    task = TaskSpec(
+        id="t",
+        name="t",
+        repo=RepoSpec(path="."),
+        prompt="p",
+        verification=VerificationSpec(command="true"),
+    )
+    tid = repo.add_task(exp_id, task, base_commit="b", task_hash="h", position=0)
+    run_ids = {}
+    for rep, passed in ((0, False), (1, True)):  # the passing repetition finishes last
+        run_id = repo.create_run(
+            exp_id=exp_id,
+            variant_row_id=vid,
+            task_row_id=tid,
+            repetition=rep,
+            config=variant.runner_config(),
+            environment=env,
+            task_hash="h",
+            prompt_hash="p",
+            base_commit="b",
+            harnesslab_commit=None,
+            harnesslab_version="0",
+            parser_version="1",
+            metrics_version="1",
+            harness_hash="hash-1",
+        )
+        repo.finalize_run(
+            run_id,
+            status=RunStatus.COMPLETED,
+            outcome="pass" if passed else "fail",
+            runner_result=RunnerResult(exit_code=0),
+            metrics=RunMetrics(verified_pass=passed),
+            worktree_path=None,
+            worktree_kept=False,
+            error_message=None,
+            events_count=0,
+        )
+        run_ids[passed] = run_id
+    chosen = repo.latest_run_for_task(session_id, "t", harness_hash="hash-1")
+    assert chosen.id == run_ids[False]
+    newest = repo.latest_run_for_task(session_id, "t", harness_hash="hash-1", exclude_passed=False)
+    assert newest.id == run_ids[True]

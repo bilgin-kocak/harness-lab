@@ -12,8 +12,15 @@
   optimizer -> window check -> held-out gate -> accept or roll back; budgets, retirement, resumable
   state, per-version audit files; grow sessions and harness versions in the database and dashboard.
 - Optimizer plugins: `claude-cli` (Claude Code binary, no tools, structured output), `manual`,
-  `fake`; leak controls (scrubbed optimizer view, candidate lint) so hidden tests never reach an
-  optimizer; `harnesslab harness check`.
+  `fake`; leak controls (scrubbed optimizer view, candidate lint) so hidden test sources, names,
+  quoted lines and, by default, assertion details never reach an optimizer
+  (`optimizer.verifier_detail: summary | full`); `harnesslab harness check`.
+- Optimizers may not add or edit `hooks.json` unless `optimizer.allow_hooks: true`: hook commands
+  run on the host outside the agent's tool allowlist. `harness check` warns about bundles with hooks.
+- The `claude-cli` optimizer charges every attempt, including failed ones, to
+  `max_optimizer_cost_usd`, and removes its temporary working directory.
+- Failure cases shown to the optimizer always come from a failing run, also with `repetitions > 1`;
+  `split.fractions` no longer rejects valid fractions because of rounding.
 - Bundled `harnesses/baseline` and `grow/demo-fake.yaml`, `grow/claude-grow.yaml` templates
   (copied by `harnesslab init`).
 - Documentation site (`docs/`, GitBook-compatible, built with MkDocs Material and deployed to

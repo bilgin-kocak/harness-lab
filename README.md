@@ -55,6 +55,9 @@ harnesslab grow run grow/demo-fake.yaml                   # grow a harness from 
 harnesslab run suites/demo/suite.yaml --variants claude-default   # a real harness (needs the claude CLI)
 ```
 
+Harness bundles and `harnesslab grow` are on `main` and ship in 0.2.0, which is not on PyPI yet;
+until then install from `main`: `pip install git+https://github.com/bilgin-kocak/harness-lab`.
+
 ## What it does
 
 - **Runs the same task through different harnesses**: Claude Code, the OpenAI Codex CLI, a

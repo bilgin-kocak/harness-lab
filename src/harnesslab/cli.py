@@ -57,7 +57,7 @@ from harnesslab.grow.optimizers.base import (
 from harnesslab.grow.report import GrowReport, lineage_json, report_for_session
 from harnesslab.grow.service import GrowError, GrowProgress, GrowService
 from harnesslab.grow.spec import load_grow_target
-from harnesslab.grow.view import ALLOWED_PATHS
+from harnesslab.grow.view import allowed_paths
 from harnesslab.harness.bundle import BundleError, HarnessBundle
 from harnesslab.harness.lint import EditConstraints, SuiteSecrets, lint_candidate
 from harnesslab.runners.base import PluginError, load_plugins
@@ -1199,7 +1199,7 @@ def _synthetic_context(spec, suite, split, bundle: HarnessBundle) -> OptimizerCo
         model=spec.base_variant.get("model"),
         bundle=bundle.content_files,
         constraints=EditConstraintsSpec(
-            allowed_paths=list(ALLOWED_PATHS),
+            allowed_paths=allowed_paths(spec.optimizer.allow_hooks),
             max_files=spec.optimizer.max_files,
             max_file_bytes=EditConstraints().max_file_bytes,
             max_bundle_bytes=EditConstraints().max_bundle_bytes,
@@ -1379,6 +1379,11 @@ def harness_check(
     console.print(f"[bold]{bundle.name or bundle_dir.name}[/]  hash {bundle.hash}")
     for entry in bundle.file_summary():
         console.print(f"  {entry['path']}  [dim]{entry['bytes']} bytes[/]")
+    if "hooks.json" in bundle.files:
+        console.print(
+            "[yellow]warning:[/] hooks.json runs shell commands on this machine outside the "
+            "agent's tool allowlist (Claude Code); review every command before using the bundle"
+        )
     if suite:
         try:
             _, tasks = load_suite(resolve_suite_target(suite))
@@ -1387,7 +1392,10 @@ def harness_check(
             raise typer.Exit(code=2) from exc
         secrets = SuiteSecrets.from_tasks(tasks)
         content = bundle.content_files
-        errors = lint_candidate({}, content, secrets, EditConstraints(max_files=10**6))
+        # A human-authored bundle may carry hooks; only optimizers are barred from writing them.
+        errors = lint_candidate(
+            {}, content, secrets, EditConstraints(max_files=10**6, allow_hooks=True)
+        )
         if errors:
             for error in errors:
                 console.print(f"[red]✘ {error}[/]")

@@ -32,8 +32,11 @@ decide on noise. Task-level bootstrap intervals are planned.
 - Only the outer harness can be grown for Claude Code and Codex: prompts, skills, hooks, agents.
   The control loop stays closed.
 - The bundled demo suite has three tasks, enough to prove the mechanics, not to measure an effect.
-- The optimizer sees scrubbed verifier output; assertion messages that print an expected answer
-  are not hidden by the scrub. Write hidden tests accordingly.
+- The optimizer sees scrubbed verifier output. By default unittest and pytest assertion details
+  are replaced by a placeholder; expected values printed in other ways (custom runners, `print`
+  calls, exception messages) are not recognised. Write hidden tests accordingly.
+- Optimizers may not write `hooks.json` unless `optimizer.allow_hooks: true`; hook commands run on
+  the host outside the agent's tool allowlist, so enable it only on a machine you can throw away.
 - No real Claude Code grow session has been run by the maintainers at the time of writing; the
   `claude-cli` optimizer's flags and result format were verified against the installed CLI, and
   the full loop is verified with the fake runner and a replayed CLI.

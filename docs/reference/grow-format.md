@@ -1,5 +1,9 @@
 # Grow YAML
 
+> **Requires Harness Lab 0.2.0 (unreleased).** `pip install harnesslab` currently installs 0.1.0,
+> which has no `grow` command and no harness bundles. Until 0.2.0 is on PyPI, install from `main`:
+> `pip install git+https://github.com/bilgin-kocak/harness-lab`.
+
 `harnesslab grow run <grow.yaml|bundled-name>`. Bundled templates: `demo-fake`, `claude-grow`.
 See [Grow the harness](../guides/growing.md) for the loop.
 
@@ -28,6 +32,8 @@ optimizer:
   kind: claude-cli                         # claude-cli | manual | fake | a plugin name
   model: claude-sonnet-5                   # passed to the optimizer
   max_files: 6                             # files a candidate may change
+  allow_hooks: false                       # may the optimizer add or edit hooks.json (shell commands)?
+  verifier_detail: summary                 # summary (assertion details hidden) | full
   # any other key is an optimizer option (e.g. executable, timeout_seconds, extra_args)
 budget:
   max_runs: 200                            # deployed runs across the whole session
@@ -42,6 +48,8 @@ Validation rules:
 
 - `split.train` and `split.gate` must be non-empty, contain only task ids from the suite, and not
   overlap; with `fractions`, the suite needs at least two tasks and the fractions sum to at most 1.
+  Fractions are allocated in the order train, gate, final, each rounded and clamped to the tasks
+  left, so train and gate always get at least one task (3 tasks at 0.5/0.5 gives 2 train, 1 gate).
 - `window.min_fixed` must not exceed `window.size`.
 - `optimizer.kind` must be a registered optimizer.
 - `base_variant` may carry `gate_overrides: {runner, model, ...}`: settings applied only to gate

@@ -243,3 +243,65 @@ async def test_final_report_is_none_when_current_final_missing(settings, db):
     row = service.repo.get_grow_session(outcome.session_id)
     assert outcome.versions_accepted == 1 and any("max_runs" in n for n in outcome.notes)
     assert report_for_session(service.repo, row).final is None
+
+
+async def test_grow_rejects_optimizer_hooks_by_default(settings, db):
+    spec, suite, tasks, split = _spec(hooks=True)
+    spec = spec.model_copy(update={"max_iterations": 1})
+    outcome = await GrowService(settings, db).run(spec, suite, tasks, split)
+    session = GrowService(settings, db).repo.get_grow_session(outcome.session_id)
+    assert session.versions[1].status == "invalid"
+    assert "hooks.json: optimizers may not" in session.versions[1].reason
+    context = (settings.home / "grow" / session.id / "v1" / "context.json").read_text()
+    assert '"hooks.json"' not in context  # not offered as an allowed path either
+
+
+async def test_grow_accepts_optimizer_hooks_when_allowed(settings, db):
+    spec, suite, tasks, split = _spec(hooks=True, allow_hooks=True)
+    spec = spec.model_copy(update={"max_iterations": 1})
+    outcome = await GrowService(settings, db).run(spec, suite, tasks, split)
+    session = GrowService(settings, db).repo.get_grow_session(outcome.session_id)
+    assert session.versions[1].status == "accepted"
+    assert (settings.home / session.versions[1].bundle_path / "hooks.json").exists()
+
+
+async def test_grow_charges_spend_of_failed_optimizer_calls(settings, db):
+    spec, suite, tasks, split = _spec(raise_error=True, cost_usd=0.25)
+    spec = spec.model_copy(update={"max_iterations": 1})
+    outcome = await GrowService(settings, db).run(spec, suite, tasks, split)
+    session = GrowService(settings, db).repo.get_grow_session(outcome.session_id)
+    assert session.versions[1].status == "invalid"
+    assert "simulated optimizer failure" in session.versions[1].reason
+    assert session.versions[1].optimizer_cost_usd == 0.25
+    assert session.state_json["optimizer_cost_usd"] == 0.25
+
+
+async def test_failure_case_hides_hidden_assertion_details(settings, db):
+    """The real demo verifier output must not hand expected values to the optimizer."""
+    from harnesslab.core.models import ExperimentSpec, VariantSpec
+    from harnesslab.experiments.service import ExperimentService
+    from harnesslab.experiments.spec import load_suite
+    from harnesslab.grow.view import build_failure_case
+    from harnesslab.harness.lint import SuiteSecrets
+    from tests.conftest import DEMO_SUITE
+
+    suite, all_tasks = load_suite(DEMO_SUITE)
+    task = next(t for t in all_tasks if t.id == "fix-month-boundary")
+    service = ExperimentService(settings, db)
+    outcome = await service.run_experiment(
+        ExperimentSpec(name="leak", suite=str(DEMO_SUITE), source_path=DEMO_SUITE),
+        suite,
+        [task],
+        [VariantSpec(id="noop", runner="fake", behavior="noop")],
+    )
+    run = service.repo.get_run(outcome.runs[0].run_id)
+    raw = run.verifier_result.stdout + run.verifier_result.stderr
+    assert "electricity" in raw  # the hidden test really does print its expected values
+    secrets = SuiteSecrets.from_tasks(all_tasks)
+    case = build_failure_case(service.repo, run, task, secrets, 0)
+    seen = case.verifier_stdout + case.verifier_stderr
+    for expected_value in ("electricity", "leap day dinner", "'gum'", "2 != 3"):
+        assert expected_value not in seen, expected_value
+    assert "AssertionError: [hidden-assertion-detail]" in seen and "FAILED" in seen
+    full = build_failure_case(service.repo, run, task, secrets, 0, verifier_detail="full")
+    assert "electricity" in full.verifier_stdout + full.verifier_stderr

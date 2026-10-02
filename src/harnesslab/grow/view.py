@@ -35,9 +35,28 @@ ALLOWED_PATHS = [
 ]
 
 
-def capped_scrub(secrets: SuiteSecrets, text: str, cap: int, *, tail: bool = False) -> str:
-    """Scrub first, then truncate, so a hidden name cut at the boundary cannot slip through."""
-    scrubbed = secrets.scrub(text)
+def allowed_paths(allow_hooks: bool) -> list[str]:
+    """Paths an optimizer may write; ``hooks.json`` only when the session opts in."""
+    return [p for p in ALLOWED_PATHS if allow_hooks or p != "hooks.json"]
+
+
+def capped_scrub(
+    secrets: SuiteSecrets,
+    text: str,
+    cap: int,
+    *,
+    tail: bool = False,
+    verifier_detail: str | None = None,
+) -> str:
+    """Scrub first, then truncate, so a hidden name cut at the boundary cannot slip through.
+
+    ``verifier_detail`` marks verifier output, which additionally loses assertion details
+    unless it is ``"full"``.
+    """
+    if verifier_detail is None:
+        scrubbed = secrets.scrub(text)
+    else:
+        scrubbed = secrets.scrub_verifier_output(text, detail=verifier_detail)
     if len(scrubbed) <= cap:
         return scrubbed
     return scrubbed[-cap:] if tail else scrubbed[:cap]
@@ -73,7 +92,13 @@ def trace_digest(events: list[Any], secrets: SuiteSecrets, limit: int = DIGEST_L
 
 
 def build_failure_case(
-    repo: Repository, run: Any, task: TaskSpec, secrets: SuiteSecrets, attempts: int
+    repo: Repository,
+    run: Any,
+    task: TaskSpec,
+    secrets: SuiteSecrets,
+    attempts: int,
+    *,
+    verifier_detail: str = "summary",
 ) -> FailureCase:
     artifacts = {a.kind: a for a in run.artifacts}
     diff = ""
@@ -94,10 +119,18 @@ def build_failure_case(
         trace_digest=trace_digest(run.events, secrets),
         diff=capped_scrub(secrets, diff, DIFF_CAP),
         verifier_stdout=capped_scrub(
-            secrets, verifier.stdout if verifier else "", VERIFIER_CAP, tail=True
+            secrets,
+            verifier.stdout if verifier else "",
+            VERIFIER_CAP,
+            tail=True,
+            verifier_detail=verifier_detail,
         ),
         verifier_stderr=capped_scrub(
-            secrets, verifier.stderr if verifier else "", VERIFIER_CAP, tail=True
+            secrets,
+            verifier.stderr if verifier else "",
+            VERIFIER_CAP,
+            tail=True,
+            verifier_detail=verifier_detail,
         ),
         metrics=FailureMetrics(
             llm_calls=metrics.get("llm_calls"),
@@ -127,7 +160,7 @@ def build_context(
         model=model,
         bundle=bundle.content_files,
         constraints=EditConstraintsSpec(
-            allowed_paths=list(ALLOWED_PATHS),
+            allowed_paths=allowed_paths(constraints.allow_hooks),
             max_files=constraints.max_files,
             max_file_bytes=constraints.max_file_bytes,
             max_bundle_bytes=constraints.max_bundle_bytes,

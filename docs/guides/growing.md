@@ -1,5 +1,9 @@
 # Grow the harness
 
+> **Requires Harness Lab 0.2.0 (unreleased).** `pip install harnesslab` currently installs 0.1.0,
+> which has no `grow` command and no harness bundles. Until 0.2.0 is on PyPI, install from `main`:
+> `pip install git+https://github.com/bilgin-kocak/harness-lab`.
+
 Harness Lab can run the loop from *Grow the Harness, Not the Context* (Li et al., 2026,
 arXiv 2609.26760) for coding agents: failures drive edits to a **harness bundle**, a held-out
 **gate** rejects edits that regress, accepted versions accumulate, and the growth curve is
@@ -98,14 +102,28 @@ Optimizers are plugins (`harnesslab.grow.optimizers.base.Optimizer`, entry-point
   and rollback.
 - **fake**: for tests and the demo; marks the window's tasks as solved in `fake.yaml`.
 
+Two options on `optimizer:` decide how much an optimizer can see and write:
+
+- `allow_hooks` (default `false`). `hooks.json` holds shell commands that Claude Code runs on your
+  machine, outside the agent's tool allowlist. By default an optimizer may not add or edit it
+  (such candidates are `invalid`) and it is not offered as an allowed path. Hooks you write
+  yourself in the initial bundle still apply. Set `allow_hooks: true` only with a sandboxed
+  machine or the `manual` optimizer, and read every proposed command.
+- `verifier_detail` (default `summary`). The optimizer sees the verifier's output with assertion
+  details removed: unittest and pytest expected values and diffs become
+  `AssertionError: [hidden-assertion-detail]`, while failing-test counts, error types and
+  tracebacks stay. `full` shows them, which lets hidden-test expectations reach the optimizer.
+
 ## Leak controls
 
 The optimizer never sees injected hidden files. Their file names and test identifiers are
 replaced by `[hidden-test]`, their source lines (which unittest and pytest tracebacks quote) by
-`[hidden-test-line]`, text is scrubbed before it is truncated, and rejection reasons are scrubbed
-before they are shown again. Every candidate is linted before it runs and rejected if it deletes a
-file, edits `harness.yaml`, exceeds `max_files` or the size caps, mentions a task id or hidden
-test name, or contains a line copied verbatim from a hidden test. See
+`[hidden-test-line]`, assertion details (expected values and diffs) by
+`[hidden-assertion-detail]` unless `verifier_detail: full`, text is scrubbed before it is
+truncated, and rejection reasons are scrubbed before they are shown again. Every candidate is
+linted before it runs and rejected if it deletes a file, edits `harness.yaml`, writes `hooks.json`
+without `allow_hooks`, exceeds `max_files` or the size caps, mentions a task id or hidden test
+name, or contains a line copied verbatim from a hidden test. See
 [What the optimizer sees](../explanations/optimizer-view.md).
 
 ## Reading the result

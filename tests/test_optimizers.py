@@ -149,7 +149,8 @@ async def test_claude_cli_optimizer_parses_structured_output(fake_cli, tmp_path,
     assert '"task_id": "b"' in out.read_text()
     assert (tmp_path / "optimizer_attempt_1.json").exists()
     cwd = Path((tmp_path / "cwd.txt").read_text().strip())
-    assert cwd.exists() and tmp_path not in cwd.parents and cwd != tmp_path
+    # It ran outside the lab directory, in a temp dir that is removed afterwards.
+    assert tmp_path not in cwd.parents and cwd != tmp_path and not cwd.exists()
     argv = build_optimizer_argv({"model": "m"}, "{}")
     assert "--json-schema" in argv and "--max-turns" in argv and "--output-format" in argv
     assert argv[argv.index("--tools") + 1] == "" and "--model" in argv
@@ -224,3 +225,29 @@ async def test_manual_optimizer_requires_tty(tmp_path, monkeypatch):
     opt = create_optimizer("manual", {}, artifacts_dir=tmp_path / "v1")
     with pytest.raises(OptimizerError, match="interactive"):
         await opt.propose(_ctx({"fake.yaml": ""}, "b"))
+
+
+async def test_claude_cli_optimizer_charges_failed_attempts(fake_cli, tmp_path, monkeypatch):
+    import json
+
+    import pytest
+
+    from harnesslab.grow.optimizers.base import OptimizerError
+
+    record = {
+        "type": "result",
+        "subtype": "success",
+        "is_error": False,
+        "result": "no proposal here",
+        "total_cost_usd": 0.01,
+        "usage": {"input_tokens": 10, "output_tokens": 5},
+    }
+    stream = tmp_path / "bad_with_cost.json"
+    stream.write_text(json.dumps(record) + "\n")
+    monkeypatch.setenv("FAKE_CLI_STREAM", str(stream))
+    opt = create_optimizer(
+        "claude-cli", {"executable": str(fake_cli), "env_passthrough": ["FAKE_CLI_STREAM"]}
+    )
+    with pytest.raises(OptimizerError) as excinfo:
+        await opt.propose(_ctx({"fake.yaml": ""}, "b"))
+    assert excinfo.value.cost_usd == pytest.approx(0.02)  # both attempts were paid for

@@ -59,10 +59,21 @@ class GrowOptimizerSpec(BaseModel):
     kind: str
     model: str | None = None
     max_files: int = Field(default=6, ge=1)
+    # hooks.json holds shell commands that Claude Code runs on the host outside the agent's
+    # tool allowlist; an optimizer may only write it when the spec opts in explicitly.
+    allow_hooks: bool = False
+    # "summary" hides assertion details (expected values, diffs) from the optimizer's view
+    # of verifier output; "full" shows them (hidden-test expectations then reach it).
+    verifier_detail: Literal["summary", "full"] = "summary"
 
     @property
     def options(self) -> dict[str, Any]:
-        return {"model": self.model, "max_files": self.max_files, **(self.model_extra or {})}
+        return {
+            "model": self.model,
+            "max_files": self.max_files,
+            "allow_hooks": self.allow_hooks,
+            **(self.model_extra or {}),
+        }
 
 
 class GrowBudget(BaseModel):
@@ -129,10 +140,12 @@ def resolve_split(spec: GrowSpec, task_ids: list[str]) -> ResolvedSplit:
         ids = list(task_ids)
         random.Random(s.seed).shuffle(ids)
         n = len(ids)
-        n_train = max(1, round(s.fractions.get("train", 0.0) * n))
-        n_gate = max(1, round(s.fractions.get("gate", 0.0) * n))
-        if n_train + n_gate > n:
+        if n < 2:
             raise SpecError(f"split.fractions need at least 2 tasks (have {n})")
+        # Allocate in order train, gate, final, each clamped to what is left, so rounding can
+        # never overshoot (e.g. 3 tasks at 0.5/0.5 -> train 2, gate 1).
+        n_train = min(max(1, round(s.fractions.get("train", 0.0) * n)), n - 1)
+        n_gate = min(max(1, round(s.fractions.get("gate", 0.0) * n)), n - n_train)
         n_final = max(0, min(n - n_train - n_gate, round(s.fractions.get("final", 0.0) * n)))
         return ResolvedSplit(
             train=ids[:n_train],

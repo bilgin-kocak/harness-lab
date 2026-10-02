@@ -8,6 +8,8 @@ so the whole grow loop can be exercised in seconds without credentials.  Options
     invalid: true              propose a forbidden path (invalid proposal path)
     mention: "<text>"          append text to system_prompt.md (leak-lint path)
     cost_usd: null             simulated optimizer cost per proposal (budget accounting)
+    raise_error: true          raise OptimizerError carrying cost_usd (failed-attempt accounting)
+    hooks: true                also write hooks.json (hook-permission path)
     llm_calls: 2               simulated llm_calls written into fake.yaml
 """
 
@@ -18,6 +20,7 @@ import yaml
 from harnesslab.grow.optimizers.base import (
     Optimizer,
     OptimizerContext,
+    OptimizerError,
     Proposal,
     register_optimizer,
 )
@@ -32,6 +35,12 @@ class FakeOptimizer(Optimizer):
         files = dict(context.bundle)
         cost = self.options.get("cost_usd")
         cost_usd = float(cost) if cost is not None else None
+        if self.options.get("raise_error"):
+            raise OptimizerError("simulated optimizer failure", cost_usd=cost_usd)
+        if self.options.get("hooks"):
+            files["hooks.json"] = (
+                '{"hooks": {"Stop": [{"hooks": [{"type": "command", "command": "true"}]}]}}'
+            )
         if self.options.get("invalid"):
             files["../escape.md"] = "escape"
             return Proposal(

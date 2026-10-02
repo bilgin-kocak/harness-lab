@@ -113,3 +113,89 @@ def test_view_scrubs_before_truncating():
     assert "test_hidden" not in capped_scrub(s, text, 20)
     assert "test_hidden" not in capped_scrub(s, text, 12, tail=True)
     assert capped_scrub(s, "short", 100) == "short"
+
+
+# --- hooks permission ---------------------------------------------------------
+
+
+def test_optimizer_may_not_write_hooks_unless_allowed():
+    from harnesslab.harness.lint import EditConstraints, SuiteSecrets, lint_candidate
+
+    secrets = SuiteSecrets(task_ids=[], hidden_names=[], hidden_lines=set())
+    hooks = '{"hooks": {"Stop": [{"hooks": [{"type": "command", "command": "true"}]}]}}'
+    added = lint_candidate({}, {"hooks.json": hooks}, secrets, EditConstraints())
+    assert any(e.startswith("hooks.json: optimizers may not") for e in added)
+    edited = lint_candidate(
+        {"hooks.json": '{"hooks": {}}'}, {"hooks.json": hooks}, secrets, EditConstraints()
+    )
+    assert any(e.startswith("hooks.json: optimizers may not") for e in edited)
+    # Carrying an existing, human-authored hooks.json over unchanged is fine.
+    carried = lint_candidate(
+        {"hooks.json": hooks},
+        {"hooks.json": hooks, "system_prompt.md": "Run the tests."},
+        secrets,
+        EditConstraints(),
+    )
+    assert carried == []
+    allowed = lint_candidate({}, {"hooks.json": hooks}, secrets, EditConstraints(allow_hooks=True))
+    assert allowed == []
+
+
+# --- assertion detail scrubbing -------------------------------------------------
+
+UNITTEST_FAILURE = """test_a (m.C.test_a) ... FAIL
+
+======================================================================
+FAIL: test_a (m.C.test_a)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "tests/x.py", line 3, in test_a
+    self.assertEqual(a, b)
+AssertionError: Lists differ: ['lunch'] != ['lunch', 'electricity']
+
+Second list contains 1 additional elements.
+First extra element 1:
+'electricity'
+
+- ['lunch']
++ ['lunch', 'electricity']
+
+----------------------------------------------------------------------
+Ran 1 test in 0.001s
+
+FAILED (failures=1)
+"""
+
+PYTEST_FAILURE = """>       assert len(entries) == 3
+E       assert 2 == 3
+E        +  where 2 = len(['lunch', 'electricity'])
+
+tests/x.py:3: AssertionError
+FAILED tests/x.py::test_a - assert 2 == 3
+FAILED tests/x.py::test_b - ModuleNotFoundError: No module named 'ledgerlite.budgets'
+"""
+
+
+def test_scrub_assertion_details_unittest_and_pytest():
+    from harnesslab.harness.lint import ASSERTION_PLACEHOLDER, scrub_assertion_details
+
+    out = scrub_assertion_details(UNITTEST_FAILURE)
+    assert "electricity" not in out and ASSERTION_PLACEHOLDER in out
+    # Structure survives: which test failed, the traceback, the run summary.
+    for kept in ("FAIL: test_a", "Traceback", "Ran 1 test", "FAILED (failures=1)"):
+        assert kept in out
+    out = scrub_assertion_details(PYTEST_FAILURE)
+    assert "electricity" not in out and "2 == 3" not in out
+    assert "ModuleNotFoundError: No module named 'ledgerlite.budgets'" in out
+    assert out.count(ASSERTION_PLACEHOLDER) == 2
+    assert scrub_assertion_details("no failures here\nOK\n") == "no failures here\nOK\n"
+
+
+def test_scrub_verifier_output_levels():
+    from harnesslab.harness.lint import SuiteSecrets
+
+    secrets = SuiteSecrets(task_ids=[], hidden_names=["test_a"], hidden_lines=set())
+    summary = secrets.scrub_verifier_output(UNITTEST_FAILURE)
+    assert "electricity" not in summary and "test_a" not in summary
+    full = secrets.scrub_verifier_output(UNITTEST_FAILURE, detail="full")
+    assert "electricity" in full and "test_a" not in full

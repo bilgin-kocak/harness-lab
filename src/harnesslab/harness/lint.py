@@ -2,9 +2,15 @@
 
 The optimizer must never learn hidden test content.  :class:`SuiteSecrets` collects what
 must stay hidden (task ids, injected file names, hidden test lines); :meth:`SuiteSecrets.scrub`
-removes hidden names from text shown to the optimizer; :func:`lint_candidate` rejects
-candidate bundles that mention them or break the edit rules (no deletions, no manifest edits,
-bounded number of changed files).
+removes hidden names and quoted hidden lines from text shown to the optimizer, and
+:meth:`SuiteSecrets.scrub_verifier_output` additionally removes assertion details (expected
+values, diffs) unless the session opts into ``verifier_detail: full``.  :func:`lint_candidate`
+rejects candidate bundles that mention hidden names or break the edit rules (no deletions, no
+manifest edits, bounded number of changed files, no hook edits unless ``allow_hooks``).
+
+These controls are heuristics over text, not a sandbox: they keep hidden tests out of the
+optimizer's *input* and out of the candidate's *text*.  Hook commands are code that runs on
+the host, which is why optimizers may not write them by default.
 """
 
 from __future__ import annotations
@@ -25,10 +31,70 @@ MIN_VERBATIM_LINE = 24
 MIN_HIDDEN_NAME = 6
 HIDDEN_PLACEHOLDER = "[hidden-test]"
 HIDDEN_LINE_PLACEHOLDER = "[hidden-test-line]"
+ASSERTION_PLACEHOLDER = "[hidden-assertion-detail]"
+VERIFIER_DETAIL_LEVELS = ("summary", "full")
 _IMPORT_PREFIXES = ("import ", "from ")
 _TEST_FUNCTION = re.compile(r"^\s*(?:async\s+)?def\s+(test\w*)\s*\(", re.M)
 _TEST_CLASS = re.compile(r"^\s*class\s+(\w+)\s*(?:\(([^)]*)\))?\s*:", re.M)
 _TRACEBACK_MARKERS = ("> ", "E ")
+# A unittest assertion block ends at the next separator, header or the run summary.
+_UNITTEST_BLOCK_END = re.compile(
+    r"^(?:={10,}|-{10,}|Ran \d+ tests?\b|FAILED \(|OK\b|FAIL: |ERROR: |"
+    r"Traceback \(most recent call last\):)"
+)
+_PYTEST_E_LINE = re.compile(r"^(\s*)E(\s+)(.*)$")
+_PYTEST_SUMMARY = re.compile(r"^((?:FAILED|ERROR) \S+) - (.*)$")
+_ASSERTION_STARTS = ("assert ", "AssertionError")
+
+
+def scrub_assertion_details(text: str) -> str:
+    """Replace assertion payloads (expected values, diffs) in test-runner output.
+
+    unittest prints ``AssertionError: <actual> != <expected>`` followed by diff lines until
+    the next ``====``/``----`` separator; pytest prints ``E   assert ...`` /
+    ``E   AssertionError: ...`` followed by more ``E`` lines and a short-summary line.  Each
+    block becomes one ``AssertionError: [hidden-assertion-detail]`` line, so the optimizer
+    still sees which runs failed and how (error types, counts, tracebacks of *errors*), but
+    not the values the hidden tests expect.  Heuristic: other runners' formats are left as is.
+    """
+    out: list[str] = []
+    mode: str | None = None  # None | "unittest" | "pytest"
+    for line in text.splitlines(keepends=True):
+        body = line.rstrip("\r\n")
+        eol = line[len(body) :]
+        if mode == "pytest":
+            if _PYTEST_E_LINE.match(body):
+                continue
+            mode = None
+        elif mode == "unittest":
+            if _UNITTEST_BLOCK_END.match(body):
+                mode = None
+            elif body.strip() or (out and not out[-1].strip()):
+                continue  # drop the block; keep at most one blank line
+            else:
+                out.append(line)
+                continue
+        e_line = _PYTEST_E_LINE.match(body)
+        if e_line and e_line.group(3).startswith(_ASSERTION_STARTS):
+            out.append(
+                f"{e_line.group(1)}E{e_line.group(2)}AssertionError: {ASSERTION_PLACEHOLDER}{eol}"
+            )
+            mode = "pytest"
+            continue
+        if body.startswith("AssertionError"):
+            out.append(f"AssertionError: {ASSERTION_PLACEHOLDER}{eol}")
+            mode = "unittest"
+            continue
+        summary = _PYTEST_SUMMARY.match(body)
+        if summary and summary.group(2).startswith(_ASSERTION_STARTS):
+            out.append(f"{summary.group(1)} - AssertionError: {ASSERTION_PLACEHOLDER}{eol}")
+            continue
+        index = body.find("AssertionError:")
+        if index > 0:
+            out.append(f"{body[:index]}AssertionError: {ASSERTION_PLACEHOLDER}{eol}")
+            continue
+        out.append(line)
+    return "".join(out)
 
 
 def hidden_identifiers(source: str) -> set[str]:
@@ -110,6 +176,18 @@ class SuiteSecrets:
                 text = text.replace(name, HIDDEN_PLACEHOLDER)
         return text
 
+    def scrub_verifier_output(self, text: str, *, detail: str = "summary") -> str:
+        """:meth:`scrub` plus, unless ``detail == "full"``, :func:`scrub_assertion_details`.
+
+        Verifier output is the one place hidden tests *run*, so their expected values show
+        up in assertion messages; the agent's own command output only ever covers visible
+        tests and goes through :meth:`scrub` alone.
+        """
+        text = self.scrub(text)
+        if detail != "full":
+            text = scrub_assertion_details(text)
+        return text
+
 
 @dataclass
 class EditConstraints:
@@ -117,6 +195,9 @@ class EditConstraints:
     max_file_bytes: int = MAX_FILE_BYTES
     max_bundle_bytes: int = MAX_BUNDLE_BYTES
     max_files_total: int = MAX_FILES
+    # hooks.json holds shell commands Claude Code runs outside the agent's tool allowlist,
+    # so an optimizer may only add or edit it when the session explicitly opts in.
+    allow_hooks: bool = False
 
 
 def changed_paths(current: dict[str, str], candidate: dict[str, str]) -> list[str]:
@@ -141,6 +222,11 @@ def lint_candidate(
     changed = changed_paths(current, candidate)
     if "harness.yaml" in changed:
         errors.append("harness.yaml: the manifest may not be edited by an optimizer")
+    if "hooks.json" in changed and not constraints.allow_hooks:
+        errors.append(
+            "hooks.json: optimizers may not add or edit hooks (hook commands run on the host "
+            "outside the agent's tool allowlist); set optimizer.allow_hooks: true to permit"
+        )
     if len(changed) > constraints.max_files:
         errors.append(f"max_files exceeded: {len(changed)} changed > {constraints.max_files}")
     errors.extend(validate_files({p: c.encode("utf-8") for p, c in candidate.items()}))

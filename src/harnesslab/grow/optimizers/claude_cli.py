@@ -16,10 +16,12 @@ needed.  Options::
 from __future__ import annotations
 
 import json
+import shutil
 import tempfile
 from pathlib import Path
 from typing import Any
 
+from harnesslab.core.models import UsageTotals
 from harnesslab.execution.process import build_child_env, run_process
 from harnesslab.grow.optimizers.base import (
     Optimizer,
@@ -55,8 +57,9 @@ Propose a new bundle that makes the agent more likely to solve tasks *like* thes
 answer with JSON only: {"files": {"<path>": "<full new content>", ...}, "rationale": "..."}.
 
 Rules (violations are rejected automatically):
-- Only these paths: system_prompt.md, hooks.json, fake.yaml, skills/<name>/SKILL.md,
-  agents/<name>.md. Every SKILL.md starts with YAML frontmatter containing `name:`.
+- Only the paths listed in constraints.allowed_paths (system_prompt.md, fake.yaml,
+  skills/<name>/SKILL.md, agents/<name>.md, and hooks.json only when it is listed).
+  Every SKILL.md starts with YAML frontmatter containing `name:`.
 - Return the FULL content of every file you change or add; omit unchanged files.
   Never delete a file. Change at most max_files files. Keep each file under
   max_file_bytes bytes.
@@ -158,35 +161,45 @@ class ClaudeCliOptimizer(Optimizer):
         # CLAUDE.md, settings or hooks from the lab directory it would otherwise run in.
         cwd = Path(tempfile.mkdtemp(prefix="harnesslab-optimizer-"))
         last_error = "optimizer produced no output"
-        for attempt in (1, 2):
-            proc = await run_process(
-                argv,
-                cwd=cwd,
-                env=env,
-                timeout=float(self.options.get("timeout_seconds", 600)),
-                stdin_text=prompt,
-            )
-            if proc.error:
-                raise OptimizerError(proc.error)
-            if self.artifacts_dir is not None:
-                (self.artifacts_dir / f"optimizer_attempt_{attempt}.json").write_text(
-                    proc.stdout[-200_000:], encoding="utf-8"
+        # Every attempt is charged, including ones whose answer could not be used, so the
+        # session's max_optimizer_cost_usd sees the real spend.
+        spent: float | None = None
+        usage = UsageTotals()
+        try:
+            for attempt in (1, 2):
+                proc = await run_process(
+                    argv,
+                    cwd=cwd,
+                    env=env,
+                    timeout=float(self.options.get("timeout_seconds", 600)),
+                    stdin_text=prompt,
                 )
-            record = _last_json_object(proc.stdout)
-            if record is None:
-                last_error = f"unparseable optimizer output (exit code {proc.exit_code})"
-                continue
-            data = parse_proposal(record)
-            if data is None:
-                last_error = "unparseable proposal: no 'files' object in the optimizer's answer"
-                continue
-            cost = record.get("total_cost_usd")
-            files = {str(k): str(v) for k, v in data["files"].items()}
-            return Proposal(
-                files={**context.bundle, **files},
-                rationale=str(data.get("rationale") or ""),
-                usage=usage_from_claude(record.get("usage") or {}),
-                cost_usd=float(cost) if isinstance(cost, int | float) else None,
-                raw=record,
-            )
-        raise OptimizerError(last_error)
+                if proc.error:
+                    raise OptimizerError(proc.error, cost_usd=spent)
+                if self.artifacts_dir is not None:
+                    (self.artifacts_dir / f"optimizer_attempt_{attempt}.json").write_text(
+                        proc.stdout[-200_000:], encoding="utf-8"
+                    )
+                record = _last_json_object(proc.stdout)
+                if record is None:
+                    last_error = f"unparseable optimizer output (exit code {proc.exit_code})"
+                    continue
+                cost = record.get("total_cost_usd")
+                if isinstance(cost, int | float):
+                    spent = (spent or 0.0) + float(cost)
+                usage = usage.add(usage_from_claude(record.get("usage") or {}))
+                data = parse_proposal(record)
+                if data is None:
+                    last_error = "unparseable proposal: no 'files' object in the optimizer's answer"
+                    continue
+                files = {str(k): str(v) for k, v in data["files"].items()}
+                return Proposal(
+                    files={**context.bundle, **files},
+                    rationale=str(data.get("rationale") or ""),
+                    usage=usage,
+                    cost_usd=spent,
+                    raw=record,
+                )
+            raise OptimizerError(last_error, cost_usd=spent)
+        finally:
+            shutil.rmtree(cwd, ignore_errors=True)

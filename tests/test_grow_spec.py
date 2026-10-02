@@ -71,3 +71,30 @@ def test_missing_grow_target_and_harness(tmp_path):
     )
     with pytest.raises(SpecError, match="harness bundle not found"):
         load_grow_target(bad)
+
+
+def test_split_fractions_never_overshoot():
+    ids = [f"t{i}" for i in range(3)]
+    split = resolve_split(_spec(fractions={"train": 0.5, "gate": 0.5}), ids)
+    assert len(split.train) == 2 and len(split.gate) == 1 and split.final == []
+    for n in range(2, 13):
+        ids = [f"t{i}" for i in range(n)]
+        for tenth in range(1, 10):
+            fractions = {"train": tenth / 10, "gate": round(1 - tenth / 10, 10)}
+            split = resolve_split(_spec(fractions=fractions), ids)
+            assert split.train and split.gate
+            assert len(split.train) + len(split.gate) + len(split.final) <= n
+            assert not set(split.train) & set(split.gate)
+
+
+def test_optimizer_options_for_hooks_and_verifier_detail():
+    from pydantic import ValidationError
+
+    from harnesslab.grow.spec import GrowOptimizerSpec
+
+    default = GrowOptimizerSpec(kind="fake")
+    assert default.allow_hooks is False and default.verifier_detail == "summary"
+    opted = GrowOptimizerSpec(kind="fake", allow_hooks=True, verifier_detail="full")
+    assert opted.options["allow_hooks"] is True
+    with pytest.raises(ValidationError):
+        GrowOptimizerSpec(kind="fake", verifier_detail="everything")

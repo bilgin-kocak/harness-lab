@@ -634,9 +634,9 @@ class Repository:
     ) -> RunRow | None:
         """Most recent run of ``task_key`` in a grow session, preferring the given bundle.
 
-        With ``harness_hash`` the newest run under that bundle wins; otherwise (or when the
-        bundle has none) the newest non-passing run, so a failure case never shows the
-        optimizer a run that passed under a rejected candidate.
+        With ``harness_hash`` the newest non-passing run under that bundle wins; otherwise
+        (or when the bundle has none) the newest non-passing run under any bundle, so a
+        failure case never shows the optimizer a passing run.
         """
         base = (
             select(RunRow.id)
@@ -648,7 +648,12 @@ class Repository:
         with self.db.session() as s:
             run_id = None
             if harness_hash is not None:
-                run_id = s.execute(base.where(RunRow.harness_hash == harness_hash)).scalar()
+                under_hash = base.where(RunRow.harness_hash == harness_hash)
+                if exclude_passed:
+                    # With repetitions > 1 a task can fail on one repetition and pass on
+                    # another; the failure case must show a failing one.
+                    under_hash = under_hash.where(RunRow.verified_pass.is_not(True))
+                run_id = s.execute(under_hash).scalar()
             if run_id is None and exclude_passed:
                 run_id = s.execute(base.where(RunRow.verified_pass.is_not(True))).scalar()
             if run_id is None:

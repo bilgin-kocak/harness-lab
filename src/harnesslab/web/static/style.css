@@ -69,3 +69,4 @@ td.better { color: var(--pass); font-weight: 600; } td.worse { color: var(--fail
 ul.artifacts { padding-left: 18px; }
 
 .sweep details { margin: 8px 0; } .sweep summary { cursor: pointer; padding: 6px 0; } tr.eligible td { background: #f0fdf4; }
+.evidence { margin: 6px 0 14px; } .evidence table { max-width: 720px; }

@@ -14,6 +14,7 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 from harnesslab.core.models import Outcome, RunStatus
+from harnesslab.experiments.stats import PairedComparison, paired_comparison
 
 
 class RunSample(BaseModel):
@@ -230,6 +231,7 @@ class VariantComparison(BaseModel):
     deltas: list[MetricDelta]
     tasks: list[TaskComparison]
     summary: dict[str, int]
+    paired: PairedComparison | None = None  # B vs A per task: bootstrap interval, sign test
 
 
 def _classify(a_rate: float | None, b_rate: float | None) -> str:
@@ -251,7 +253,13 @@ def _classify(a_rate: float | None, b_rate: float | None) -> str:
 
 
 def compare_variants(
-    samples: list[RunSample], a: str, b: str, task_order: list[str]
+    samples: list[RunSample],
+    a: str,
+    b: str,
+    task_order: list[str],
+    *,
+    resamples: int = 2000,
+    seed: int = 0,
 ) -> VariantComparison:
     aggs = aggregate_variants(samples, [a, b])
     agg_a, agg_b = aggs[a], aggs[b]
@@ -343,6 +351,9 @@ def compare_variants(
         deltas=deltas,
         tasks=tasks,
         summary=dict(summary),
+        paired=paired_comparison(
+            samples, a, b, task_order=task_order, resamples=resamples, seed=seed
+        ),
     )
 
 

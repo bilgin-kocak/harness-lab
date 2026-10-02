@@ -1,0 +1,29 @@
+{% set ar = ablation_report %}
+<section class="ablation">
+  <h2>Component ablation
+    <span class="muted small">bundle <span class="mono">{{ ar.bundle_hash[:12] }}</span> on {{ ar.base_variant }} · every component tested against its own absence</span>
+  </h2>
+  {% for note in ar.notes %}<p class="muted small">{{ note }}</p>{% endfor %}
+  <h3 class="small muted">Whole bundle: full vs minimal (no components)</h3>
+  {% set p = ar.full_vs_minimal %}
+  {% include "partials/paired.html" %}
+  <table class="data compact">
+    <thead><tr><th>component</th><th>verdict</th><th class="num">Δ pass rate</th><th class="num">interval</th><th class="num">Δ {{ ar.full_vs_minimal.cost_kind }}</th><th class="num">Δ llm_calls</th><th class="num">wins / losses / ties</th><th class="num">sign test p</th></tr></thead>
+    <tbody>
+    {% for e in ar.components %}
+      {% set c = e.comparison %}
+      <tr>
+        <td class="mono">{{ e.component }}</td>
+        <td><span class="badge {{ 'badge-pass' if e.verdict == 'helps' else ('badge-fail' if e.verdict == 'hurts' else 'badge-neutral') }}">{{ e.verdict }}</span></td>
+        <td class="num">{% if c.pass_rate_diff %}{{ (c.pass_rate_diff.estimate * 100)|delta(1) }} pts{% else %}—{% endif %}</td>
+        <td class="num">{% if c.pass_rate_diff %}[{{ (c.pass_rate_diff.low * 100)|delta(1) }}, {{ (c.pass_rate_diff.high * 100)|delta(1) }}]{% else %}—{% endif %}</td>
+        <td class="num">{% if c.cost_diff %}{{ c.cost_diff.estimate|delta(4) }}{% else %}—{% endif %}</td>
+        <td class="num">{% if c.llm_calls_diff %}{{ c.llm_calls_diff.estimate|delta(2) }}{% else %}—{% endif %}</td>
+        <td class="num">{{ c.wins }} / {{ c.losses }} / {{ c.ties }}</td>
+        <td class="num">{% if c.sign_test_p is not none %}{{ '%.3f'|format(c.sign_test_p) }}{% else %}—{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <p class="muted small">Effect = full bundle minus the bundle without that component, per task. A component "helps" only when the interval excludes zero over enough tasks; "no evidence" is a reason to prefer the simpler harness.</p>
+</section>

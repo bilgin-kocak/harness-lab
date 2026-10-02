@@ -73,7 +73,8 @@ Every field is listed in [Grow YAML](../reference/grow-format.md).
 4. **Window check**: the window runs against the candidate. A task counts as fixed only if every
    repetition passes. Fewer than Q fixed: `rejected`.
 5. **Gate check**: the gate set runs against the candidate. Pass rate below the current version's,
-   or no valid runs: `rejected`.
+   or no valid runs: `rejected`. With `gate.require: not_worse_ci` or `better_ci` the decision uses
+   paired intervals instead (see [Grow YAML](../reference/grow-format.md)).
 6. **Accept**: the candidate becomes current, fixed tasks leave the pool, unfixed ones gain an
    attempt, tasks at `max_attempts` retire. Runs that were `not_verified` because of an
    infrastructure failure never cost an attempt.

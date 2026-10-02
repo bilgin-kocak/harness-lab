@@ -200,6 +200,7 @@ class ExperimentSpec(BaseModel):
     keep_worktrees: bool = False
     plugins: list[str] = Field(default_factory=list)
     sweep: dict[str, Any] | None = None  # the SweepSpec that generated this experiment, if any
+    ablation: dict[str, Any] | None = None  # the AblationSpec that generated it, if any
     source_path: Path | None = Field(default=None, exclude=True)
 
     @property
@@ -258,6 +259,9 @@ class SweepSpec(BaseModel):
     tasks: list[str] | None = None
     workload_by: Literal["suite", "task", "tag"] = "suite"
     holdout_tasks: list[str] = Field(default_factory=list)
+    # Factor levels of the minimal configuration every recommendation is compared against,
+    # e.g. {toolset: minimal, action_granularity: batched}; None means no baseline comparison.
+    baseline: dict[str, str] | None = None
     sample: SweepSample | None = None
     budget: SweepBudget | None = None
     objective: SweepObjective = Field(default_factory=SweepObjective)

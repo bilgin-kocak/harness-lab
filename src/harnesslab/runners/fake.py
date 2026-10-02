@@ -17,6 +17,11 @@ Options (all optional)::
     simulate_cost_usd_per_1k_tokens: float   report a *simulated* cost (clearly labelled)
     simulate_token_multiplier: float         scale the deterministic token usage (sweep demos)
     action_policy: str                       accepted for parity with real adapters (recorded, no effect)
+
+A harness bundle's ``fake.yaml`` can also simulate harness effects: ``solve_tasks`` / ``fail_tasks``
+override the behaviour per task, ``component_solves: {skills/<name>: [task ids]}`` solves tasks only
+while the bundle contains that component, and ``component_llm_calls: {<component>: n}`` adds n
+simulated LLM calls when it is present (used by ablation demos and tests).
 """
 
 from __future__ import annotations
@@ -131,6 +136,16 @@ class FakeRunner(HarnessRunner):
             behavior = "solve"
         elif task.id in set(fake_cfg.get("fail_tasks") or []):
             behavior = "fail"
+        # Simulated component effects (for ablation demos and tests): a task listed under a
+        # component is solved only while the bundle contains that component.
+        present = set(bundle.files) if bundle else set()
+
+        def has_component(component: str) -> bool:
+            return any(p == component or p.startswith(component + "/") for p in present)
+
+        for component, task_ids in (fake_cfg.get("component_solves") or {}).items():
+            if has_component(str(component)) and task.id in set(task_ids or []):
+                behavior = "solve"
         model = config.model or FAKE_MODEL
 
         emit.emit(
@@ -295,6 +310,9 @@ class FakeRunner(HarnessRunner):
         llm_calls = int(
             fake_cfg.get("llm_calls", config.get("llm_calls", DEFAULT_LLM_CALLS.get(behavior, 2)))
         )
+        for component, extra in (fake_cfg.get("component_llm_calls") or {}).items():
+            if has_component(str(component)):
+                llm_calls += int(extra)
 
         return RunnerResult(
             status=RunStatus.COMPLETED,

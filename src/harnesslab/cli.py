@@ -28,6 +28,8 @@ from harnesslab.bundled import (
 from harnesslab.config import Settings
 from harnesslab.core.models import ExperimentSpec, RunStatus, TaskSpec, VariantSpec
 from harnesslab.core.pricing import PricingTable, find_pricing_table
+from harnesslab.experiments.ablation import AblationReport, plan_ablation
+from harnesslab.experiments.ablation import report_for_experiment as ablation_report_for
 from harnesslab.experiments.aggregate import aggregate_variants, build_matrix, samples_from_rows
 from harnesslab.experiments.export import export_experiment
 from harnesslab.experiments.service import ExperimentOutcome, ExperimentService, RunProgress
@@ -41,6 +43,7 @@ from harnesslab.experiments.spec import (
     resolve_variants,
     select_tasks,
 )
+from harnesslab.experiments.stats import PairedComparison, paired_comparison
 from harnesslab.experiments.sweep import (
     BudgetGate,
     SweepReport,
@@ -80,11 +83,16 @@ grow_app = typer.Typer(
     no_args_is_help=True,
 )
 harness_app = typer.Typer(help="Inspect and validate harness bundles.", no_args_is_help=True)
+ablate_app = typer.Typer(
+    help="Component ablation: test every part of a harness bundle against its own absence.",
+    no_args_is_help=True,
+)
 app.add_typer(suite_app, name="suite")
 app.add_typer(experiment_app, name="experiment")
 app.add_typer(sweep_app, name="sweep")
 app.add_typer(grow_app, name="grow")
 app.add_typer(harness_app, name="harness")
+app.add_typer(ablate_app, name="ablate")
 
 console = Console()
 err_console = Console(stderr=True)
@@ -108,6 +116,37 @@ def _fmt(value: Any, digits: int = 2) -> str:
     if isinstance(value, float):
         return f"{value:.{digits}f}"
     return str(value)
+
+
+def _signed(value: float, digits: int) -> str:
+    return f"{value:+.{digits}f}"
+
+
+def _print_paired(p: PairedComparison, title: str | None = None) -> None:
+    """One evidence block: verdict, task counts, sign test and bootstrap intervals."""
+    colour = {"better": "green", "worse": "red"}.get(p.verdict, "yellow")
+    sign = f", sign test p = {p.sign_test_p:.3f}" if p.sign_test_p is not None else ""
+    console.print(
+        f"{title or f'{p.b} vs {p.a}'}: [{colour}]{p.verdict}[/] over {p.n_tasks} paired task(s) "
+        f"(wins {p.wins}, losses {p.losses}, ties {p.ties}{sign})"
+    )
+    rows = [
+        ("pass rate (pts)", p.pass_rate_diff, 100.0, 1),
+        (p.cost_kind, p.cost_diff, 1.0, 4),
+        ("llm_calls", p.llm_calls_diff, 1.0, 2),
+    ]
+    for label, iv, scale, digits in rows:
+        if iv is None:
+            continue
+        console.print(
+            f"  {label}: {_signed(iv.estimate * scale, digits)} "
+            f"[{_signed(iv.low * scale, digits)}, {_signed(iv.high * scale, digits)}] "
+            f"{iv.level:.0%} interval, P(>0) {iv.p_positive:.0%}"
+        )
+    if not p.enough_tasks:
+        console.print(
+            f"  [dim]fewer than {p.min_tasks} paired tasks: no verdict (repetitions do not count as tasks)[/]"
+        )
 
 
 @app.callback()
@@ -764,6 +803,56 @@ def experiment_show(ctx: typer.Context, experiment_id: Annotated[str, typer.Argu
     console.print(rt)
 
 
+@experiment_app.command("compare")
+def experiment_compare(
+    ctx: typer.Context,
+    experiment_id: Annotated[str, typer.Argument()],
+    a: Annotated[str, typer.Argument(help="Baseline variant id (A).")],
+    b: Annotated[str, typer.Argument(help="Variant compared against A (B).")],
+    resamples: Annotated[int, typer.Option("--resamples", min=100)] = 2000,
+    seed: Annotated[int, typer.Option("--seed")] = 0,
+    min_tasks: Annotated[int, typer.Option("--min-tasks", min=1)] = 5,
+) -> None:
+    """Paired, task-level comparison of two variants: bootstrap intervals and a sign test."""
+    settings = _settings(ctx)
+    db = _open_db(settings)
+    try:
+        exp = Repository(db, settings.home).find_experiment(experiment_id)
+        if exp is None:
+            err_console.print(f"[red]experiment not found: {experiment_id}[/]")
+            raise typer.Exit(code=1)
+        samples = samples_from_rows(
+            exp.runs, {t.id: t for t in exp.tasks}, {v.id: v for v in exp.variants}
+        )
+    finally:
+        db.dispose()
+    keys = [v.variant_key for v in exp.variants]
+    for name in (a, b):
+        if name not in keys:
+            err_console.print(
+                f"[red]unknown variant {name!r}; experiment has: {', '.join(keys)}[/]"
+            )
+            raise typer.Exit(code=2)
+    result = paired_comparison(
+        samples,
+        a,
+        b,
+        task_order=[t.task_key for t in exp.tasks],
+        resamples=resamples,
+        seed=seed,
+        min_tasks=min_tasks,
+    )
+    _print_paired(result)
+    table = Table(box=None, padding=(0, 1))
+    for col in ("task", f"{a} pass", f"{b} pass", "Δ"):
+        table.add_column(col, justify="left" if col == "task" else "right")
+    for t in result.tasks:
+        table.add_row(
+            t.task_key, f"{t.a_rate:.0%}", f"{t.b_rate:.0%}", f"{(t.b_rate - t.a_rate) * 100:+.0f}"
+        )
+    console.print(table)
+
+
 @experiment_app.command("export")
 def experiment_export(
     ctx: typer.Context,
@@ -842,6 +931,10 @@ def _print_sweep_report(report: SweepReport) -> None:
                 console.print(
                     f"  runner-up: {u.variant_key}  {kind} {_fmt_objective(u.objective, kind)}"
                 )
+            if w.vs_runner_up:
+                _print_paired(w.vs_runner_up, title="  evidence vs runner-up")
+            if w.vs_baseline:
+                _print_paired(w.vs_baseline, title=f"  evidence vs baseline {w.baseline}")
             if w.holdout:
                 h = w.holdout
                 rate = f"{h.pass_rate:.0%}" if h.pass_rate is not None else "—"
@@ -953,7 +1046,7 @@ def sweep_run(
         _load_plugins_or_exit(list(plugin or []) + suite.plugins + spec.plugins)
         variants = expand_sweep(spec)
         resolve_variant_harnesses(variants, spec.base_dir)
-    except SpecError as exc:
+    except (SpecError, ValueError) as exc:
         err_console.print(f"[red]{exc}[/]")
         raise typer.Exit(code=2) from exc
     if repetitions is not None:
@@ -1354,6 +1447,167 @@ def grow_export(
     console.print(
         f"wrote v{current.number} ({current.harness_hash[:12]}) and lineage.json to {directory}"
     )
+
+
+# ---------------------------------------------------------------------------
+# ablate
+# ---------------------------------------------------------------------------
+
+
+def _print_ablation(report: AblationReport) -> None:
+    console.print(
+        f"[bold]ablation[/] of {report.bundle} (hash {report.bundle_hash[:12]}) on {report.base_variant}"
+    )
+    for note in report.notes:
+        console.print(f"[dim]note: {note}[/]")
+    _print_paired(report.full_vs_minimal, title="whole bundle (full vs minimal)")
+    table = Table(title="component effects: full minus without-component", box=None, padding=(0, 1))
+    for col in (
+        "component",
+        "verdict",
+        "Δ pass (pts)",
+        "interval",
+        "Δ cost",
+        "Δ llm_calls",
+        "W/L/T",
+    ):
+        table.add_column(col, justify="left" if col in ("component", "verdict") else "right")
+    colours = {"helps": "green", "hurts": "red"}
+    for e in report.components:
+        c = e.comparison
+        iv, cost, calls = c.pass_rate_diff, c.cost_diff, c.llm_calls_diff
+        table.add_row(
+            e.component,
+            f"[{colours.get(e.verdict, 'yellow')}]{e.verdict}[/]",
+            f"{iv.estimate * 100:+.1f}" if iv else "—",
+            f"[{iv.low * 100:+.1f}, {iv.high * 100:+.1f}]" if iv else "—",
+            f"{cost.estimate:+.4f}" if cost else "—",
+            f"{calls.estimate:+.2f}" if calls else "—",
+            f"{c.wins}/{c.losses}/{c.ties}",
+        )
+    console.print(table)
+    console.print(
+        "[dim]A component 'helps' only when the paired interval of (full − without) excludes zero "
+        "over enough tasks; 'no evidence' means keep the simpler harness unless it is cheaper.[/]"
+    )
+
+
+@ablate_app.command("run")
+def ablate_run(
+    ctx: typer.Context,
+    bundle_dir: Annotated[Path, typer.Argument(help="Harness bundle directory to ablate.")],
+    suite: Annotated[str, typer.Option("--suite", help="Suite path or bundled suite name.")],
+    variant: Annotated[
+        str,
+        typer.Option(
+            "--variant", help="Base variant (runner, model, options) the bundle is applied to."
+        ),
+    ] = "claude-default",
+    tasks: Annotated[
+        str | None, typer.Option("--tasks", "-t", help="Comma-separated task ids (default: all).")
+    ] = None,
+    repetitions: Annotated[int, typer.Option("--repetitions", "-r", min=1)] = 2,
+    parallelism: Annotated[int, typer.Option("--parallelism", "-p", min=1)] = 2,
+    name: Annotated[str | None, typer.Option("--name", "-n", help="Experiment name.")] = None,
+    min_tasks: Annotated[int, typer.Option("--min-tasks", min=1)] = 5,
+    resamples: Annotated[int, typer.Option("--resamples", min=100)] = 2000,
+    seed: Annotated[int, typer.Option("--seed")] = 0,
+    keep_worktrees: Annotated[bool, typer.Option("--keep-worktrees")] = False,
+    pricing: Annotated[
+        Path | None, typer.Option("--pricing", help="pricing.yaml for cost estimates.")
+    ] = None,
+    plugin: Annotated[
+        list[str] | None, typer.Option("--plugin", help="Python module registering custom runners.")
+    ] = None,
+    dry_run: Annotated[
+        bool, typer.Option("--dry-run", help="Print the components and variants, run nothing.")
+    ] = False,
+) -> None:
+    """Run the full bundle, an empty (minimal) bundle and one leave-one-out bundle per component."""
+    settings = _settings(ctx)
+    try:
+        suite_path = resolve_suite_target(suite)
+        suite_spec, all_tasks = load_suite(suite_path)
+        _load_plugins_or_exit(list(plugin or []) + suite_spec.plugins)
+        chosen = select_tasks(all_tasks, [t.strip() for t in tasks.split(",")] if tasks else None)
+        holder = ExperimentSpec(name="ablate", suite=str(suite_path), source_path=suite_path)
+        base = resolve_variants([variant], holder, suite_spec)[0]
+        bundle = HarnessBundle.load(bundle_dir)
+        out_dir = settings.home / "ablations" / bundle.hash[:16]
+        variants, spec = plan_ablation(
+            bundle_dir, base, out_dir, resamples=resamples, seed=seed, min_tasks=min_tasks
+        )
+    except (SpecError, BundleError, ValueError) as exc:
+        err_console.print(f"[red]{exc}[/]")
+        raise typer.Exit(code=2) from exc
+    total = len(variants) * len(chosen) * repetitions
+    console.print(
+        f"[bold]{name or 'ablate ' + bundle_dir.name}[/]: {len(spec.components)} component(s) "
+        f"({', '.join(spec.components)}) -> {len(variants)} variant(s) x {len(chosen)} task(s) x "
+        f"{repetitions} repetition(s) = {total} run(s) on base variant {base.id}"
+    )
+    if len(chosen) < min_tasks:
+        console.print(
+            f"[yellow]{len(chosen)} task(s) < --min-tasks {min_tasks}: the report will show intervals "
+            "but no verdicts.[/]"
+        )
+    if dry_run:
+        for v in variants:
+            console.print(f"  {v.id}  [dim]{v.harness}[/]")
+        return
+    experiment = ExperimentSpec(
+        name=name or f"ablate {bundle_dir.name}",
+        suite=str(suite_path),
+        repetitions=repetitions,
+        parallelism=parallelism,
+        variants=variants,
+        keep_worktrees=keep_worktrees,
+        plugins=suite_spec.plugins,
+        ablation=spec.model_dump(mode="json"),
+        source_path=suite_path,
+    )
+    db = _open_db(settings)
+    service = ExperimentService(settings, db, pricing=_load_pricing(settings, pricing))
+    try:
+        outcome = asyncio.run(
+            service.run_experiment(
+                experiment,
+                suite_spec,
+                chosen,
+                variants,
+                keep_worktrees=keep_worktrees,
+                progress=_progress_printer(total),
+            )
+        )
+        report = ablation_report_for(service.repo.get_experiment(outcome.experiment_id))
+    finally:
+        db.dispose()
+    console.print()
+    if report is not None:
+        _print_ablation(report)
+    console.print(
+        f"experiment id: [bold]{outcome.experiment_id}[/]  ·  harnesslab ablate report "
+        f"{outcome.experiment_id}  ·  harnesslab serve"
+    )
+
+
+@ablate_app.command("report")
+def ablate_report(ctx: typer.Context, experiment_id: Annotated[str, typer.Argument()]) -> None:
+    """Recompute the component verdicts of a past ablation from the database."""
+    settings = _settings(ctx)
+    db = _open_db(settings)
+    try:
+        exp = Repository(db, settings.home).find_experiment(experiment_id)
+        if exp is None:
+            err_console.print(f"[red]experiment not found: {experiment_id}[/]")
+            raise typer.Exit(code=1)
+        report = ablation_report_for(exp)
+    finally:
+        db.dispose()
+    if report is None:
+        err_console.print(f"[red]experiment {exp.id} is not an ablation[/]")
+        raise typer.Exit(code=1)
+    _print_ablation(report)
 
 
 # ---------------------------------------------------------------------------

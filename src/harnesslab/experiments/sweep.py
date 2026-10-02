@@ -31,6 +31,7 @@ from pydantic import BaseModel, Field
 
 from harnesslab.core.models import RunStatus, SweepSpec, VariantSpec
 from harnesslab.experiments.aggregate import RunSample, samples_from_rows
+from harnesslab.experiments.stats import PairedComparison, paired_comparison
 
 # ---------------------------------------------------------------------------
 # Expansion
@@ -49,6 +50,15 @@ def config_id(factors: dict[str, str]) -> str:
 
 def expand_sweep(spec: SweepSpec) -> list[VariantSpec]:
     """Cartesian product of factor levels merged over ``base_variant`` (then optional sampling)."""
+    if spec.baseline:
+        for factor, level in spec.baseline.items():
+            if factor not in spec.factors:
+                raise ValueError(f"baseline names unknown factor {factor!r}")
+            names = [name for name, _ in _levels(factor, spec.factors[factor])]
+            if level not in names:
+                raise ValueError(
+                    f"baseline level {level!r} is not a level of factor {factor!r} ({', '.join(names)})"
+                )
     names = list(spec.factors)
     level_lists = [_levels(name, spec.factors[name]) for name in names]
     variants: list[VariantSpec] = []
@@ -65,6 +75,12 @@ def expand_sweep(spec: SweepSpec) -> list[VariantSpec]:
     if spec.sample and spec.sample.max_configs < len(variants):
         rng = random.Random(spec.sample.seed)
         chosen = set(rng.sample(range(len(variants)), spec.sample.max_configs))
+        if spec.baseline:
+            # The baseline is what every recommendation is measured against: never sample it out.
+            for i, v in enumerate(variants):
+                if v.factors and all(v.factors.get(f) == lvl for f, lvl in spec.baseline.items()):
+                    chosen.add(i)
+                    break
         variants = [v for i, v in enumerate(variants) if i in chosen]
     return variants
 
@@ -146,6 +162,9 @@ class WorkloadReport(BaseModel):
     best_effort: ConfigResult | None = None  # highest pass rate when nothing is eligible
     pareto: list[str] = Field(default_factory=list)
     holdout: HoldoutResult | None = None
+    baseline: str | None = None  # variant key of the spec's baseline configuration
+    vs_runner_up: PairedComparison | None = None  # recommended (B) vs runner-up (A)
+    vs_baseline: PairedComparison | None = None  # recommended (B) vs baseline (A)
 
 
 class FactorEffect(BaseModel):
@@ -297,6 +316,21 @@ def analyze_sweep(
             f"Holdout tasks ({', '.join(holdout)}) were excluded from selection and are reported separately."
         )
 
+    baseline_key: str | None = None
+    if spec.baseline:
+        matches = [
+            vk
+            for vk, levels in variant_factors.items()
+            if all(levels.get(f) == lvl for f, lvl in spec.baseline.items())
+        ]
+        if matches:
+            baseline_key = matches[0]
+        else:
+            notes.append(
+                "No configuration matches the baseline "
+                + ", ".join(f"{f}={lvl}" for f, lvl in spec.baseline.items())
+                + " (it may have been sampled out); no baseline comparison."
+            )
     by_variant: dict[str, list[RunSample]] = defaultdict(list)
     for s in samples:
         by_variant[s.variant_key].append(s)
@@ -355,6 +389,18 @@ def analyze_sweep(
             else next((c for c in ordered if c.pass_rate is not None), None),
             pareto=_pareto(configs),
         )
+        if report.recommended is not None:
+            in_workload = [s for s in samples if s.task_key in tasks]
+            best = report.recommended.variant_key
+            if report.runner_up is not None:
+                report.vs_runner_up = paired_comparison(
+                    in_workload, report.runner_up.variant_key, best, task_order=tasks
+                )
+            if baseline_key is not None and baseline_key != best:
+                report.baseline = baseline_key
+                report.vs_baseline = paired_comparison(
+                    in_workload, baseline_key, best, task_order=tasks
+                )
         if holdout and report.recommended is not None:
             runs = [r for r in by_variant[report.recommended.variant_key] if r.task_key in holdout]
             valid = [r for r in runs if r.verified_pass is not None]

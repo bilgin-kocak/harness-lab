@@ -44,7 +44,7 @@ recorded on every variant and run that used the bundle, and it is part of the va
 | `claude` | written to a file with `append_system_prompt` and the action policy, passed as `--append-system-prompt-file` | materialized as a plugin directory (`.claude-plugin/plugin.json`, `skills/`, `hooks/hooks.json`, `agents/`) and passed as `--plugin-dir`; works under `--bare` | ignored |
 | `codex` | prompt prefix, followed by each skill under `## Skill: <name>` | hooks and agents ignored, recorded in a `harness_components_ignored` event | ignored |
 | `generic` | prepended to the prompt | available to the command through `{harness_dir}` and `HARNESSLAB_HARNESS_DIR` | ignored |
-| `fake` | ignored | ignored | `solve_tasks` and `fail_tasks` override the variant's `behavior` per task (solve wins); `llm_calls` sets the simulated count |
+| `fake` | ignored | ignored | `solve_tasks` and `fail_tasks` override the variant's `behavior` per task (solve wins); `component_solves` solves tasks only while a component is present; `llm_calls` sets the simulated count and `component_llm_calls` adds to it per present component |
 
 ## Hooks are code
 

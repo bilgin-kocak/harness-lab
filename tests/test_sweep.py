@@ -439,3 +439,34 @@ def test_harness_bundle_as_sweep_factor(tmp_path: Path):
     assert "harness_dir" not in by_key["harness=a|model=m-big"].runner_config().model_dump(
         mode="json"
     )
+
+
+def test_sweep_baseline_validation_and_sampling_keeps_it():
+    with pytest.raises(ValueError, match="unknown factor"):
+        expand_sweep(_spec(baseline={"nope": "x"}))
+    with pytest.raises(ValueError, match="not a level"):
+        expand_sweep(_spec(baseline={"toolset": "huge"}))
+    for seed in range(10):
+        sampled = expand_sweep(
+            _spec(
+                baseline={"model": "m-small", "toolset": "min"},
+                sample={"max_configs": 1, "seed": seed},
+            )
+        )
+        assert any(v.factors == {"model": "m-small", "toolset": "min"} for v in sampled)
+
+
+def test_sweep_report_compares_recommendation_with_baseline_and_runner_up():
+    spec = _spec(repetitions=1, baseline={"model": "small", "toolset": "min"})
+    tasks = [f"t{i}" for i in range(6)]
+    samples = []
+    for t in tasks:
+        samples.append(_sample(t, "A", False, cost=0.01))  # the baseline fails everything
+        samples.append(_sample(t, "B", True, cost=0.20))
+        samples.append(_sample(t, "C", True, cost=0.05))  # cheapest passing: recommended
+    report = analyze_sweep(spec, samples, FACTORS, {t: [] for t in tasks})
+    w = report.workloads[0]
+    assert w.recommended.variant_key == "C" and w.runner_up.variant_key == "B"
+    assert w.baseline == "A" and w.vs_baseline.verdict == "better" and w.vs_baseline.n_tasks == 6
+    assert w.vs_runner_up.verdict == "no evidence"  # same pass rate ...
+    assert w.vs_runner_up.cost_diff.estimate == pytest.approx(-0.15)  # ... at lower cost

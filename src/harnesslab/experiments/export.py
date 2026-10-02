@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
+from harnesslab.experiments.ablation import report_for_experiment as ablation_report_for
 from harnesslab.experiments.aggregate import aggregate_variants, samples_from_rows
 from harnesslab.experiments.sweep import report_for_experiment
 from harnesslab.storage.repository import Repository
@@ -181,6 +182,10 @@ def export_experiment(
             for t in exp.tasks
         ],
         "aggregates": {k: v.model_dump(mode="json") for k, v in aggregates.items()},
+        "ablation": (exp.spec_json or {}).get("ablation"),
+        "ablation_report": (
+            ab.model_dump(mode="json") if (ab := ablation_report_for(exp)) else None
+        ),
         "sweep": (exp.spec_json or {}).get("sweep"),
         "sweep_report": (
             report.model_dump(mode="json") if (report := report_for_experiment(exp)) else None

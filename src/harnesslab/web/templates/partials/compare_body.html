@@ -28,6 +28,12 @@
 </section>
 
 <section>
+  <h2>Statistical evidence <span class="muted small">paired by task, cluster bootstrap over tasks</span></h2>
+  {% set p = c.paired %}
+  {% include "partials/paired.html" %}
+</section>
+
+<section>
   <h2>Per-task agreement</h2>
   <p class="chips">
     <span class="chip chip-pass">both passed: {{ c.summary.both_passed }}</span>

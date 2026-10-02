@@ -2,6 +2,15 @@
 
 ## 0.2.0 (unreleased)
 
+- Paired statistics (`harnesslab.experiments.stats`): task-level cluster bootstrap intervals and an
+  exact sign test, with verdicts only above a minimum number of paired tasks. Shown on the compare
+  view and by `harnesslab experiment compare`, in sweep reports (recommendation vs runner-up and vs
+  an optional `baseline` configuration), and available as grow gate rules
+  (`gate.require: not_worse_ci | better_ci`).
+- `harnesslab ablate run|report`: tests every component of a harness bundle against its own
+  absence and the whole bundle against a minimal one; verdicts `helps`, `hurts`, `no evidence`,
+  `not enough tasks`; dashboard section and `ablation_report` in exports. The fake runner gains
+  `component_solves` and `component_llm_calls` for offline ablation demos.
 - Harness bundles: a directory (system prompt, skills, hooks, agents, fake.yaml) any variant can
   carry with `harness:`; applied by the Claude Code (`--append-system-prompt-file`, `--plugin-dir`),
   Codex (prompt prefix), generic and fake runners; `harness_hash` recorded on variants and runs and

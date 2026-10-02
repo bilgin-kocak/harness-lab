@@ -30,8 +30,10 @@ from pydantic import BaseModel, Field
 from harnesslab.config import Settings
 from harnesslab.core.models import ExperimentSpec, SuiteSpec, TaskSpec, VariantSpec
 from harnesslab.core.pricing import PricingTable
+from harnesslab.experiments.aggregate import RunSample, samples_from_rows
 from harnesslab.experiments.service import ExperimentService, RunOutcome
 from harnesslab.experiments.spec import load_suite, select_tasks
+from harnesslab.experiments.stats import paired_comparison
 from harnesslab.grow.optimizers.base import Proposal, create_optimizer
 from harnesslab.grow.spec import GrowBudget, GrowSpec, ResolvedSplit
 from harnesslab.grow.view import build_context, build_failure_case
@@ -399,16 +401,7 @@ class GrowService:
                     session_id, spec, suite, state, vid, gate_tasks, "gate"
                 )
                 self.repo.update_harness_version(vid, **stats.fields())
-                if stats.n_valid == 0:
-                    reason = "gate: no valid runs"
-                elif (
-                    state.current_gate_pass_rate is not None
-                    and stats.pass_rate is not None
-                    and stats.pass_rate < state.current_gate_pass_rate
-                ):
-                    reason = f"gate: {stats.pass_rate:.2f} < {state.current_gate_pass_rate:.2f}"
-                else:
-                    reason = None
+                reason = self._gate_reason(spec, state, current, stats)
                 if reason:
                     self._reject(state, vid, reason, window, spec, unverified)
                     report("version", f"v{number} rejected: {reason}", number)
@@ -545,6 +538,52 @@ class GrowService:
         return GateStats.from_runs(runs, exp_id)
 
     # ------------------------------------------------------------------
+    def _gate_reason(
+        self, spec: GrowSpec, state: GrowState, current: Any, stats: GateStats
+    ) -> str | None:
+        """Why the candidate fails the gate, or None if it passes (see ``GrowGate``)."""
+        if stats.n_valid == 0:
+            return "gate: no valid runs"
+        rule = spec.gate.require
+        if rule == "no_regression":
+            if (
+                state.current_gate_pass_rate is not None
+                and stats.pass_rate is not None
+                and stats.pass_rate < state.current_gate_pass_rate
+            ):
+                return f"gate: {stats.pass_rate:.2f} < {state.current_gate_pass_rate:.2f}"
+            return None
+        if not current.gate_experiment_id:
+            return None  # nothing to compare against (current version has no gate runs)
+        samples = self._gate_samples(current.gate_experiment_id, "current") + self._gate_samples(
+            stats.experiment_id, "candidate"
+        )
+        evidence = paired_comparison(
+            samples,
+            "current",
+            "candidate",
+            resamples=spec.gate.resamples,
+            seed=spec.gate.seed,
+            min_tasks=spec.gate.min_tasks,
+        )
+        iv = evidence.pass_rate_diff
+        span = f"[{iv.low:+.2f}, {iv.high:+.2f}]" if iv else "[—]"
+        detail = f"{evidence.n_tasks} task(s), diff {span}"
+        if rule == "not_worse_ci" and evidence.verdict == "worse":
+            return f"gate: evidence of regression ({detail})"
+        if rule == "better_ci" and evidence.verdict != "better":
+            return f"gate: no evidence of improvement, {evidence.verdict} ({detail})"
+        return None
+
+    def _gate_samples(self, experiment_id: str, label: str) -> list[RunSample]:
+        exp = self.repo.get_experiment(experiment_id)
+        if exp is None:
+            return []
+        samples = samples_from_rows(
+            exp.runs, {t.id: t for t in exp.tasks}, {v.id: v for v in exp.variants}
+        )
+        return [s.model_copy(update={"variant_key": label}) for s in samples]
+
     @staticmethod
     def _all_passed(runs: list[RunOutcome], task_id: str) -> bool:
         mine = [r for r in runs if r.task_key == task_id]

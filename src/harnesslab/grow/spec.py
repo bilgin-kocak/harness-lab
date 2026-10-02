@@ -84,6 +84,23 @@ class GrowBudget(BaseModel):
     max_optimizer_cost_usd: float | None = None
 
 
+class GrowGate(BaseModel):
+    """How a candidate's gate runs are judged against the current version's.
+
+    ``no_regression`` (default): reject when the gate pass rate is lower, however small the gap.
+    ``not_worse_ci``: reject only with evidence of a regression (paired bootstrap interval of the
+    per-task difference entirely below zero, at least ``min_tasks`` gate tasks).
+    ``better_ci``: accept only with evidence of an improvement (interval entirely above zero).
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    require: Literal["no_regression", "not_worse_ci", "better_ci"] = "no_regression"
+    resamples: int = Field(default=2000, ge=100)
+    min_tasks: int = Field(default=5, ge=1)
+    seed: int = 0
+
+
 class GrowReportSpec(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -106,6 +123,7 @@ class GrowSpec(BaseModel):
     max_iterations: int = Field(default=10, ge=1)
     optimizer: GrowOptimizerSpec
     budget: GrowBudget | None = None
+    gate: GrowGate = Field(default_factory=GrowGate)
     report: GrowReportSpec = Field(default_factory=GrowReportSpec)
     keep_worktrees: bool = False
     source_path: Path | None = Field(default=None, exclude=True)

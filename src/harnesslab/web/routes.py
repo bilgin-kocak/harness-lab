@@ -7,6 +7,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse
 
+from harnesslab.experiments.ablation import report_for_experiment as ablation_report_for
 from harnesslab.experiments.aggregate import (
     aggregate_variants,
     build_matrix,
@@ -54,6 +55,7 @@ def _experiment_context(repo: Repository, exp_ref: str) -> dict[str, Any]:
         "tasks_by_id": tasks_by_id,
         "variants_by_id": variants_by_id,
         "sweep_report": report_for_experiment(exp),
+        "ablation_report": ablation_report_for(exp),
         "factors_by_variant": {
             v.variant_key: v.factors_json for v in exp.variants if v.factors_json
         },

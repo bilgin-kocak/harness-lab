@@ -305,3 +305,40 @@ async def test_failure_case_hides_hidden_assertion_details(settings, db):
     assert "AssertionError: [hidden-assertion-detail]" in seen and "FAILED" in seen
     full = build_failure_case(service.repo, run, task, secrets, 0, verifier_detail="full")
     assert "electricity" in full.verifier_stdout + full.verifier_stderr
+
+
+async def test_grow_gate_better_ci_rejects_without_evidence(settings, db):
+    from harnesslab.grow.spec import GrowGate
+
+    spec, suite, tasks, split = _spec()
+    spec = spec.model_copy(update={"max_iterations": 1, "gate": GrowGate(require="better_ci")})
+    outcome = await GrowService(settings, db).run(spec, suite, tasks, split)
+    session = GrowService(settings, db).repo.get_grow_session(outcome.session_id)
+    assert session.versions[1].status == "rejected"
+    assert session.versions[1].reason.startswith(
+        "gate: no evidence of improvement, not enough tasks"
+    )
+
+
+async def test_grow_gate_not_worse_ci_rejects_clear_regression(settings, db, tmp_path):
+    from harnesslab.grow.spec import GrowGate
+
+    bundle = tmp_path / "b"
+    bundle.mkdir()
+    (bundle / "fake.yaml").write_text("solve_tasks: [consolidate-money-formatting]\n")
+    spec, suite, tasks, split = _spec(regress_gate_task="consolidate-money-formatting")
+    gate = GrowGate(require="not_worse_ci", min_tasks=1)
+    spec = spec.model_copy(update={"harness_dir": bundle, "max_iterations": 1, "gate": gate})
+    outcome = await GrowService(settings, db).run(spec, suite, tasks, split)
+    session = GrowService(settings, db).repo.get_grow_session(outcome.session_id)
+    assert session.versions[1].status == "rejected"
+    assert session.versions[1].reason.startswith("gate: evidence of regression (1 task(s)")
+
+
+async def test_grow_gate_not_worse_ci_accepts_unchanged_gate(settings, db):
+    from harnesslab.grow.spec import GrowGate
+
+    spec, suite, tasks, split = _spec()
+    spec = spec.model_copy(update={"max_iterations": 1, "gate": GrowGate(require="not_worse_ci")})
+    outcome = await GrowService(settings, db).run(spec, suite, tasks, split)
+    assert outcome.versions_accepted == 1

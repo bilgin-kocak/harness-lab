@@ -39,6 +39,11 @@ budget:
   max_runs: 200                            # deployed runs across the whole session
   max_cost_usd: 20                         # deployed cost (reported, else estimated)
   max_optimizer_cost_usd: 10               # the optimizer's own cost
+gate:
+  require: no_regression                   # no_regression | not_worse_ci | better_ci
+  min_tasks: 5                             # paired gate tasks needed for a statistical verdict
+  resamples: 2000
+  seed: 0
 report:
   minimize: llm_calls                      # llm_calls | cost | tokens | wall_time (shown, not selected on)
 keep_worktrees: false
@@ -52,6 +57,11 @@ Validation rules:
   left, so train and gate always get at least one task (3 tasks at 0.5/0.5 gives 2 train, 1 gate).
 - `window.min_fixed` must not exceed `window.size`.
 - `optimizer.kind` must be a registered optimizer.
+- `gate.require`: `no_regression` (default) rejects a candidate whose gate pass rate is lower than
+  the current version's, however small the gap; `not_worse_ci` rejects only with evidence of a
+  regression (paired interval below zero over at least `gate.min_tasks` gate tasks); `better_ci`
+  accepts only with evidence of an improvement. With small gate sets `better_ci` rejects almost
+  everything, which is the honest result.
 - `base_variant` may carry `gate_overrides: {runner, model, ...}`: settings applied only to gate
   evaluations (advanced; used to evaluate the gate under different conditions).
 

@@ -23,6 +23,11 @@
     </div>
   {% endfor %}
   </div>
+  {% for w in sr.workloads %}{% if w.vs_runner_up or w.vs_baseline %}
+  <h3 class="small muted">Evidence for {{ w.workload }}: recommended configuration vs alternatives</h3>
+  {% if w.vs_baseline %}{% set p = w.vs_baseline %}{% include "partials/paired.html" %}{% endif %}
+  {% if w.vs_runner_up %}{% set p = w.vs_runner_up %}{% include "partials/paired.html" %}{% endif %}
+  {% endif %}{% endfor %}
   {% for w in sr.workloads %}
   <details {% if loop.first %}open{% endif %}>
     <summary><strong>{{ w.workload }}</strong> <span class="muted small">{{ w.configs|length }} configurations · ✔ eligible · ◆ Pareto front (pass rate vs {{ kind }})</span></summary>

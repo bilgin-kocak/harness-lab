@@ -31,6 +31,7 @@ $ harnesslab [OPTIONS] COMMAND [ARGS]...
 * `sweep`: Configuration sweeps: search model x...
 * `grow`: Growing Harness: grow a harness bundle...
 * `harness`: Inspect and validate harness bundles.
+* `ablate`: Component ablation: test every part of a...
 
 ## `harnesslab version`
 
@@ -194,6 +195,7 @@ $ harnesslab experiment [OPTIONS] COMMAND [ARGS]...
 
 * `list`: List past experiments.
 * `show`: Print a terminal summary of an experiment.
+* `compare`: Paired, task-level comparison of two...
 * `export`: Export an experiment (spec, runs, traces,...
 
 ### `harnesslab experiment list`
@@ -226,6 +228,29 @@ $ harnesslab experiment show [OPTIONS] {experiment_id}
 
 **Options**:
 
+* `--help`: Show this message and exit.
+
+### `harnesslab experiment compare`
+
+Paired, task-level comparison of two variants: bootstrap intervals and a sign test.
+
+**Usage**:
+
+```console
+$ harnesslab experiment compare [OPTIONS] {experiment_id} {a} {b}
+```
+
+**Arguments**:
+
+* `experiment_id`: [required]
+* `a`: Baseline variant id (A).  [required]
+* `b`: Variant compared against A (B).  [required]
+
+**Options**:
+
+* `--resamples <int range>`: [default: 2000; x&gt;=100]
+* `--seed <int>`: [default: 0]
+* `--min-tasks <int range>`: [default: 5; x&gt;=1]
 * `--help`: Show this message and exit.
 
 ### `harnesslab experiment export`
@@ -476,5 +501,73 @@ $ harnesslab harness check [OPTIONS] {bundle_dir}
 **Options**:
 
 * `--suite <str>`: Suite (path or bundled name) to run the leak lint against.
+* `--help`: Show this message and exit.
+
+## `harnesslab ablate`
+
+Component ablation: test every part of a harness bundle against its own absence.
+
+**Usage**:
+
+```console
+$ harnesslab ablate [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `run`: Run the full bundle, an empty (minimal)...
+* `report`: Recompute the component verdicts of a past...
+
+### `harnesslab ablate run`
+
+Run the full bundle, an empty (minimal) bundle and one leave-one-out bundle per component.
+
+**Usage**:
+
+```console
+$ harnesslab ablate run [OPTIONS] {bundle_dir}
+```
+
+**Arguments**:
+
+* `bundle_dir`: Harness bundle directory to ablate.  [required]
+
+**Options**:
+
+* `--suite <str>`: Suite path or bundled suite name.  [required]
+* `--variant <str>`: Base variant (runner, model, options) the bundle is applied to.  [default: claude-default]
+* `-t, --tasks <str>`: Comma-separated task ids (default: all).
+* `-r, --repetitions <int range>`: [default: 2; x&gt;=1]
+* `-p, --parallelism <int range>`: [default: 2; x&gt;=1]
+* `-n, --name <str>`: Experiment name.
+* `--min-tasks <int range>`: [default: 5; x&gt;=1]
+* `--resamples <int range>`: [default: 2000; x&gt;=100]
+* `--seed <int>`: [default: 0]
+* `--keep-worktrees`
+* `--pricing <path>`: pricing.yaml for cost estimates.
+* `--plugin <str>`: Python module registering custom runners.
+* `--dry-run`: Print the components and variants, run nothing.
+* `--help`: Show this message and exit.
+
+### `harnesslab ablate report`
+
+Recompute the component verdicts of a past ablation from the database.
+
+**Usage**:
+
+```console
+$ harnesslab ablate report [OPTIONS] {experiment_id}
+```
+
+**Arguments**:
+
+* `experiment_id`: [required]
+
+**Options**:
+
 * `--help`: Show this message and exit.
 

@@ -1,0 +1,35 @@
+{# Paired statistical evidence for "B vs A". Expects `p` (PairedComparison). #}
+{% if p %}
+<div class="evidence">
+  <p>
+    <span class="badge {{ 'badge-pass' if p.verdict == 'better' else ('badge-fail' if p.verdict == 'worse' else 'badge-neutral') }}">{{ p.b }}: {{ p.verdict }}</span>
+    <span class="muted small">vs {{ p.a }} over {{ p.n_tasks }} paired task{{ '' if p.n_tasks == 1 else 's' }}
+      (wins {{ p.wins }}, losses {{ p.losses }}, ties {{ p.ties }}{% if p.sign_test_p is not none %}, sign test p = {{ '%.3f'|format(p.sign_test_p) }}{% endif %})</span>
+  </p>
+  <table class="data compact">
+    <thead><tr><th>per-task difference (B − A)</th><th class="num">mean</th><th class="num">{{ ((p.pass_rate_diff.level if p.pass_rate_diff else 0.95) * 100)|round|int }}% interval</th><th class="num">P(&gt; 0)</th></tr></thead>
+    <tbody>
+    {% for label, iv, unit in [("pass rate", p.pass_rate_diff, "pts"), (p.cost_kind, p.cost_diff, ""), ("llm_calls", p.llm_calls_diff, "")] %}
+      <tr>
+        <td>{{ label }}</td>
+        {% if iv %}
+          {% if unit == "pts" %}
+          <td class="num">{{ (iv.estimate * 100)|delta(1) }} pts</td>
+          <td class="num">[{{ (iv.low * 100)|delta(1) }}, {{ (iv.high * 100)|delta(1) }}]</td>
+          {% else %}
+          <td class="num">{{ iv.estimate|delta(4) }}</td>
+          <td class="num">[{{ iv.low|delta(4) }}, {{ iv.high|delta(4) }}]</td>
+          {% endif %}
+          <td class="num">{{ iv.p_positive|pct }}</td>
+        {% else %}
+          <td class="num">—</td><td class="num">—</td><td class="num">—</td>
+        {% endif %}
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% if not p.enough_tasks %}
+  <p class="muted small">Fewer than {{ p.min_tasks }} paired tasks: the interval is shown, but no verdict is given. Add tasks (repetitions do not count as tasks).</p>
+  {% endif %}
+</div>
+{% endif %}

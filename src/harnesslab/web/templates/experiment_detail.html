@@ -16,6 +16,9 @@
   <a class="button secondary" href="/api/experiments/{{ exp.id }}/export.json">Export JSON</a>
 </p>
 
+{% if ablation_report %}
+  {% include "partials/ablation_report.html" %}
+{% endif %}
 {% if sweep_report %}
   {% include "partials/sweep_report.html" %}
 {% endif %}

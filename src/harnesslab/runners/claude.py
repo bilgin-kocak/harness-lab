@@ -36,6 +36,7 @@ Options::
 
 from __future__ import annotations
 
+import sys
 import tempfile
 import uuid
 from pathlib import Path
@@ -154,6 +155,8 @@ def build_claude_command(
         argv.extend(["--autocompact", str(config.get("autocompact"))])
     if session_id:
         argv.extend(["--session-id", session_id])
+    if config.get("include_hook_events", True):
+        argv.append("--include-hook-events")
     extra = option_list(config.get("extra_args"))
     forbidden = FORBIDDEN_EXTRA_ARGS.intersection(extra)
     if forbidden:
@@ -258,6 +261,14 @@ class ClaudeCodeRunner(HarnessRunner):
                 "DISABLE_TELEMETRY": "1",
                 "DISABLE_ERROR_REPORTING": "1",
                 "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
+                # For bundle hooks such as the sentinel: the interpreter that has harnesslab,
+                # and where decisions are logged for the run's safety report.
+                "HARNESSLAB_PYTHON": sys.executable,
+                **(
+                    {"HARNESSLAB_SAFETY_LOG": str(artifacts / "sentinel.jsonl")}
+                    if artifacts
+                    else {}
+                ),
             },
         )
         try:
@@ -282,6 +293,8 @@ class ClaudeCodeRunner(HarnessRunner):
             "reasoning_events": parser.reasoning_count,
             "api_retries": parser.api_retries,
             "permission_denials": list(parser.permission_denials),
+            "hooks_run": parser.hooks_run,
+            "hook_blocks": parser.hook_blocks,
             "tools": parser.tools,
             "permission_mode": parser.permission_mode,
             "unknown_records": parser.unknown_records,

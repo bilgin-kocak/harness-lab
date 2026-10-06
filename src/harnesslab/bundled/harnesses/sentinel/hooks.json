@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Read|Edit|Write|MultiEdit|NotebookEdit|Grep|Glob|WebFetch|WebSearch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${HARNESSLAB_PYTHON:-python3}\" -m harnesslab.safety.decide"
+          }
+        ]
+      }
+    ]
+  }
+}

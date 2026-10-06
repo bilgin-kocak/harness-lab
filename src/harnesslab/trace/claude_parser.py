@@ -171,6 +171,8 @@ class ClaudeStreamParser:
         self.saw_result = False
         self._seen_message_ids: set[str] = set()
         self._assistant_ids: set[str] = set()
+        self.hooks_run = 0
+        self.hook_blocks = 0
         self.api_calls = 0
         self._open: dict[str, tuple[float, str, bool]] = {}
         self._per_message_usage = UsageTotals()
@@ -209,6 +211,10 @@ class ClaudeStreamParser:
             self._handle_result(obj)
         elif rtype == "stream_event":
             self.stream_events += 1
+        elif rtype == "hook_response":
+            self._handle_hook_response(obj)
+        elif rtype in ("hook_started", "hook_progress"):
+            pass
         elif rtype in KNOWN_TYPES:
             self.emit.emit(
                 EventKind.SYSTEM,
@@ -273,6 +279,10 @@ class ClaudeStreamParser:
                 source=self.source,
                 payload={"tool": str(tool), "message": preview(obj.get("message"), 500)},
             )
+        elif subtype == "hook_response":
+            self._handle_hook_response(obj)
+        elif subtype in ("hook_started", "hook_progress"):
+            pass  # the response carries everything worth keeping
         elif subtype == "compact_boundary":
             self.emit.emit(
                 EventKind.SYSTEM,
@@ -291,6 +301,44 @@ class ClaudeStreamParser:
                 source=self.source,
                 payload=safe_unknown_summary(obj, ""),
             )
+
+    def _handle_hook_response(self, obj: dict[str, Any]) -> None:
+        """A hook finished (``--include-hook-events``). Records whether it blocked the action."""
+        self.hooks_run += 1
+        exit_code = obj.get("exit_code")
+        decision = None
+        for key in ("output", "stdout"):
+            text = str(obj.get(key) or "").strip()
+            if text.startswith("{"):
+                try:
+                    parsed = json.loads(text)
+                except ValueError:
+                    continue
+                if isinstance(parsed, dict):
+                    specific = parsed.get("hookSpecificOutput")
+                    if isinstance(specific, dict) and specific.get("permissionDecision"):
+                        decision = str(specific.get("permissionDecision"))
+                    elif parsed.get("decision"):
+                        decision = str(parsed.get("decision"))
+                break
+        blocked = exit_code == 2 or decision in ("deny", "block")
+        if blocked:
+            self.hook_blocks += 1
+        message = str(obj.get("stderr") or obj.get("output") or "")
+        self.emit.emit(
+            EventKind.SYSTEM,
+            name="hook",
+            source=self.source,
+            payload={
+                "hook_event": obj.get("hook_event"),
+                "hook_name": obj.get("hook_name"),
+                "exit_code": exit_code,
+                "outcome": obj.get("outcome"),
+                "decision": decision,
+                "blocked": blocked,
+                "message": preview(message, 300),
+            },
+        )
 
     def _handle_assistant(self, obj: dict[str, Any]) -> None:
         message = obj.get("message") if isinstance(obj.get("message"), dict) else {}

@@ -47,6 +47,35 @@
 </section>
 {% endif %}
 
+{% if metrics.safe is not none %}
+<section>
+  <h2>Safety <span class="muted small">risky actions found in the trace · blocked means the harness, a hook or the OS refused it</span></h2>
+  <div class="cards">
+    <div class="card metric"><div class="label">verdict</div><div class="value {{ 'badge-pass' if metrics.safe else 'badge-fail' }}">{{ "safe" if metrics.safe else "unsafe" }}</div><div class="sub">{{ metrics.safety_violations }} high-severity action(s) executed</div></div>
+    <div class="card metric"><div class="label">risky actions</div><div class="value">{{ metrics.risky_actions }}</div><div class="sub">{{ metrics.risky_blocked }} blocked · {{ metrics.hook_blocks }} by hooks</div></div>
+    <div class="card metric"><div class="label">categories</div><div class="value small">{% for k, n in (metrics.safety_counts or {}).items() %}<span class="chip">{{ k }} {{ n }}</span>{% else %}none{% endfor %}</div><div class="sub">see the safety guide for the rules</div></div>
+  </div>
+  {% if safety_findings %}
+  <table class="data compact">
+    <thead><tr><th class="num">event</th><th>category</th><th>severity</th><th>rule</th><th>source</th><th>result</th><th>excerpt</th></tr></thead>
+    <tbody>
+    {% for f in safety_findings %}
+      <tr>
+        <td class="num">{% if f.sequence is not none %}#{{ f.sequence }}{% else %}—{% endif %}</td>
+        <td>{{ f.category }}</td>
+        <td><span class="badge {{ 'badge-fail' if f.severity == 'high' else 'badge-warn' }}">{{ f.severity }}</span></td>
+        <td class="small">{{ f.rule }}</td>
+        <td class="small">{{ f.source }}</td>
+        <td>{% if f.blocked %}<span class="badge badge-pass">blocked</span>{% else %}<span class="badge badge-fail">executed</span>{% endif %}</td>
+        <td class="mono small">{{ f.excerpt }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</section>
+{% endif %}
+
 {% if run.final_message %}
 <section>
   <h2>Final agent message <span class="muted small">(not evidence of success)</span></h2>

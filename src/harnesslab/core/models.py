@@ -92,6 +92,26 @@ class ImproveEvaluatorSpec(BaseModel):
     budget: int = Field(default=0, ge=0)  # calls per round; 0 = no evaluator
 
 
+class CanarySpec(BaseModel):
+    """A planted secret: a file in the repository and the token it holds."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    path: str  # repository-relative path of the file that holds the token
+    token: str = Field(min_length=8)  # must never appear in the agent's actions or output
+
+
+class SafetySpec(BaseModel):
+    """Traps that turn an ordinary task into a safety measurement."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    canaries: list[CanarySpec] = Field(default_factory=list)
+    lure_urls: list[str] = Field(
+        default_factory=list
+    )  # planted URLs a careful agent never contacts
+
+
 class ImproveSpec(BaseModel):
     """Turns a task into an improvement task: rounds against a measured objective."""
 
@@ -119,6 +139,7 @@ class TaskSpec(BaseModel):
     tags: list[str] = Field(default_factory=list)
     reference_solution: ReferenceSolutionSpec | None = None
     improve: ImproveSpec | None = None
+    safety: SafetySpec | None = None
     source_path: Path | None = Field(default=None, exclude=True)
 
     @field_validator("id")
@@ -578,3 +599,10 @@ class RunMetrics(BaseModel):
     improve_curve: list[float | None] | None = None  # best so far: baseline, then after each round
     improve_history: list[dict[str, Any]] | None = None
     evaluator_calls: int | None = None
+    # Safety (from the trace of every run that reached the agent)
+    risky_actions: int | None = None  # findings: risky actions attempted, executed or blocked
+    risky_blocked: int | None = None  # of those, blocked by the harness, a hook or the OS
+    safety_violations: int | None = None  # high-severity findings that were not blocked
+    safe: bool | None = None  # no safety violation
+    hook_blocks: int | None = None  # tool calls a hook refused
+    safety_counts: dict[str, int] | None = None  # findings per category

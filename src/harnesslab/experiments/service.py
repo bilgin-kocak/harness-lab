@@ -18,6 +18,7 @@ the experiment.
 from __future__ import annotations
 
 import asyncio
+import json
 import time
 import traceback
 from collections.abc import Callable
@@ -51,6 +52,7 @@ from harnesslab.execution.sandbox import ExecutionSandbox, LocalWorktreeSandbox,
 from harnesslab.harness.bundle import HarnessBundle
 from harnesslab.improve.protocol import ImproveBaselineError, ImproveResult, run_improvement
 from harnesslab.runners.base import HarnessRunner, create_runner
+from harnesslab.safety.analyze import SafetyReport, analyze_run
 from harnesslab.storage.database import Database
 from harnesslab.storage.repository import Repository
 from harnesslab.trace.normalize import close_orphaned_calls
@@ -346,8 +348,16 @@ class ExperimentService:
 
         artifacts_dir = self.settings.artifacts_dir / exp_id / run_id
         artifacts_dir.mkdir(parents=True, exist_ok=True)
+        # Canary tokens are secrets: redacted like any other, and watched for before redaction.
+        canaries = list(task.safety.canaries) if task.safety else []
+        run_redactor = (
+            Redactor(extra_literals=[c.token for c in canaries]) if canaries else self.redactor
+        )
         emitter = EventEmitter(
-            run_id, redactor=self.redactor, sink=lambda evs: self.repo.add_events(run_id, evs)
+            run_id,
+            redactor=run_redactor,
+            sink=lambda evs: self.repo.add_events(run_id, evs),
+            watch={f"canary:{c.path}": c.token for c in canaries},
         )
 
         t0 = time.monotonic()
@@ -361,6 +371,7 @@ class ExperimentService:
         interrupted = False
         wall_seconds: float | None = None
         improve_result: ImproveResult | None = None
+        safety_report: SafetyReport | None = None
 
         try:
             try:
@@ -432,8 +443,11 @@ class ExperimentService:
 
                 # 3. capture what the agent changed
                 changes = await self.sandbox.capture_changes(ctx)
-                self._write_change_artifacts(run_id, artifacts_dir, changes)
+                self._write_change_artifacts(run_id, artifacts_dir, changes, run_redactor)
                 self._flag_suite_access(task, emitter, runner_result)
+                safety_report = self._analyze_safety(
+                    run_id, task, ctx, emitter, changes, runner_result, artifacts_dir, run_redactor
+                )
 
                 # 4. independent verification
                 verifier_t0 = time.monotonic()
@@ -479,9 +493,9 @@ class ExperimentService:
                 if verifier_result.passed is not None:
                     improved = bool(verifier_result.passed) and improve_result.improved
                     outcome = Outcome.PASS if improved else Outcome.FAIL
-            error = self.redactor.redact_text(error or runner_result.error or "") or None
+            error = run_redactor.redact_text(error or runner_result.error or "") or None
             if runner_result.final_message:
-                runner_result.final_message = self.redactor.redact_text(runner_result.final_message)
+                runner_result.final_message = run_redactor.redact_text(runner_result.final_message)
             emitter.emit(
                 EventKind.RUN_FINISHED,
                 duration_ms=int(wall_seconds * 1000),
@@ -509,6 +523,13 @@ class ExperimentService:
             )
             if improve_result is not None:
                 _apply_improvement(metrics, improve_result, verifier_result, outcome)
+            if safety_report is not None:
+                metrics.risky_actions = safety_report.risky_actions
+                metrics.risky_blocked = safety_report.blocked
+                metrics.safety_violations = safety_report.violations
+                metrics.safe = safety_report.safe
+                metrics.hook_blocks = safety_report.hook_blocks
+                metrics.safety_counts = safety_report.counts
             if verifier_result is not None:
                 self.repo.save_verifier_result(run_id, verifier_result)
             self.repo.finalize_run(
@@ -617,13 +638,13 @@ class ExperimentService:
             )
 
     def _write_change_artifacts(
-        self, run_id: str, artifacts_dir: Path, changes: DiffSummary
+        self, run_id: str, artifacts_dir: Path, changes: DiffSummary, redactor: Redactor
     ) -> None:
         files = {
             "agent.diff": (
                 "agent_diff",
                 "text/x-diff",
-                self.redactor.redact_text(changes.diff_text),
+                redactor.redact_text(changes.diff_text),
             ),
             "git_status.txt": ("git_status", "text/plain", changes.status_text),
             "diff_stat.txt": ("diff_stat", "text/plain", changes.stat_text),
@@ -643,6 +664,56 @@ class ExperimentService:
             path = artifacts_dir / filename
             path.write_text(content, encoding="utf-8")
             self.repo.add_artifact(run_id, kind, path, "text/plain")
+
+    def _analyze_safety(
+        self,
+        run_id: str,
+        task: TaskSpec,
+        ctx: SandboxContext,
+        emitter: EventEmitter,
+        changes: DiffSummary,
+        runner_result: RunnerResult,
+        artifacts_dir: Path,
+        redactor: Redactor,
+    ) -> SafetyReport:
+        """Findings from the trace (all rounds), the raw diff and the raw final message."""
+        decisions: list[dict] = []
+        for log in sorted(artifacts_dir.rglob("sentinel.jsonl")):
+            for line in log.read_text(encoding="utf-8", errors="replace").splitlines():
+                try:
+                    record = json.loads(line)
+                except ValueError:
+                    continue
+                if isinstance(record, dict):
+                    decisions.append(record)
+        report = analyze_run(
+            emitter.events,
+            worktree=ctx.workdir,
+            home=Path.home(),
+            suite_dir=task.base_dir,
+            canaries=task.safety.canaries if task.safety else [],
+            lure_urls=task.safety.lure_urls if task.safety else [],
+            watch_hits=emitter.watch_hits,
+            raw_diff=changes.diff_text,
+            raw_final_message=runner_result.final_message or "",
+            sentinel_decisions=decisions,
+            redact=redactor.redact_text,
+        )
+        path = artifacts_dir / "safety.json"
+        path.write_text(report.model_dump_json(indent=2), encoding="utf-8")
+        self.repo.add_artifact(run_id, "safety", path, "application/json")
+        emitter.emit(
+            EventKind.SYSTEM,
+            name="safety",
+            payload={
+                "safe": report.safe,
+                "violations": report.violations,
+                "risky_actions": report.risky_actions,
+                "blocked": report.blocked,
+                "counts": report.counts,
+            },
+        )
+        return report
 
     @staticmethod
     def _flag_suite_access(

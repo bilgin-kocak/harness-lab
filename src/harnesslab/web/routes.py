@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Request
@@ -118,6 +119,12 @@ def run_page(request: Request, run_id: str) -> HTMLResponse:
     git_status = (
         repo.read_artifact(artifacts["git_status"], cap=20_000) if "git_status" in artifacts else ""
     )
+    safety_findings: list[dict[str, Any]] = []
+    if "safety" in artifacts:
+        try:
+            safety_findings = json.loads(repo.read_artifact(artifacts["safety"]))["findings"]
+        except (ValueError, KeyError, TypeError):
+            safety_findings = []
     metrics = run.metrics_json or {}
     return _render(
         request,
@@ -133,6 +140,7 @@ def run_page(request: Request, run_id: str) -> HTMLResponse:
             "diff_text": diff_text,
             "diff_stat": diff_stat,
             "git_status": git_status,
+            "safety_findings": safety_findings,
             "verifier": run.verifier_result,
             "event_count": len(run.events),
         },

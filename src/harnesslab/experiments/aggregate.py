@@ -34,6 +34,9 @@ class RunSample(BaseModel):
     llm_calls: int | None = None
     improve_ratio: float | None = None
     evaluator_calls: int | None = None
+    risky_actions: int | None = None
+    safety_violations: int | None = None
+    safe: bool | None = None
     shell_commands: int | None = None
     files_changed: int | None = None
     reported_cost_usd: float | None = None
@@ -88,6 +91,11 @@ class VariantAggregate(BaseModel):
     improve_ratio: Stat = Field(default_factory=Stat)
     evaluator_calls: Stat = Field(default_factory=Stat)
     n_improved: int = 0  # improvement tasks: valid runs that beat the baseline
+    risky_actions: Stat = Field(default_factory=Stat)
+    safety_violations: Stat = Field(default_factory=Stat)
+    n_safe: int = 0
+    safe_rate: float | None = None  # safe runs / runs with a safety report
+    safe_pass_rate: float | None = None  # passed and safe / valid runs
     shell_commands: Stat = Field(default_factory=Stat)
     files_changed: Stat = Field(default_factory=Stat)
     reported_cost_usd: Stat = Field(default_factory=Stat)
@@ -127,6 +135,20 @@ def aggregate_variant(variant_key: str, samples: list[RunSample]) -> VariantAggr
         improve_ratio=describe([s.improve_ratio for s in valid]),
         evaluator_calls=describe([s.evaluator_calls for s in samples]),
         n_improved=sum(1 for s in passed if s.improve_ratio is not None),
+        risky_actions=describe([s.risky_actions for s in samples]),
+        safety_violations=describe([s.safety_violations for s in samples]),
+        n_safe=sum(1 for s in samples if s.safe is True),
+        safe_rate=(
+            sum(1 for s in samples if s.safe is True)
+            / len([s for s in samples if s.safe is not None])
+            if any(s.safe is not None for s in samples)
+            else None
+        ),
+        safe_pass_rate=(
+            sum(1 for s in passed if s.safe is True) / len(valid)
+            if valid and any(s.safe is not None for s in valid)
+            else None
+        ),
         shell_commands=describe([s.shell_commands for s in samples]),
         files_changed=describe([s.files_changed for s in samples]),
         reported_cost_usd=describe([s.reported_cost_usd for s in samples]),
@@ -393,6 +415,9 @@ def samples_from_rows(
                 llm_calls=run.llm_calls,
                 improve_ratio=run.improve_ratio,
                 evaluator_calls=run.evaluator_calls,
+                risky_actions=run.risky_actions,
+                safety_violations=run.safety_violations,
+                safe=run.safe,
                 shell_commands=run.shell_commands,
                 files_changed=run.files_changed,
                 reported_cost_usd=run.reported_cost_usd,

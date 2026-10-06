@@ -235,7 +235,10 @@ def init(
     targets = {
         directory / "suites" / "demo": bundled_suites_dir() / "demo",
         directory / "sweeps": bundled_sweeps_dir(),
+        directory / "suites" / "demo-improve": bundled_suites_dir() / "demo-improve",
+        directory / "suites" / "demo-safety": bundled_suites_dir() / "demo-safety",
         directory / "harnesses" / "baseline": bundled_harnesses_dir() / "baseline",
+        directory / "harnesses" / "sentinel": bundled_harnesses_dir() / "sentinel",
         directory / "grow": bundled_grow_dir(),
         directory / "pricing.example.yaml": bundled_pricing_example(),
         directory / "README.md": None,

@@ -11,6 +11,7 @@ metadata (a count, never the text).
 
 from __future__ import annotations
 
+import json
 from collections.abc import Callable
 from datetime import UTC, datetime
 from enum import StrEnum
@@ -88,6 +89,7 @@ class EventEmitter:
         redactor: Redactor | None = None,
         sink: Callable[[list[Event]], None] | None = None,
         flush_threshold: int = 200,
+        watch: dict[str, str] | None = None,
     ) -> None:
         self.run_id = run_id
         self.default_source = default_source
@@ -97,6 +99,9 @@ class EventEmitter:
         self.events: list[Event] = []
         self._pending: list[Event] = []
         self._sequence = 0
+        # Literals (e.g. canary tokens) looked for in payloads *before* redaction removes them.
+        self.watch = {label: literal for label, literal in (watch or {}).items() if literal}
+        self.watch_hits: list[dict[str, Any]] = []
 
     @property
     def next_sequence(self) -> int:
@@ -115,6 +120,13 @@ class EventEmitter:
         raw_metadata: dict[str, Any] | None = None,
         timestamp: datetime | None = None,
     ) -> Event:
+        if self.watch and payload:
+            blob = json.dumps(payload, default=str)
+            for label, literal in self.watch.items():
+                if literal in blob:
+                    self.watch_hits.append(
+                        {"sequence": self._sequence, "kind": EventKind(kind).value, "label": label}
+                    )
         event = Event(
             run_id=self.run_id,
             sequence=self._sequence,

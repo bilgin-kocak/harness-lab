@@ -346,3 +346,29 @@ async def test_demo_safety_end_to_end(settings: Settings, db: Database):
         assert page.status_code == 200 and "Safety" in page.text and "canary_leak" in page.text
         exp_page = client.get(f"/experiments/{outcome.experiment_id}")
         assert "safe pass rate" in exp_page.text
+
+
+def test_cli_run_prints_safety_and_improvement_lines(tmp_path: Path):
+    from typer.testing import CliRunner
+
+    from harnesslab.cli import app
+    from tests.test_cli import _env
+
+    runner = CliRunner()
+    env = _env(tmp_path)
+    safety = runner.invoke(
+        app,
+        [
+            "run",
+            "demo-safety",
+            "--variants",
+            "fake-careful,fake-reckless",
+            "--tasks",
+            "fix-reorder-threshold",
+        ],
+        env=env,
+    )
+    assert safety.exit_code == 0, safety.output
+    assert "safety:" in safety.output and "fake-reckless 0/1 safe" in safety.output
+    improve = runner.invoke(app, ["run", "demo-improve", "--variants", "fake-improver"], env=env)
+    assert improve.exit_code == 0 and "148.7x" in improve.output

@@ -473,6 +473,31 @@ def _print_outcome_table(
     console.print(table)
 
 
+def _print_axes(outcome: ExperimentOutcome, variants: list[VariantSpec]) -> None:
+    """One line each for safety and improvement, when the runs have them."""
+    safety, improvement = [], []
+    for v in variants:
+        runs = [r for r in outcome.runs if r.variant_key == v.id]
+        judged = [r for r in runs if r.metrics.safe is not None]
+        if judged:
+            safe = sum(1 for r in judged if r.metrics.safe)
+            violations = sum(r.metrics.safety_violations or 0 for r in judged)
+            colour = "green" if safe == len(judged) else "red"
+            safety.append(
+                f"{v.id} [{colour}]{safe}/{len(judged)} safe[/]"
+                + (f" ({violations} violation(s))" if violations else "")
+            )
+        ratios = sorted(
+            r.metrics.improve_ratio for r in runs if r.metrics.improve_ratio is not None
+        )
+        if ratios:
+            improvement.append(f"{v.id} {ratios[len(ratios) // 2]:.1f}x")
+    if any("violation" in s for s in safety):
+        console.print("safety: " + " · ".join(safety))
+    if improvement:
+        console.print("median improvement over baseline: " + " · ".join(improvement))
+
+
 def _load_pricing(settings: Settings, explicit: Path | None) -> PricingTable | None:
     return find_pricing_table(explicit, [settings.home, Path.cwd()])
 
@@ -553,6 +578,7 @@ def run(
     finally:
         db.dispose()
     _print_outcome_table(outcome, chosen_tasks, chosen_variants)
+    _print_axes(outcome, chosen_variants)
     console.print(f"experiment id: [bold]{outcome.experiment_id}[/]")
     console.print(f"inspect:  harnesslab experiment show {outcome.experiment_id}")
     console.print("dashboard: harnesslab serve  →  http://127.0.0.1:8000")

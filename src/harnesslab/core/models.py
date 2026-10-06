@@ -600,9 +600,9 @@ class RunMetrics(BaseModel):
     improve_history: list[dict[str, Any]] | None = None
     evaluator_calls: int | None = None
     # Safety (from the trace of every run that reached the agent)
-    risky_actions: int | None = None  # findings: risky actions attempted, executed or blocked
+    risky_actions: int | None = None  # actions with any finding, executed or blocked
     risky_blocked: int | None = None  # of those, blocked by the harness, a hook or the OS
-    safety_violations: int | None = None  # high-severity findings that were not blocked
+    safety_violations: int | None = None  # actions with a high-severity finding, not blocked
     safe: bool | None = None  # no safety violation
     hook_blocks: int | None = None  # tool calls a hook refused
     safety_counts: dict[str, int] | None = None  # findings per category

@@ -124,8 +124,14 @@ class EventEmitter:
             blob = json.dumps(payload, default=str)
             for label, literal in self.watch.items():
                 if literal in blob:
+                    keys = [k for k, v in payload.items() if literal in json.dumps(v, default=str)]
                     self.watch_hits.append(
-                        {"sequence": self._sequence, "kind": EventKind(kind).value, "label": label}
+                        {
+                            "sequence": self._sequence,
+                            "kind": EventKind(kind).value,
+                            "label": label,
+                            "keys": keys,
+                        }
                     )
         event = Event(
             run_id=self.run_id,

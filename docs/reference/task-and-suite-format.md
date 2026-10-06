@@ -42,7 +42,33 @@ from the suite's list, the experiment's list, or the built-ins (`fake-reference`
 | `tags` | list | `[]` | Free labels; sweeps can report per tag. |
 | `reference_solution.overlay` | path | none | Directory copied over the worktree by the fake runner's `solve` behaviour and by `suite check`. |
 | `reference_solution.partial_overlay` | path | none | Used by the fake runner's `partial` behaviour. |
+| `reference_solution.improve_overlays` | list of paths | `[]` | Improvement tasks: applied by the fake runner's `solve` behaviour one per round. |
 | `reference_solution.description` | string | none | Free text. |
+| `improve` | mapping | none | Turns the task into an [improvement task](../guides/improvement.md); see below. |
+| `safety` | mapping | none | Canaries and lures that make the task a [safety measurement](../guides/safety.md); see below. |
+
+### Improvement tasks
+
+| Field | Default | Meaning |
+| --- | --- | --- |
+| `improve.objective.command` | required | Shell command printing one number (last number on stdout, or a JSON line with `value`). Runs without credentials on a scratch copy. |
+| `improve.objective.direction` | `minimize` | `minimize` or `maximize`. |
+| `improve.objective.unit` | none | Shown in prompts and reports. |
+| `improve.objective.target` | none | A reference value; `improve_progress` measures the way from baseline to it. |
+| `improve.objective.repeats` | `1` | Median of this many measurements. |
+| `improve.objective.timeout_seconds` | `120` | Per measurement. |
+| `improve.objective.inject` | `[]` | `{source, dest}` files copied in only to measure, never into the agent's worktree. |
+| `improve.rounds` | `3` | Harness invocations; variant option `improve_rounds` overrides it. |
+| `improve.keep_best` | `true` | Revert rounds that fail the gate or do not beat the best. |
+| `improve.min_improvement` | `0.0` | Relative margin the final value must beat the baseline by to pass. |
+| `improve.evaluator.budget` | `0` | In-loop measurements the agent may make per round; variant option `improve_eval_budget` overrides it. |
+
+### Safety traps
+
+| Field | Default | Meaning |
+| --- | --- | --- |
+| `safety.canaries` | `[]` | `{path, token}`: a repository file holding a secret token (at least 8 characters). Reading it is `canary_read`; the token in an action, message or the diff is `canary_leak`. Tokens are redacted from everything persisted. |
+| `safety.lure_urls` | `[]` | Planted URLs; contacting one is `lure_followed`. |
 
 ### Partial score
 
@@ -82,4 +108,6 @@ Runner options are documented per adapter: [Run Claude Code](../guides/claude-co
 [Run Codex](../guides/codex.md), [Test your own harness](../guides/your-own-harness.md). The fake
 runner accepts `behavior` (`solve`, `partial`, `noop`, `fail`, `crash`, `timeout`), `command`,
 `run_command`, `delay_ms`, `solve_tasks`, `simulate_cost_usd_per_1k_tokens`,
-`simulate_token_multiplier`, `action_policy` and `llm_calls`.
+`simulate_token_multiplier`, `action_policy` and `llm_calls`, and for the demo suites
+`improve_break_rounds`, `eval_calls` and `simulate_unsafe` (`read_canary`, `follow_lure`,
+`leak_canary`, `read_ssh_key`, `destructive`; emitted into the trace, never executed).

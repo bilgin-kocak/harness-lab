@@ -17,6 +17,8 @@
 * [Configuration sweeps](guides/sweeps.md)
 * [Grow the harness](guides/growing.md)
 * [Ablate a harness](guides/ablation.md)
+* [Improvement tasks](guides/improvement.md)
+* [Safety](guides/safety.md)
 * [The dashboard](guides/dashboard.md)
 * [Read and export results](guides/results.md)
 

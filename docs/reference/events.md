@@ -36,7 +36,7 @@ schema. The dashboard timeline, metrics and aggregation only ever see this schem
 | `usage` | `input_tokens`, `cached_input_tokens`, `cache_write_tokens`, `output_tokens`, `reasoning_output_tokens`, `model` |
 | `error` | `message`, plus provider fields |
 | `reasoning_event` | `count` only. Thinking text and signatures are dropped at parse time and never persisted. |
-| `system` | Named events: `harness_launch` (argv, CLI version, harness hash, applied components), `setup_command`, `verification`, `api_retry`, `compact_boundary`, `permission_denied`, `harness_components_ignored`, `non_json_output`, `unknown_record`, … |
+| `system` | Named events: `harness_launch` (argv, CLI version, harness hash, applied components), `setup_command`, `verification`, `api_retry`, `compact_boundary`, `permission_denied`, `harness_components_ignored`, `hook` (a Claude Code hook finished: event, name, exit code, decision, `blocked`), `improve_baseline`, `improve_round_started`, `improve_round` (improvement tasks), `safety` (the run's safety summary), `non_json_output`, `unknown_record`, … |
 
 Started and finished events with the same `call_id` are paired in the timeline; a started event
 without a matching finish is closed as `interrupted` when the run ends and counts as

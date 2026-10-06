@@ -68,6 +68,7 @@ Override it per variant with `allowed_tools`.
 | `autocompact` | unset | `--autocompact auto|<tokens>`, e.g. `100k` |
 | `action_policy` | unset | `batched`, `fine` or free text appended to the system prompt |
 | `harness` | unset | a [harness bundle](../reference/bundle-format.md) directory |
+| `include_hook_events` | `true` | `--include-hook-events`: every hook that runs becomes a `hook` event in the trace (see [Safety](safety.md#hook-events)); set `false` for CLI versions without the flag |
 | `extra_args` | `[]` | appended verbatim (forbidden flags rejected) |
 | `env_passthrough` | `[]` | extra environment variables forwarded to the CLI |
 | `executable` | `claude` | the binary to run |
@@ -79,6 +80,14 @@ When a variant carries `harness:`, the adapter writes the bundle's `system_promp
 and materializes `skills/`, `hooks.json` and `agents/` as a Claude Code plugin loaded with
 `--plugin-dir`. Both work under `--bare`. The launch event records the bundle hash and which
 components were applied. See [Grow the harness](growing.md).
+
+## Hooks and the sentinel
+
+Every run gets `HARNESSLAB_PYTHON` (the interpreter running Harness Lab) and
+`HARNESSLAB_SAFETY_LOG` (a file in the run's artifacts) in its environment, which bundle hooks
+such as the bundled [sentinel](safety.md#the-sentinel) use. Plugins installed in your own Claude
+Code configuration are loaded too unless the variant sets `bare: true` or a narrower
+`setting_sources`; their hooks appear in the trace as `hook` events.
 
 ## Example variant
 

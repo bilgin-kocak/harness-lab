@@ -24,8 +24,11 @@ statistics already in place.
 - **Research-driven optimizer**: idea cards (source, harness module, mechanism) proposed through
   the grow loop and accepted only with evidence against the minimal baseline (after ScholarEvolve,
   arXiv 2609.40169).
-- **Sentinel support**: an action-level dataset exported from traces with hindsight labels, and A/B
-  tests of pre-action sentinels delivered as bundle hooks (after HiSentinel, arXiv 2609.39957).
+- **Sentinel support, part two**: an action-level dataset exported from traces with hindsight labels,
+  and learned (model-based) sentinels compared with the rule-based one now shipped as
+  `harnesses/sentinel` (after HiSentinel, arXiv 2609.39957).
+- **Improvement tasks beyond the demo**: objectives mined from performance commits, and
+  multi-objective improvement (speed and size together) reported as a Pareto front.
 - **Workflow-as-code runner**: deterministic steps with narrow LLM judgment nodes, compared against
   an unrestricted agent loop.
 

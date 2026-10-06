@@ -70,6 +70,12 @@ until then install from `main`: `pip install git+https://github.com/bilgin-kocak
   CLI version, model and environment on every run.
 - **Compares configurations**: sweeps search model × effort × toolset × compaction × action policy
   × harness bundle for the cheapest configuration that still passes.
+- **Measures improvement, not just completion**: improvement tasks give the agent several rounds
+  to make a working repository better on a measured objective, with an optional in-loop
+  evaluator, and report the improvement curve.
+- **Measures safety next to success**: every run gets risky-action findings, executed or blocked,
+  and tasks can plant canary secrets and prompt-injection lures; a bundled sentinel hook can be
+  A/B tested.
 - **Grows a harness from its failures**: the `grow` loop edits a harness bundle with an optimizer,
   keeps only edits that fix failures without regressing a held-out gate, and records the lineage
   (after *Grow the Harness, Not the Context*, arXiv 2609.26760).

@@ -18,6 +18,10 @@ Everything lives under one directory, by default `./.harnesslab` (override with
   grow/<session>/v<N>/context.json  exactly what the optimizer saw
   grow/<session>/v<N>/proposal.json the raw proposal
   grow/<session>/v<N>-proposal/     the manual optimizer's working directory
+  artifacts/<exp>/<run>/improve.json        improvement tasks: baseline, rounds, verdict
+  artifacts/<exp>/<run>/round-<n>/          improvement tasks: each round's prompt and harness files
+  artifacts/<exp>/<run>/safety.json         the run's safety report (findings, counts, sentinel decisions)
+  artifacts/<exp>/<run>/sentinel.jsonl      sentinel decisions when the sentinel hook ran
   logs/
 ```
 
@@ -32,7 +36,7 @@ on start-up, so an older database keeps working.
 | `experiments` | Name, suite, spec, status, repetitions, parallelism, timestamps, Harness Lab version and commit, environment and its hash, grow session id and role when part of a session. |
 | `variants` | Per experiment: key, runner, model, description, recorded policies, configuration and `config_hash`, sweep factors, `harness_hash` and the bundle's file list. |
 | `tasks` | Per experiment: key, name, version, `task_hash`, `spec_hash`, `prompt_hash`, base commit, repo path, tags, spec. |
-| `runs` | One row per cell: status, outcome, timestamps, worktree, the reproducibility record (base commit, hashes, runner, configuration, environment, models, CLI version, session id), exit code, error, final message, runner metadata, `metrics_json` and denormalized metric columns including `llm_calls`. |
+| `runs` | One row per cell: status, outcome, timestamps, worktree, the reproducibility record (base commit, hashes, runner, configuration, environment, models, CLI version, session id), exit code, error, final message, runner metadata, `metrics_json` and denormalized metric columns including `llm_calls`, `improve_ratio`, `evaluator_calls`, `risky_actions`, `safety_violations` and `safe`. |
 | `events` | Normalized events, unique on `(run_id, sequence)`. |
 | `verifier_results` | Command, exit code, timeout, duration, capped stdout and stderr, score fields, protected-path violations, injected files, skip reason. |
 | `artifacts` | Kind, path relative to home, media type, size, SHA-256. |

@@ -53,6 +53,11 @@ your privileges, outside the agent's `--allowedTools` allowlist, and they can re
 can, including a suite's hidden tests. `harnesslab harness check` prints a warning for every bundle
 that contains one. Review hook commands like any other code you run.
 
+The bundled `harnesses/sentinel` is a bundle whose only component is such a hook: a pre-tool-use
+decider that blocks risky actions. Its command runs `"${HARNESSLAB_PYTHON:-python3}" -m
+harnesslab.safety.decide`; the Claude runner sets `HARNESSLAB_PYTHON` so the hook finds Harness
+Lab. See [Safety](../guides/safety.md#the-sentinel).
+
 ## Optimizer edit rules
 
 An optimizer may edit or add content files only. It may not delete a file, edit `harness.yaml`,

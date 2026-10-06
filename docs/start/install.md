@@ -24,8 +24,8 @@ pipx install harnesslab
 uv tool install harnesslab
 ```
 
-Pages marked *Requires Harness Lab 0.2.0* describe features that are on `main` but not yet on
-PyPI (harness bundles, `harnesslab grow`). To use them before the release:
+Pages marked *New in Harness Lab 0.2.0* need 0.2.0 or later; upgrade with
+`pip install -U harnesslab`. To try changes on `main` before they are released:
 
 ```bash
 pip install git+https://github.com/bilgin-kocak/harness-lab

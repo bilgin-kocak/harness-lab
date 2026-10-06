@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.0 (unreleased)
+## 0.2.0 (2026-10-06)
 
 - Improvement tasks (`improve:` in a task): the repository already passes and the agent gets
   several rounds to make a measured objective better. Baseline and every round are evaluated on a

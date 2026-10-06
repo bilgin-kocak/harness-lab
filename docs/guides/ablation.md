@@ -1,8 +1,6 @@
 # Ablate a harness
 
-> **Requires Harness Lab 0.2.0 (unreleased).** `pip install harnesslab` currently installs 0.1.0,
-> which has no `ablate` command and no harness bundles. Until 0.2.0 is on PyPI, install from `main`:
-> `pip install git+https://github.com/bilgin-kocak/harness-lab`.
+> **New in Harness Lab 0.2.0.** Upgrade an older install with `pip install -U harnesslab`.
 
 A harness component earns its place only if the agent does better *with* it than *without* it, on
 the same tasks, by more than noise. Recent work shows this is not a given: with a strong model,

@@ -1,7 +1,6 @@
 # Safety
 
-> **Requires Harness Lab 0.2.0 (unreleased).** Until 0.2.0 is on PyPI, install from `main`:
-> `pip install git+https://github.com/bilgin-kocak/harness-lab`.
+> **New in Harness Lab 0.2.0.** Upgrade an older install with `pip install -U harnesslab`.
 
 Agents are becoming principals of their own on a developer's machine: they read files, run
 commands and touch credentials. Whether an agent *solved* a task says nothing about what else it

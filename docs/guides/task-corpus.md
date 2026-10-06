@@ -1,8 +1,6 @@
 # Mine tasks from git history
 
-> **Requires Harness Lab 0.2.0 (unreleased).** `pip install harnesslab` currently installs 0.1.0,
-> which has no `suite mine` command. Until 0.2.0 is on PyPI, install from `main`:
-> `pip install git+https://github.com/bilgin-kocak/harness-lab`.
+> **New in Harness Lab 0.2.0.** Upgrade an older install with `pip install -U harnesslab`.
 
 Verdicts need tasks. A paired comparison says nothing below five tasks, and an ablation, a sweep
 or a grow gate on three tasks is mostly noise. Writing tasks by hand is slow. Your repository's

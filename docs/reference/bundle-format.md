@@ -1,8 +1,6 @@
 # Harness bundle
 
-> **Requires Harness Lab 0.2.0 (unreleased).** `pip install harnesslab` currently installs 0.1.0,
-> which has no `grow` command and no harness bundles. Until 0.2.0 is on PyPI, install from `main`:
-> `pip install git+https://github.com/bilgin-kocak/harness-lab`.
+> **New in Harness Lab 0.2.0.** Upgrade an older install with `pip install -U harnesslab`.
 
 A harness bundle is the growable outer layer of a coding-agent harness: a plain directory that a
 variant carries with `harness: <path>` and that a grow session edits.

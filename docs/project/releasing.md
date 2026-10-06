@@ -20,8 +20,8 @@ token is needed anywhere; the publisher for this repository, workflow `release.y
 4. Commit to `main`, then tag and push the tag:
 
    ```bash
-   git tag -a v0.2.0 -m "harnesslab 0.2.0"
-   git push origin main v0.2.0
+   git tag -a vX.Y.Z -m "harnesslab X.Y.Z"
+   git push origin main vX.Y.Z
    ```
 
 5. Watch the workflow: `gh run list --workflow=release.yml`. It runs the tests, builds the

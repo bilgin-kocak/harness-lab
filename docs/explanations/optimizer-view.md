@@ -1,8 +1,6 @@
 # What the optimizer sees
 
-> **Requires Harness Lab 0.2.0 (unreleased).** `pip install harnesslab` currently installs 0.1.0,
-> which has no `grow` command and no harness bundles. Until 0.2.0 is on PyPI, install from `main`:
-> `pip install git+https://github.com/bilgin-kocak/harness-lab`.
+> **New in Harness Lab 0.2.0.** Upgrade an older install with `pip install -U harnesslab`.
 
 A grow session's headline guarantee is that **hidden tests never reach the optimizer**. If they
 did, the optimizer could encode the answers into the harness and the gate would measure

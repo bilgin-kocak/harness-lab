@@ -1,8 +1,6 @@
 # Grow the harness
 
-> **Requires Harness Lab 0.2.0 (unreleased).** `pip install harnesslab` currently installs 0.1.0,
-> which has no `grow` command and no harness bundles. Until 0.2.0 is on PyPI, install from `main`:
-> `pip install git+https://github.com/bilgin-kocak/harness-lab`.
+> **New in Harness Lab 0.2.0.** Upgrade an older install with `pip install -U harnesslab`.
 
 Harness Lab can run the loop from *Grow the Harness, Not the Context* (Li et al., 2026,
 arXiv 2609.26760) for coding agents: failures drive edits to a **harness bundle**, a held-out

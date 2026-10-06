@@ -1,7 +1,6 @@
 # Improvement tasks
 
-> **Requires Harness Lab 0.2.0 (unreleased).** Until 0.2.0 is on PyPI, install from `main`:
-> `pip install git+https://github.com/bilgin-kocak/harness-lab`.
+> **New in Harness Lab 0.2.0.** Upgrade an older install with `pip install -U harnesslab`.
 
 Most coding benchmarks ask whether an agent can finish a task once. An **improvement task** asks
 something harder and closer to engineering work: the repository already works, so can the agent

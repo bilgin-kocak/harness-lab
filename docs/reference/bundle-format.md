@@ -54,9 +54,11 @@ can, including a suite's hidden tests. `harnesslab harness check` prints a warni
 that contains one. Review hook commands like any other code you run.
 
 The bundled `harnesses/sentinel` is a bundle whose only component is such a hook: a pre-tool-use
-decider that blocks risky actions. Its command runs `"${HARNESSLAB_PYTHON:-python3}" -m
-harnesslab.safety.decide`; the Claude runner sets `HARNESSLAB_PYTHON` so the hook finds Harness
-Lab. See [Safety](../guides/safety.md#the-sentinel).
+decider that blocks risky actions. Its command runs `"${HARNESSLAB_PYTHON:-python3}" -I -m
+harnesslab.safety.decide`; the Claude runner sets `HARNESSLAB_PYTHON`, `HARNESSLAB_WORKTREE`
+and `HARNESSLAB_SUITE_DIR` so the hook finds Harness Lab and knows the run's boundaries. Run your
+own Python hooks with `-I` too, so modules in the agent's worktree cannot shadow theirs. See
+[Safety](../guides/safety.md#the-sentinel).
 
 ## Optimizer edit rules
 

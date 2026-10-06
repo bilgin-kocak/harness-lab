@@ -180,6 +180,17 @@ def build_claude_command(
     return argv
 
 
+def hook_env(*, worktree: Path, suite_dir: Path | None, artifacts: Path | None) -> dict[str, str]:
+    """What bundle hooks such as the sentinel learn about the run: the interpreter that has
+    harnesslab, the worktree and the suite directory, and where to log decisions."""
+    env = {"HARNESSLAB_PYTHON": sys.executable, "HARNESSLAB_WORKTREE": str(worktree)}
+    if suite_dir is not None:
+        env["HARNESSLAB_SUITE_DIR"] = str(suite_dir)
+    if artifacts is not None:
+        env["HARNESSLAB_SAFETY_LOG"] = str(artifacts / "sentinel.jsonl")
+    return env
+
+
 @register_runner
 class ClaudeCodeRunner(HarnessRunner):
     name = "claude"
@@ -261,14 +272,7 @@ class ClaudeCodeRunner(HarnessRunner):
                 "DISABLE_TELEMETRY": "1",
                 "DISABLE_ERROR_REPORTING": "1",
                 "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
-                # For bundle hooks such as the sentinel: the interpreter that has harnesslab,
-                # and where decisions are logged for the run's safety report.
-                "HARNESSLAB_PYTHON": sys.executable,
-                **(
-                    {"HARNESSLAB_SAFETY_LOG": str(artifacts / "sentinel.jsonl")}
-                    if artifacts
-                    else {}
-                ),
+                **hook_env(worktree=worktree, suite_dir=task.base_dir, artifacts=artifacts),
             },
         )
         try:

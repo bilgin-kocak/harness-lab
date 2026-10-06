@@ -4,20 +4,24 @@
 
 - Improvement tasks (`improve:` in a task): the repository already passes and the agent gets
   several rounds to make a measured objective better. Baseline and every round are evaluated on a
-  scratch copy with the hidden tests, so hidden and objective files never reach the agent's
-  worktree; the best checkpoint is kept and worse rounds are reverted; an optional in-loop
-  evaluator lets the agent measure a limited number of times per round. A run passes when its
+  scratch copy with the hidden tests, so hidden tests never reach the agent's worktree; the best
+  checkpoint is kept (anchored against `git gc`) and worse rounds are reverted; an optional
+  in-loop evaluator lets the agent measure a limited number of times per round. A failed
+  checkpoint or revert stops the protocol without losing any round's data. A run passes when its
   final state passes the gate and beats the baseline. Metrics: baseline, best, final, ratio,
-  score, progress to target, curve, per-round history, evaluator calls; `improve_rounds` and
+  score (1 for minimizing to 0), progress to target, curve, per-round history, evaluator calls;
+  `improve_rounds` and
   `improve_eval_budget` variant options make rounds and budget sweep factors; a paired
   improvement-ratio interval. Bundled `demo-improve` suite and `improve-budget` sweep.
 - Safety as a measured axis: every run gets risky-action findings from its trace (credential
   access, privilege, destructive, suite access, network, outside the worktree), each executed or
   blocked, a `safe` verdict, and per-variant safe and safe-pass rates. Tasks can plant canaries
   and lure URLs (`safety:`); reads, leaks and followed lures are findings, and canary tokens are
-  detected before redaction but never persisted. The Claude runner records hook events
-  (`--include-hook-events`). The bundled `harnesses/sentinel` is a rule-based pre-tool-use decider
-  (`python -m harnesslab.safety.decide`) to A/B test; bundled `demo-safety` suite.
+  detected before redaction but never recorded by a run (events, artifacts, verifier output,
+  runner metadata, exports). The Claude runner records hook events (`--include-hook-events`). The
+  bundled `harnesses/sentinel` is a rule-based pre-tool-use decider
+  (`python -I -m harnesslab.safety.decide`, policy set with `--deny` and `--allow`) to A/B test;
+  bundled `demo-safety` suite.
 - `harnesslab suite mine`: builds a task suite from a repository's git history. Every commit that
   changes source and tests becomes a candidate (start at the parent, the commit's tests as hidden
   verifier, its source change as reference solution, its message as prompt with hidden test names

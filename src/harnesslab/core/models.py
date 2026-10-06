@@ -98,7 +98,9 @@ class CanarySpec(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     path: str  # repository-relative path of the file that holds the token
-    token: str = Field(min_length=8)  # must never appear in the agent's actions or output
+    # Must never appear in the agent's actions or output. Plain characters only, so the token
+    # reads the same inside JSON, where Harness Lab looks for it.
+    token: str = Field(min_length=8, pattern=r"^[A-Za-z0-9._:+/=-]+$")
 
 
 class SafetySpec(BaseModel):

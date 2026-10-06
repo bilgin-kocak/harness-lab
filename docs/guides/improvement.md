@@ -25,18 +25,26 @@ For every run of an improvement task:
 1. **Baseline.** Harness Lab copies the untouched worktree to a scratch directory, injects the
    hidden tests and runs the verification command (the *gate*). The repository must pass; a task
    whose baseline fails the gate is broken and the run is not verified. Then it injects the
-   objective's files and runs the objective command; the printed number is the baseline.
+   objective's files and runs the objective command; the printed number is the baseline. It must
+   not be negative, and a minimized objective must not already be 0: improvement is scored as a
+   ratio.
 2. **Rounds.** The harness runs once per round. Its prompt is the task prompt plus a round
    section: the objective and its direction, the baseline, the best value so far, the result of
    every earlier round, the target if there is one, and whether it can measure the objective
-   itself. Each round gets the full `agent_timeout_seconds`.
+   itself. Each round gets the full `agent_timeout_seconds`, so a run can take up to
+   `rounds × agent_timeout_seconds` of agent time, plus an evaluation after each round.
 3. **Evaluation.** After each round, Harness Lab evaluates a *copy* of the worktree the same way
-   as the baseline. Hidden tests and objective files are only ever copied into that scratch copy,
-   never into the agent's own worktree.
+   as the baseline. Hidden tests are only ever copied into that scratch copy, never into the
+   agent's own worktree. A state that cannot be evaluated at all (a file the copy cannot read,
+   say) counts as a failed round.
 4. **Keep the best.** A round that passes the gate and beats the best so far becomes the new best
-   checkpoint. With `keep_best: true` (the default), any other round is reverted to the best
-   checkpoint before the next round, and the prompt says so. With `keep_best: false` the agent's
-   changes carry over whatever happened.
+   checkpoint, a commit anchored by a ref so that `git gc` cannot prune it. With
+   `keep_best: true` (the default), any other round is reverted to the best checkpoint before the
+   next round, and the prompt says so. With `keep_best: false` the agent's changes carry over
+   whatever happened. A revert restores tracked and untracked files but, like `git clean -fd`,
+   leaves gitignored files alone. If taking a checkpoint or reverting fails, the protocol stops
+   there: the run is marked `crashed`, keeps every round's usage and history, and is verified on
+   the state the worktree actually holds.
 5. **Verdict.** The usual final capture and verification run on the resulting worktree. The run
    **passes** when the final state passes the gate *and* the final value beats the baseline by
    more than `min_improvement`.
@@ -93,16 +101,18 @@ but not improve, and the reference overlays applied round by round must improve.
 ## The in-loop evaluator
 
 With `evaluator.budget` above zero, Harness Lab installs `.harnesslab_eval/evaluate.py` in the
-agent's worktree, excluded from git so it never shows up in the diff. The prompt tells the agent
-it may run `python .harnesslab_eval/evaluate.py` at most that many times per round. Each call
-copies the working tree to a scratch directory, adds the objective's files there, measures and
-prints the value; the objective's files never land in the worktree. It does not run the
-correctness checks: the agent has its visible tests for that.
+agent's worktree, with a copy of the objective's files under `.harnesslab_eval/objective/`, all
+excluded from git so it never shows up in the diff. The prompt tells the agent it may run
+`python .harnesslab_eval/evaluate.py` at most that many times per round. Each call copies the
+working tree to a scratch directory, adds the objective's files there, measures and prints the
+value. It does not run the correctness checks: the agent has its visible tests for that.
 
-Calls are counted from the evaluator's own log and from the trace, and reported as
-`evaluator_calls`. The budget is cooperative, like the rest of Harness Lab's isolation: an agent
-can read the evaluator's configuration and run the measurement itself. When it does, the command
-shows up in the trace, and commands that touch the suite directory are flagged.
+An agent that can measure the objective can also read how it is measured; it never learns where
+the suite, and its hidden tests, live. Calls are counted from the evaluator's own log, written
+before each measurement so that an interrupted call still counts, and from the trace, and
+reported as `evaluator_calls`. The budget is cooperative, like the rest of Harness Lab's
+isolation: an agent can run the measurement itself. When it does, the command shows up in the
+trace.
 
 ## Comparing evaluator budget with model choice
 
@@ -130,16 +140,18 @@ evaluator budget help more than a bigger model?" gets an answer with an interval
 | Metric | Meaning |
 | --- | --- |
 | `improve_baseline`, `improve_best`, `improve_final` | Objective values: untouched repository, best checkpoint, final state. |
-| `improve_ratio` | How many times better the final state is: baseline ÷ final when minimizing, final ÷ baseline when maximizing. Only defined for positive values. |
-| `verified_score` | `1 − 1/ratio`: `0.5` for twice as good, `0.75` for four times. `0` without an improvement or when the gate fails. |
+| `improve_ratio` | How many times better the final state is: baseline ÷ final when minimizing, final ÷ baseline when maximizing. Only reported when the final state passed verification, and only defined for positive values: a run that minimizes to 0 has no ratio (its score is 1). |
+| `verified_score` | `1 − 1/ratio`: `0.5` for twice as good, `0.75` for four times, `1` for reaching 0 when minimizing. `0` without an improvement or when the gate fails. |
 | `improve_progress` | Share of the way from the baseline to the `target`; `1.0` reached it, above `1.0` beat it. |
 | `improve_curve` | Best value so far: the baseline, then after each round. This is the improvement curve. |
-| `improve_history` | Per round: harness status, value, gate result, best so far, kept or reverted, evaluator calls. |
+| `improve_history` | Per round: harness status, value, gate result, best so far, kept or reverted, evaluator calls, and a note (the harness's error, why the round could not be evaluated, or why the protocol stopped), redacted like everything else. |
 | `evaluator_calls` | In-loop measurements the agent made across all rounds. |
 
 The run page shows the rounds table and the improvement cards; the experiment page adds the median
-improvement and evaluator calls per variant; `improve.json` in the run's artifacts holds the full
+improvement, the number of runs that passed by improving (including those without a finite ratio)
+and evaluator calls per variant; `improve.json` in the run's artifacts holds the full
 record, and every round's prompt is kept under `round-<n>/prompt.txt`.
 
 Usage, cost and LLM calls are summed over all rounds, so a variant that improves more but spends
-much more shows up on the cost axis as well.
+much more shows up on the cost axis as well. `agent_wall_time_seconds` covers the whole protocol:
+the baseline, every round and every evaluation.

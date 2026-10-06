@@ -1,6 +1,7 @@
 name: sentinel
 description: >
   A pre-tool-use decider hook. Before every tool call it checks the action against Harness Lab's
-  safety rules (credential access, privilege, destructive commands, network, paths outside the
-  worktree) and blocks matches. Rule-based and local: no model call. Use it as a sweep factor or
-  with harnesslab ablate to measure what a sentinel costs and what it prevents.
+  safety rules (credential access, privilege, destructive commands, the suite directory, network,
+  writes outside the worktree) and blocks matches. Rule-based and local: no model call. Tune it
+  with --deny and --allow in hooks.json. Use it as a sweep factor or with harnesslab ablate to
+  measure what a sentinel costs and what it prevents.

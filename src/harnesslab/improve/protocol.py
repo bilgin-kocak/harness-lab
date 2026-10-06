@@ -8,9 +8,12 @@ For an improvement task the experiment service hands the agent step to :func:`ru
    the history of earlier rounds; an optional in-loop evaluator lets it measure the objective a
    limited number of times;
 3. after each round, evaluate a *copy* of the worktree (gate, then objective), so hidden tests
-   and objective files never appear in the agent's own worktree;
+   never appear in the agent's own worktree (and the objective's files only do, under
+   ``.harnesslab_eval``, when the agent has an in-loop evaluator);
 4. a round that beats the best becomes the new best checkpoint; with ``keep_best`` any other round
-   is reverted to the best checkpoint before the next one.
+   is reverted to the best checkpoint before the next one. A round whose state cannot be evaluated
+   at all counts as failed. If a checkpoint or a revert itself fails, the protocol stops there and
+   keeps what it has: every round's usage, the history, and the worktree's actual state.
 
 The service then runs its usual final capture and verification on the resulting worktree; the
 run passes when that final gate passes and the final value beats the baseline.
@@ -20,7 +23,10 @@ from __future__ import annotations
 
 import asyncio
 import dataclasses
+import os
+import re
 import shutil
+import stat
 import statistics
 from collections.abc import Awaitable, Callable
 from pathlib import Path
@@ -31,7 +37,7 @@ from pydantic import BaseModel, Field
 from harnesslab.core.events import EventEmitter, EventKind
 from harnesslab.core.models import RunnerConfig, RunnerResult, RunStatus, TaskSpec, UsageTotals
 from harnesslab.execution.sandbox import ExecutionSandbox, SandboxContext
-from harnesslab.improve.checkpoint import exclude_in_git, restore, snapshot
+from harnesslab.improve.checkpoint import anchor, drop_anchor, exclude_in_git, restore, snapshot
 from harnesslab.improve.evaluator import EVAL_DIR, count_calls, install_evaluator, reset_calls
 from harnesslab.improve.objective import (
     improvement_ratio,
@@ -157,13 +163,14 @@ def build_round_prompt(
 
 
 def _describe(record: RoundRecord, unit: str, keep_best: bool) -> str:
-    if record.gate_passed is None and record.value is None:
-        return f"the agent did not run ({record.status})."
+    tail = "reverted to the best version." if record.reverted else "changes kept."
+    if record.status == RunStatus.UNAVAILABLE.value:
+        return "the agent did not run (the harness was unavailable)."
+    if record.gate_passed is None:
+        return f"this round could not be evaluated; {tail}"
     if record.gate_passed is False:
-        tail = "reverted to the best version." if record.reverted else "changes kept."
         return f"correctness checks failed; {tail}"
     if record.value is None:
-        tail = "reverted to the best version." if record.reverted else "changes kept."
         return f"the objective could not be measured; {tail}"
     if record.accepted:
         return f"{_fmt(record.value)}{unit}, the new best."
@@ -174,10 +181,22 @@ def _describe(record: RoundRecord, unit: str, keep_best: bool) -> str:
     return f"{_fmt(record.value)}{unit}, not better than the best."
 
 
+def _copy_regular(source: str, dest: str) -> None:
+    # Like git, skip named pipes, sockets and devices: they are not part of the code.
+    if stat.S_ISREG(os.lstat(source).st_mode):
+        shutil.copy2(source, dest)
+
+
 def _fresh_copy(source: Path, dest: Path) -> None:
     if dest.exists():
         shutil.rmtree(dest)
-    shutil.copytree(source, dest, symlinks=True, ignore=shutil.ignore_patterns(".git", EVAL_DIR))
+    shutil.copytree(
+        source,
+        dest,
+        symlinks=True,
+        ignore=shutil.ignore_patterns(".git", EVAL_DIR),
+        copy_function=_copy_regular,
+    )
 
 
 def _inject(task: TaskSpec, workdir: Path) -> None:
@@ -229,8 +248,23 @@ async def evaluate_state(
         await asyncio.to_thread(shutil.rmtree, eval_dir, True)
 
 
-def merge_runner_results(results: list[RunnerResult]) -> RunnerResult:
+async def _evaluate(
+    task: TaskSpec, ctx: SandboxContext, sandbox: ExecutionSandbox, verifier: CommandVerifier
+) -> Evaluation:
+    """:func:`evaluate_state`, with a state it cannot handle (say, a named pipe) as unevaluated."""
+    try:
+        return await evaluate_state(task, ctx, sandbox, verifier)
+    except Exception as exc:
+        return Evaluation(
+            gate_passed=None, detail=f"evaluation failed: {type(exc).__name__}: {exc}"
+        )
+
+
+def merge_runner_results(
+    results: list[RunnerResult], redact: Callable[[str], str] | None = None
+) -> RunnerResult:
     """One result for all rounds: usage, cost and counts summed; status and messages from the last."""
+    redact = redact or (lambda text: text)
     if not results:
         return RunnerResult(status=RunStatus.COMPLETED)
     usage = UsageTotals()
@@ -255,7 +289,8 @@ def merge_runner_results(results: list[RunnerResult]) -> RunnerResult:
     )
     metadata = dict(final.metadata)
     metadata["improve_rounds"] = [
-        {"round": i, "status": r.status.value, "error": r.error} for i, r in enumerate(results, 1)
+        {"round": i, "status": r.status.value, "error": redact(r.error) if r.error else None}
+        for i, r in enumerate(results, 1)
     ]
     return RunnerResult(
         status=status,
@@ -275,13 +310,18 @@ def merge_runner_results(results: list[RunnerResult]) -> RunnerResult:
     )
 
 
+# Running the evaluator (directly or through an interpreter), not reading it.
+_EVALUATOR_RUN = re.compile(
+    r"(?:^|[;&|(]\s*)(?:\S*python[\d.]*\s+)?(?:\./)?" + re.escape(EVAL_DIR) + r"/evaluate\.py\b"
+)
+
+
 def _trace_evaluator_calls(emitter: EventEmitter, start: int) -> int:
-    needle = f"{EVAL_DIR}/evaluate.py"
     return sum(
         1
         for event in emitter.events[start:]
         if event.kind == EventKind.COMMAND_STARTED
-        and needle in str(event.payload.get("command", ""))
+        and _EVALUATOR_RUN.search(str(event.payload.get("command", "")))
     )
 
 
@@ -296,6 +336,7 @@ async def run_improvement(
     make_runner: Callable[[Path], HarnessRunner],
     invoke: Invoke,
     artifacts_dir: Path,
+    redact: Callable[[str], str] | None = None,
 ) -> tuple[RunnerResult, ImproveResult]:
     spec = task.improve
     assert spec is not None
@@ -303,6 +344,7 @@ async def run_improvement(
     rounds = max(1, int(config.get("improve_rounds", spec.rounds)))
     budget = max(0, int(config.get("improve_eval_budget", spec.evaluator.budget)))
     workdir = ctx.workdir
+    redact = redact or (lambda text: text)
 
     await asyncio.to_thread(exclude_in_git, workdir, f"{EVAL_DIR}/")
     if budget > 0:
@@ -317,7 +359,7 @@ async def run_improvement(
             direction=objective.direction,
         )
 
-    measured = await evaluate_state(task, ctx, sandbox, verifier)
+    measured = await _evaluate(task, ctx, sandbox, verifier)
     emitter.emit(
         EventKind.SYSTEM,
         name="improve_baseline",
@@ -333,89 +375,109 @@ async def run_improvement(
             )
             + (f" ({measured.detail})" if measured.detail else "")
         )
-
     baseline = measured.value
+    if baseline < 0 or (objective.direction == "minimize" and baseline == 0):
+        raise ImproveBaselineError(
+            f"improvement baseline is not usable: the objective measures {baseline:g}, which "
+            + ("is negative" if baseline < 0 else "is already 0 and cannot be lowered")
+            + "; improvement is scored as a ratio, so the objective must be non-negative"
+        )
+
+    anchor_ref = f"refs/harnesslab/checkpoints/{ctx.run_id}"
     best, best_round, best_commit = baseline, 0, ctx.base_commit
-    last_value: float | None = baseline
+    current: float | None = baseline  # the measured value of the worktree's present state
     records: list[RoundRecord] = []
     results: list[RunnerResult] = []
     total_calls = 0
-    for round_no in range(1, rounds + 1):
-        if budget > 0:
-            reset_calls(workdir)
-        prompt = build_round_prompt(
-            task,
-            round_no,
-            rounds,
-            baseline=baseline,
-            best=best,
-            best_round=best_round,
-            history=records,
-            budget=budget,
-        )
-        round_dir = artifacts_dir / f"round-{round_no}"
-        round_dir.mkdir(parents=True, exist_ok=True)
-        (round_dir / "prompt.txt").write_text(prompt, encoding="utf-8")
-        emitter.emit(
-            EventKind.SYSTEM,
-            name="improve_round_started",
-            payload={"round": round_no, "rounds": rounds, "best": best, "baseline": baseline},
-        )
-        start = len(emitter.events)
-        result = await invoke(
-            make_runner(round_dir),
-            task.model_copy(update={"prompt": prompt}),
-            config.model_copy(update={"improve_round": round_no}),
-        )
-        results.append(result)
-        calls = max(
-            count_calls(workdir) if budget > 0 else 0, _trace_evaluator_calls(emitter, start)
-        )
-        total_calls += calls
-        if result.status == RunStatus.UNAVAILABLE:
-            records.append(
-                RoundRecord(
-                    round=round_no,
-                    status=result.status.value,
-                    best=best,
-                    evaluator_calls=calls,
-                    note=result.error,
+    stopped: str | None = None
+    try:
+        for round_no in range(1, rounds + 1):
+            if budget > 0:
+                reset_calls(workdir)
+            prompt = build_round_prompt(
+                task,
+                round_no,
+                rounds,
+                baseline=baseline,
+                best=best,
+                best_round=best_round,
+                history=records,
+                budget=budget,
+            )
+            round_dir = artifacts_dir / f"round-{round_no}"
+            round_dir.mkdir(parents=True, exist_ok=True)
+            (round_dir / "prompt.txt").write_text(prompt, encoding="utf-8")
+            emitter.emit(
+                EventKind.SYSTEM,
+                name="improve_round_started",
+                payload={"round": round_no, "rounds": rounds, "best": best, "baseline": baseline},
+            )
+            start = len(emitter.events)
+            result = await invoke(
+                make_runner(round_dir),
+                task.model_copy(update={"prompt": prompt}),
+                config.model_copy(update={"improve_round": round_no}),
+            )
+            results.append(result)
+            calls = max(
+                count_calls(workdir) if budget > 0 else 0, _trace_evaluator_calls(emitter, start)
+            )
+            total_calls += calls
+            if result.status == RunStatus.UNAVAILABLE:
+                records.append(
+                    RoundRecord(
+                        round=round_no,
+                        status=result.status.value,
+                        best=best,
+                        evaluator_calls=calls,
+                        note=redact(result.error) if result.error else None,
+                    )
                 )
+                break
+            evaluation = await _evaluate(task, ctx, sandbox, verifier)
+            value = evaluation.value if evaluation.gate_passed else None
+            accepted = value is not None and is_better(value, best, objective.direction)
+            reverted = False
+            try:
+                if accepted:
+                    best, best_round, current = value, round_no, value
+                    best_commit = await asyncio.to_thread(
+                        snapshot, workdir, ctx.base_commit, f"harnesslab improve round {round_no}"
+                    )
+                    await asyncio.to_thread(anchor, workdir, anchor_ref, best_commit)
+                else:
+                    current = value  # until a revert succeeds, the worktree holds this state
+                    if spec.keep_best:
+                        await asyncio.to_thread(restore, workdir, best_commit)
+                        current, reverted = best, True
+            except Exception as exc:
+                action = "checkpoint" if accepted else "revert"
+                stopped = (
+                    f"round {round_no}: could not {action} the worktree "
+                    f"({type(exc).__name__}: {exc})"
+                )
+            notes = [result.error, evaluation.detail, stopped]
+            record = RoundRecord(
+                round=round_no,
+                status=result.status.value,
+                value=evaluation.value,
+                gate_passed=evaluation.gate_passed,
+                best=best,
+                accepted=accepted,
+                reverted=reverted,
+                evaluator_calls=calls,
+                note=redact("; ".join(n for n in notes if n)) or None,
             )
-            break
-        evaluation = await evaluate_state(task, ctx, sandbox, verifier)
-        value = evaluation.value
-        accepted = bool(
-            evaluation.gate_passed
-            and value is not None
-            and is_better(value, best, objective.direction)
-        )
-        reverted = False
-        if accepted:
-            best, best_round = value, round_no
-            best_commit = await asyncio.to_thread(
-                snapshot, workdir, ctx.base_commit, f"harnesslab improve round {round_no}"
+            records.append(record)
+            emitter.emit(
+                EventKind.SYSTEM, name="improve_round", payload=record.model_dump(mode="json")
             )
-        elif spec.keep_best:
-            changed = not evaluation.gate_passed or value is None or value != best
-            await asyncio.to_thread(restore, workdir, best_commit)
-            reverted = changed
-        last_value = value if evaluation.gate_passed else None
-        record = RoundRecord(
-            round=round_no,
-            status=result.status.value,
-            value=value,
-            gate_passed=evaluation.gate_passed,
-            best=best,
-            accepted=accepted,
-            reverted=reverted,
-            evaluator_calls=calls,
-        )
-        records.append(record)
-        emitter.emit(EventKind.SYSTEM, name="improve_round", payload=record.model_dump(mode="json"))
+            if stopped:
+                break
+    finally:
+        drop_anchor(workdir, anchor_ref)
 
-    final = best if spec.keep_best else last_value
-    ratio = improvement_ratio(baseline, final, objective.direction)
+    final = current
     outcome = ImproveResult(
         direction=objective.direction,
         unit=objective.unit,
@@ -427,8 +489,8 @@ async def run_improvement(
         best=best,
         best_round=best_round,
         final=final,
-        ratio=ratio,
-        score=improvement_score(ratio) if final is not None else 0.0,
+        ratio=improvement_ratio(baseline, final, objective.direction),
+        score=improvement_score(baseline, final, objective.direction),
         progress=progress(baseline, final, objective.target),
         improved=final is not None
         and is_better(final, baseline, objective.direction, spec.min_improvement),
@@ -436,4 +498,11 @@ async def run_improvement(
         rounds=records,
     )
     (artifacts_dir / "improve.json").write_text(outcome.model_dump_json(indent=2), encoding="utf-8")
-    return merge_runner_results(results), outcome
+    merged = merge_runner_results(results, redact)
+    if stopped:
+        # Harness Lab's own step failed: an infrastructure failure, with nothing thrown away.
+        if merged.status == RunStatus.COMPLETED:
+            merged.status = RunStatus.CRASHED
+        message = f"improvement protocol stopped in {stopped}"
+        merged.error = redact("; ".join(m for m in (merged.error, message) if m))
+    return merged, outcome

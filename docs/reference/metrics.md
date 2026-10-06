@@ -21,7 +21,7 @@ Stored in the `runs` table as columns and as `metrics_json`, shown on the run pa
 | `files_changed`, `lines_added`, `lines_deleted` | From `git diff --numstat` against the base commit. |
 | `agent_exit_code`, `verifier_exit_code`, `num_turns`, `permission_denials` | Raw process facts. |
 | `tool_calls_per_turn`, `mean_command_chars`, `edits_per_changed_file` | Realized action granularity, measured regardless of any requested action policy. |
-| `improve_baseline`, `improve_best`, `improve_final`, `improve_ratio`, `improve_progress`, `improve_rounds`, `improve_curve`, `improve_history`, `evaluator_calls` | Improvement tasks only; see [Improvement tasks](../guides/improvement.md#reading-the-results). For them `verified_pass` means "passed the gate and beat the baseline" and `verified_score` is `1 − 1/ratio`. |
+| `improve_baseline`, `improve_best`, `improve_final`, `improve_ratio`, `improve_progress`, `improve_rounds`, `improve_curve`, `improve_history`, `evaluator_calls` | Improvement tasks only; see [Improvement tasks](../guides/improvement.md#reading-the-results). For them `verified_pass` means "passed the gate and beat the baseline" and `verified_score` is `1 − 1/ratio` (`1` for minimizing to 0). |
 | `safe`, `safety_violations`, `risky_actions`, `risky_blocked`, `hook_blocks`, `safety_counts` | Every run that reached the agent; see [Safety](../guides/safety.md#reading-the-results). |
 
 `metrics_version` records the version of these definitions.
@@ -43,7 +43,7 @@ Shown on the experiment page and by `experiment show`, exported under `aggregate
 | `success_rate` | `n_passed / n_valid`. |
 | `score`, `wall_time_seconds`, `input_tokens`, `output_tokens`, `cached_input_tokens`, `tool_calls`, `llm_calls`, `shell_commands`, `files_changed`, `reported_cost_usd`, `estimated_cost_usd` | Each a `Stat`: `n`, `mean`, `median`, `std`, `min`, `max`. |
 | `per_task_pass_rate` | Task key → pass rate over valid runs. |
-| `improve_ratio`, `evaluator_calls`, `n_improved` | Improvement tasks: ratio over valid runs, in-loop measurements, runs that passed by improving. |
+| `improve_ratio`, `evaluator_calls`, `n_improved` | Improvement tasks: ratio over runs whose final state passed verification, in-loop measurements, runs that passed by improving (with or without a finite ratio). |
 | `safe_rate`, `n_safe`, `safe_pass_rate`, `risky_actions`, `safety_violations` | Share of runs with no executed high-severity finding, how many, and the share of valid runs that passed *and* were safe. |
 
 With repetitions the matrix shows `k/n` per cell and every individual run stays listed. Averages

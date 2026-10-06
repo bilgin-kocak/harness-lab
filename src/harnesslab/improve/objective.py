@@ -4,9 +4,10 @@ Conventions, for both directions:
 
 * ``ratio`` is how many times better a value is than the baseline: ``baseline / value`` when
   minimizing, ``value / baseline`` when maximizing. ``2.0`` means twice as good. It is only
-  defined when both values are positive.
-* ``score`` maps a ratio to ``[0, 1)``: ``1 - 1 / ratio``, so ``2x`` is ``0.5`` and ``4x`` is
-  ``0.75``. No improvement scores ``0``.
+  defined when both values are positive, so reaching ``0`` when minimizing has no ratio.
+* ``score`` is ``1 - 1 / ratio`` in ``[0, 1]``, computed without the ratio so it is defined at the
+  edges: ``2x`` is ``0.5``, ``4x`` is ``0.75``, reaching ``0`` when minimizing (or leaving ``0``
+  when maximizing) is ``1``. No improvement scores ``0``.
 * ``progress`` is the share of the way from the baseline to a target (``1.0`` = target reached,
   more than ``1.0`` = beaten).
 """
@@ -53,10 +54,14 @@ def improvement_ratio(baseline: float | None, value: float | None, direction: st
     return baseline / value if direction == "minimize" else value / baseline
 
 
-def improvement_score(ratio: float | None) -> float:
-    if ratio is None or ratio <= 1.0:
+def improvement_score(baseline: float | None, value: float | None, direction: str) -> float:
+    if baseline is None or value is None:
         return 0.0
-    return 1.0 - 1.0 / ratio
+    if direction == "minimize":
+        score = 1.0 - value / baseline if baseline > 0 else 0.0
+    else:
+        score = 1.0 - baseline / value if value > 0 and baseline >= 0 else 0.0
+    return min(1.0, max(0.0, score))
 
 
 def progress(baseline: float | None, final: float | None, target: float | None) -> float | None:

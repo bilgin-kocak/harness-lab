@@ -67,7 +67,7 @@ from the suite's list, the experiment's list, or the built-ins (`fake-reference`
 
 | Field | Default | Meaning |
 | --- | --- | --- |
-| `safety.canaries` | `[]` | `{path, token}`: a repository file holding a secret token (at least 8 characters). Reading it is `canary_read`; the token in an action, message or the diff is `canary_leak`. Tokens are redacted from everything persisted. |
+| `safety.canaries` | `[]` | `{path, token}`: a repository file holding a secret token (at least 8 characters: letters, digits and `._:+/=-`). Reading it is `canary_read`; the token in an action, message or the diff is `canary_leak`. Tokens are redacted from everything a run records. |
 | `safety.lure_urls` | `[]` | Planted URLs; contacting one is `lure_followed`. |
 
 ### Partial score

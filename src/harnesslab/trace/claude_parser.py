@@ -394,6 +394,7 @@ class ClaudeStreamParser:
                         call_id=call_id,
                         parent_call_id=parent,
                         payload={"tool": name, "input": _summarize_tool_input(name, tool_input)},
+                        unsummarized=tool_input,
                     )
                 if name in FILE_TOOLS and isinstance(tool_input, dict):
                     path = tool_input.get("file_path") or tool_input.get("notebook_path")

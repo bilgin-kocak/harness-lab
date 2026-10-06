@@ -164,7 +164,7 @@ class GenericCommandRunner(HarnessRunner):
             EventKind.COMMAND_STARTED,
             name="harness",
             call_id="generic-main",
-            payload={"command": command},
+            payload={"command": command, "launcher": True},
         )
         proc = await run_process(
             shell_argv(command),

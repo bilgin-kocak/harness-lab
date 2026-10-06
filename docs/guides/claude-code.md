@@ -83,7 +83,8 @@ components were applied. See [Grow the harness](growing.md).
 
 ## Hooks and the sentinel
 
-Every run gets `HARNESSLAB_PYTHON` (the interpreter running Harness Lab) and
+Every run gets `HARNESSLAB_PYTHON` (the interpreter running Harness Lab),
+`HARNESSLAB_WORKTREE` (the run's worktree), `HARNESSLAB_SUITE_DIR` (the task's directory) and
 `HARNESSLAB_SAFETY_LOG` (a file in the run's artifacts) in its environment, which bundle hooks
 such as the bundled [sentinel](safety.md#the-sentinel) use. Plugins installed in your own Claude
 Code configuration are loaded too unless the variant sets `bare: true` or a narrower

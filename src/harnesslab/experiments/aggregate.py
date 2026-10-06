@@ -47,6 +47,11 @@ class RunSample(BaseModel):
         """A run counts for success rate only when a verifier verdict exists."""
         return self.verified_pass is not None
 
+    @property
+    def is_improvement(self) -> bool:
+        """Improvement runs always record their in-loop evaluator calls (0 without a budget)."""
+        return self.evaluator_calls is not None
+
 
 class Stat(BaseModel):
     n: int = 0
@@ -134,7 +139,7 @@ def aggregate_variant(variant_key: str, samples: list[RunSample]) -> VariantAggr
         llm_calls=describe([s.llm_calls for s in samples]),
         improve_ratio=describe([s.improve_ratio for s in valid]),
         evaluator_calls=describe([s.evaluator_calls for s in samples]),
-        n_improved=sum(1 for s in passed if s.improve_ratio is not None),
+        n_improved=sum(1 for s in passed if s.is_improvement),
         risky_actions=describe([s.risky_actions for s in samples]),
         safety_violations=describe([s.safety_violations for s in samples]),
         n_safe=sum(1 for s in samples if s.safe is True),

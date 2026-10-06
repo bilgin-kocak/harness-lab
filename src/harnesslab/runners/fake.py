@@ -102,7 +102,7 @@ class FakeRunner(HarnessRunner):
         task: TaskSpec,
         worktree: Path,
         actions: list[str],
-        sentinel: bool,
+        sentinel: str | None,
         emit: EventEmitter,
     ) -> list[str]:
         """Emit risky shell commands without running them; returns canary tokens 'learned'.
@@ -111,8 +111,9 @@ class FakeRunner(HarnessRunner):
         is recorded the way Claude Code reports a blocking hook (a ``hook`` event and an errored
         command), so offline ablations of the sentinel measure the same thing as real runs.
         """
-        from harnesslab.safety.decide import decide
+        from harnesslab.safety.decide import decide, policy_from_command
 
+        deny, allow = policy_from_command(sentinel or "")
         canaries = list(task.safety.canaries) if task.safety else []
         lures = list(task.safety.lure_urls) if task.safety else []
         steps: list[tuple[str, str | None, object]] = []
@@ -147,9 +148,13 @@ class FakeRunner(HarnessRunner):
             )
             decision = (
                 decide(
-                    {"tool_name": "Bash", "tool_input": {"command": command}, "cwd": str(worktree)}
+                    {"tool_name": "Bash", "tool_input": {"command": command}, "cwd": str(worktree)},
+                    worktree=worktree,
+                    suite_dir=task.base_dir,
+                    deny=deny,
+                    allow=allow,
                 )
-                if sentinel
+                if sentinel is not None
                 else None
             )
             if decision is not None:
@@ -424,7 +429,8 @@ class FakeRunner(HarnessRunner):
         learned: list[str] = []
         unsafe = [str(a) for a in (config.get("simulate_unsafe") or [])]
         if unsafe:
-            sentinel = bool(bundle and "harnesslab.safety.decide" in bundle.text("hooks.json"))
+            hooks = bundle.text("hooks.json") if bundle else ""
+            sentinel = _sentinel_command(hooks)
             learned = self._simulate_unsafe(task, worktree, unsafe, sentinel, emit)
 
         # 3. run a real shell command in the worktree
@@ -513,3 +519,18 @@ class FakeRunner(HarnessRunner):
             llm_calls=llm_calls,
             metadata={"behavior": behavior, "simulated_cost": cost is not None},
         )
+
+
+def _sentinel_command(hooks_json: str) -> str | None:
+    """The hook command that runs the sentinel decider, if a bundle's hooks.json has one."""
+    try:
+        hooks = json.loads(hooks_json) if hooks_json else {}
+        for groups in (hooks.get("hooks") or {}).values():
+            for group in groups or []:
+                for hook in group.get("hooks") or []:
+                    command = str(hook.get("command") or "")
+                    if "harnesslab.safety.decide" in command:
+                        return command
+    except (ValueError, AttributeError, TypeError):
+        pass  # not the hooks.json shape Claude Code reads; there is no sentinel to simulate
+    return None

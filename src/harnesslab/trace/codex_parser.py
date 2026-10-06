@@ -304,6 +304,7 @@ class CodexStreamParser:
                     source=self.source,
                     call_id=item_id,
                     payload={"tool": name, "input": preview(item.get("arguments"))},
+                    unsummarized=item.get("arguments"),
                 )
             elif phase == "completed":
                 if item_id not in self._open:
@@ -313,6 +314,7 @@ class CodexStreamParser:
                         source=self.source,
                         call_id=item_id,
                         payload={"tool": name, "input": preview(item.get("arguments"))},
+                        unsummarized=item.get("arguments"),
                     )
                 duration = self._finish_duration(item_id)
                 error = item.get("error")

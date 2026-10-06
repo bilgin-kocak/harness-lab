@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 import fnmatch
 import os
 import shutil
@@ -55,6 +56,13 @@ class CommandVerifier(Verifier):
     def __init__(self, redactor: Redactor | None = None) -> None:
         self.redactor = redactor or default_redactor()
         self.score_verifier = ScoreVerifier(redactor=self.redactor)
+
+    def with_redactor(self, redactor: Redactor) -> CommandVerifier:
+        """The same verifier, redacting with ``redactor`` (e.g. one that knows a run's canaries)."""
+        clone = copy.copy(self)
+        clone.redactor = redactor
+        clone.score_verifier = ScoreVerifier(redactor=redactor)
+        return clone
 
     def inject_files(self, task: TaskSpec, ctx: SandboxContext) -> tuple[list[str], list[str]]:
         injected: list[str] = []

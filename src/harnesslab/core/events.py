@@ -119,12 +119,22 @@ class EventEmitter:
         parent_call_id: str | None = None,
         raw_metadata: dict[str, Any] | None = None,
         timestamp: datetime | None = None,
+        unsummarized: Any = None,
     ) -> Event:
-        if self.watch and payload:
-            blob = json.dumps(payload, default=str)
+        """Record one event. ``unsummarized`` is the full value a payload summarizes (a large tool
+        input, say): it is checked for watched literals and never stored."""
+        if self.watch and (payload or unsummarized is not None):
+            blob = json.dumps(payload or {}, default=str)
+            full = json.dumps(unsummarized, default=str) if unsummarized is not None else ""
             for label, literal in self.watch.items():
-                if literal in blob:
-                    keys = [k for k, v in payload.items() if literal in json.dumps(v, default=str)]
+                if literal in blob or literal in full:
+                    keys = [
+                        k
+                        for k, v in (payload or {}).items()
+                        if literal in json.dumps(v, default=str)
+                    ]
+                    if literal in full and "input" not in keys:
+                        keys.append("input")
                     self.watch_hits.append(
                         {
                             "sequence": self._sequence,

@@ -353,6 +353,11 @@ class ExperimentService:
         run_redactor = (
             Redactor(extra_literals=[c.token for c in canaries]) if canaries else self.redactor
         )
+        verifier = (
+            self.verifier.with_redactor(run_redactor)
+            if run_redactor is not self.redactor
+            else self.verifier
+        )
         emitter = EventEmitter(
             run_id,
             redactor=run_redactor,
@@ -424,13 +429,14 @@ class ExperimentService:
                             config=config,
                             ctx=ctx,
                             sandbox=self.sandbox,
-                            verifier=self.verifier,
+                            verifier=verifier,
                             emitter=emitter,
                             make_runner=lambda round_dir: self.runner_factory(
                                 config.runner, artifacts_dir=round_dir
                             ),
                             invoke=lambda r, t, c: self._invoke_runner(r, t, ctx, c, emitter),
                             artifacts_dir=artifacts_dir,
+                            redact=run_redactor.redact_text,
                         )
                     except ImproveBaselineError as exc:
                         raise SetupError(str(exc)) from exc
@@ -451,7 +457,7 @@ class ExperimentService:
 
                 # 4. independent verification
                 verifier_t0 = time.monotonic()
-                verifier_result = await self.verifier.verify(task, self.sandbox, ctx, changes)
+                verifier_result = await verifier.verify(task, self.sandbox, ctx, changes)
                 verifier_seconds = time.monotonic() - verifier_t0
                 self._write_verifier_artifacts(run_id, artifacts_dir, verifier_result)
                 emitter.emit(
@@ -496,6 +502,7 @@ class ExperimentService:
             error = run_redactor.redact_text(error or runner_result.error or "") or None
             if runner_result.final_message:
                 runner_result.final_message = run_redactor.redact_text(runner_result.final_message)
+            runner_result.metadata = run_redactor.redact_value(runner_result.metadata)
             emitter.emit(
                 EventKind.RUN_FINISHED,
                 duration_ms=int(wall_seconds * 1000),
@@ -741,7 +748,9 @@ def _apply_improvement(
     metrics.improve_baseline = result.baseline
     metrics.improve_best = result.best
     metrics.improve_final = result.final
-    metrics.improve_ratio = result.ratio
+    # How much better a *correct* final state is; a broken one has no improvement to report.
+    passed = verifier_result is not None and verifier_result.passed is True
+    metrics.improve_ratio = result.ratio if passed else None
     metrics.improve_progress = result.progress
     metrics.improve_rounds = len(result.rounds)
     metrics.improve_curve = result.curve

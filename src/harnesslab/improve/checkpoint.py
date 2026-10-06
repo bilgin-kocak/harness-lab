@@ -1,8 +1,10 @@
 """Checkpoints of an agent's worktree, so a worse round can be reverted.
 
 A checkpoint is a commit built from a temporary index (``git add -A`` honours ``.gitignore``) with
-the base commit as parent. Taking one never touches the agent's HEAD or index. Restoring one is a
-hard reset plus ``git clean -fd``, which keeps ignored and excluded files such as the evaluator.
+the base commit as parent. Taking one never touches the agent's HEAD or index. A ref anchors the
+best checkpoint, so ``git gc`` run by any agent on the shared repository cannot prune it. Restoring
+one is a hard reset plus ``git clean -fd``, which keeps ignored and excluded files such as the
+evaluator (and, by the same rule, ignored files a reverted round created).
 """
 
 from __future__ import annotations
@@ -49,6 +51,15 @@ def snapshot(worktree: Path, parent: str, message: str) -> str:
     finally:
         if os.path.exists(index):
             os.unlink(index)
+
+
+def anchor(worktree: Path, ref: str, commit: str) -> None:
+    """Point ``ref`` at ``commit`` so the checkpoint stays reachable (best effort)."""
+    run_git(["update-ref", ref, commit], cwd=worktree, check=False, deterministic=True)
+
+
+def drop_anchor(worktree: Path, ref: str) -> None:
+    run_git(["update-ref", "-d", ref], cwd=worktree, check=False, deterministic=True)
 
 
 def restore(worktree: Path, commit: str) -> None:

@@ -65,8 +65,18 @@ def test_improvement_math():
     assert (
         improvement_ratio(0, 5, "minimize") is None and improvement_ratio(-1, 5, "maximize") is None
     )
-    assert improvement_score(4.0) == 0.75 and improvement_score(1.0) == 0.0
-    assert improvement_score(0.5) == 0.0 and improvement_score(None) == 0.0
+    assert improvement_ratio(100, 0, "minimize") is None  # infinitely better: no finite ratio
+    assert improvement_score(100, 25, "minimize") == 0.75
+    assert improvement_score(100, 100, "minimize") == 0.0
+    assert improvement_score(100, 150, "minimize") == 0.0
+    assert improvement_score(100, 0, "minimize") == 1.0  # reaching zero is a full score
+    assert (
+        improvement_score(10, 40, "maximize") == 0.75 and improvement_score(0, 5, "maximize") == 1.0
+    )
+    assert (
+        improvement_score(10, 5, "maximize") == 0.0
+        and improvement_score(10, None, "minimize") == 0.0
+    )
     assert progress(100, 60, 20) == 0.5 and progress(10, 30, 50) == 0.5
     assert progress(100, 60, None) is None and progress(100, 60, 100) is None
 
@@ -361,3 +371,260 @@ def test_task_spec_rejects_unknown_improve_keys():
             verification={"command": "true"},
             improve={"objective": {"command": "x"}, "roundz": 2},
         )
+
+
+# -- review fixes ---------------------------------------------------------------------------
+
+
+class ScriptedRunner(HarnessRunner):
+    """Runs one scripted step against the worktree per round."""
+
+    name = "scripted"
+    steps: list = []
+
+    async def run(self, task, worktree, config, emit):
+        step = ScriptedRunner.steps[config.improve_round - 1]
+        result = step(worktree) if step else None
+        emit.emit(EventKind.ASSISTANT_MESSAGE, payload={"text": f"round {config.improve_round}"})
+        return result or RunnerResult(status=RunStatus.COMPLETED, exit_code=0, llm_calls=1)
+
+
+def _score(value):
+    def step(worktree: Path):
+        (worktree / "score.txt").write_text(f"{value}\n")
+
+    return step
+
+
+def _score_task(rounds: int, *, baseline: str = "5", direction: str = "minimize", **extra):
+    _, tasks = load_suite(IMPROVE_SUITE)
+    spec = tasks[0].improve
+    objective = spec.objective.model_copy(
+        update={
+            "command": f"cat score.txt 2>/dev/null || echo {baseline}",
+            "inject": [],
+            "target": None,
+            "unit": "points",
+            "direction": direction,
+        }
+    )
+    improve = spec.model_copy(
+        update={
+            "objective": objective,
+            "rounds": rounds,
+            "evaluator": spec.evaluator.model_copy(update={"budget": 0}),
+        }
+    )
+    return {"improve": improve, **extra}
+
+
+async def _scripted(settings, db, steps, **task_kwargs):
+    ScriptedRunner.steps = steps
+    variant = VariantSpec(id="scripted", runner="scripted")
+    return await _run(
+        settings,
+        db,
+        [variant],
+        task_update=_score_task(len(steps), **task_kwargs),
+        factory=lambda name, **kwargs: ScriptedRunner(**kwargs),
+    )
+
+
+async def test_reaching_zero_is_a_full_score_and_counts_as_improved(
+    settings: Settings, db: Database
+):
+    service, outcome = await _scripted(settings, db, [_score(0)])
+    run = outcome.runs[0]
+    m = run.metrics
+    assert run.outcome == Outcome.PASS and m.improve_final == 0 and m.improve_baseline == 5
+    assert m.verified_score == 1.0 and m.improve_ratio is None
+    exp = service.repo.get_experiment(outcome.experiment_id)
+    samples = samples_from_rows(
+        exp.runs, {t.id: t for t in exp.tasks}, {v.id: v for v in exp.variants}
+    )
+    assert aggregate_variants(samples, ["scripted"])["scripted"].n_improved == 1
+
+
+async def test_maximizing_from_zero_is_allowed(settings: Settings, db: Database):
+    _, outcome = await _scripted(settings, db, [_score(7)], baseline="0", direction="maximize")
+    run = outcome.runs[0]
+    assert run.outcome == Outcome.PASS and run.metrics.verified_score == 1.0
+
+
+async def test_a_baseline_that_cannot_be_improved_as_a_ratio_is_rejected(
+    settings: Settings, db: Database
+):
+    for baseline, words in (("0", "already 0"), ("-3", "negative")):
+        _, outcome = await _scripted(settings, db, [_score(1)], baseline=baseline)
+        run = outcome.runs[0]
+        assert run.outcome == Outcome.NOT_VERIFIED and words in (run.error or ""), run.error
+
+
+async def test_a_failed_revert_keeps_every_rounds_data(
+    settings: Settings, db: Database, monkeypatch
+):
+    from harnesslab.improve import protocol
+
+    def broken_restore(worktree, commit):
+        raise RuntimeError("Unable to create index.lock: File exists")
+
+    monkeypatch.setattr(protocol, "restore", broken_restore)
+    _, outcome = await _scripted(settings, db, [_score(3), _score(4), _score(1)])
+    run = outcome.runs[0]
+    m = run.metrics
+    assert run.status == RunStatus.CRASHED and "index.lock" in (run.error or "")
+    assert m.llm_calls == 2 and m.improve_rounds == 2  # the protocol stopped after round 2
+    assert m.improve_best == 3 and m.improve_final == 4  # the worktree kept round 2's state
+    assert "index.lock" in (m.improve_history[1]["note"] or "")
+    assert run.outcome == Outcome.PASS  # that state is correct and still beats the baseline
+
+
+async def test_checkpoints_survive_git_gc(settings: Settings, db: Database):
+    def gc_then_worse(worktree: Path):
+        _score(4)(worktree)
+        subprocess.run(
+            ["git", "gc", "--prune=now", "--quiet"], cwd=worktree, check=True, capture_output=True
+        )
+
+    _, outcome = await _scripted(settings, db, [_score(3), gc_then_worse])
+    run = outcome.runs[0]
+    assert run.status == RunStatus.COMPLETED, run.error
+    assert run.metrics.improve_final == 3 and run.outcome == Outcome.PASS
+
+
+async def test_a_round_that_cannot_be_evaluated_is_reverted(
+    settings: Settings, db: Database, monkeypatch
+):
+    from harnesslab.improve import protocol
+
+    real_copy = protocol._fresh_copy
+
+    def copy(source: Path, dest: Path) -> None:
+        if (source / "unreadable").exists():
+            raise PermissionError("unreadable")
+        real_copy(source, dest)
+
+    def unreadable(worktree: Path):
+        _score(1)(worktree)
+        (worktree / "unreadable").write_text("x")
+
+    monkeypatch.setattr(protocol, "_fresh_copy", copy)
+    _, outcome = await _scripted(settings, db, [_score(3), unreadable, _score(2)])
+    run = outcome.runs[0]
+    history = run.metrics.improve_history
+    assert run.status == RunStatus.COMPLETED, run.error
+    assert history[1]["gate_passed"] is None and history[1]["reverted"] is True
+    assert history[1]["note"] and run.metrics.improve_final == 2
+
+
+def test_evaluation_copies_skip_named_pipes(tmp_path: Path):
+    import os
+
+    from harnesslab.improve.protocol import _fresh_copy
+
+    source = tmp_path / "src"
+    source.mkdir()
+    (source / "code.py").write_text("x = 1\n")
+    os.mkfifo(source / "pipe")
+    _fresh_copy(source, tmp_path / "copy")
+    assert (tmp_path / "copy" / "code.py").exists() and not (tmp_path / "copy" / "pipe").exists()
+
+
+def test_round_history_describes_every_kind_of_round():
+    from harnesslab.improve.protocol import _describe
+
+    unevaluated = RoundRecord(round=1, status="completed", gate_passed=None, reverted=True)
+    assert "could not be evaluated" in _describe(unevaluated, "", True)
+    unavailable = RoundRecord(round=1, status="unavailable")
+    assert "did not run" in _describe(unavailable, "", True)
+    equal = RoundRecord(round=1, status="completed", value=5, gate_passed=True, reverted=True)
+    assert "reverted" in _describe(equal, "", True)
+
+
+async def test_equal_rounds_are_reported_as_reverted(settings: Settings, db: Database):
+    _, outcome = await _scripted(settings, db, [_score(3), _score(3)])
+    history = outcome.runs[0].metrics.improve_history
+    assert history[1]["accepted"] is False and history[1]["reverted"] is True
+
+
+async def test_round_errors_are_redacted(settings: Settings, db: Database):
+    from harnesslab.core.models import CanarySpec, SafetySpec
+
+    token = "HLCANARY-roundnote-0001"
+
+    def leaky(worktree: Path):
+        return RunnerResult(
+            status=RunStatus.CRASHED, error=f"boom {token}", llm_calls=1, metadata={"saw": token}
+        )
+
+    service, outcome = await _scripted(
+        settings,
+        db,
+        [leaky, leaky],
+        safety=SafetySpec(canaries=[CanarySpec(path="secret.txt", token=token)]),
+    )
+    run = service.repo.get_run(outcome.runs[0].run_id)
+    blob = json.dumps([run.runner_metadata_json, run.metrics_json, run.error_message], default=str)
+    assert "boom" in blob and token not in blob
+    for path in (settings.home / "artifacts").rglob("*"):
+        if path.is_file():
+            assert token not in path.read_text(errors="replace"), path
+
+
+def test_trace_counts_only_evaluator_runs():
+    from harnesslab.core.events import EventEmitter
+    from harnesslab.improve.protocol import _trace_evaluator_calls
+
+    e = EventEmitter("r")
+    for command in (
+        f"cat {EVAL_DIR}/evaluate.py",
+        f"python {EVAL_DIR}/evaluate.py",
+        f"cd . && python3 ./{EVAL_DIR}/evaluate.py",
+        f"sed -n 1,5p {EVAL_DIR}/config.json",
+    ):
+        e.emit(EventKind.COMMAND_STARTED, payload={"command": command})
+    assert _trace_evaluator_calls(e, 0) == 2
+
+
+def test_the_evaluator_hides_suite_paths_and_reserves_a_call_before_measuring(tmp_path: Path):
+    work = tmp_path / "work"
+    work.mkdir()
+    objective = tmp_path / "suite" / "bench.py"
+    objective.parent.mkdir()
+    objective.write_text("print(3)\n")
+    install_evaluator(
+        work,
+        command=f"{sys.executable} .obj/bench.py",
+        inject=[(objective, ".obj/bench.py")],
+        budget=1,
+        repeats=1,
+        timeout=30,
+        unit=None,
+        direction="minimize",
+    )
+    config = (work / EVAL_DIR / "config.json").read_text()
+    assert str(tmp_path / "suite") not in config
+    objective.unlink()  # the evaluator no longer depends on the suite directory
+    first = subprocess.run(
+        [sys.executable, str(work / EVAL_DIR / "evaluate.py")],
+        cwd=work,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert first.returncode == 0 and "objective: 3" in first.stdout
+    assert count_calls(work) == 1
+
+
+async def test_an_unavailable_round_stops_the_rounds_and_keeps_the_best(
+    settings: Settings, db: Database
+):
+    def unavailable(worktree: Path):
+        return RunnerResult(status=RunStatus.UNAVAILABLE, error="claude: command not found")
+
+    _, outcome = await _scripted(settings, db, [_score(3), unavailable, _score(1)])
+    run = outcome.runs[0]
+    history = run.metrics.improve_history
+    assert [h["status"] for h in history] == ["completed", "unavailable"]
+    assert run.status == RunStatus.UNAVAILABLE and run.metrics.improve_final == 3
+    assert run.metrics.llm_calls == 1

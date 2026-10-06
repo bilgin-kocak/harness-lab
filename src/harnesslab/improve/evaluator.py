@@ -1,17 +1,21 @@
 """The in-loop evaluator an agent may call during an improvement round.
 
 Installed into the agent's worktree as ``.harnesslab_eval/evaluate.py`` (excluded from git, so it
-never shows up in the agent's diff). Each call copies the working tree into a scratch directory,
-copies in the objective's hidden files, measures the objective there and prints the value, so the
-objective's files never land in the agent's own worktree. Calls are logged and refused once the
-round's budget is spent. The budget is cooperative: an agent can read the configuration and run
-the measurement itself, which shows up in the trace like any other command.
+never shows up in the agent's diff), with a copy of the objective's files under
+``.harnesslab_eval/objective/``: an agent that may measure the objective can also read how it is
+measured, but it never learns where the suite (and its hidden tests) lives. Each call copies the
+working tree into a scratch directory, copies the objective's files in, measures the objective
+there and prints the value, so they never land in the code under test. A call is logged before it
+measures, so a call that is killed still counts, and calls are refused once the round's budget is
+spent. The budget is cooperative: an agent can run the measurement itself, which shows up in the
+trace like any other command.
 """
 
 from __future__ import annotations
 
 import inspect
 import json
+import shutil
 from pathlib import Path
 
 from harnesslab.improve.objective import parse_value
@@ -27,7 +31,9 @@ the correctness checks. Each call counts against this round's budget.
 """
 
 import json
+import os
 import shutil
+import stat
 import statistics
 import subprocess
 import sys
@@ -40,6 +46,12 @@ LOG = HERE / "{log_name}"
 
 
 {parse_source}
+
+def copy_regular(source, dest):
+    # Like git, skip named pipes, sockets and devices.
+    if stat.S_ISREG(os.lstat(source).st_mode):
+        shutil.copy2(source, dest)
+
 
 def measure(work):
     values = []
@@ -64,11 +76,19 @@ def main():
     if used >= budget:
         print("evaluator budget exhausted: %d call(s) per round" % budget, file=sys.stderr)
         return 3
+    with LOG.open("a", encoding="utf-8") as fh:
+        fh.write(json.dumps({{"call": used + 1}}) + "\\n")
     work = HERE / ("work-%d" % (used + 1))
     shutil.rmtree(work, ignore_errors=True)
-    shutil.copytree(ROOT, work, ignore=shutil.ignore_patterns(".git", HERE.name))
+    shutil.copytree(
+        ROOT,
+        work,
+        symlinks=True,
+        ignore=shutil.ignore_patterns(".git", HERE.name),
+        copy_function=copy_regular,
+    )
     for item in CONFIG["inject"]:
-        source, dest = Path(item["source"]), work / item["dest"]
+        source, dest = HERE / item["source"], work / item["dest"]
         dest.parent.mkdir(parents=True, exist_ok=True)
         if source.is_dir():
             shutil.copytree(source, dest, dirs_exist_ok=True)
@@ -78,8 +98,6 @@ def main():
         value = measure(work)
     finally:
         shutil.rmtree(work, ignore_errors=True)
-    with LOG.open("a", encoding="utf-8") as fh:
-        fh.write(json.dumps({{"call": used + 1, "value": value}}) + "\\n")
     left = budget - used - 1
     better = "lower" if CONFIG["direction"] == "minimize" else "higher"
     if value is None:
@@ -106,12 +124,22 @@ def install_evaluator(
     unit: str | None,
     direction: str,
 ) -> Path:
-    """Write the evaluator script and its configuration; returns the script path."""
+    """Write the evaluator script, its configuration and the objective's files; returns the script."""
     directory = worktree / EVAL_DIR
     directory.mkdir(parents=True, exist_ok=True)
+    files: list[dict[str, str]] = []
+    for index, (source, dest) in enumerate(inject):
+        copy = Path("objective") / str(index) / source.name
+        target = directory / copy
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if source.is_dir():
+            shutil.copytree(source, target, dirs_exist_ok=True)
+        else:
+            shutil.copyfile(source, target)
+        files.append({"source": copy.as_posix(), "dest": dest})
     config = {
         "command": command,
-        "inject": [{"source": str(source), "dest": dest} for source, dest in inject],
+        "inject": files,
         "budget": budget,
         "repeats": repeats,
         "timeout": timeout,

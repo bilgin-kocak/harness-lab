@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"${HARNESSLAB_PYTHON:-python3}\" -m harnesslab.safety.decide"
+            "command": "\"${HARNESSLAB_PYTHON:-python3}\" -I -m harnesslab.safety.decide"
           }
         ]
       }

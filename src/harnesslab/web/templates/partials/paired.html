@@ -9,7 +9,7 @@
   <table class="data compact">
     <thead><tr><th>per-task difference (B − A)</th><th class="num">mean</th><th class="num">{{ ((p.pass_rate_diff.level if p.pass_rate_diff else 0.95) * 100)|round|int }}% interval</th><th class="num">P(&gt; 0)</th></tr></thead>
     <tbody>
-    {% for label, iv, unit in [("pass rate", p.pass_rate_diff, "pts"), (p.cost_kind, p.cost_diff, ""), ("llm_calls", p.llm_calls_diff, "")] %}
+    {% for label, iv, unit in [("pass rate", p.pass_rate_diff, "pts"), (p.cost_kind, p.cost_diff, ""), ("llm_calls", p.llm_calls_diff, ""), ("improvement ratio", p.improve_ratio_diff, "")] if iv is not none or label != "improvement ratio" %}
       <tr>
         <td>{{ label }}</td>
         {% if iv %}

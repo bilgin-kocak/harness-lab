@@ -51,6 +51,8 @@ class PairedTask(BaseModel):
     b_cost: float | None = None
     a_llm_calls: float | None = None
     b_llm_calls: float | None = None
+    a_improve_ratio: float | None = None
+    b_improve_ratio: float | None = None
 
 
 class PairedComparison(BaseModel):
@@ -67,6 +69,7 @@ class PairedComparison(BaseModel):
     cost_kind: str
     cost_diff: Interval | None
     llm_calls_diff: Interval | None
+    improve_ratio_diff: Interval | None = None  # improvement tasks: B's ratio minus A's
     min_tasks: int
     verdict: Verdict
     tasks: list[PairedTask]
@@ -135,6 +138,8 @@ def paired_tasks(
                 b_cost=_mean([_cost(r, kind) for r in runs_b]),
                 a_llm_calls=_mean([r.llm_calls for r in runs_a]),
                 b_llm_calls=_mean([r.llm_calls for r in runs_b]),
+                a_improve_ratio=_mean([r.improve_ratio for r in runs_a]),
+                b_improve_ratio=_mean([r.improve_ratio for r in runs_b]),
             )
         )
     return out
@@ -210,6 +215,11 @@ def paired_comparison(
         for t in tasks
         if t.a_llm_calls is not None and t.b_llm_calls is not None
     ]
+    improve_diffs = [
+        t.b_improve_ratio - t.a_improve_ratio
+        for t in tasks
+        if t.a_improve_ratio is not None and t.b_improve_ratio is not None
+    ]
     wins = sum(1 for d in rate_diffs if d > 0)
     losses = sum(1 for d in rate_diffs if d < 0)
     pass_interval = bootstrap_mean_diff(rate_diffs, resamples=resamples, seed=seed, level=level)
@@ -225,6 +235,9 @@ def paired_comparison(
         cost_kind=kind,
         cost_diff=bootstrap_mean_diff(cost_diffs, resamples=resamples, seed=seed, level=level),
         llm_calls_diff=bootstrap_mean_diff(call_diffs, resamples=resamples, seed=seed, level=level),
+        improve_ratio_diff=bootstrap_mean_diff(
+            improve_diffs, resamples=resamples, seed=seed, level=level
+        ),
         min_tasks=min_tasks,
         verdict=verdict_for(pass_interval, len(tasks), min_tasks),
         tasks=tasks,

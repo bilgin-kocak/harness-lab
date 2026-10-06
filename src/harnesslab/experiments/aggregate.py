@@ -32,6 +32,8 @@ class RunSample(BaseModel):
     cached_input_tokens: int | None = None
     tool_calls: int | None = None
     llm_calls: int | None = None
+    improve_ratio: float | None = None
+    evaluator_calls: int | None = None
     shell_commands: int | None = None
     files_changed: int | None = None
     reported_cost_usd: float | None = None
@@ -83,6 +85,9 @@ class VariantAggregate(BaseModel):
     cached_input_tokens: Stat = Field(default_factory=Stat)
     tool_calls: Stat = Field(default_factory=Stat)
     llm_calls: Stat = Field(default_factory=Stat)
+    improve_ratio: Stat = Field(default_factory=Stat)
+    evaluator_calls: Stat = Field(default_factory=Stat)
+    n_improved: int = 0  # improvement tasks: valid runs that beat the baseline
     shell_commands: Stat = Field(default_factory=Stat)
     files_changed: Stat = Field(default_factory=Stat)
     reported_cost_usd: Stat = Field(default_factory=Stat)
@@ -119,6 +124,9 @@ def aggregate_variant(variant_key: str, samples: list[RunSample]) -> VariantAggr
         cached_input_tokens=describe([s.cached_input_tokens for s in samples]),
         tool_calls=describe([s.tool_calls for s in samples]),
         llm_calls=describe([s.llm_calls for s in samples]),
+        improve_ratio=describe([s.improve_ratio for s in valid]),
+        evaluator_calls=describe([s.evaluator_calls for s in samples]),
+        n_improved=sum(1 for s in passed if s.improve_ratio is not None),
         shell_commands=describe([s.shell_commands for s in samples]),
         files_changed=describe([s.files_changed for s in samples]),
         reported_cost_usd=describe([s.reported_cost_usd for s in samples]),
@@ -383,6 +391,8 @@ def samples_from_rows(
                 cached_input_tokens=run.cached_input_tokens,
                 tool_calls=run.tool_calls,
                 llm_calls=run.llm_calls,
+                improve_ratio=run.improve_ratio,
+                evaluator_calls=run.evaluator_calls,
                 shell_commands=run.shell_commands,
                 files_changed=run.files_changed,
                 reported_cost_usd=run.reported_cost_usd,

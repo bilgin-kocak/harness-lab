@@ -17,6 +17,11 @@ Options (all optional)::
     simulate_cost_usd_per_1k_tokens: float   report a *simulated* cost (clearly labelled)
     simulate_token_multiplier: float         scale the deterministic token usage (sweep demos)
     action_policy: str                       accepted for parity with real adapters (recorded, no effect)
+    improve_break_rounds: [round numbers]    improvement tasks: break the code in these rounds
+    eval_calls: int                          improvement tasks: call the in-loop evaluator n times per round
+
+On an improvement task, ``solve`` applies the reference solution's ``improve_overlays`` one per
+round (round 1 gets the first overlay) and changes nothing once they run out.
 
 A harness bundle's ``fake.yaml`` can also simulate harness effects: ``solve_tasks`` / ``fail_tasks``
 override the behaviour per task, ``component_solves: {skills/<name>: [task ids]}`` solves tasks only
@@ -28,6 +33,7 @@ from __future__ import annotations
 
 import asyncio
 import shutil
+import sys
 from pathlib import Path
 
 from harnesslab.core.events import EventEmitter, EventKind
@@ -66,10 +72,19 @@ class FakeRunner(HarnessRunner):
 
     # -- helpers -------------------------------------------------------------
     @staticmethod
-    def _overlay_dir(task: TaskSpec, behavior: str) -> Path | None:
+    def _overlay_dir(
+        task: TaskSpec, behavior: str, improve_round: int | None = None
+    ) -> Path | None:
         ref = task.reference_solution
         if ref is None:
             return None
+        if task.improve is not None and behavior == "solve":
+            index = (improve_round or 1) - 1
+            return (
+                task.resolve(ref.improve_overlays[index])
+                if index < len(ref.improve_overlays)
+                else None
+            )
         if behavior == "partial":
             if ref.partial_overlay:
                 return task.resolve(ref.partial_overlay)
@@ -146,6 +161,12 @@ class FakeRunner(HarnessRunner):
         for component, task_ids in (fake_cfg.get("component_solves") or {}).items():
             if has_component(str(component)) and task.id in set(task_ids or []):
                 behavior = "solve"
+        if (
+            task.improve is not None
+            and behavior == "solve"
+            and config.improve_round in set(config.get("improve_break_rounds") or [])
+        ):
+            behavior = "fail"
         model = config.model or FAKE_MODEL
 
         emit.emit(
@@ -201,9 +222,15 @@ class FakeRunner(HarnessRunner):
         # 2. edit files
         written = 0
         if behavior in ("solve", "partial"):
-            overlay = self._overlay_dir(task, behavior)
+            overlay = self._overlay_dir(task, behavior, config.improve_round)
             if overlay is not None and overlay.exists():
                 written = self._apply_overlay(overlay, worktree, emit, delay)
+            elif task.improve is not None:
+                emit.emit(
+                    EventKind.SYSTEM,
+                    name="no_improvement_step",
+                    payload={"round": config.improve_round},
+                )
             else:
                 emit.emit(
                     EventKind.SYSTEM,
@@ -218,7 +245,9 @@ class FakeRunner(HarnessRunner):
                 (
                     worktree / p
                     for p in iter_fixture_files(worktree)
-                    if p.suffix == ".py" and "test" not in p.as_posix()
+                    if p.suffix == ".py"
+                    and "test" not in p.as_posix()
+                    and not p.parts[0].startswith(".")
                 ),
                 None,
             )
@@ -243,6 +272,37 @@ class FakeRunner(HarnessRunner):
                     payload={"tool": "edit_file", "status": "completed"},
                 )
                 written = 64
+
+        # 2b. improvement tasks: use the in-loop evaluator if one is installed
+        evaluator = worktree / ".harnesslab_eval" / "evaluate.py"
+        for index in range(int(config.get("eval_calls", 0) or 0)):
+            if not evaluator.exists():
+                break
+            call_id = f"fake-eval-{index}"
+            eval_command = "python .harnesslab_eval/evaluate.py"
+            emit.emit(
+                EventKind.COMMAND_STARTED,
+                name="shell",
+                call_id=call_id,
+                payload={"command": eval_command},
+            )
+            proc = await run_process(
+                [sys.executable, str(evaluator)],
+                cwd=worktree,
+                env=build_child_env(include_auth=False),
+                timeout=300,
+            )
+            emit.emit(
+                EventKind.COMMAND_FINISHED,
+                name="shell",
+                call_id=call_id,
+                duration_ms=proc.duration_ms,
+                payload={
+                    "command": eval_command,
+                    "exit_code": proc.exit_code,
+                    "output": (proc.stdout + proc.stderr_tail)[-OUTPUT_PREVIEW:],
+                },
+            )
 
         # 3. run a real shell command in the worktree
         command = config.get("command")

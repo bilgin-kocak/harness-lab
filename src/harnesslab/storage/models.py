@@ -160,6 +160,8 @@ class RunRow(Base):
     estimated_cost_usd: Mapped[float | None] = mapped_column(Float, nullable=True)
     tool_calls: Mapped[int | None] = mapped_column(Integer, nullable=True)
     llm_calls: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    improve_ratio: Mapped[float | None] = mapped_column(Float, nullable=True)
+    evaluator_calls: Mapped[int | None] = mapped_column(Integer, nullable=True)
     shell_commands: Mapped[int | None] = mapped_column(Integer, nullable=True)
     files_changed: Mapped[int | None] = mapped_column(Integer, nullable=True)
     lines_added: Mapped[int | None] = mapped_column(Integer, nullable=True)

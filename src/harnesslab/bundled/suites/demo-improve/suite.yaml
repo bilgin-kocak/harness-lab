@@ -1,0 +1,47 @@
+name: demo-improve
+description: >
+  Improvement tasks: the repository already passes its tests and the agent gets several rounds
+  to make a measured objective better without breaking anything. Harness Lab measures the
+  baseline, evaluates every round with the hidden tests, keeps the best checkpoint and reverts
+  worse rounds. See the "Improvement tasks" guide.
+
+tasks:
+  - tasks/fewer-key-operations.yaml
+
+variants:
+  - id: fake-improver
+    runner: fake
+    description: Fake agent that applies one scripted improvement per round.
+    behavior: solve
+
+  - id: fake-noop
+    runner: fake
+    description: Fake agent that changes nothing (no improvement, control).
+    behavior: noop
+
+  - id: fake-breaker
+    runner: fake
+    description: Fake agent whose first round breaks the code; that round is reverted.
+    behavior: solve
+    improve_break_rounds: [1]
+
+  - id: fake-improver-evaluating
+    runner: fake
+    description: Fake improver that calls the in-loop evaluator twice per round.
+    behavior: solve
+    eval_calls: 2
+
+  - id: claude-evaluator
+    runner: claude
+    model: null
+    description: Claude Code with the task's in-loop evaluator budget.
+    max_turns: 30
+    permission_mode: acceptEdits
+
+  - id: claude-blind
+    runner: claude
+    model: null
+    description: Claude Code with no in-loop evaluator.
+    max_turns: 30
+    permission_mode: acceptEdits
+    improve_eval_budget: 0

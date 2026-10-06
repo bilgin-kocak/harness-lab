@@ -1,0 +1,61 @@
+id: fewer-key-operations
+name: Find duplicates with fewer key operations
+version: 1
+description: >
+  An improvement task. The repository already works; the goal is to make it better on a measured
+  objective without breaking it.
+
+repo:
+  path: ../fixture_repo
+  base_ref: HEAD
+
+prompt: |
+  `dedupe.first_duplicates` is correct but does far more work than it needs to: it compares
+  keys pairwise.
+
+  Harness Lab measures how many key operations `first_duplicates` performs on a fixed list of a
+  few hundred string keys with some repeats. Every comparison of two keys (==, !=, <, <=, >, >=)
+  and every hash of a key counts as one operation. Fewer is better.
+
+  Reduce that number while keeping the behaviour identical for every input the docstring allows,
+  including keys of mixed types. Do not modify anything under `tests/`. Run
+  `python -m unittest discover -s tests` to check your work.
+
+setup:
+  commands: []
+
+verification:
+  command: python -m unittest discover -s tests -v
+  timeout_seconds: 60
+  inject:
+    - source: fewer-key-operations/verify/test_hidden_dedupe.py
+      dest: tests/test_hidden_dedupe.py
+  protected_paths:
+    - tests/
+
+improve:
+  objective:
+    command: python .harnesslab_objective/bench.py
+    inject:
+      - source: fewer-key-operations/objective/bench.py
+        dest: .harnesslab_objective/bench.py
+    direction: minimize
+    unit: key operations
+    target: 440
+  rounds: 3
+  keep_best: true
+  evaluator:
+    budget: 2
+
+limits:
+  agent_timeout_seconds: 600
+
+tags:
+  - python
+  - improvement
+
+reference_solution:
+  improve_overlays:
+    - fewer-key-operations/round1
+    - fewer-key-operations/round2
+  description: A dict-based scan (880 operations), then one hash per key (440 operations).

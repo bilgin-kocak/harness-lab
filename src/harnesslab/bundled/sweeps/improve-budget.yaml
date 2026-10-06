@@ -1,0 +1,21 @@
+# Does in-loop evaluator budget matter more than the model? (after SPEEDRUNBENCH)
+# WARNING: real API usage: 2 models x 3 budgets x 1 task x 3 rounds x 2 repetitions.
+name: improve-budget
+suite: demo-improve
+base_variant:
+  runner: claude
+  max_turns: 30
+  permission_mode: acceptEdits
+factors:
+  model: [claude-haiku-4-5, claude-sonnet-5]
+  evaluator:
+    none: { improve_eval_budget: 0 }
+    few: { improve_eval_budget: 2 }
+    many: { improve_eval_budget: 10 }
+repetitions: 2
+parallelism: 2
+baseline: { model: claude-haiku-4-5, evaluator: none }
+objective:
+  require: { min_pass_rate: 0.5 }
+  minimize: cost
+  tie_breaker: wall_time_seconds

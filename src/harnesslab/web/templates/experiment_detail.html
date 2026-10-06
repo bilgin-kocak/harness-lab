@@ -88,6 +88,10 @@
       <tr><td>median files changed</td>{% for vk in variant_keys %}<td class="num">{{ aggregates[vk].files_changed.median|int }}</td>{% endfor %}</tr>
       <tr><td>median reported cost <span class="muted">(n with cost)</span></td>{% for vk in variant_keys %}{% set a = aggregates[vk] %}<td class="num">{{ a.reported_cost_usd.median|cost }} <span class="muted">({{ a.reported_cost_usd.n }})</span></td>{% endfor %}</tr>
       <tr><td>median estimated cost <span class="muted">(pricing.yaml)</span></td>{% for vk in variant_keys %}{% set a = aggregates[vk] %}<td class="num">{{ a.estimated_cost_usd.median|cost }} <span class="muted">({{ a.estimated_cost_usd.n }})</span></td>{% endfor %}</tr>
+      {% if aggregates.values()|selectattr("improve_ratio.n")|list %}
+      <tr><td>median improvement <span class="muted">(× baseline)</span></td>{% for vk in variant_keys %}<td class="num">{% if aggregates[vk].improve_ratio.median is not none %}{{ aggregates[vk].improve_ratio.median|num(2) }}×{% else %}—{% endif %}</td>{% endfor %}</tr>
+      <tr><td>median evaluator calls</td>{% for vk in variant_keys %}<td class="num">{{ aggregates[vk].evaluator_calls.median|int }}</td>{% endfor %}</tr>
+      {% endif %}
       <tr><td>infrastructure failures</td>{% for vk in variant_keys %}<td class="num">{{ aggregates[vk].n_infra_failures }}</td>{% endfor %}</tr>
     </tbody>
   </table>

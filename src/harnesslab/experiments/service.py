@@ -49,6 +49,7 @@ from harnesslab.core.pricing import PricingTable
 from harnesslab.execution.git import git_version, head_commit
 from harnesslab.execution.sandbox import ExecutionSandbox, LocalWorktreeSandbox, SandboxContext
 from harnesslab.harness.bundle import HarnessBundle
+from harnesslab.improve.protocol import ImproveBaselineError, ImproveResult, run_improvement
 from harnesslab.runners.base import HarnessRunner, create_runner
 from harnesslab.storage.database import Database
 from harnesslab.storage.repository import Repository
@@ -359,6 +360,7 @@ class ExperimentService:
         verifier_seconds: float | None = None
         interrupted = False
         wall_seconds: float | None = None
+        improve_result: ImproveResult | None = None
 
         try:
             try:
@@ -402,31 +404,31 @@ class ExperimentService:
                     },
                 )
 
-                # 2. the agent
+                # 2. the agent (one invocation, or rounds for an improvement task)
                 agent_t0 = time.monotonic()
-                try:
-                    runner_result = await asyncio.wait_for(
-                        runner.run(task, ctx.workdir, config, emitter),
-                        timeout=task.limits.agent_timeout_seconds + AGENT_TIMEOUT_GRACE_SECONDS,
+                if task.improve is not None:
+                    try:
+                        runner_result, improve_result = await run_improvement(
+                            task=task,
+                            config=config,
+                            ctx=ctx,
+                            sandbox=self.sandbox,
+                            verifier=self.verifier,
+                            emitter=emitter,
+                            make_runner=lambda round_dir: self.runner_factory(
+                                config.runner, artifacts_dir=round_dir
+                            ),
+                            invoke=lambda r, t, c: self._invoke_runner(r, t, ctx, c, emitter),
+                            artifacts_dir=artifacts_dir,
+                        )
+                    except ImproveBaselineError as exc:
+                        raise SetupError(str(exc)) from exc
+                    self.repo.add_artifact(
+                        run_id, "improve", artifacts_dir / "improve.json", "application/json"
                     )
-                except TimeoutError:
-                    msg = (
-                        f"agent exceeded {task.limits.agent_timeout_seconds}s limit and was stopped"
-                    )
-                    runner_result = RunnerResult(status=RunStatus.TIMEOUT, error=msg)
-                    emitter.emit(EventKind.ERROR, name="agent_timeout", payload={"message": msg})
-                except asyncio.CancelledError:
-                    raise
-                except Exception as exc:  # adapter bug or harness crash: keep the experiment going
-                    msg = f"{type(exc).__name__}: {exc}"
-                    runner_result = RunnerResult(status=RunStatus.CRASHED, error=msg)
-                    emitter.emit(
-                        EventKind.ERROR,
-                        name="runner_crashed",
-                        payload={"message": msg, "traceback": traceback.format_exc()[-4000:]},
-                    )
+                else:
+                    runner_result = await self._invoke_runner(runner, task, ctx, config, emitter)
                 agent_seconds = time.monotonic() - agent_t0
-                close_orphaned_calls(emitter)
 
                 # 3. capture what the agent changed
                 changes = await self.sandbox.capture_changes(ctx)
@@ -473,6 +475,10 @@ class ExperimentService:
             if status in (RunStatus.PENDING, RunStatus.RUNNING):
                 status = RunStatus.COMPLETED
             outcome = verifier_result.outcome if verifier_result else Outcome.NOT_VERIFIED
+            if improve_result is not None and verifier_result is not None:
+                if verifier_result.passed is not None:
+                    improved = bool(verifier_result.passed) and improve_result.improved
+                    outcome = Outcome.PASS if improved else Outcome.FAIL
             error = self.redactor.redact_text(error or runner_result.error or "") or None
             if runner_result.final_message:
                 runner_result.final_message = self.redactor.redact_text(runner_result.final_message)
@@ -501,6 +507,8 @@ class ExperimentService:
                 else None,
                 pricing=self.pricing,
             )
+            if improve_result is not None:
+                _apply_improvement(metrics, improve_result, verifier_result, outcome)
             if verifier_result is not None:
                 self.repo.save_verifier_result(run_id, verifier_result)
             self.repo.finalize_run(
@@ -547,6 +555,37 @@ class ExperimentService:
         )
 
     # ------------------------------------------------------------------
+    async def _invoke_runner(
+        self,
+        runner: HarnessRunner,
+        task: TaskSpec,
+        ctx: SandboxContext,
+        config: RunnerConfig,
+        emitter: EventEmitter,
+    ) -> RunnerResult:
+        """Run the harness once, turning a timeout or an adapter crash into a result."""
+        try:
+            result = await asyncio.wait_for(
+                runner.run(task, ctx.workdir, config, emitter),
+                timeout=task.limits.agent_timeout_seconds + AGENT_TIMEOUT_GRACE_SECONDS,
+            )
+        except TimeoutError:
+            msg = f"agent exceeded {task.limits.agent_timeout_seconds}s limit and was stopped"
+            result = RunnerResult(status=RunStatus.TIMEOUT, error=msg)
+            emitter.emit(EventKind.ERROR, name="agent_timeout", payload={"message": msg})
+        except asyncio.CancelledError:
+            raise
+        except Exception as exc:  # adapter bug or harness crash: keep the experiment going
+            msg = f"{type(exc).__name__}: {exc}"
+            result = RunnerResult(status=RunStatus.CRASHED, error=msg)
+            emitter.emit(
+                EventKind.ERROR,
+                name="runner_crashed",
+                payload={"message": msg, "traceback": traceback.format_exc()[-4000:]},
+            )
+        close_orphaned_calls(emitter)
+        return result
+
     async def _run_setup(self, task: TaskSpec, ctx: SandboxContext, emitter: EventEmitter) -> None:
         if not task.setup.commands:
             return
@@ -619,3 +658,25 @@ class ExperimentService:
                 hits += 1
         if hits:
             runner_result.metadata["possible_suite_access"] = hits
+
+
+def _apply_improvement(
+    metrics: RunMetrics,
+    result: ImproveResult,
+    verifier_result: VerifierResult | None,
+    outcome: Outcome,
+) -> None:
+    """Improvement tasks pass when the final state passes the gate *and* beats the baseline."""
+    metrics.improve_baseline = result.baseline
+    metrics.improve_best = result.best
+    metrics.improve_final = result.final
+    metrics.improve_ratio = result.ratio
+    metrics.improve_progress = result.progress
+    metrics.improve_rounds = len(result.rounds)
+    metrics.improve_curve = result.curve
+    metrics.improve_history = [r.model_dump(mode="json") for r in result.rounds]
+    metrics.evaluator_calls = result.evaluator_calls
+    if verifier_result is None or verifier_result.passed is None:
+        return
+    metrics.verified_pass = outcome == Outcome.PASS
+    metrics.verified_score = result.score if verifier_result.passed else 0.0

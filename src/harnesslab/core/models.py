@@ -66,7 +66,42 @@ class ReferenceSolutionSpec(BaseModel):
 
     overlay: str | None = None
     partial_overlay: str | None = None
+    improve_overlays: list[str] = Field(default_factory=list)  # one per improvement round
     description: str | None = None
+
+
+class ImproveObjectiveSpec(BaseModel):
+    """A measured objective: a command that prints one number for the current repository."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    command: str
+    direction: Literal["minimize", "maximize"] = "minimize"
+    unit: str | None = None
+    target: float | None = None  # a reference value, e.g. the best known result
+    repeats: int = Field(default=1, ge=1)  # median of this many measurements
+    timeout_seconds: int = Field(default=120, ge=1)
+    inject: list[InjectSpec] = Field(default_factory=list)  # copied in only to measure
+
+
+class ImproveEvaluatorSpec(BaseModel):
+    """An in-loop evaluator the agent may call a limited number of times per round."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    budget: int = Field(default=0, ge=0)  # calls per round; 0 = no evaluator
+
+
+class ImproveSpec(BaseModel):
+    """Turns a task into an improvement task: rounds against a measured objective."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    objective: ImproveObjectiveSpec
+    rounds: int = Field(default=3, ge=1)
+    keep_best: bool = True  # revert rounds that break the gate or do not beat the best
+    min_improvement: float = Field(default=0.0, ge=0.0)  # relative; 0.05 = 5% better than baseline
+    evaluator: ImproveEvaluatorSpec = Field(default_factory=ImproveEvaluatorSpec)
 
 
 class TaskSpec(BaseModel):
@@ -83,6 +118,7 @@ class TaskSpec(BaseModel):
     limits: LimitsSpec = Field(default_factory=LimitsSpec)
     tags: list[str] = Field(default_factory=list)
     reference_solution: ReferenceSolutionSpec | None = None
+    improve: ImproveSpec | None = None
     source_path: Path | None = Field(default=None, exclude=True)
 
     @field_validator("id")
@@ -306,6 +342,7 @@ class RunnerConfig(BaseModel):
     tool_policy: dict[str, Any] | None = None
     harness_hash: str | None = None
     harness_dir: Path | None = Field(default=None, exclude=True)
+    improve_round: int | None = Field(default=None, exclude=True)  # set per improvement round
 
     def get(self, key: str, default: Any = None) -> Any:
         return self.options.get(key, default)
@@ -531,3 +568,13 @@ class RunMetrics(BaseModel):
     tool_calls_per_turn: float | None = None
     mean_command_chars: float | None = None
     edits_per_changed_file: float | None = None
+    # Improvement tasks (None for ordinary tasks)
+    improve_baseline: float | None = None
+    improve_best: float | None = None
+    improve_final: float | None = None
+    improve_ratio: float | None = None  # > 1 is better: baseline/final (minimize) or final/baseline
+    improve_progress: float | None = None  # share of the way from baseline to target
+    improve_rounds: int | None = None
+    improve_curve: list[float | None] | None = None  # best so far: baseline, then after each round
+    improve_history: list[dict[str, Any]] | None = None
+    evaluator_calls: int | None = None

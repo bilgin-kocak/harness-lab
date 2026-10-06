@@ -143,6 +143,7 @@ def _print_paired(p: PairedComparison, title: str | None = None) -> None:
         ("pass rate (pts)", p.pass_rate_diff, 100.0, 1),
         (p.cost_kind, p.cost_diff, 1.0, 4),
         ("llm_calls", p.llm_calls_diff, 1.0, 2),
+        ("improvement ratio", p.improve_ratio_diff, 1.0, 2),
     ]
     for label, iv, scale, digits in rows:
         if iv is None:
@@ -613,9 +614,14 @@ def suite_check(
         )
         ref_ok = bool(ref and ref.metrics.verified_pass)
         noop_fails = bool(noop and noop.metrics.verified_pass is False)
-        has_ref = task.reference_solution is not None and task.reference_solution.overlay
+        has_ref = task.reference_solution is not None and bool(
+            task.reference_solution.overlay or task.reference_solution.improve_overlays
+        )
         verdict = "[green]ok[/]"
-        if not noop_fails:
+        if task.improve is not None and noop is not None and noop.metrics.verified_pass is None:
+            verdict = "[red]baseline fails the correctness gate[/]"
+            problems += 1
+        elif not noop_fails:
             verdict = "[red]verifier passes without changes[/]"
             problems += 1
         elif has_ref and not ref_ok:

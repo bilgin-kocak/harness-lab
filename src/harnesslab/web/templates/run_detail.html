@@ -18,6 +18,35 @@
   <div class="card metric"><div class="label">exit codes</div><div class="value">{{ metrics.agent_exit_code if metrics.agent_exit_code is not none else "—" }} <span class="muted">/</span> {{ metrics.verifier_exit_code if metrics.verifier_exit_code is not none else "—" }}</div><div class="sub">agent / verifier · turns {{ metrics.num_turns if metrics.num_turns is not none else "—" }}{% if metrics.permission_denials %} · <span class="error-text">{{ metrics.permission_denials }} permission denials</span>{% endif %}</div></div>
 </div>
 
+{% if metrics.improve_rounds is not none %}
+<section>
+  <h2>Improvement <span class="muted small">{{ metrics.improve_rounds }} round(s) against a measured objective · every round evaluated on a copy with the hidden checks</span></h2>
+  <div class="cards">
+    <div class="card metric"><div class="label">baseline</div><div class="value">{{ metrics.improve_baseline|num }}</div><div class="sub">the untouched repository</div></div>
+    <div class="card metric"><div class="label">best</div><div class="value">{{ metrics.improve_best|num }}</div><div class="sub">final {{ metrics.improve_final|num }}</div></div>
+    <div class="card metric"><div class="label">improvement</div><div class="value">{% if metrics.improve_ratio is not none %}{{ metrics.improve_ratio|num(1) }}×{% else %}—{% endif %}</div><div class="sub">score {{ metrics.verified_score|num(3) }}{% if metrics.improve_progress is not none %} · {{ metrics.improve_progress|pct }} of the way to the target{% endif %}</div></div>
+    <div class="card metric"><div class="label">evaluator calls</div><div class="value">{{ metrics.evaluator_calls if metrics.evaluator_calls is not none else "—" }}</div><div class="sub">in-loop measurements by the agent</div></div>
+  </div>
+  <table class="data compact">
+    <thead><tr><th class="num">round</th><th>harness</th><th class="num">value</th><th>checks</th><th class="num">best so far</th><th>result</th><th class="num">evaluator calls</th></tr></thead>
+    <tbody>
+      <tr><td class="num">0</td><td class="muted">baseline</td><td class="num">{{ metrics.improve_baseline|num }}</td><td><span class="badge badge-pass">pass</span></td><td class="num">{{ metrics.improve_baseline|num }}</td><td></td><td></td></tr>
+    {% for r in metrics.improve_history or [] %}
+      <tr>
+        <td class="num">{{ r.round }}</td>
+        <td><span class="badge {{ r.status|status_class }}">{{ r.status }}</span></td>
+        <td class="num">{{ r.value|num }}</td>
+        <td>{% if r.gate_passed is none %}—{% elif r.gate_passed %}<span class="badge badge-pass">pass</span>{% else %}<span class="badge badge-fail">fail</span>{% endif %}</td>
+        <td class="num">{{ r.best|num }}</td>
+        <td>{% if r.accepted %}new best{% elif r.reverted %}reverted{% else %}kept{% endif %}</td>
+        <td class="num">{{ r.evaluator_calls }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
+
 {% if run.final_message %}
 <section>
   <h2>Final agent message <span class="muted small">(not evidence of success)</span></h2>

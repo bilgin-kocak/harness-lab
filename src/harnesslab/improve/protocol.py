@@ -15,6 +15,11 @@ For an improvement task the experiment service hands the agent step to :func:`ru
    at all counts as failed. If a checkpoint or a revert itself fails, the protocol stops there and
    keeps what it has: every round's usage, the history, and the worktree's actual state.
 
+Each round runs in a fresh agent session by default (``improve_session: fresh``). With
+``improve_session: resume`` the first round's session is kept and later rounds continue it with a
+short delta prompt (:func:`build_resume_prompt`) instead of the full one, so the two modes can be
+compared on the same task.
+
 The service then runs its usual final capture and verification on the resulting worktree; the
 run passes when that final gate passes and the final value beats the baseline.
 """
@@ -49,8 +54,14 @@ from harnesslab.improve.objective import (
 from harnesslab.runners.base import HarnessRunner
 from harnesslab.verification.command import CommandVerifier
 
+SESSION_MODES = ("fresh", "resume")
 
-class ImproveBaselineError(RuntimeError):
+
+class ImproveSetupError(RuntimeError):
+    """The improvement protocol cannot start: a bad option, a runner or a broken task."""
+
+
+class ImproveBaselineError(ImproveSetupError):
     """The untouched repository fails the gate or cannot be measured: the task is broken."""
 
 
@@ -77,6 +88,7 @@ class ImproveResult(BaseModel):
     unit: str | None = None
     target: float | None = None
     keep_best: bool = True
+    session: str = "fresh"  # fresh: a new agent session per round; resume: one session for all
     rounds_planned: int
     evaluator_budget: int
     baseline: float
@@ -127,24 +139,15 @@ def build_round_prompt(
         f"{better} while every correctness check keeps passing.",
         "",
         f"- Objective: {objective.unit or 'the measured value'}, {better} is better.",
-        f"- Baseline (the untouched repository): {_fmt(baseline)}{unit}",
-        f"- Best so far: {_fmt(best)}{unit} "
-        + (f"(round {best_round})" if best_round else "(the baseline)"),
+        *_standing(task, baseline=baseline, best=best, best_round=best_round),
     ]
-    if objective.target is not None:
-        lines.append(f"- Reference value to aim for: {_fmt(objective.target)}{unit}")
     if history:
         lines += ["", "Previous rounds:"]
         for record in history:
             lines.append(f"- Round {record.round}: {_describe(record, unit, spec.keep_best)}")
     lines.append("")
     if budget > 0:
-        lines.append(
-            "You can measure the objective of your current working tree by running "
-            f"`python {EVAL_DIR}/evaluate.py`. It runs the same measurement Harness Lab uses, "
-            f"without the correctness checks, and you may call it at most {budget} time(s) in "
-            "this round."
-        )
+        lines.append(_evaluator_text(budget))
     else:
         lines.append("You cannot measure the objective directly in this round.")
     lines.append("")
@@ -160,6 +163,75 @@ def build_round_prompt(
             "including hidden ones. Your changes carry over to the next round whatever the result."
         )
     return "\n".join(lines) + "\n"
+
+
+def build_resume_prompt(
+    task: TaskSpec,
+    round_no: int,
+    rounds: int,
+    *,
+    baseline: float,
+    best: float,
+    best_round: int,
+    unseen: list[RoundRecord],
+    budget: int,
+) -> str:
+    """The short prompt for a round that resumes the agent's session.
+
+    The session already holds the task and the earlier rounds' prompts, so this reports only what
+    the agent has not seen: the results of the rounds since its last turn (``unseen``, usually
+    just the previous round), the standing, and a revert, which makes its memory of its own edits
+    stale.
+    """
+    spec = task.improve
+    assert spec is not None
+    better = "lower" if spec.objective.direction == "minimize" else "higher"
+    unit = f" {spec.objective.unit}" if spec.objective.unit else ""
+    lines = [f"## Round {round_no} of {rounds}: keep improving the objective", ""]
+    if unseen:
+        lines.append("Previous round:" if len(unseen) == 1 else "Rounds since your last prompt:")
+        for record in unseen:
+            lines.append(f"- Round {record.round}: {_describe(record, unit, spec.keep_best)}")
+        lines.append("")
+    lines += [*_standing(task, baseline=baseline, best=best, best_round=best_round), ""]
+    if unseen and unseen[-1].reverted:
+        version = f"round {best_round}" if best_round else "the untouched repository"
+        lines += [
+            f"Harness Lab reverted the files to the best version ({version}), so the working "
+            "tree no longer holds the edits you made after it. Read the files again before you "
+            "change them.",
+            "",
+        ]
+    if budget > 0:
+        lines += [_evaluator_text(budget), ""]
+    lines.append(
+        f"Keep improving: make the objective {better} while every correctness check keeps "
+        "passing. Harness Lab measures and checks this round the same way as the earlier ones."
+    )
+    return "\n".join(lines) + "\n"
+
+
+def _standing(task: TaskSpec, *, baseline: float, best: float, best_round: int) -> list[str]:
+    assert task.improve is not None
+    objective = task.improve.objective
+    unit = f" {objective.unit}" if objective.unit else ""
+    lines = [
+        f"- Baseline (the untouched repository): {_fmt(baseline)}{unit}",
+        f"- Best so far: {_fmt(best)}{unit} "
+        + (f"(round {best_round})" if best_round else "(the baseline)"),
+    ]
+    if objective.target is not None:
+        lines.append(f"- Reference value to aim for: {_fmt(objective.target)}{unit}")
+    return lines
+
+
+def _evaluator_text(budget: int) -> str:
+    return (
+        "You can measure the objective of your current working tree by running "
+        f"`python {EVAL_DIR}/evaluate.py`. It runs the same measurement Harness Lab uses, "
+        f"without the correctness checks, and you may call it at most {budget} time(s) in "
+        "this round."
+    )
 
 
 def _describe(record: RoundRecord, unit: str, keep_best: bool) -> str:
@@ -289,7 +361,12 @@ def merge_runner_results(
     )
     metadata = dict(final.metadata)
     metadata["improve_rounds"] = [
-        {"round": i, "status": r.status.value, "error": redact(r.error) if r.error else None}
+        {
+            "round": i,
+            "status": r.status.value,
+            "error": redact(r.error) if r.error else None,
+            "session_id": r.provider_session_id,
+        }
         for i, r in enumerate(results, 1)
     ]
     return RunnerResult(
@@ -343,6 +420,16 @@ async def run_improvement(
     objective = spec.objective
     rounds = max(1, int(config.get("improve_rounds", spec.rounds)))
     budget = max(0, int(config.get("improve_eval_budget", spec.evaluator.budget)))
+    session = config.get("improve_session", "fresh")
+    if session not in SESSION_MODES:
+        raise ImproveSetupError(
+            f"invalid improve_session {session!r}; expected one of: {', '.join(SESSION_MODES)}"
+        )
+    resume = session == "resume"
+    if resume:
+        problem = make_runner(artifacts_dir).resume_error(config)
+        if problem:
+            raise ImproveSetupError(f"improve_session: resume is not available: {problem}")
     workdir = ctx.workdir
     redact = redact or (lambda text: text)
 
@@ -390,20 +477,41 @@ async def run_improvement(
     results: list[RunnerResult] = []
     total_calls = 0
     stopped: str | None = None
+    # Resume mode: the most recent session id any round reported, and the round that reported it.
+    session_id: str | None = None
+    session_round = 0
     try:
         for round_no in range(1, rounds + 1):
             if budget > 0:
                 reset_calls(workdir)
-            prompt = build_round_prompt(
-                task,
-                round_no,
-                rounds,
-                baseline=baseline,
-                best=best,
-                best_round=best_round,
-                history=records,
-                budget=budget,
+            resume_id = session_id if resume else None
+            fallback = (
+                "no earlier round reported a session id; this round started a fresh session"
+                if resume and round_no > 1 and resume_id is None
+                else None
             )
+            if resume_id is not None:
+                prompt = build_resume_prompt(
+                    task,
+                    round_no,
+                    rounds,
+                    baseline=baseline,
+                    best=best,
+                    best_round=best_round,
+                    unseen=records[session_round - 1 :],
+                    budget=budget,
+                )
+            else:
+                prompt = build_round_prompt(
+                    task,
+                    round_no,
+                    rounds,
+                    baseline=baseline,
+                    best=best,
+                    best_round=best_round,
+                    history=records,
+                    budget=budget,
+                )
             round_dir = artifacts_dir / f"round-{round_no}"
             round_dir.mkdir(parents=True, exist_ok=True)
             (round_dir / "prompt.txt").write_text(prompt, encoding="utf-8")
@@ -416,9 +524,17 @@ async def run_improvement(
             result = await invoke(
                 make_runner(round_dir),
                 task.model_copy(update={"prompt": prompt}),
-                config.model_copy(update={"improve_round": round_no}),
+                config.model_copy(
+                    update={
+                        "improve_round": round_no,
+                        "resume_session_id": resume_id,
+                        "persist_session": resume,
+                    }
+                ),
             )
             results.append(result)
+            if result.provider_session_id:
+                session_id, session_round = result.provider_session_id, round_no
             calls = max(
                 count_calls(workdir) if budget > 0 else 0, _trace_evaluator_calls(emitter, start)
             )
@@ -430,7 +546,7 @@ async def run_improvement(
                         status=result.status.value,
                         best=best,
                         evaluator_calls=calls,
-                        note=redact(result.error) if result.error else None,
+                        note=redact("; ".join(n for n in (fallback, result.error) if n)) or None,
                     )
                 )
                 break
@@ -456,7 +572,7 @@ async def run_improvement(
                     f"round {round_no}: could not {action} the worktree "
                     f"({type(exc).__name__}: {exc})"
                 )
-            notes = [result.error, evaluation.detail, stopped]
+            notes = [fallback, result.error, evaluation.detail, stopped]
             record = RoundRecord(
                 round=round_no,
                 status=result.status.value,
@@ -483,6 +599,7 @@ async def run_improvement(
         unit=objective.unit,
         target=objective.target,
         keep_best=spec.keep_best,
+        session=session,
         rounds_planned=rounds,
         evaluator_budget=budget,
         baseline=baseline,

@@ -23,11 +23,20 @@ class HarnessRunner(ABC):
 
     name: str = "abstract"
     description: str = ""
+    # Whether the runner honours RunnerConfig.resume_session_id and persist_session, so that
+    # improvement rounds can continue one agent session (``improve_session: resume``).
+    supports_resume: bool = False
 
     def __init__(self, *, artifacts_dir: Path | None = None) -> None:
         # Directory where the runner may write large auxiliary files (raw
         # sanitized streams, stderr logs).  Provided by the experiment service.
         self.artifacts_dir = artifacts_dir
+
+    def resume_error(self, config: RunnerConfig) -> str | None:
+        """Why ``config`` cannot resume sessions with this runner, or None if it can."""
+        if not self.supports_resume:
+            return f"runner {self.name!r} cannot resume an agent session"
+        return None
 
     @abstractmethod
     async def run(

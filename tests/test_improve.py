@@ -628,3 +628,189 @@ async def test_an_unavailable_round_stops_the_rounds_and_keeps_the_best(
     assert [h["status"] for h in history] == ["completed", "unavailable"]
     assert run.status == RunStatus.UNAVAILABLE and run.metrics.improve_final == 3
     assert run.metrics.llm_calls == 1
+
+
+# -- fresh or resumed sessions ------------------------------------------------------------
+
+
+class SessionRunner(HarnessRunner):
+    """A scripted runner that can resume: records each round's prompt and session settings."""
+
+    name = "sessions"
+    supports_resume = True
+    steps: list = []
+    session_ids: list = []
+    seen: list[dict] = []
+
+    async def run(self, task, worktree, config, emit):
+        index = config.improve_round - 1
+        SessionRunner.seen.append(
+            {
+                "round": config.improve_round,
+                "prompt": task.prompt,
+                "resume": config.resume_session_id,
+                "persist": config.persist_session,
+            }
+        )
+        step = SessionRunner.steps[index]
+        if step:
+            step(worktree)
+        emit.emit(EventKind.ASSISTANT_MESSAGE, payload={"text": f"round {config.improve_round}"})
+        return RunnerResult(
+            status=RunStatus.COMPLETED,
+            exit_code=0,
+            llm_calls=1,
+            provider_session_id=SessionRunner.session_ids[index],
+        )
+
+
+async def _sessions(settings, db, steps, session_ids, mode="resume", runner="sessions"):
+    SessionRunner.steps, SessionRunner.session_ids, SessionRunner.seen = steps, session_ids, []
+    ScriptedRunner.steps = steps
+    variant = VariantSpec(id="sessions", runner=runner, improve_session=mode)
+    return await _run(
+        settings,
+        db,
+        [variant],
+        task_update=_score_task(len(steps)),
+        factory=lambda name, **kwargs: (
+            SessionRunner(**kwargs) if name == "sessions" else ScriptedRunner(**kwargs)
+        ),
+    )
+
+
+async def test_resumed_rounds_get_a_delta_prompt_and_the_previous_session(
+    settings: Settings, db: Database
+):
+    service, outcome = await _sessions(
+        settings, db, [_score(3), _score(4), _score(2)], ["sess-1", "sess-1", "sess-1"]
+    )
+    run = outcome.runs[0]
+    assert run.status == RunStatus.COMPLETED and run.outcome == Outcome.PASS, run.error
+    first, second, third = SessionRunner.seen
+    task_prompt = load_suite(IMPROVE_SUITE)[1][0].prompt.rstrip()
+    assert first["prompt"].startswith(task_prompt) and "## Round 1 of 3" in first["prompt"]
+    assert first["persist"] is True and first["resume"] is None
+    assert second["resume"] == "sess-1" and third["resume"] == "sess-1"
+    delta = second["prompt"]
+    assert delta.startswith("## Round 2 of 3") and task_prompt not in delta
+    assert "3 points, the new best" in delta and "Baseline" in delta and "Best so far" in delta
+    assert "keep improving" in delta.lower() and "reverted the files" not in delta
+    # Round 2 (4 points) was reverted to round 1's state: round 3 is told its memory is stale.
+    assert "reverted the files to the best version" in third["prompt"]
+    assert "Round 3 of 3" in third["prompt"]
+    assert run.metrics.improve_session == "resume" and run.metrics.improve_final == 2
+
+    row = service.repo.get_run(run.run_id)
+    rounds = row.runner_metadata_json["improve_rounds"]
+    assert [r["session_id"] for r in rounds] == ["sess-1", "sess-1", "sess-1"]
+    improve_doc = json.loads(
+        service.repo.read_artifact(next(a for a in row.artifacts if a.kind == "improve"))
+    )
+    assert improve_doc["session"] == "resume"
+    prompts = sorted((settings.home / "artifacts").rglob("round-2/prompt.txt"))
+    assert prompts and prompts[0].read_text(encoding="utf-8") == delta
+
+    with TestClient(create_app(settings, db)) as client:
+        page = client.get(f"/runs/{run.run_id}")
+        assert page.status_code == 200 and "resumed session" in page.text
+
+
+async def test_a_round_without_an_earlier_session_id_starts_a_fresh_session(
+    settings: Settings, db: Database
+):
+    _, outcome = await _sessions(
+        settings, db, [_score(3), _score(2), _score(1)], [None, "sess-2", None]
+    )
+    run = outcome.runs[0]
+    assert run.status == RunStatus.COMPLETED, run.error
+    _, second, third = SessionRunner.seen
+    assert second["resume"] is None and second["persist"] is True
+    assert "## Round 2 of 3" in second["prompt"] and "Previous rounds:" in second["prompt"]
+    assert not second["prompt"].startswith("## Round")  # the full prompt, task first
+    assert third["resume"] == "sess-2" and third["prompt"].startswith("## Round 3 of 3")
+    history = run.metrics.improve_history
+    assert "fresh session" in (history[1]["note"] or "") and not history[2]["note"]
+
+
+async def test_fresh_sessions_are_the_default_and_unchanged(settings: Settings, db: Database):
+    _, outcome = await _sessions(
+        settings, db, [_score(3), _score(2)], ["sess-a", "sess-b"], mode="fresh"
+    )
+    assert outcome.runs[0].metrics.improve_session == "fresh"
+    assert [(s["resume"], s["persist"]) for s in SessionRunner.seen] == [
+        (None, False),
+        (None, False),
+    ]
+    assert "Previous rounds:" in SessionRunner.seen[1]["prompt"]
+    assert not any(s["prompt"].startswith("## Round") for s in SessionRunner.seen)
+
+
+async def test_resume_needs_a_runner_that_can_resume(settings: Settings, db: Database):
+    _, outcome = await _sessions(settings, db, [_score(3)], [None], runner="scripted")
+    run = outcome.runs[0]
+    assert run.outcome == Outcome.NOT_VERIFIED
+    assert "scripted" in (run.error or "") and "resume" in (run.error or ""), run.error
+
+
+async def test_an_unknown_session_mode_is_a_setup_error(settings: Settings, db: Database):
+    _, outcome = await _sessions(settings, db, [_score(3)], ["s"], mode="sometimes")
+    run = outcome.runs[0]
+    assert run.outcome == Outcome.NOT_VERIFIED
+    assert "improve_session" in (run.error or "") and "sometimes" in (run.error or ""), run.error
+    assert SessionRunner.seen == []
+
+
+async def test_demo_resumed_fake_improver_passes_like_the_fresh_one(
+    settings: Settings, db: Database
+):
+    suite, _ = load_suite(IMPROVE_SUITE)
+    by_id = {v.id: v for v in suite.variants}
+    service, outcome = await _run(
+        settings, db, [by_id["fake-improver"], by_id["fake-improver-resumed"]]
+    )
+    runs = {r.variant_key: r for r in outcome.runs}
+    fresh, resumed = runs["fake-improver"], runs["fake-improver-resumed"]
+    assert resumed.outcome == Outcome.PASS and resumed.status == RunStatus.COMPLETED
+    assert resumed.metrics.improve_curve == fresh.metrics.improve_curve == [65440, 880, 440, 440]
+    assert (fresh.metrics.improve_session, resumed.metrics.improve_session) == ("fresh", "resume")
+    fresh_ids = [
+        r["session_id"]
+        for r in service.repo.get_run(fresh.run_id).runner_metadata_json["improve_rounds"]
+    ]
+    resumed_meta = service.repo.get_run(resumed.run_id).runner_metadata_json
+    resumed_ids = [r["session_id"] for r in resumed_meta["improve_rounds"]]
+    assert len(set(fresh_ids)) == 3  # a new session every round
+    assert len(set(resumed_ids)) == 1 and resumed_meta["resumed_from"] == resumed_ids[0]
+    # The delta prompts are shorter than the full ones, so the resumed run reads fewer tokens.
+    assert resumed.metrics.input_tokens < fresh.metrics.input_tokens
+
+
+def test_runner_config_session_fields_are_not_part_of_the_config_hash():
+    a = RunnerConfig(runner="fake", options={"improve_session": "resume"})
+    b = a.model_copy(update={"resume_session_id": "abc", "persist_session": True})
+    assert a.config_hash() == b.config_hash() and b.resume_session_id == "abc"
+    assert a.persist_session is False and a.resume_session_id is None
+
+
+def test_only_runners_that_can_resume_say_so():
+    from harnesslab.runners.base import get_runner_class
+
+    assert HarnessRunner.supports_resume is False
+    assert {n: get_runner_class(n).supports_resume for n in ("claude", "codex", "fake")} == {
+        "claude": True,
+        "codex": True,
+        "fake": True,
+    }
+    assert get_runner_class("generic").supports_resume is False
+
+
+def test_the_improve_session_sweep_loads():
+    from harnesslab.experiments.spec import load_sweep, resolve_sweep_target
+    from harnesslab.experiments.sweep import expand_sweep
+
+    spec = load_sweep(resolve_sweep_target("improve-session"))
+    assert spec.suite == "demo-improve"
+    variants = expand_sweep(spec)
+    modes = {v.options.get("improve_session") for v in variants}
+    assert modes == {"fresh", "resume"} and {v.runner for v in variants} == {"claude"}

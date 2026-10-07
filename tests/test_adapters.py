@@ -131,6 +131,72 @@ def test_claude_command_defaults_and_guards():
     )
 
 
+def test_claude_command_resumes_and_persists_sessions():
+    resumed = build_claude_command(RunnerConfig(runner="claude", resume_session_id="sess-1"), None)
+    assert resumed[resumed.index("--resume") + 1] == "sess-1"
+    assert "--session-id" not in resumed and "--no-session-persistence" not in resumed
+    first = build_claude_command(RunnerConfig(runner="claude", persist_session=True), "sid")
+    assert first[first.index("--session-id") + 1] == "sid"
+    assert "--no-session-persistence" not in first and "--resume" not in first
+    # resume mode overrides an explicit no_session_persistence: the session must be kept
+    forced = build_claude_command(
+        RunnerConfig(
+            runner="claude", options={"no_session_persistence": True}, resume_session_id="s"
+        ),
+        None,
+    )
+    assert "--no-session-persistence" not in forced
+
+
+def test_codex_resume_command_uses_the_exec_resume_form(tmp_path: Path):
+    argv = build_codex_command(
+        RunnerConfig(
+            runner="codex",
+            model="gpt-5-codex",
+            options={"network_access": True, "reasoning_effort": "high"},
+            resume_session_id="thread-1",
+        ),
+        tmp_path,
+        tmp_path / "last.txt",
+    )
+    assert argv[:4] == ["codex", "exec", "resume", "--json"] and argv[-2:] == ["thread-1", "-"]
+    assert 'sandbox_mode="workspace-write"' in argv
+    assert "sandbox_workspace_write.network_access=true" in argv
+    assert "model_reasoning_effort=high" in argv and "--skip-git-repo-check" in argv
+    assert argv[argv.index("-m") + 1] == "gpt-5-codex" and "-o" in argv
+    for flag in ("-C", "--cd", "--sandbox", "--full-auto", "--color", "--profile", "--ephemeral"):
+        assert flag not in argv, flag
+    full = build_codex_command(
+        RunnerConfig(
+            runner="codex", options={"sandbox": "danger-full-access"}, resume_session_id="t"
+        ),
+        tmp_path,
+    )
+    assert "--dangerously-bypass-approvals-and-sandbox" in full
+    assert not any(a.startswith("sandbox_mode=") for a in full)
+    read_only = build_codex_command(
+        RunnerConfig(runner="codex", options={"sandbox": "read-only"}, resume_session_id="t"),
+        tmp_path,
+    )
+    assert 'sandbox_mode="read-only"' in read_only
+    assert not any("network_access" in a for a in read_only)
+    with pytest.raises(ValueError, match="profile"):
+        build_codex_command(
+            RunnerConfig(runner="codex", options={"profile": "work"}, resume_session_id="t"),
+            tmp_path,
+        )
+    # the first round of a resumed run is an ordinary exec (Codex keeps sessions by default)
+    first = build_codex_command(RunnerConfig(runner="codex", persist_session=True), tmp_path)
+    assert first[:3] == ["codex", "exec", "--json"] and "resume" not in first
+
+
+def test_codex_runner_rejects_profile_with_resume_at_setup():
+    config = RunnerConfig(runner="codex", options={"profile": "work", "improve_session": "resume"})
+    assert "profile" in (CodexRunner().resume_error(config) or "")
+    assert CodexRunner().resume_error(RunnerConfig(runner="codex")) is None
+    assert ClaudeCodeRunner().resume_error(RunnerConfig(runner="claude")) is None
+
+
 # -- codex adapter -----------------------------------------------------------
 
 
@@ -286,6 +352,26 @@ async def test_claude_runner_end_to_end_with_fake_cli(fake_cli: Path, tmp_path: 
         _emitter(),
     )
     assert result.status == RunStatus.COMPLETED and "error_max_turns" in (result.error or "")
+
+
+async def test_claude_runner_resumes_the_given_session(fake_cli: Path, tmp_path: Path, monkeypatch):
+    worktree = tmp_path / "wt"
+    worktree.mkdir()
+    monkeypatch.setenv("FAKE_CLI_STREAM", str(FIXTURES / "claude" / "stream_success.jsonl"))
+    emitter = _emitter()
+    config = RunnerConfig(
+        runner="claude",
+        options={"executable": str(fake_cli), "env_passthrough": PASSTHROUGH},
+        resume_session_id="a1b2c3d4-0000-4000-8000-000000000001",
+    )
+    result = await ClaudeCodeRunner().run(_task(worktree), worktree, config, emitter)
+    assert result.status == RunStatus.COMPLETED, result.error
+    launch = next(e for e in emitter.events if e.name == "harness_launch")
+    argv = launch.payload["argv"]
+    assert argv[argv.index("--resume") + 1] == config.resume_session_id
+    assert "--session-id" not in argv and "--no-session-persistence" not in argv
+    assert launch.payload["session_id"] == config.resume_session_id
+    assert launch.payload["resumed_from"] == config.resume_session_id
 
 
 # -- generic runner ----------------------------------------------------------

@@ -12,6 +12,10 @@ explicitly sets ``allow_dangerous_permissions: true``.  Partial-message and
 subagent-text forwarding flags are never passed, so thinking deltas never
 reach Harness Lab.
 
+Improvement rounds with ``improve_session: resume`` keep their session: the
+first round drops ``--no-session-persistence``, and later rounds pass
+``--resume <id>`` instead of ``--session-id``.
+
 Options::
 
     executable: claude
@@ -21,7 +25,7 @@ Options::
     disallowed_tools: [WebFetch, WebSearch]
     tools: null                             (restrict the built-in tool set, e.g. "Bash,Edit,Read")
     permission_prompts: none                (none|host)
-    no_session_persistence: true
+    no_session_persistence: true            (improve_session: resume turns persistence on)
     strict_mcp_config: true
     max_budget_usd: null
     bare: false                             (skips hooks/CLAUDE.md/plugins; needs ANTHROPIC_API_KEY)
@@ -126,7 +130,9 @@ def build_claude_command(
     prompts = config.get("permission_prompts", "none")
     if prompts:
         argv.extend(["--permission-prompts", str(prompts)])
-    if config.get("no_session_persistence", True):
+    # A session that a later improvement round resumes, or that resumes one, must be kept.
+    keep_session = config.persist_session or config.resume_session_id is not None
+    if config.get("no_session_persistence", True) and not keep_session:
         argv.append("--no-session-persistence")
     if config.get("strict_mcp_config", True):
         argv.append("--strict-mcp-config")
@@ -153,7 +159,9 @@ def build_claude_command(
         argv.extend(["--effort", str(effort)])
     if config.get("autocompact") is not None:
         argv.extend(["--autocompact", str(config.get("autocompact"))])
-    if session_id:
+    if config.resume_session_id:
+        argv.extend(["--resume", config.resume_session_id])
+    elif session_id:
         argv.extend(["--session-id", session_id])
     if config.get("include_hook_events", True):
         argv.append("--include-hook-events")
@@ -195,6 +203,7 @@ def hook_env(*, worktree: Path, suite_dir: Path | None, artifacts: Path | None) 
 class ClaudeCodeRunner(HarnessRunner):
     name = "claude"
     description = "Claude Code CLI in headless print mode."
+    supports_resume = True
 
     async def check_availability(self, config: RunnerConfig | None = None) -> Availability:
         exe = str(config.get("executable", "claude")) if config else "claude"
@@ -214,7 +223,8 @@ class ClaudeCodeRunner(HarnessRunner):
             )
             return RunnerResult(status=RunStatus.UNAVAILABLE, error=availability.detail)
 
-        session_id = str(uuid.uuid4())
+        # A resumed session keeps its id; otherwise every invocation gets a new one.
+        session_id = config.resume_session_id or str(uuid.uuid4())
         bundle = HarnessBundle.load(config.harness_dir) if config.harness_dir else None
         system_prompt_file: Path | None = None
         plugin_dir: Path | None = None
@@ -254,6 +264,7 @@ class ClaudeCodeRunner(HarnessRunner):
                 "argv": [Path(argv[0]).name] + argv[1:],
                 "cli_version": availability.version,
                 "session_id": session_id,
+                "resumed_from": config.resume_session_id,
                 "harness_hash": config.harness_hash,
                 "harness_components": components,
             },

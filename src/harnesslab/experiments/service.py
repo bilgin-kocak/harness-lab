@@ -50,7 +50,7 @@ from harnesslab.core.pricing import PricingTable
 from harnesslab.execution.git import git_version, head_commit
 from harnesslab.execution.sandbox import ExecutionSandbox, LocalWorktreeSandbox, SandboxContext
 from harnesslab.harness.bundle import HarnessBundle
-from harnesslab.improve.protocol import ImproveBaselineError, ImproveResult, run_improvement
+from harnesslab.improve.protocol import ImproveResult, ImproveSetupError, run_improvement
 from harnesslab.runners.base import HarnessRunner, create_runner
 from harnesslab.safety.analyze import SafetyReport, analyze_run
 from harnesslab.storage.database import Database
@@ -438,7 +438,7 @@ class ExperimentService:
                             artifacts_dir=artifacts_dir,
                             redact=run_redactor.redact_text,
                         )
-                    except ImproveBaselineError as exc:
+                    except ImproveSetupError as exc:
                         raise SetupError(str(exc)) from exc
                     self.repo.add_artifact(
                         run_id, "improve", artifacts_dir / "improve.json", "application/json"
@@ -753,6 +753,7 @@ def _apply_improvement(
     metrics.improve_ratio = result.ratio if passed else None
     metrics.improve_progress = result.progress
     metrics.improve_rounds = len(result.rounds)
+    metrics.improve_session = result.session
     metrics.improve_curve = result.curve
     metrics.improve_history = [r.model_dump(mode="json") for r in result.rounds]
     metrics.evaluator_calls = result.evaluator_calls

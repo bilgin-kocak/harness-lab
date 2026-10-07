@@ -134,6 +134,70 @@ baseline: { model: claude-haiku-4-5, evaluator: none }
 compare view and in sweep reports includes an **improvement ratio** interval, so "does a bigger
 evaluator budget help more than a bigger model?" gets an answer with an interval, not an anecdote.
 
+## Fresh or resumed sessions
+
+> **Unreleased.** On `main`; ships in the next release.
+
+By default every round runs in a new agent session. Harness Lab owns the state between rounds
+(the worktree, the best checkpoint, the history and the standing) and hands it to a fresh worker
+in the full prompt. The variant option `improve_session` lets you test that design against the
+alternative, one long conversation that continues across rounds:
+
+```yaml
+variants:
+  - id: claude-resumed
+    runner: claude
+    improve_session: resume       # fresh (the default) | resume
+```
+
+| Round | `fresh` | `resume` |
+| --- | --- | --- |
+| 1 | New session, full prompt. | New session that the harness keeps, full prompt. |
+| 2 and later | New session, full prompt with every earlier round. | Resumes the most recent session with a short delta prompt. |
+
+The delta prompt holds only what the agent has not seen: the round heading, the result of the
+previous round, the baseline and the best so far, the evaluator instructions when there is a
+budget, and a closing instruction to keep improving. When `keep_best` reverted the previous round,
+the agent's memory of its own edits is stale, so the delta prompt says explicitly that Harness Lab
+reverted the files to the best version and asks the agent to read them again. If no earlier round
+reported a session id (the harness failed before its session started, say), that round starts a
+new session with the full prompt, and its `improve_history` note says so. Every round's prompt is
+saved under `round-<n>/prompt.txt` in both modes.
+
+Resume mode needs a runner that can resume a session: `claude`, `codex` and `fake`. With any
+other runner, or an `improve_session` value other than `fresh` or `resume`, the run fails at setup
+with a message naming the problem. Claude Code keeps the first round's session (no
+`--no-session-persistence`) and later rounds pass `--resume <id>`; Codex runs later rounds as
+`codex exec resume … <thread id> -`, which accepts no `profile`.
+
+Things to keep in mind when you compare the two:
+
+- **Transcripts live outside the sandbox.** A resumed session is stored where the CLI keeps its
+  sessions, in your Claude Code or Codex configuration directory (`~/.claude`, or `~/.codex` and
+  `CODEX_HOME`), not in the run's worktree. Harness Lab does not delete those transcripts, and
+  its redaction applies to what it records, not to them.
+- **Compare cost and cached tokens, not just input tokens.** A resumed round re-reads the whole
+  conversation so far, mostly from the prompt cache. Its uncached `input_tokens` look small next
+  to a fresh round's full prompt, while `cached_input_tokens` and the context the model works
+  through keep growing. Cost and cached input tokens are the fair comparison.
+- **Reverts happen under a resumed agent.** With `keep_best: true`, Harness Lab still restores
+  the best checkpoint between rounds; the resumed agent learns it from the delta prompt, not from
+  its own memory.
+
+`improve.json` records the mode as `session`, the run's metrics as `improve_session`, and the
+runner metadata's `improve_rounds` list each round's session id. The run page names the mode in
+the improvement heading. To compare the modes with paired statistics, run both on the same tasks:
+
+```bash
+harnesslab run demo-improve --variants fake-improver,fake-improver-resumed   # seconds, no keys
+harnesslab run demo-improve --variants claude-evaluator,claude-resumed       # real Claude Code
+harnesslab sweep run improve-session --dry-run                               # fresh vs resume
+```
+
+The bundled `improve-session` sweep has one factor, `session` (`fresh` or `resume`), on Claude
+Code with `fresh` as the baseline, so its report compares the two modes task by task, with the
+paired improvement ratio interval described above.
+
 ## Reading the results
 
 | Metric | Meaning |
@@ -145,6 +209,7 @@ evaluator budget help more than a bigger model?" gets an answer with an interval
 | `improve_curve` | Best value so far: the baseline, then after each round. This is the improvement curve. |
 | `improve_history` | Per round: harness status, value, gate result, best so far, kept or reverted, evaluator calls, and a note (the harness's error, why the round could not be evaluated, or why the protocol stopped), redacted like everything else. |
 | `evaluator_calls` | In-loop measurements the agent made across all rounds. |
+| `improve_session` *(unreleased)* | `fresh` or `resume`: whether every round ran in a new agent session or the rounds continued one. |
 
 The run page shows the rounds table and the improvement cards; the experiment page adds the median
 improvement, the number of runs that passed by improving (including those without a finite ratio)

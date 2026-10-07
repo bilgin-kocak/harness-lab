@@ -366,6 +366,10 @@ class RunnerConfig(BaseModel):
     harness_hash: str | None = None
     harness_dir: Path | None = Field(default=None, exclude=True)
     improve_round: int | None = Field(default=None, exclude=True)  # set per improvement round
+    # Per invocation, for improvement rounds in resume mode: the provider session to continue,
+    # and whether the harness must keep this session so a later round can resume it.
+    resume_session_id: str | None = Field(default=None, exclude=True)
+    persist_session: bool = Field(default=False, exclude=True)
 
     def get(self, key: str, default: Any = None) -> Any:
         return self.options.get(key, default)
@@ -598,6 +602,7 @@ class RunMetrics(BaseModel):
     improve_ratio: float | None = None  # > 1 is better: baseline/final (minimize) or final/baseline
     improve_progress: float | None = None  # share of the way from baseline to target
     improve_rounds: int | None = None
+    improve_session: str | None = None  # fresh: a new agent session per round; resume: one
     improve_curve: list[float | None] | None = None  # best so far: baseline, then after each round
     improve_history: list[dict[str, Any]] | None = None
     evaluator_calls: int | None = None

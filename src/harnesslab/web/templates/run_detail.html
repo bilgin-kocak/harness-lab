@@ -20,7 +20,7 @@
 
 {% if metrics.improve_rounds is not none %}
 <section>
-  <h2>Improvement <span class="muted small">{{ metrics.improve_rounds }} round(s) against a measured objective · every round evaluated on a copy with the hidden checks</span></h2>
+  <h2>Improvement <span class="muted small">{{ metrics.improve_rounds }} round(s) against a measured objective{% if metrics.improve_session == "resume" %} · one resumed session{% elif metrics.improve_session %} · a fresh session per round{% endif %} · every round evaluated on a copy with the hidden checks</span></h2>
   <div class="cards">
     <div class="card metric"><div class="label">baseline</div><div class="value">{{ metrics.improve_baseline|num }}</div><div class="sub">the untouched repository</div></div>
     <div class="card metric"><div class="label">best</div><div class="value">{{ metrics.improve_best|num }}</div><div class="sub">final {{ metrics.improve_final|num }}</div></div>

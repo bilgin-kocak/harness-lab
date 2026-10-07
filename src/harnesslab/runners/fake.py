@@ -24,7 +24,9 @@ Options (all optional)::
                                              the sentinel bundle the decider blocks them as a hook would.
 
 On an improvement task, ``solve`` applies the reference solution's ``improve_overlays`` one per
-round (round 1 gets the first overlay) and changes nothing once they run out.
+round (round 1 gets the first overlay) and changes nothing once they run out. Each round reports a
+new session id (``fake-session-<run>-<round>``); a round that resumes a session reports that
+session's id and records it as ``resumed_from``, so tests can follow ``improve_session: resume``.
 
 A harness bundle's ``fake.yaml`` can also simulate harness effects: ``solve_tasks`` / ``fail_tasks``
 override the behaviour per task, ``component_solves: {skills/<name>: [task ids]}`` solves tasks only
@@ -68,6 +70,7 @@ class FakeRunnerCrash(RuntimeError):
 class FakeRunner(HarnessRunner):
     name = "fake"
     description = "Deterministic simulated agent (no API access required)."
+    supports_resume = True
 
     async def check_availability(self, config: RunnerConfig | None = None) -> Availability:
         return Availability(
@@ -505,6 +508,14 @@ class FakeRunner(HarnessRunner):
             if has_component(str(component)):
                 llm_calls += int(extra)
 
+        session_id = f"fake-session-{emit.run_id}"
+        if config.resume_session_id:
+            session_id = config.resume_session_id
+        elif config.improve_round is not None:
+            session_id += f"-{config.improve_round}"
+        metadata: dict[str, object] = {"behavior": behavior, "simulated_cost": cost is not None}
+        if config.resume_session_id:
+            metadata["resumed_from"] = config.resume_session_id
         return RunnerResult(
             status=RunStatus.COMPLETED,
             exit_code=0,
@@ -512,12 +523,12 @@ class FakeRunner(HarnessRunner):
             usage=usage,
             usage_by_model={model: usage},
             reported_cost_usd=cost,
-            provider_session_id=f"fake-session-{emit.run_id}",
+            provider_session_id=session_id,
             model_resolved=model,
             cli_version=FAKE_VERSION,
             num_turns=3,
             llm_calls=llm_calls,
-            metadata={"behavior": behavior, "simulated_cost": cost is not None},
+            metadata=metadata,
         )
 
 

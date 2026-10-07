@@ -1,0 +1,22 @@
+# Does a fresh agent session per round beat one resumed session? (Oct 7 brief: harness-owned
+# state with fresh workers vs. one long conversation)
+# WARNING: real API usage: 2 session modes x 1 task x 3 rounds x 3 repetitions.
+# Compare cost and cached input tokens as well as input tokens: resumed rounds read the earlier
+# conversation from the prompt cache.
+name: improve-session
+suite: demo-improve
+base_variant:
+  runner: claude
+  max_turns: 30
+  permission_mode: acceptEdits
+factors:
+  session:
+    fresh: { improve_session: fresh }
+    resume: { improve_session: resume }
+repetitions: 3
+parallelism: 2
+baseline: { session: fresh }
+objective:
+  require: { min_pass_rate: 0.5 }
+  minimize: cost
+  tie_breaker: wall_time_seconds

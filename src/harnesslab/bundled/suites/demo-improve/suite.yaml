@@ -31,6 +31,12 @@ variants:
     behavior: solve
     eval_calls: 2
 
+  - id: fake-improver-resumed
+    runner: fake
+    description: Fake improver that resumes one session across rounds (delta prompts).
+    behavior: solve
+    improve_session: resume
+
   - id: claude-evaluator
     runner: claude
     model: null
@@ -45,3 +51,11 @@ variants:
     max_turns: 30
     permission_mode: acceptEdits
     improve_eval_budget: 0
+
+  - id: claude-resumed
+    runner: claude
+    model: null
+    description: Claude Code resuming one session across rounds instead of a fresh one per round.
+    max_turns: 30
+    permission_mode: acceptEdits
+    improve_session: resume

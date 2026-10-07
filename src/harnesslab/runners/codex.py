@@ -9,6 +9,15 @@ sandbox (writes limited to the worktree, network disabled by default).  The
 sandbox can be changed through the ``sandbox`` option; ``danger-full-access``
 is never selected implicitly.
 
+Improvement rounds with ``improve_session: resume`` continue the first round's
+thread (Codex keeps sessions by default) with a different argv::
+
+    codex exec resume --json --skip-git-repo-check -c sandbox_mode="workspace-write" ... <id> -
+
+``codex exec resume`` takes no ``--sandbox``, ``-C``, ``--full-auto``, ``--color`` or
+``--profile``: the sandbox goes through ``-c``, the worktree is the process's working
+directory, and a ``profile`` cannot be combined with resume mode.
+
 Options::
 
     executable: codex
@@ -46,6 +55,10 @@ from harnesslab.runners.policies import action_policy_text
 from harnesslab.trace.codex_parser import CodexStreamParser
 
 SANDBOX_MODES = {"workspace-write", "read-only", "danger-full-access"}
+PROFILE_RESUME_ERROR = (
+    "codex profile cannot be combined with improve_session: resume "
+    "(codex exec resume does not accept --profile); remove profile or use improve_session: fresh"
+)
 
 
 def build_codex_command(
@@ -57,22 +70,28 @@ def build_codex_command(
         raise ValueError(
             f"invalid codex sandbox {sandbox!r}; expected one of {sorted(SANDBOX_MODES)}"
         )
-    argv = [exe, "exec", "--json"]
+    resume = config.resume_session_id
+    if resume and config.get("profile"):
+        raise ValueError(PROFILE_RESUME_ERROR)
+    argv = [exe, "exec", "resume", "--json"] if resume else [exe, "exec", "--json"]
     if sandbox == "danger-full-access":
         # Explicit opt-in only: never selected by default.
         argv.append("--dangerously-bypass-approvals-and-sandbox")
-    else:
+    elif not resume:
         if bool(config.get("full_auto", True)) and sandbox == "workspace-write":
             argv.append("--full-auto")
         argv.extend(["--sandbox", sandbox])
     if config.get("skip_git_repo_check", True):
         argv.append("--skip-git-repo-check")
-    argv.extend(["--color", "never"])
-    argv.extend(["-C", str(worktree)])
+    if not resume:
+        argv.extend(["--color", "never"])
+        argv.extend(["-C", str(worktree)])
     if config.model:
         argv.extend(["-m", str(config.model)])
     if config.get("profile"):
         argv.extend(["--profile", str(config.get("profile"))])
+    if resume and sandbox != "danger-full-access":
+        argv.extend(["-c", f'sandbox_mode="{sandbox}"'])
     network = config.get("network_access", False)
     if sandbox == "workspace-write":
         argv.extend(
@@ -88,6 +107,8 @@ def build_codex_command(
     if last_message_path is not None:
         argv.extend(["-o", str(last_message_path)])
     argv.extend(option_list(config.get("extra_args")))
+    if resume:
+        argv.append(resume)
     argv.append("-")  # prompt on stdin
     return argv
 
@@ -96,6 +117,12 @@ def build_codex_command(
 class CodexRunner(HarnessRunner):
     name = "codex"
     description = "OpenAI Codex CLI in non-interactive JSON mode."
+    supports_resume = True
+
+    def resume_error(self, config: RunnerConfig) -> str | None:
+        if config.get("profile"):
+            return PROFILE_RESUME_ERROR
+        return super().resume_error(config)
 
     async def check_availability(self, config: RunnerConfig | None = None) -> Availability:
         exe = str(config.get("executable", "codex")) if config else "codex"
@@ -126,7 +153,9 @@ class CodexRunner(HarnessRunner):
         bundle = HarnessBundle.load(config.harness_dir) if config.harness_dir else None
         prefix = prompt_prefix(bundle) if bundle is not None else ""
         policy = action_policy_text(config.get("action_policy"))
-        prompt = "\n\n".join(p for p in (prefix, policy, task.prompt) if p)
+        # A resumed thread already holds the bundle's and the policy's text from its first turn.
+        parts = (task.prompt,) if config.resume_session_id else (prefix, policy, task.prompt)
+        prompt = "\n\n".join(p for p in parts if p)
         if bundle is not None:
             ignored = sorted(
                 {
@@ -154,6 +183,7 @@ class CodexRunner(HarnessRunner):
                 "prompt_prefix_hash": hashlib.sha256(policy.encode()).hexdigest()[:16]
                 if policy
                 else None,
+                "resumed_from": config.resume_session_id,
                 "harness_hash": config.harness_hash,
             },
         )

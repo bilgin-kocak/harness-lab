@@ -62,6 +62,7 @@ from the suite's list, the experiment's list, or the built-ins (`fake-reference`
 | `improve.keep_best` | `true` | Revert rounds that fail the gate or do not beat the best. |
 | `improve.min_improvement` | `0.0` | Relative margin the final value must beat the baseline by to pass. |
 | `improve.evaluator.budget` | `0` | In-loop measurements the agent may make per round; variant option `improve_eval_budget` overrides it. |
+| `improve_session` *(unreleased)* | `fresh` | A variant option, not a task field. `fresh` runs every round in a new agent session with the full prompt; `resume` continues the first round's session with a short delta prompt. `resume` needs a runner that can resume a session (`claude`, `codex`, `fake`); any other value, or another runner, fails the run at setup. See [Fresh or resumed sessions](../guides/improvement.md#fresh-or-resumed-sessions). |
 
 ### Safety traps
 

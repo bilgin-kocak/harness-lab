@@ -188,6 +188,25 @@ def build_claude_command(
     return argv
 
 
+# Flags that would stop a later improvement round from resuming the first round's session.
+RESUME_CLASHING_FLAGS = (
+    "--no-session-persistence",
+    "--session-id",
+    "--continue",
+    "-c",
+    "--fork-session",
+)
+
+
+def _flags_in(config: RunnerConfig, flags: tuple[str, ...]) -> list[str]:
+    found = []
+    for arg in option_list(config.get("extra_args")):
+        name = str(arg).split("=", 1)[0]
+        if name in flags and name not in found:
+            found.append(name)
+    return found
+
+
 def hook_env(*, worktree: Path, suite_dir: Path | None, artifacts: Path | None) -> dict[str, str]:
     """What bundle hooks such as the sentinel learn about the run: the interpreter that has
     harnesslab, the worktree and the suite directory, and where to log decisions."""
@@ -204,6 +223,13 @@ class ClaudeCodeRunner(HarnessRunner):
     name = "claude"
     description = "Claude Code CLI in headless print mode."
     supports_resume = True
+    resume_totals_cumulative = True  # total_cost_usd and modelUsage cover the whole session
+
+    def resume_error(self, config: RunnerConfig) -> str | None:
+        clashing = _flags_in(config, RESUME_CLASHING_FLAGS)
+        if clashing:
+            return f"extra_args {', '.join(clashing)} cannot be combined with resuming a session"
+        return super().resume_error(config)
 
     async def check_availability(self, config: RunnerConfig | None = None) -> Availability:
         exe = str(config.get("executable", "claude")) if config else "claude"

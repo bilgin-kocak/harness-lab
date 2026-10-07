@@ -110,3 +110,13 @@ def test_gate_metric_defaults_to_pass_rate_and_is_validated():
     assert GrowGate(**gate.model_dump()).metric == "score"
     with pytest.raises(ValidationError):
         GrowGate(metric="cost")
+
+
+def test_gate_metric_cannot_be_the_improvement_ratio():
+    # A candidate that breaks every gate task has no ratio left to compare, so a ratio verdict
+    # would say "not enough tasks" and not_worse_ci would let the regression through.
+    from harnesslab.grow.spec import GrowGate
+
+    with pytest.raises(ValueError):
+        GrowGate(require="not_worse_ci", metric="improve_ratio")
+    assert GrowGate(require="not_worse_ci", metric="score").metric == "score"

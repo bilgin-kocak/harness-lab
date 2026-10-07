@@ -42,7 +42,7 @@ Two honest gaps:
 | `action_policy` | unset | `batched`, `fine` or free text prepended to the prompt |
 | `harness` | unset | a [harness bundle](../reference/bundle-format.md) directory |
 | `skip_git_repo_check` | `true` | `--skip-git-repo-check` |
-| `improve_session` *(unreleased)* | `fresh` | improvement tasks only: `resume` relies on Codex's session persistence (on by default) and continues later rounds with `codex exec resume … <thread id> -`, passing the sandbox as `-c sandbox_mode=` and no `-C`; cannot be combined with `profile`; see [Fresh or resumed sessions](improvement.md#fresh-or-resumed-sessions) |
+| `improve_session` *(unreleased)* | `fresh` | improvement tasks only: `resume` relies on Codex's session persistence (on by default) and continues later rounds with `codex exec resume … <thread id> -`, passing the sandbox as `-c sandbox_mode=` and no `-C`; cannot be combined with `profile`, `--ephemeral` or `extra_args` that `codex exec resume` rejects; see [Fresh or resumed sessions](improvement.md#fresh-or-resumed-sessions) |
 | `extra_args` | `[]` | appended verbatim |
 | `env_passthrough` | `[]` | extra environment variables forwarded |
 | `executable` | `codex` | the binary to run |

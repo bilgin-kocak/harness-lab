@@ -20,6 +20,7 @@ from harnesslab.core.models import (
     RunnerResult,
     RunStatus,
     TaskSpec,
+    UsageTotals,
     VariantSpec,
 )
 from harnesslab.experiments.aggregate import aggregate_variants, compare_variants, samples_from_rows
@@ -814,3 +815,116 @@ def test_the_improve_session_sweep_loads():
     variants = expand_sweep(spec)
     modes = {v.options.get("improve_session") for v in variants}
     assert modes == {"fresh", "resume"} and {v.runner for v in variants} == {"claude"}
+
+
+# -- review fixes: session totals and failed resumes ---------------------------------------
+
+# Real numbers from a two-round Claude Code (Haiku) run in resume mode: the resumed round reports
+# total_cost_usd and modelUsage as running totals for the whole session, usage per invocation.
+HAIKU = "claude-haiku-4-5"
+ROUND_1 = UsageTotals(
+    input_tokens=81, cache_write_tokens=26583, cached_input_tokens=220314, output_tokens=3037
+)
+ROUND_2 = UsageTotals(
+    input_tokens=33, cache_write_tokens=3685, cached_input_tokens=113941, output_tokens=3068
+)
+SESSION_AFTER_2 = ROUND_1.add(ROUND_2)
+
+
+class CumulativeRunner(SessionRunner):
+    """Reports cost and per-model usage the way a resumed Claude Code session does."""
+
+    name = "cumulative"
+    resume_totals_cumulative = True
+    reports: list = []
+
+    async def run(self, task, worktree, config, emit):
+        result = await super().run(task, worktree, config, emit)
+        own, cost, models = CumulativeRunner.reports[config.improve_round - 1]
+        return result.model_copy(
+            update={"usage": own, "reported_cost_usd": cost, "usage_by_model": {HAIKU: models}}
+        )
+
+
+async def _cumulative(settings, db, mode, reports, session_ids):
+    SessionRunner.steps, SessionRunner.session_ids, SessionRunner.seen = (
+        [_score(3), _score(2)],
+        session_ids,
+        [],
+    )
+    CumulativeRunner.reports = reports
+    variant = VariantSpec(id="cumulative", runner="cumulative", improve_session=mode)
+    return await _run(
+        settings,
+        db,
+        [variant],
+        task_update=_score_task(2),
+        factory=lambda name, **kwargs: CumulativeRunner(**kwargs),
+    )
+
+
+async def test_resumed_session_totals_are_not_counted_twice(settings: Settings, db: Database):
+    reports = [(ROUND_1, 0.07052615, ROUND_1), (ROUND_2, 0.1018995, SESSION_AFTER_2)]
+    service, outcome = await _cumulative(settings, db, "resume", reports, ["s1", "s1"])
+    run = outcome.runs[0]
+    assert run.status == RunStatus.COMPLETED, run.error
+    assert round(run.metrics.reported_cost_usd, 4) == 0.1019  # not 0.0705 + 0.1019
+    assert run.metrics.input_tokens == 114 and run.metrics.output_tokens == 6105
+    row = service.repo.get_run(run.run_id)
+    by_model = row.runner_metadata_json.get("usage_by_model") or {}
+    if by_model:  # stored by the runner layer when present
+        assert by_model[HAIKU]["cached_input_tokens"] == SESSION_AFTER_2.cached_input_tokens
+
+
+async def test_fresh_rounds_and_per_invocation_runners_still_add_up(
+    settings: Settings, db: Database
+):
+    fresh = [(ROUND_1, 0.07, ROUND_1), (ROUND_2, 0.03, ROUND_2)]
+    _, outcome = await _cumulative(settings, db, "fresh", fresh, ["s1", "s2"])
+    assert round(outcome.runs[0].metrics.reported_cost_usd, 2) == 0.10
+
+
+def test_cumulative_session_totals_become_per_round_values():
+    from harnesslab.improve.protocol import per_round_totals
+
+    first = RunnerResult(
+        status=RunStatus.COMPLETED, reported_cost_usd=0.07, usage_by_model={HAIKU: ROUND_1}
+    )
+    second = RunnerResult(
+        status=RunStatus.COMPLETED,
+        reported_cost_usd=0.10,
+        usage_by_model={HAIKU: SESSION_AFTER_2},
+    )
+    adjusted = per_round_totals(second, previous=first)
+    assert round(adjusted.reported_cost_usd, 2) == 0.03
+    assert adjusted.usage_by_model[HAIKU] == ROUND_2
+    assert per_round_totals(first, previous=None) is first
+
+
+async def test_a_failed_resume_falls_back_to_a_fresh_session(settings: Settings, db: Database):
+    # Round 2 tries to resume s1 and reports no session id (the resume failed): round 3 must not
+    # keep resuming the same dead session.
+    _, outcome = await _sessions(
+        settings, db, [_score(3), _score(4), _score(2)], ["s1", None, "s3"]
+    )
+    first, second, third = SessionRunner.seen
+    assert second["resume"] == "s1"
+    assert third["resume"] is None
+    assert "## Round 3 of 3: improve the objective" in third["prompt"]  # the full prompt
+    note = outcome.runs[0].metrics.improve_history[2]["note"] or ""
+    assert "could not resume" in note
+
+
+def test_resume_rejects_extra_args_that_break_resuming():
+    from harnesslab.runners.claude import ClaudeCodeRunner
+    from harnesslab.runners.codex import CodexRunner
+
+    def config(runner, *args):
+        return RunnerConfig(runner=runner, options={"extra_args": list(args)})
+
+    assert CodexRunner().resume_error(config("codex")) is None
+    for flag in ("--ephemeral", "--add-dir", "--oss", "-C", "--sandbox"):
+        assert flag in (CodexRunner().resume_error(config("codex", flag, "x")) or ""), flag
+    assert ClaudeCodeRunner().resume_error(config("claude")) is None
+    problem = ClaudeCodeRunner().resume_error(config("claude", "--no-session-persistence"))
+    assert problem and "--no-session-persistence" in problem

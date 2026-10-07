@@ -69,7 +69,7 @@ Override it per variant with `allowed_tools`.
 | `action_policy` | unset | `batched`, `fine` or free text appended to the system prompt |
 | `harness` | unset | a [harness bundle](../reference/bundle-format.md) directory |
 | `include_hook_events` | `true` | `--include-hook-events`: every hook that runs becomes a `hook` event in the trace (see [Safety](safety.md#hook-events)); set `false` for CLI versions without the flag |
-| `improve_session` *(unreleased)* | `fresh` | improvement tasks only: `resume` turns session persistence on (no `--no-session-persistence`) and continues later rounds with `--resume <id>` instead of `--session-id`; see [Fresh or resumed sessions](improvement.md#fresh-or-resumed-sessions) |
+| `improve_session` *(unreleased)* | `fresh` | improvement tasks only: `resume` turns session persistence on (no `--no-session-persistence`) and continues later rounds with `--resume <id>` instead of `--session-id`; a resumed round's cost is the session's running total, of which Harness Lab keeps the round's share, and `max_budget_usd` applies to the whole session; see [Fresh or resumed sessions](improvement.md#fresh-or-resumed-sessions) |
 | `extra_args` | `[]` | appended verbatim (forbidden flags rejected) |
 | `env_passthrough` | `[]` | extra environment variables forwarded to the CLI |
 | `executable` | `claude` | the binary to run |

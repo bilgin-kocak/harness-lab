@@ -25,6 +25,8 @@ from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel
 
+from harnesslab.core.models import VerdictMetric
+
 if TYPE_CHECKING:  # aggregate imports this module; RunSample is only needed for annotations
     from harnesslab.experiments.aggregate import RunSample
 
@@ -33,7 +35,6 @@ DEFAULT_LEVEL = 0.95
 DEFAULT_MIN_TASKS = 5
 
 Verdict = Literal["better", "worse", "no evidence", "not enough tasks"]
-VerdictMetric = Literal["pass_rate", "score", "improve_ratio"]
 
 VERDICT_METRICS: tuple[VerdictMetric, ...] = ("pass_rate", "score", "improve_ratio")
 METRIC_LABELS: dict[str, str] = {
@@ -188,6 +189,14 @@ def paired_tasks(
     return out
 
 
+TIE_TOLERANCE = 1e-9
+
+
+def _snap(diff: float) -> float:
+    """Float noise is a tie: means that are equal on paper can differ in their last bits."""
+    return 0.0 if abs(diff) <= TIE_TOLERANCE else diff
+
+
 def bootstrap_mean_diff(
     diffs: list[float],
     *,
@@ -264,7 +273,7 @@ def paired_comparison(
 
     metric_diffs: dict[str, list[float]] = {
         name: [
-            vb - va
+            _snap(vb - va)
             for va, vb in (t.metric_values(name) for t in tasks)
             if va is not None and vb is not None
         ]

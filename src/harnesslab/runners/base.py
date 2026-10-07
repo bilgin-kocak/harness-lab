@@ -26,6 +26,10 @@ class HarnessRunner(ABC):
     # Whether the runner honours RunnerConfig.resume_session_id and persist_session, so that
     # improvement rounds can continue one agent session (``improve_session: resume``).
     supports_resume: bool = False
+    # Whether a resumed session reports cost and per-model usage as running totals for the whole
+    # session rather than for one invocation (Claude Code does); the improvement protocol then
+    # keeps only each round's share.
+    resume_totals_cumulative: bool = False
 
     def __init__(self, *, artifacts_dir: Path | None = None) -> None:
         # Directory where the runner may write large auxiliary files (raw

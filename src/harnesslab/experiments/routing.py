@@ -24,6 +24,7 @@ from pydantic import BaseModel, Field
 from harnesslab.experiments.aggregate import RunSample
 
 HELD_OUT_NOTE = "needs at least 2 repetitions per variant"
+HALVES_NOTE = "no task has valid runs from every variant in both halves (even and odd repetitions)"
 
 
 class RoutingGap(BaseModel):
@@ -32,6 +33,7 @@ class RoutingGap(BaseModel):
     variant_keys: list[str]
     n_tasks: int = 0  # tasks with at least one valid run from every variant
     n_excluded: int = 0  # requested tasks left out because some variant has no valid run
+    excluded_variants: list[str] = Field(default_factory=list)  # variants with no valid run
     best_single: str | None = None
     best_single_rate: float | None = None  # mean per-task pass rate of best_single
     oracle_rate: float | None = None  # mean over tasks of the best variant's pass rate
@@ -45,7 +47,7 @@ class RoutingGap(BaseModel):
     def summary(self) -> str:
         """One plain-text line, e.g. for ``sweep report`` and ``experiment show``."""
         if self.best_single is None or self.gap is None:
-            return "no task has valid runs from every variant"
+            return self.note or "no task has valid runs from every variant"
         line = (
             f"best single {self.best_single} {self.best_single_rate:.0%} · best per task "
             f"{self.oracle_rate:.0%} ({self.gap * 100:+.0f} points, "
@@ -59,6 +61,8 @@ class RoutingGap(BaseModel):
             line += f" · held out: {self.note or HELD_OUT_NOTE}"
         if self.n_excluded:
             line += f" · {self.n_excluded} tasks left out (not run validly by every variant)"
+        if self.excluded_variants:
+            line += f" · {', '.join(self.excluded_variants)} left out (no valid runs)"
         return line
 
 
@@ -95,14 +99,15 @@ def _route(rates: dict[str, float], single: str, variant_keys: list[str]) -> str
 
 def _held_out_gain(
     valid: list[RunSample], tasks: list[str], variant_keys: list[str]
-) -> tuple[float | None, int]:
+) -> tuple[float | None, int, str | None]:
     halves = [
         _rates(s for s in valid if s.repetition % 2 == 0),
         _rates(s for s in valid if s.repetition % 2 == 1),
     ]
     usable = [t for t in tasks if all(_complete(h, [t], variant_keys) for h in halves)]
     if not usable:
-        return None, 0
+        repeated = any(s.repetition % 2 == 1 for s in valid)
+        return None, 0, HALVES_NOTE if repeated else HELD_OUT_NOTE
     diffs: list[float] = []
     for h in (0, 1):
         choose, score = halves[h], halves[1 - h]
@@ -110,7 +115,7 @@ def _held_out_gain(
         routed = statistics.fmean(score[t][_route(choose[t], single, variant_keys)] for t in usable)
         fixed = statistics.fmean(score[t][single] for t in usable)
         diffs.append(routed - fixed)
-    return statistics.fmean(diffs), len(usable)
+    return statistics.fmean(diffs), len(usable), None
 
 
 def routing_gap(
@@ -120,8 +125,9 @@ def routing_gap(
 
     None with fewer than two variants or two tasks: then there is nothing to choose between.
 
-    Only valid runs count, and only tasks on which every variant has at least one valid run.
-    Ties go to the earlier variant in ``variant_keys``.
+    Only valid runs count. A variant without any valid run (skipped, or its harness unavailable)
+    is left out and named; of the rest, only tasks on which every variant has at least one valid
+    run count. Ties go to the earlier variant in ``variant_keys``.
     """
     if len(variant_keys) < 2 or len(task_keys) < 2:
         return None
@@ -131,13 +137,20 @@ def routing_gap(
         for s in samples
         if s.is_valid and s.task_key in wanted_tasks and s.variant_key in wanted_variants
     ]
+    ran = {s.variant_key for s in valid}
+    excluded = [v for v in variant_keys if v not in ran]
+    variant_keys = [v for v in variant_keys if v in ran]
     rates = _rates(valid)
-    tasks = _complete(rates, task_keys, variant_keys)
+    tasks = _complete(rates, task_keys, variant_keys) if len(variant_keys) > 1 else []
     result = RoutingGap(
-        variant_keys=list(variant_keys),
+        variant_keys=variant_keys,
+        excluded_variants=excluded,
         n_tasks=len(tasks),
         n_excluded=len(task_keys) - len(tasks),
     )
+    if len(variant_keys) < 2:
+        result.note = "fewer than two variants have valid runs"
+        return result
     if not tasks:
         result.note = "no task has valid runs from every variant"
         return result
@@ -151,7 +164,7 @@ def routing_gap(
     result.per_task_best = {
         t: [v for v in variant_keys if rates[t][v] == task_best[t]] for t in tasks
     }
-    result.held_out_gain, result.n_held_out_tasks = _held_out_gain(valid, tasks, variant_keys)
-    if result.held_out_gain is None:
-        result.note = HELD_OUT_NOTE
+    result.held_out_gain, result.n_held_out_tasks, result.note = _held_out_gain(
+        valid, tasks, variant_keys
+    )
     return result

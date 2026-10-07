@@ -204,3 +204,14 @@ def test_compare_variants_passes_the_metric_through():
     assert compare_variants(samples, "A", "B", tasks).paired.verdict == "no evidence"
     scored = compare_variants(samples, "A", "B", tasks, metric="score")
     assert scored.paired.metric == "score" and scored.paired.verdict == "better"
+
+
+def test_float_noise_is_a_tie_not_a_win():
+    # Means that are equal on paper differ in the last bits: that must not become a verdict.
+    samples = []
+    for task in ("t0", "t1", "t2"):
+        samples += [_m(task, "A", True, score=v, rep=i) for i, v in enumerate((0.1, 0.2, 0.3))]
+        samples += [_m(task, "B", True, score=0.2, rep=i) for i in range(2)]
+    result = paired_comparison(samples, "A", "B", metric="score", min_tasks=1)
+    assert (result.wins, result.losses, result.ties) == (0, 0, 3)
+    assert result.verdict == "no evidence"

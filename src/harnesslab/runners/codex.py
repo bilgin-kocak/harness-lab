@@ -111,6 +111,25 @@ def build_codex_command(
     return argv
 
 
+# extra_args that `codex exec resume` rejects (Codex CLI 0.153), or that keep the first round's
+# session from being saved (--ephemeral).
+RESUME_UNSUPPORTED_FLAGS = (
+    "--ephemeral",
+    "--oss",
+    "--local-provider",
+    "-p",
+    "--profile",
+    "-s",
+    "--sandbox",
+    "--approve-for-me",
+    "-C",
+    "--cd",
+    "--add-dir",
+    "--color",
+    "--full-auto",
+)
+
+
 @register_runner
 class CodexRunner(HarnessRunner):
     name = "codex"
@@ -120,6 +139,16 @@ class CodexRunner(HarnessRunner):
     def resume_error(self, config: RunnerConfig) -> str | None:
         if config.get("profile"):
             return PROFILE_RESUME_ERROR
+        clashing = []
+        for arg in option_list(config.get("extra_args")):
+            name = str(arg).split("=", 1)[0]
+            if name in RESUME_UNSUPPORTED_FLAGS and name not in clashing:
+                clashing.append(name)
+        if clashing:
+            return (
+                f"extra_args {', '.join(clashing)} cannot be combined with resuming a session "
+                "(codex exec resume rejects them, or the session would not be kept)"
+            )
         return super().resume_error(config)
 
     async def check_availability(self, config: RunnerConfig | None = None) -> Availability:

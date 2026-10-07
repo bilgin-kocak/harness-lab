@@ -165,15 +165,18 @@ previous round, the baseline and the best so far, the evaluator instructions whe
 budget, and a closing instruction to keep improving. When `keep_best` reverted the previous round,
 the agent's memory of its own edits is stale, so the delta prompt says explicitly that Harness Lab
 reverted the files to the best version and asks the agent to read them again. If no earlier round
-reported a session id (the harness failed before its session started, say), that round starts a
-new session with the full prompt, and its `improve_history` note says so. Every round's prompt is
-saved under `round-<n>/prompt.txt` in both modes.
+reported a session id (the harness failed before its session started, say), or the last resume
+failed without reporting one, that round starts a new session with the full prompt, and its
+`improve_history` note says so. Every round's prompt is saved under `round-<n>/prompt.txt` in both
+modes.
 
 Resume mode needs a runner that can resume a session: `claude`, `codex` and `fake`. With any
 other runner, or an `improve_session` value other than `fresh` or `resume`, the run fails at setup
 with a message naming the problem. Claude Code keeps the first round's session (no
 `--no-session-persistence`) and later rounds pass `--resume <id>`; Codex runs later rounds as
-`codex exec resume … <thread id> -`, which accepts no `profile`.
+`codex exec resume … <thread id> -`. Settings that would break resuming are refused at setup: a
+Codex `profile`, `extra_args` that `codex exec resume` rejects or `--ephemeral`, and Claude
+`extra_args` such as `--no-session-persistence` or `--session-id`.
 
 Things to keep in mind when you compare the two:
 
@@ -184,7 +187,10 @@ Things to keep in mind when you compare the two:
 - **Compare cost and cached tokens, not just input tokens.** A resumed round re-reads the whole
   conversation so far, mostly from the prompt cache. Its uncached `input_tokens` look small next
   to a fresh round's full prompt, while `cached_input_tokens` and the context the model works
-  through keep growing. Cost and cached input tokens are the fair comparison.
+  through keep growing. Cost and cached input tokens are the fair comparison. A resumed Claude
+  Code session reports its cost and per-model usage as running totals for the whole session;
+  Harness Lab keeps each round's share, so the run's totals count every token once. For the same
+  reason Claude Code's `max_budget_usd` applies to the whole session in a resumed round.
 - **Reverts happen under a resumed agent.** With `keep_best: true`, Harness Lab still restores
   the best checkpoint between rounds; the resumed agent learns it from the delta prompt, not from
   its own memory.
@@ -201,7 +207,9 @@ harnesslab sweep run improve-session --dry-run                               # f
 
 The bundled `improve-session` sweep has one factor, `session` (`fresh` or `resume`), on Claude
 Code with `fresh` as the baseline, so its report compares the two modes task by task, with the
-verdict given on the improvement score (`verdict_metric: score`).
+verdict given on the improvement score (`verdict_metric: score`). The demo suite has a single
+task, so on it the verdict stays "not enough tasks"; point the sweep at an improvement suite of
+your own with at least five tasks (`min_tasks`) to get one.
 
 ## Reading the results
 

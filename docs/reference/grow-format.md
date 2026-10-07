@@ -39,7 +39,7 @@ budget:
   max_optimizer_cost_usd: 10               # the optimizer's own cost
 gate:
   require: no_regression                   # no_regression | not_worse_ci | better_ci
-  metric: pass_rate                        # pass_rate | score | improve_ratio, for the _ci rules (unreleased)
+  metric: pass_rate                        # pass_rate | score, for the _ci rules (unreleased)
   min_tasks: 5                             # paired gate tasks needed for a statistical verdict
   resamples: 2000
   seed: 0
@@ -61,8 +61,10 @@ Validation rules:
   regression (paired interval below zero over at least `gate.min_tasks` gate tasks); `better_ci`
   accepts only with evidence of an improvement. With small gate sets `better_ci` rejects almost
   everything, which is the honest result.
-- `gate.metric` *(unreleased)*: what `not_worse_ci` and `better_ci` judge, `pass_rate` (default),
-  `score` or `improve_ratio` (see [Verdict metric](../guides/results.md#verdict-metric)).
+- `gate.metric` *(unreleased)*: what `not_worse_ci` and `better_ci` judge, `pass_rate` (default)
+  or `score` (see [Verdict metric](../guides/results.md#verdict-metric)). The improvement ratio is
+  not allowed here: a candidate that breaks a gate task has no ratio on it, so a ratio verdict
+  would see fewer tasks instead of a regression.
   `gate.min_tasks` counts the gate tasks where both versions have that metric, and a rejection
   reason shows its interval, for example `gate: evidence of regression (6 task(s), score diff
   [-0.50, -0.20])`. Use `score` when the gate tasks are improvement tasks. `no_regression` always

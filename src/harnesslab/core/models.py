@@ -26,7 +26,9 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from harnesslab.core.ids import hash_value
-from harnesslab.experiments.stats import VerdictMetric
+
+# What a paired comparison's verdict judges (see harnesslab.experiments.stats).
+VerdictMetric = Literal["pass_rate", "score", "improve_ratio"]
 
 # ---------------------------------------------------------------------------
 # Task specification

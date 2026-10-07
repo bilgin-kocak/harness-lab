@@ -36,7 +36,7 @@ The document contains:
 - `routing` *(unreleased)*: whether choosing a variant per task would beat the best single
   variant, in sample and held out (see
   [Would choosing per task help?](sweeps.md#would-choosing-per-task-help)); `null` with fewer
-  than two variants;
+  than two variants or tasks;
 - `sweep_report`: the recommendation report when the experiment was a sweep, including paired
   evidence against the runner-up and the baseline;
 - `ablation_report`: per-component verdicts when the experiment was an ablation.

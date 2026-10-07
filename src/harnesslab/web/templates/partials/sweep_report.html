@@ -16,6 +16,7 @@
           · tokens {{ w.recommended.median_tokens|int }} · {{ w.recommended.median_wall_time|seconds }}</div>
         {% if w.runner_up %}<div class="sub">runner-up: {{ w.runner_up.variant_key }}</div>{% endif %}
         {% if w.holdout %}<div class="sub">holdout ({{ w.holdout.task_keys|join(", ") }}): pass {{ w.holdout.pass_rate|pct }} over {{ w.holdout.n_valid }} runs</div>{% endif %}
+        {% if w.routing %}<div class="sub">per-task selection: {{ w.routing.summary() }}</div>{% endif %}
       {% else %}
         <div class="value badge-fail">none eligible</div>
         <div class="sub">no configuration met the requirement{% if w.best_effort %} · best effort {{ w.best_effort.variant_key }} at {{ w.best_effort.pass_rate|pct }}{% endif %}</div>

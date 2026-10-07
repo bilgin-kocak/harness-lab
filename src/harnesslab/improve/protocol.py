@@ -332,6 +332,37 @@ async def _evaluate(
         )
 
 
+def per_round_totals(result: RunnerResult, previous: RunnerResult | None) -> RunnerResult:
+    """``result``'s own share of a resumed session's running totals.
+
+    A resumed Claude Code session reports ``total_cost_usd`` and per-model usage as totals for the
+    whole session so far (its per-invocation ``usage`` is reported separately and stays as it
+    is). Subtracting what the session reported last time leaves this invocation's share, so
+    adding up the rounds counts every token and every cent once.
+    """
+    if previous is None:
+        return result
+    cost = result.reported_cost_usd
+    if cost is not None and previous.reported_cost_usd is not None:
+        cost = max(0.0, cost - previous.reported_cost_usd)
+    by_model = {
+        model: _minus(usage, previous.usage_by_model.get(model))
+        for model, usage in result.usage_by_model.items()
+    }
+    return result.model_copy(update={"reported_cost_usd": cost, "usage_by_model": by_model})
+
+
+def _minus(total: UsageTotals, earlier: UsageTotals | None) -> UsageTotals:
+    if earlier is None:
+        return total
+    return UsageTotals(
+        **{
+            name: max(0, getattr(total, name) - getattr(earlier, name))
+            for name in UsageTotals.model_fields
+        }
+    )
+
+
 def merge_runner_results(
     results: list[RunnerResult], redact: Callable[[str], str] | None = None
 ) -> RunnerResult:
@@ -480,16 +511,24 @@ async def run_improvement(
     # Resume mode: the most recent session id any round reported, and the round that reported it.
     session_id: str | None = None
     session_round = 0
+    lost_session = False  # the last resume reported no session id, so it failed
+    # The totals each session last reported, for runners whose resumed sessions report running
+    # totals (see per_round_totals).
+    session_totals: dict[str, RunnerResult] = {}
     try:
         for round_no in range(1, rounds + 1):
             if budget > 0:
                 reset_calls(workdir)
             resume_id = session_id if resume else None
-            fallback = (
-                "no earlier round reported a session id; this round started a fresh session"
-                if resume and round_no > 1 and resume_id is None
-                else None
-            )
+            fallback = None
+            if resume and round_no > 1 and resume_id is None:
+                fallback = (
+                    "the previous round could not resume its session; this round started a "
+                    "fresh session"
+                    if lost_session
+                    else "no earlier round reported a session id; this round started a fresh "
+                    "session"
+                )
             if resume_id is not None:
                 prompt = build_resume_prompt(
                     task,
@@ -521,8 +560,9 @@ async def run_improvement(
                 payload={"round": round_no, "rounds": rounds, "best": best, "baseline": baseline},
             )
             start = len(emitter.events)
+            runner = make_runner(round_dir)
             result = await invoke(
-                make_runner(round_dir),
+                runner,
                 task.model_copy(update={"prompt": prompt}),
                 config.model_copy(
                     update={
@@ -532,9 +572,19 @@ async def run_improvement(
                     }
                 ),
             )
+            if result.provider_session_id:
+                reported = result
+                if resume_id == result.provider_session_id and runner.resume_totals_cumulative:
+                    result = per_round_totals(result, previous=session_totals.get(resume_id))
+                session_totals[result.provider_session_id] = reported
             results.append(result)
             if result.provider_session_id:
                 session_id, session_round = result.provider_session_id, round_no
+                lost_session = False
+            elif resume_id is not None:
+                # A resume that reports no session id failed. Resuming the same id again would
+                # fail the same way in every later round, so the next round starts afresh.
+                session_id, lost_session = None, True
             calls = max(
                 count_calls(workdir) if budget > 0 else 0, _trace_evaluator_calls(emitter, start)
             )

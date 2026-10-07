@@ -121,7 +121,11 @@ def test_fewer_than_two_variants_or_tasks_or_no_complete_task():
     assert routing_gap(samples, ["t0", "t1"], ["A"]) is None
     assert routing_gap(samples, ["t0", "t1"], []) is None
     assert routing_gap(samples, ["t0"], ["A", "B"]) is None  # one task: nothing to choose
-    empty = routing_gap(samples, ["t0", "t1"], ["A", "B"])
+    alone = routing_gap(samples, ["t0", "t1"], ["A", "B"])  # B never ran validly
+    assert alone.excluded_variants == ["B"] and alone.n_tasks == 0 and alone.best_single is None
+    assert "fewer than two variants have valid runs" in alone.summary()
+    disjoint = _grid({"A": {"t0"}}, ["t0"], reps=2) + _grid({"B": {"t1"}}, ["t1"], reps=2)
+    empty = routing_gap(disjoint, ["t0", "t1"], ["A", "B"])
     assert empty.n_tasks == 0 and empty.n_excluded == 2 and empty.best_single is None
     assert empty.gap is None and empty.held_out_gain is None
     assert "no task has valid runs from every variant" in empty.summary()
@@ -193,3 +197,32 @@ def test_sweep_and_experiment_surfaces_print_the_routing_line(tmp_path: Path):
         assert data["routing"]["held_out_gain"] == pytest.approx(1 / 3)
         assert data["sweep_report"]["workloads"][0]["routing"]["n_improvable"] == 1
     db.dispose()
+
+
+def test_a_variant_without_valid_runs_is_left_out_not_every_task():
+    samples = _grid(SPECIALISED, TASKS, reps=2) + [
+        RunSample(run_id=f"skip-{t}", task_key=t, variant_key="D", verified_pass=None)
+        for t in TASKS
+    ]
+    gap = routing_gap(samples, TASKS, ["A", "B", "C", "D"])
+    assert gap.excluded_variants == ["D"] and gap.n_tasks == len(TASKS)
+    assert gap.best_single == "A" and gap.gap > 0
+    assert "D" in gap.summary()
+
+
+def test_held_out_note_names_the_real_reason():
+    # Two repetitions, but variant B's second repetition was not valid: no task has valid runs in
+    # both halves for every variant, which is not the same as "needs 2 repetitions".
+    samples = [
+        _s("t0", "A", True, 0),
+        _s("t0", "A", False, 1),
+        _s("t1", "A", True, 0),
+        _s("t1", "A", True, 1),
+        _s("t0", "B", True, 0),
+        _s("t1", "B", False, 0),
+        RunSample(run_id="b-t0-1", task_key="t0", variant_key="B", repetition=1),
+        RunSample(run_id="b-t1-1", task_key="t1", variant_key="B", repetition=1),
+    ]
+    gap = routing_gap(samples, ["t0", "t1"], ["A", "B"])
+    assert gap.held_out_gain is None
+    assert "both halves" in (gap.note or "") and "2 repetitions" not in (gap.note or "")

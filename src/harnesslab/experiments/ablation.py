@@ -29,6 +29,7 @@ from harnesslab.experiments.stats import (
     DEFAULT_MIN_TASKS,
     DEFAULT_RESAMPLES,
     PairedComparison,
+    VerdictMetric,
     paired_comparison,
 )
 from harnesslab.harness.bundle import HarnessBundle
@@ -79,6 +80,7 @@ class AblationSpec(BaseModel):
     resamples: int = DEFAULT_RESAMPLES
     seed: int = 0
     min_tasks: int = DEFAULT_MIN_TASKS
+    metric: VerdictMetric = "pass_rate"  # what every component verdict is about
 
 
 def plan_ablation(
@@ -89,6 +91,7 @@ def plan_ablation(
     resamples: int = DEFAULT_RESAMPLES,
     seed: int = 0,
     min_tasks: int = DEFAULT_MIN_TASKS,
+    metric: VerdictMetric = "pass_rate",
 ) -> tuple[list[VariantSpec], AblationSpec]:
     """Write the full, minimal and leave-one-out bundles under ``out_dir`` and build variants."""
     bundle = HarnessBundle.load(bundle_dir)
@@ -129,6 +132,7 @@ def plan_ablation(
         resamples=resamples,
         seed=seed,
         min_tasks=min_tasks,
+        metric=metric,
     )
     return variants, spec
 
@@ -176,6 +180,7 @@ def analyze_ablation(
             resamples=spec.resamples,
             seed=spec.seed,
             min_tasks=spec.min_tasks,
+            metric=spec.metric,
         )
 
     full_vs_minimal = compare(MINIMAL)
@@ -189,10 +194,15 @@ def analyze_ablation(
         for component, key in spec.variant_keys.items()
     ]
     notes: list[str] = []
-    if full_vs_minimal.n_tasks < spec.min_tasks:
+    if full_vs_minimal.n_metric_tasks < spec.min_tasks:
+        with_metric = (
+            ""
+            if spec.metric == "pass_rate"
+            else f" with {full_vs_minimal.metric_label} on both sides"
+        )
         notes.append(
-            f"Only {full_vs_minimal.n_tasks} paired task(s); verdicts need at least {spec.min_tasks}. "
-            "Repetitions reduce noise within a task but do not add tasks."
+            f"Only {full_vs_minimal.n_metric_tasks} paired task(s){with_metric}; verdicts need at "
+            f"least {spec.min_tasks}. Repetitions reduce noise within a task but do not add tasks."
         )
     return AblationReport(
         bundle=spec.bundle,

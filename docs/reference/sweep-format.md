@@ -23,6 +23,7 @@ tasks: null                                          # optional subset of task i
 workload_by: suite                                   # suite | task | tag
 holdout_tasks: []                                    # excluded from selection, reported separately
 baseline: { toolset: minimal }                       # optional: factor levels of the minimal configuration
+verdict_metric: pass_rate                            # pass_rate | score | improve_ratio (unreleased)
 sample: { max_configs: 8, seed: 7 }                  # optional random subset of the grid
 budget: { max_runs: 60, max_cost_usd: 15 }           # optional; remaining runs are recorded as skipped
 objective:
@@ -40,6 +41,7 @@ keep_worktrees: false
 | `workload_by` | `suite` | One recommendation per suite, per task, or per tag. |
 | `holdout_tasks` | `[]` | The recommended configuration's pass rate on these is reported, never used for selection. |
 | `baseline` | none | Factor levels naming the minimal configuration. Each workload's recommendation is compared with it (and with the runner-up) by the paired analysis in [Read and export results](../guides/results.md#statistics). Sampling never drops it. |
+| `verdict_metric` *(unreleased)* | `pass_rate` | What the paired verdicts against the baseline and the runner-up are about: `pass_rate`, `score` or `improve_ratio` (see [Verdict metric](../guides/results.md#verdict-metric)). Use `score` for improvement tasks. It does not change eligibility or the ranking, which stay on `objective`. `sweep report` names it in its header. |
 | `sample.max_configs`, `sample.seed` | none | Deterministic random subset of the grid. |
 | `budget.max_runs`, `budget.max_cost_usd` | none | Runs beyond the budget are recorded with status `skipped`. Cost counts reported cost, else estimated cost. |
 | `objective.minimize` | `cost` | `cost` uses reported cost, else the pricing estimate, else total tokens, and the report names which. |

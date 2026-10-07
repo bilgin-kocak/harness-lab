@@ -8,6 +8,7 @@ import platform
 import shlex
 import shutil
 import sys
+from enum import StrEnum
 from pathlib import Path
 from typing import Annotated, Any
 
@@ -52,7 +53,7 @@ from harnesslab.experiments.spec import (
     resolve_variants,
     select_tasks,
 )
-from harnesslab.experiments.stats import PairedComparison, paired_comparison
+from harnesslab.experiments.stats import METRIC_LABELS, PairedComparison, paired_comparison
 from harnesslab.experiments.sweep import (
     BudgetGate,
     SweepReport,
@@ -131,16 +132,36 @@ def _signed(value: float, digits: int) -> str:
     return f"{value:+.{digits}f}"
 
 
+class MetricChoice(StrEnum):
+    """The metric a paired verdict is about (see ``harnesslab.experiments.stats``)."""
+
+    pass_rate = "pass_rate"
+    score = "score"
+    improve_ratio = "improve_ratio"
+
+
+METRIC_HELP = (
+    "Metric the verdict, wins/losses and sign test are about: pass_rate, score (verified_score; "
+    "recommended for improvement tasks) or improve_ratio (tasks where both sides have a ratio)."
+)
+
+
 def _print_paired(p: PairedComparison, title: str | None = None) -> None:
     """One evidence block: verdict, task counts, sign test and bootstrap intervals."""
     colour = {"better": "green", "worse": "red"}.get(p.verdict, "yellow")
     sign = f", sign test p = {p.sign_test_p:.3f}" if p.sign_test_p is not None else ""
+    counted = (
+        str(p.n_metric_tasks)
+        if p.n_metric_tasks == p.n_tasks
+        else f"{p.n_metric_tasks} of {p.n_tasks}"
+    )
     console.print(
-        f"{title or f'{p.b} vs {p.a}'}: [{colour}]{p.verdict}[/] over {p.n_tasks} paired task(s) "
-        f"(wins {p.wins}, losses {p.losses}, ties {p.ties}{sign})"
+        f"{title or f'{p.b} vs {p.a}'}: [{colour}]{p.verdict}[/] on {p.metric_label} over "
+        f"{counted} paired task(s) (wins {p.wins}, losses {p.losses}, ties {p.ties}{sign})"
     )
     rows = [
         ("pass rate (pts)", p.pass_rate_diff, 100.0, 1),
+        ("score", p.score_diff, 1.0, 2),
         (p.cost_kind, p.cost_diff, 1.0, 4),
         ("llm_calls", p.llm_calls_diff, 1.0, 2),
         ("improvement ratio", p.improve_ratio_diff, 1.0, 2),
@@ -154,8 +175,10 @@ def _print_paired(p: PairedComparison, title: str | None = None) -> None:
             f"{iv.level:.0%} interval, P(>0) {iv.p_positive:.0%}"
         )
     if not p.enough_tasks:
+        with_metric = "" if p.metric == "pass_rate" else f" with {p.metric_label} on both sides"
         console.print(
-            f"  [dim]fewer than {p.min_tasks} paired tasks: no verdict (repetitions do not count as tasks)[/]"
+            f"  [dim]fewer than {p.min_tasks} paired tasks{with_metric}: no verdict "
+            "(repetitions do not count as tasks)[/]"
         )
 
 
@@ -1000,6 +1023,9 @@ def experiment_compare(
     resamples: Annotated[int, typer.Option("--resamples", min=100)] = 2000,
     seed: Annotated[int, typer.Option("--seed")] = 0,
     min_tasks: Annotated[int, typer.Option("--min-tasks", min=1)] = 5,
+    metric: Annotated[
+        MetricChoice, typer.Option("--metric", help=METRIC_HELP)
+    ] = MetricChoice.pass_rate,
 ) -> None:
     """Paired, task-level comparison of two variants: bootstrap intervals and a sign test."""
     settings = _settings(ctx)
@@ -1029,15 +1055,27 @@ def experiment_compare(
         resamples=resamples,
         seed=seed,
         min_tasks=min_tasks,
+        metric=metric.value,
     )
     _print_paired(result)
     table = Table(box=None, padding=(0, 1))
-    for col in ("task", f"{a} pass", f"{b} pass", "Δ"):
+    columns = ["task", f"{a} pass", f"{b} pass", "Δ"]
+    if result.metric != "pass_rate":
+        columns += [f"{a} {result.metric}", f"{b} {result.metric}", f"Δ {result.metric}"]
+    for col in columns:
         table.add_column(col, justify="left" if col == "task" else "right")
     for t in result.tasks:
-        table.add_row(
-            t.task_key, f"{t.a_rate:.0%}", f"{t.b_rate:.0%}", f"{(t.b_rate - t.a_rate) * 100:+.0f}"
-        )
+        row = [
+            t.task_key,
+            f"{t.a_rate:.0%}",
+            f"{t.b_rate:.0%}",
+            f"{(t.b_rate - t.a_rate) * 100:+.0f}",
+        ]
+        if result.metric != "pass_rate":
+            va, vb = t.metric_values(result.metric)
+            delta = _signed(vb - va, 2) if va is not None and vb is not None else "—"
+            row += [_fmt(va), _fmt(vb), delta]
+        table.add_row(*row)
     console.print(table)
 
 
@@ -1101,6 +1139,7 @@ def _print_sweep_report(report: SweepReport) -> None:
         f"[bold]sweep {report.name}[/]: {report.n_configs} configuration(s), {report.n_runs} run(s)"
         + (f", {report.n_skipped} skipped by budget" if report.n_skipped else "")
         + f" · objective: minimize [bold]{kind}[/] subject to pass rate ≥ {report.min_pass_rate:.0%}"
+        + f" · verdicts on {METRIC_LABELS[report.verdict_metric]}"
     )
     for note in report.notes:
         console.print(f"[dim]note: {note}[/]")
@@ -1649,11 +1688,14 @@ def _print_ablation(report: AblationReport) -> None:
     for note in report.notes:
         console.print(f"[dim]note: {note}[/]")
     _print_paired(report.full_vs_minimal, title="whole bundle (full vs minimal)")
+    metric = report.full_vs_minimal.metric
+    # The verdict column is about the ablation's metric, so its interval is shown next to it.
+    scale, digits, unit = (100.0, 1, " (pts)") if metric == "pass_rate" else (1.0, 2, "")
     table = Table(title="component effects: full minus without-component", box=None, padding=(0, 1))
     for col in (
         "component",
         "verdict",
-        "Δ pass (pts)",
+        f"Δ {METRIC_LABELS[metric]}{unit}",
         "interval",
         "Δ cost",
         "Δ llm_calls",
@@ -1663,12 +1705,14 @@ def _print_ablation(report: AblationReport) -> None:
     colours = {"helps": "green", "hurts": "red"}
     for e in report.components:
         c = e.comparison
-        iv, cost, calls = c.pass_rate_diff, c.cost_diff, c.llm_calls_diff
+        iv, cost, calls = c.metric_diff, c.cost_diff, c.llm_calls_diff
         table.add_row(
             e.component,
             f"[{colours.get(e.verdict, 'yellow')}]{e.verdict}[/]",
-            f"{iv.estimate * 100:+.1f}" if iv else "—",
-            f"[{iv.low * 100:+.1f}, {iv.high * 100:+.1f}]" if iv else "—",
+            _signed(iv.estimate * scale, digits) if iv else "—",
+            f"[{_signed(iv.low * scale, digits)}, {_signed(iv.high * scale, digits)}]"
+            if iv
+            else "—",
             f"{cost.estimate:+.4f}" if cost else "—",
             f"{calls.estimate:+.2f}" if calls else "—",
             f"{c.wins}/{c.losses}/{c.ties}",
@@ -1700,6 +1744,9 @@ def ablate_run(
     min_tasks: Annotated[int, typer.Option("--min-tasks", min=1)] = 5,
     resamples: Annotated[int, typer.Option("--resamples", min=100)] = 2000,
     seed: Annotated[int, typer.Option("--seed")] = 0,
+    metric: Annotated[
+        MetricChoice, typer.Option("--metric", help=METRIC_HELP)
+    ] = MetricChoice.pass_rate,
     keep_worktrees: Annotated[bool, typer.Option("--keep-worktrees")] = False,
     pricing: Annotated[
         Path | None, typer.Option("--pricing", help="pricing.yaml for cost estimates.")
@@ -1723,7 +1770,13 @@ def ablate_run(
         bundle = HarnessBundle.load(bundle_dir)
         out_dir = settings.home / "ablations" / bundle.hash[:16]
         variants, spec = plan_ablation(
-            bundle_dir, base, out_dir, resamples=resamples, seed=seed, min_tasks=min_tasks
+            bundle_dir,
+            base,
+            out_dir,
+            resamples=resamples,
+            seed=seed,
+            min_tasks=min_tasks,
+            metric=metric.value,
         )
     except (SpecError, BundleError, ValueError) as exc:
         err_console.print(f"[red]{exc}[/]")
@@ -1732,7 +1785,8 @@ def ablate_run(
     console.print(
         f"[bold]{name or 'ablate ' + bundle_dir.name}[/]: {len(spec.components)} component(s) "
         f"({', '.join(spec.components)}) -> {len(variants)} variant(s) x {len(chosen)} task(s) x "
-        f"{repetitions} repetition(s) = {total} run(s) on base variant {base.id}"
+        f"{repetitions} repetition(s) = {total} run(s) on base variant {base.id}; "
+        f"verdicts on {METRIC_LABELS[spec.metric]}"
     )
     if len(chosen) < min_tasks:
         console.print(

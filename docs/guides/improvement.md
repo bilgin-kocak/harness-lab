@@ -134,6 +134,11 @@ baseline: { model: claude-haiku-4-5, evaluator: none }
 compare view and in sweep reports includes an **improvement ratio** interval, so "does a bigger
 evaluator budget help more than a bigger model?" gets an answer with an interval, not an anecdote.
 
+*(unreleased)* By default the verdict is still about pass rate. For improvement tasks give it on
+the score instead (`experiment compare --metric score`, `verdict_metric: score` in a sweep): the
+score counts a broken final state as 0 and minimizing to 0 as 1, which the ratio cannot. See
+[Verdict metric](results.md#verdict-metric).
+
 ## Fresh or resumed sessions
 
 > **Unreleased.** On `main`; ships in the next release.
@@ -196,7 +201,7 @@ harnesslab sweep run improve-session --dry-run                               # f
 
 The bundled `improve-session` sweep has one factor, `session` (`fresh` or `resume`), on Claude
 Code with `fresh` as the baseline, so its report compares the two modes task by task, with the
-paired improvement ratio interval described above.
+verdict given on the improvement score (`verdict_metric: score`).
 
 ## Reading the results
 

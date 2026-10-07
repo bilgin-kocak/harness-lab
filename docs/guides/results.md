@@ -86,6 +86,38 @@ The intervals are honest about small suites: with the three-task demo suite they
 verdict is given. Use them to decide whether a difference is worth acting on, and add tasks before
 trusting a close call.
 
+### Verdict metric
+
+> **Unreleased.** On `main`; ships in the next release.
+
+The verdict, the wins/losses/ties and the sign test are about one metric, chosen per comparison:
+
+| Metric | Per-task value | Tasks counted |
+| --- | --- | --- |
+| `pass_rate` (default) | Share of valid runs that passed. | Every paired task. |
+| `score` | Mean `verified_score` over the task's valid runs. | Tasks where both sides have a score. |
+| `improve_ratio` | Mean `improve_ratio` over the task's valid runs. | Tasks where both sides have a ratio. |
+
+The interval of the chosen metric decides the verdict, and `--min-tasks` applies to the tasks
+counted for it, not to every paired task. The other metrics are still shown, with a score row
+next to pass rate, cost and `llm_calls` (and the improvement ratio when there is one).
+
+Pass rate is the right metric for pass/fail tasks. Use `score` when tasks have a partial-score
+command, and for [improvement tasks](improvement.md): there `verified_score` is `1 − 1/ratio`, `0`
+when the final state fails and `1` when the objective was minimized to zero, so every run counts.
+`improve_ratio` only uses tasks where both sides have a ratio. A run whose final state broke has
+none and is left out of its task's mean, and a task where one side never kept a working final
+state is not counted at all, so breaking the code is never held against that side.
+
+```bash
+harnesslab experiment compare <experiment-id> <a> <b> --metric score
+```
+
+The compare view has the same choice (links above the evidence table, or `?metric=score`); sweeps
+set it with `verdict_metric` ([sweep format](../reference/sweep-format.md)), ablations with
+`ablate run --metric` ([ablation](ablation.md)) and the grow gate with `gate.metric`
+([grow format](../reference/grow-format.md)).
+
 ## Reading a single run
 
 Statuses and outcomes are independent (see [Concepts](../start/concepts.md)). When a run looks

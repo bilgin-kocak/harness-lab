@@ -11,7 +11,14 @@ from typer.testing import CliRunner
 from harnesslab.cli import app
 from harnesslab.config import Settings
 from harnesslab.core.models import VariantSpec
-from harnesslab.experiments.ablation import bundle_components, files_without, plan_ablation
+from harnesslab.experiments.ablation import (
+    AblationSpec,
+    analyze_ablation,
+    bundle_components,
+    files_without,
+    plan_ablation,
+)
+from harnesslab.experiments.aggregate import RunSample
 from harnesslab.harness.bundle import HarnessBundle
 from harnesslab.storage.database import Database
 from harnesslab.web.app import create_app
@@ -101,12 +108,15 @@ def test_ablate_cli_report_dashboard_and_export(tmp_path: Path):
             str(suite),
             "--variant",
             "fake-noop",
+            "--metric",
+            "score",
             "--dry-run",
         ],
         env=env,
     )
     assert dry.exit_code == 0, dry.output
     assert "2 component(s)" in dry.output and "without:skills/careful" in dry.output
+    assert "verdicts on score" in " ".join(dry.output.split())
 
     result = runner.invoke(
         app,
@@ -127,7 +137,7 @@ def test_ablate_cli_report_dashboard_and_export(tmp_path: Path):
     )
     assert result.exit_code == 0, result.output
     out = " ".join(result.output.split())
-    assert "whole bundle (full vs minimal): better over 6 paired task(s)" in out
+    assert "whole bundle (full vs minimal): better on pass rate over 6 paired task(s)" in out
     assert re.search(r"skills/careful\s+helps", result.output)
     assert re.search(r"system_prompt\.md\s+no evidence", result.output)
     exp_id = re.search(r"experiment id: (exp_[a-z0-9]+)", result.output).group(1)
@@ -138,6 +148,26 @@ def test_ablate_cli_report_dashboard_and_export(tmp_path: Path):
     assert compare.exit_code == 0 and "better" in compare.output
     bad = runner.invoke(app, ["experiment", "compare", exp_id, "minimal", "nope"], env=env)
     assert bad.exit_code == 2
+    # Without a score_command every verified run scores 1.0 or 0.0, so the score agrees here.
+    by_score = runner.invoke(
+        app, ["experiment", "compare", exp_id, "minimal", "full", "--metric", "score"], env=env
+    )
+    assert by_score.exit_code == 0, by_score.output
+    assert "full vs minimal: better on score over 6 paired task(s)" in by_score.output
+    assert "  score: +1.00 [+1.00, +1.00]" in by_score.output
+    by_ratio = runner.invoke(
+        app,
+        ["experiment", "compare", exp_id, "minimal", "full", "--metric", "improve_ratio"],
+        env=env,
+    )
+    assert by_ratio.exit_code == 0, by_ratio.output
+    assert "not enough tasks on improvement ratio over 0 of 6 paired task(s)" in " ".join(
+        by_ratio.output.split()
+    )
+    unknown = runner.invoke(
+        app, ["experiment", "compare", exp_id, "minimal", "full", "--metric", "cost"], env=env
+    )
+    assert unknown.exit_code == 2
 
     settings = Settings(home=Path(env["HARNESSLAB_HOME"]))
     db = Database(settings.resolved_database_url)
@@ -148,6 +178,14 @@ def test_ablate_cli_report_dashboard_and_export(tmp_path: Path):
         )
         cmp = client.get(f"/experiments/{exp_id}/compare?a=minimal&b=full")
         assert "Statistical evidence" in cmp.text and "full: better" in cmp.text
+        assert "verdict on pass rate" in cmp.text and "metric=score" in cmp.text
+        scored = client.get(f"/experiments/{exp_id}/compare?a=minimal&b=full&metric=score")
+        assert scored.status_code == 200 and "verdict on score" in scored.text
+        ratio = client.get(f"/experiments/{exp_id}/compare?a=minimal&b=full&metric=improve_ratio")
+        assert "full: not enough tasks" in ratio.text
+        assert "verdict on improvement ratio" in ratio.text
+        bogus = client.get(f"/experiments/{exp_id}/compare?a=minimal&b=full&metric=bogus")
+        assert bogus.status_code == 200 and "verdict on pass rate" in bogus.text
         data = client.get(
             f"/api/experiments/{exp_id}/export.json?events=false&artifacts=false"
         ).json()
@@ -183,3 +221,35 @@ def test_ablate_on_three_tasks_gives_no_verdicts(tmp_path: Path):
     assert result.exit_code == 0, result.output
     assert re.search(r"skills/careful\s+not enough tasks", result.output)
     assert not re.search(r"skills/careful\s+helps", result.output)
+
+
+def test_ablation_verdicts_use_the_spec_metric(tmp_path: Path):
+    """Every variant passes every task; the component only raises the partial score."""
+    scores = {"full": 0.9, "minimal": 0.4, "without:skills/careful": 0.4}
+    samples = [
+        RunSample(
+            run_id=f"{t}-{v}", task_key=t, variant_key=v, verified_pass=True, verified_score=s
+        )
+        for t in TASKS
+        for v, s in scores.items()
+    ]
+    _, planned = plan_ablation(
+        _bundle(tmp_path), VariantSpec(id="base", runner="fake"), tmp_path / "out", metric="score"
+    )
+    assert planned.metric == "score"
+    spec = AblationSpec(
+        bundle="b",
+        bundle_hash="h",
+        base_variant="base",
+        components=["skills/careful"],
+        variant_keys={"skills/careful": "without:skills/careful"},
+    )
+    assert spec.metric == "pass_rate"
+    by_rate = analyze_ablation(spec, samples, TASKS)
+    assert by_rate.full_verdict == "no evidence" and by_rate.components[0].verdict == "no evidence"
+    by_score = analyze_ablation(spec.model_copy(update={"metric": "score"}), samples, TASKS)
+    assert by_score.full_verdict == "helps" and by_score.full_vs_minimal.metric == "score"
+    assert by_score.components[0].verdict == "helps"
+    assert by_score.components[0].comparison.wins == 6
+    with pytest.raises(ValueError):
+        AblationSpec(**{**spec.model_dump(), "metric": "cost"})

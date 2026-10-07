@@ -8,15 +8,21 @@
   {% set p = ar.full_vs_minimal %}
   {% include "partials/paired.html" %}
   <table class="data compact">
-    <thead><tr><th>component</th><th>verdict</th><th class="num">Δ pass rate</th><th class="num">interval</th><th class="num">Δ {{ ar.full_vs_minimal.cost_kind }}</th><th class="num">Δ llm_calls</th><th class="num">wins / losses / ties</th><th class="num">sign test p</th></tr></thead>
+    <thead><tr><th>component</th><th>verdict</th><th class="num">Δ {{ ar.full_vs_minimal.metric_label }}</th><th class="num">interval</th><th class="num">Δ {{ ar.full_vs_minimal.cost_kind }}</th><th class="num">Δ llm_calls</th><th class="num">wins / losses / ties</th><th class="num">sign test p</th></tr></thead>
     <tbody>
     {% for e in ar.components %}
       {% set c = e.comparison %}
       <tr>
         <td class="mono">{{ e.component }}</td>
         <td><span class="badge {{ 'badge-pass' if e.verdict == 'helps' else ('badge-fail' if e.verdict == 'hurts' else 'badge-neutral') }}">{{ e.verdict }}</span></td>
-        <td class="num">{% if c.pass_rate_diff %}{{ (c.pass_rate_diff.estimate * 100)|delta(1) }} pts{% else %}—{% endif %}</td>
-        <td class="num">{% if c.pass_rate_diff %}[{{ (c.pass_rate_diff.low * 100)|delta(1) }}, {{ (c.pass_rate_diff.high * 100)|delta(1) }}]{% else %}—{% endif %}</td>
+        {% set iv = c.metric_diff %}
+        {% if c.metric == "pass_rate" %}
+        <td class="num">{% if iv %}{{ (iv.estimate * 100)|delta(1) }} pts{% else %}—{% endif %}</td>
+        <td class="num">{% if iv %}[{{ (iv.low * 100)|delta(1) }}, {{ (iv.high * 100)|delta(1) }}]{% else %}—{% endif %}</td>
+        {% else %}
+        <td class="num">{% if iv %}{{ iv.estimate|delta(4) }}{% else %}—{% endif %}</td>
+        <td class="num">{% if iv %}[{{ iv.low|delta(4) }}, {{ iv.high|delta(4) }}]{% else %}—{% endif %}</td>
+        {% endif %}
         <td class="num">{% if c.cost_diff %}{{ c.cost_diff.estimate|delta(4) }}{% else %}—{% endif %}</td>
         <td class="num">{% if c.llm_calls_diff %}{{ c.llm_calls_diff.estimate|delta(2) }}{% else %}—{% endif %}</td>
         <td class="num">{{ c.wins }} / {{ c.losses }} / {{ c.ties }}</td>

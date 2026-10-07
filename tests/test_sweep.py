@@ -264,6 +264,7 @@ def test_sweep_cli_end_to_end_and_dashboard(tmp_path: Path, settings: Settings):
     exp_id = match.group(1)
     report = runner.invoke(app, ["sweep", "report", exp_id], env=env)
     assert report.exit_code == 0 and "factor effects" in report.output
+    assert "verdicts on pass rate" in " ".join(report.output.split())
     listing = runner.invoke(app, ["sweep", "list"], env=env)
     assert (
         listing.exit_code == 0
@@ -470,3 +471,29 @@ def test_sweep_report_compares_recommendation_with_baseline_and_runner_up():
     assert w.baseline == "A" and w.vs_baseline.verdict == "better" and w.vs_baseline.n_tasks == 6
     assert w.vs_runner_up.verdict == "no evidence"  # same pass rate ...
     assert w.vs_runner_up.cost_diff.estimate == pytest.approx(-0.15)  # ... at lower cost
+    assert report.verdict_metric == "pass_rate" and w.vs_baseline.metric == "pass_rate"
+
+
+def test_sweep_verdict_metric_round_trip_and_use():
+    spec = _spec(repetitions=1, baseline={"model": "small", "toolset": "min"})
+    assert spec.verdict_metric == "pass_rate"
+    scored = _spec(
+        repetitions=1, baseline={"model": "small", "toolset": "min"}, verdict_metric="score"
+    )
+    assert SweepSpec(**scored.model_dump(mode="json")).verdict_metric == "score"
+    with pytest.raises(ValueError, match="verdict_metric"):
+        _spec(verdict_metric="cost")
+    tasks = [f"t{i}" for i in range(6)]
+    samples = []
+    for t in tasks:
+        # Everything passes; the baseline (A) has the lowest partial score on every task.
+        for variant, cost, score in (("A", 0.50, 0.5), ("B", 0.20, 0.9), ("C", 0.05, 0.9)):
+            s = _sample(t, variant, True, cost=cost)
+            samples.append(s.model_copy(update={"verified_score": score}))
+    by_rate = analyze_sweep(spec, samples, FACTORS, {t: [] for t in tasks})
+    by_score = analyze_sweep(scored, samples, FACTORS, {t: [] for t in tasks})
+    assert by_rate.workloads[0].vs_baseline.verdict == "no evidence"
+    w = by_score.workloads[0]
+    assert by_score.verdict_metric == "score" and w.vs_baseline.metric == "score"
+    assert w.recommended.variant_key == "C" and w.vs_baseline.verdict == "better"
+    assert w.vs_runner_up.metric == "score" and w.vs_runner_up.verdict == "no evidence"

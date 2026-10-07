@@ -8,8 +8,11 @@ module turns run samples into per-task differences and summarises them with
 * an exact two-sided sign test on tasks where one side did better (McNemar-style; ties dropped).
 
 A verdict is only given when the interval excludes zero *and* enough tasks were paired; below
-``min_tasks`` the honest answer is "not enough tasks", whatever the point estimate says.  No
-third-party statistics dependency is needed.
+``min_tasks`` the honest answer is "not enough tasks", whatever the point estimate says.  The
+verdict is about one *verdict metric*: the pass rate (default), the partial score
+(``verified_score``) or the improvement ratio; the interval, the task count, wins/losses and the
+sign test all use that metric's per-task differences, and the other metrics are reported
+alongside.  No third-party statistics dependency is needed.
 """
 
 from __future__ import annotations
@@ -30,6 +33,14 @@ DEFAULT_LEVEL = 0.95
 DEFAULT_MIN_TASKS = 5
 
 Verdict = Literal["better", "worse", "no evidence", "not enough tasks"]
+VerdictMetric = Literal["pass_rate", "score", "improve_ratio"]
+
+VERDICT_METRICS: tuple[VerdictMetric, ...] = ("pass_rate", "score", "improve_ratio")
+METRIC_LABELS: dict[str, str] = {
+    "pass_rate": "pass rate",
+    "score": "score",
+    "improve_ratio": "improvement ratio",
+}
 
 
 class Interval(BaseModel):
@@ -53,19 +64,36 @@ class PairedTask(BaseModel):
     b_llm_calls: float | None = None
     a_improve_ratio: float | None = None
     b_improve_ratio: float | None = None
+    a_score: float | None = None  # mean verified_score over the valid runs that have one
+    b_score: float | None = None
+
+    def metric_values(self, metric: VerdictMetric) -> tuple[float | None, float | None]:
+        """A's and B's value of ``metric`` on this task (None where a side has none)."""
+        if metric == "pass_rate":
+            return self.a_rate, self.b_rate
+        if metric == "score":
+            return self.a_score, self.b_score
+        return self.a_improve_ratio, self.b_improve_ratio
 
 
 class PairedComparison(BaseModel):
-    """B relative to A over the tasks both sides have verified runs for."""
+    """B relative to A over the tasks both sides have verified runs for.
+
+    ``verdict``, ``wins``/``losses``/``ties`` and ``sign_test_p`` are about ``metric``, over the
+    ``n_metric_tasks`` paired tasks where both sides have a value of that metric.
+    """
 
     a: str
     b: str
     n_tasks: int
-    wins: int  # tasks where B's pass rate is higher
-    losses: int  # tasks where B's pass rate is lower
+    metric: VerdictMetric = "pass_rate"
+    n_metric_tasks: int  # paired tasks with the verdict metric on both sides
+    wins: int  # tasks where B's value of the verdict metric is higher
+    losses: int  # tasks where it is lower
     ties: int
     sign_test_p: float | None
     pass_rate_diff: Interval | None
+    score_diff: Interval | None = None  # tasks where both sides have a verified score
     cost_kind: str
     cost_diff: Interval | None
     llm_calls_diff: Interval | None
@@ -76,7 +104,20 @@ class PairedComparison(BaseModel):
 
     @property
     def enough_tasks(self) -> bool:
-        return self.n_tasks >= self.min_tasks
+        return self.n_metric_tasks >= self.min_tasks
+
+    @property
+    def metric_label(self) -> str:
+        return METRIC_LABELS[self.metric]
+
+    @property
+    def metric_diff(self) -> Interval | None:
+        """The interval the verdict is based on."""
+        return {
+            "pass_rate": self.pass_rate_diff,
+            "score": self.score_diff,
+            "improve_ratio": self.improve_ratio_diff,
+        }[self.metric]
 
 
 def _cost(sample: RunSample, kind: str) -> float | None:
@@ -113,7 +154,7 @@ def paired_tasks(
     task_order: list[str] | None = None,
     cost_kind: str | None = None,
 ) -> list[PairedTask]:
-    """Per-task pass rates (and mean cost, llm_calls) of A and B over their valid runs.
+    """Per-task pass rates (and mean score, cost, llm_calls) of A and B over their valid runs.
 
     Only tasks where *both* sides have at least one verified run are paired; repetitions are
     averaged within a task first, so a task with five repetitions does not count five times.
@@ -140,6 +181,8 @@ def paired_tasks(
                 b_llm_calls=_mean([r.llm_calls for r in runs_b]),
                 a_improve_ratio=_mean([r.improve_ratio for r in runs_a]),
                 b_improve_ratio=_mean([r.improve_ratio for r in runs_b]),
+                a_score=_mean([r.verified_score for r in runs_a]),
+                b_score=_mean([r.verified_score for r in runs_b]),
             )
         )
     return out
@@ -202,11 +245,32 @@ def paired_comparison(
     seed: int = 0,
     level: float = DEFAULT_LEVEL,
     min_tasks: int = DEFAULT_MIN_TASKS,
+    metric: VerdictMetric = "pass_rate",
 ) -> PairedComparison:
-    """Compare B against A task by task; the verdict is about B's pass rate."""
+    """Compare B against A task by task; the verdict is about B's value of ``metric``.
+
+    ``min_tasks`` applies to the tasks where both sides have that metric (every paired task for
+    the pass rate; tasks with a verified score, or with an improvement ratio, otherwise).
+    """
+    if metric not in VERDICT_METRICS:
+        raise ValueError(
+            f"unknown verdict metric {metric!r} (expected one of {', '.join(VERDICT_METRICS)})"
+        )
     kind = cost_kind_for([s for s in samples if s.variant_key in (a, b)])
     tasks = paired_tasks(samples, a, b, task_order=task_order, cost_kind=kind)
-    rate_diffs = [t.b_rate - t.a_rate for t in tasks]
+
+    def interval(diffs: list[float]) -> Interval | None:
+        return bootstrap_mean_diff(diffs, resamples=resamples, seed=seed, level=level)
+
+    metric_diffs: dict[str, list[float]] = {
+        name: [
+            vb - va
+            for va, vb in (t.metric_values(name) for t in tasks)
+            if va is not None and vb is not None
+        ]
+        for name in VERDICT_METRICS
+    }
+    intervals = {name: interval(diffs) for name, diffs in metric_diffs.items()}
     cost_diffs = [
         t.b_cost - t.a_cost for t in tasks if t.a_cost is not None and t.b_cost is not None
     ]
@@ -215,30 +279,26 @@ def paired_comparison(
         for t in tasks
         if t.a_llm_calls is not None and t.b_llm_calls is not None
     ]
-    improve_diffs = [
-        t.b_improve_ratio - t.a_improve_ratio
-        for t in tasks
-        if t.a_improve_ratio is not None and t.b_improve_ratio is not None
-    ]
-    wins = sum(1 for d in rate_diffs if d > 0)
-    losses = sum(1 for d in rate_diffs if d < 0)
-    pass_interval = bootstrap_mean_diff(rate_diffs, resamples=resamples, seed=seed, level=level)
+    chosen = metric_diffs[metric]
+    wins = sum(1 for d in chosen if d > 0)
+    losses = sum(1 for d in chosen if d < 0)
     return PairedComparison(
         a=a,
         b=b,
         n_tasks=len(tasks),
+        metric=metric,
+        n_metric_tasks=len(chosen),
         wins=wins,
         losses=losses,
-        ties=len(tasks) - wins - losses,
+        ties=len(chosen) - wins - losses,
         sign_test_p=exact_sign_test(wins, losses),
-        pass_rate_diff=pass_interval,
+        pass_rate_diff=intervals["pass_rate"],
+        score_diff=intervals["score"],
         cost_kind=kind,
-        cost_diff=bootstrap_mean_diff(cost_diffs, resamples=resamples, seed=seed, level=level),
-        llm_calls_diff=bootstrap_mean_diff(call_diffs, resamples=resamples, seed=seed, level=level),
-        improve_ratio_diff=bootstrap_mean_diff(
-            improve_diffs, resamples=resamples, seed=seed, level=level
-        ),
+        cost_diff=interval(cost_diffs),
+        llm_calls_diff=interval(call_diffs),
+        improve_ratio_diff=intervals["improve_ratio"],
         min_tasks=min_tasks,
-        verdict=verdict_for(pass_interval, len(tasks), min_tasks),
+        verdict=verdict_for(intervals[metric], len(chosen), min_tasks),
         tasks=tasks,
     )

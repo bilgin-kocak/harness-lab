@@ -31,7 +31,7 @@ from pydantic import BaseModel, Field
 
 from harnesslab.core.models import RunStatus, SweepSpec, VariantSpec
 from harnesslab.experiments.aggregate import RunSample, samples_from_rows
-from harnesslab.experiments.stats import PairedComparison, paired_comparison
+from harnesslab.experiments.stats import PairedComparison, VerdictMetric, paired_comparison
 
 # ---------------------------------------------------------------------------
 # Expansion
@@ -181,6 +181,7 @@ class SweepReport(BaseModel):
     minimize: str
     min_pass_rate: float
     min_valid_runs: int | None
+    verdict_metric: VerdictMetric = "pass_rate"  # what vs_runner_up / vs_baseline judge
     workloads: list[WorkloadReport]
     factor_effects: list[FactorEffect]
     n_configs: int
@@ -394,12 +395,16 @@ def analyze_sweep(
             best = report.recommended.variant_key
             if report.runner_up is not None:
                 report.vs_runner_up = paired_comparison(
-                    in_workload, report.runner_up.variant_key, best, task_order=tasks
+                    in_workload,
+                    report.runner_up.variant_key,
+                    best,
+                    task_order=tasks,
+                    metric=spec.verdict_metric,
                 )
             if baseline_key is not None and baseline_key != best:
                 report.baseline = baseline_key
                 report.vs_baseline = paired_comparison(
-                    in_workload, baseline_key, best, task_order=tasks
+                    in_workload, baseline_key, best, task_order=tasks, metric=spec.verdict_metric
                 )
         if holdout and report.recommended is not None:
             runs = [r for r in by_variant[report.recommended.variant_key] if r.task_key in holdout]
@@ -445,6 +450,7 @@ def analyze_sweep(
         minimize=spec.objective.minimize,
         min_pass_rate=spec.objective.require.min_pass_rate,
         min_valid_runs=spec.objective.require.min_valid_runs,
+        verdict_metric=spec.verdict_metric,
         workloads=workloads,
         factor_effects=effects,
         n_configs=len(variant_keys),

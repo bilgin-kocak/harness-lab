@@ -31,14 +31,15 @@ experiment, so the matrix, run pages and compare view work as usual.
 ## Read the report
 
 ```
-whole bundle (full vs minimal): better over 6 paired task(s) (wins 6, losses 0, ties 0, sign test p = 0.031)
+whole bundle (full vs minimal): better on pass rate over 6 paired task(s) (wins 6, losses 0, ties 0, sign test p = 0.031)
   pass rate (pts): +100.0 [+100.0, +100.0] 95% interval, P(>0) 100%
+  score: +1.00 [+1.00, +1.00] 95% interval, P(>0) 100%
   total_tokens: +0.0000 [+0.0000, +0.0000] 95% interval, P(>0) 0%
   llm_calls: +5.00 [+5.00, +5.00] 95% interval, P(>0) 100%
 
- component         verdict      Δ pass (pts)          interval   Δ cost  Δ llm_calls  W/L/T
- system_prompt.md  no evidence          +0.0      [+0.0, +0.0]  +0.0000        +3.00  0/0/6
- skills/careful    helps              +100.0  [+100.0, +100.0]  +0.0000        +2.00  6/0/0
+ component         verdict      Δ pass rate (pts)          interval   Δ cost  Δ llm_calls  W/L/T
+ system_prompt.md  no evidence               +0.0      [+0.0, +0.0]  +0.0000        +3.00  0/0/6
+ skills/careful    helps                   +100.0  [+100.0, +100.0]  +0.0000        +2.00  6/0/0
 ```
 
 This is the offline example from the test suite (fake runner, six tasks): the skill solves every
@@ -56,6 +57,19 @@ A component's effect is *full minus without-component*, task by task:
 
 The same report is on the experiment's dashboard page and in its JSON export (`ablation_report`).
 How the intervals are computed is in [Read and export results](results.md#statistics).
+
+### Verdict metric
+
+> **Unreleased.** On `main`; ships in the next release.
+
+`ablate run --metric pass_rate|score|improve_ratio` (default `pass_rate`) chooses what every
+verdict above is about: the whole bundle's and each component's. The metric is stored with the
+ablation, so `ablate report` and the dashboard recompute the same verdicts; the component table's
+Δ and interval columns show that metric, and `--min-tasks` counts the tasks where both sides have
+it. Use `score` when the tasks have a partial score, and for
+[improvement tasks](improvement.md), where a component that keeps the code working but improves
+less still shows up and a broken final state counts as 0. `improve_ratio` only uses tasks where
+both sides have a ratio. See [Verdict metric](results.md#verdict-metric).
 
 ## Simulate it without API keys
 

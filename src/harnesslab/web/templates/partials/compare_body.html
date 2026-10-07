@@ -29,6 +29,12 @@
 
 <section>
   <h2>Statistical evidence <span class="muted small">paired by task, cluster bootstrap over tasks</span></h2>
+  <p class="small">Verdict metric:
+    {% for key, label in metrics.items() %}
+      {% if key == metric %}<strong>{{ label }}</strong>{% else %}<a href="/experiments/{{ exp.id }}/compare?{{ {'a': a, 'b': b, 'metric': key}|urlencode }}">{{ label }}</a>{% endif %}{% if not loop.last %} · {% endif %}
+    {% endfor %}
+    <span class="muted">(use score for improvement tasks: a broken final state counts as 0)</span>
+  </p>
   {% set p = c.paired %}
   {% include "partials/paired.html" %}
 </section>

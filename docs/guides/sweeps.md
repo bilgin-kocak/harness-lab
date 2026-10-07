@@ -62,6 +62,13 @@ A configuration is *eligible* when its verified pass rate over valid runs meets
 `cost` is the harness-reported cost when any run reported one, else the estimate from your
 [pricing table](../reference/pricing.md), else total tokens, and the report says which was used.
 
+The recommendation is also compared, task by task, with the runner-up and with the `baseline`
+configuration, using the paired analysis in [Read and export results](results.md#statistics).
+*(unreleased)* Those verdicts are about `verdict_metric`: `pass_rate` by default, `score` for
+tasks with a partial score and for [improvement tasks](improvement.md), or `improve_ratio` (only
+tasks where both sides have a ratio). The report header names the metric; eligibility and the
+ranking are not affected by it.
+
 A sweep is an ordinary experiment whose variants carry `factors`, so `experiment show`, the
 compare view and the export all work on it.
 

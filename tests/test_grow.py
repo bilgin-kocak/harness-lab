@@ -342,3 +342,50 @@ async def test_grow_gate_not_worse_ci_accepts_unchanged_gate(settings, db):
     spec = spec.model_copy(update={"max_iterations": 1, "gate": GrowGate(require="not_worse_ci")})
     outcome = await GrowService(settings, db).run(spec, suite, tasks, split)
     assert outcome.versions_accepted == 1
+
+
+def test_grow_gate_judges_the_chosen_metric(settings, db, monkeypatch):
+    """Both versions pass every gate task; only the candidate's partial score is higher."""
+    from types import SimpleNamespace
+
+    from harnesslab.experiments.aggregate import RunSample
+    from harnesslab.grow.service import GateStats, GrowState
+    from harnesslab.grow.spec import GrowGate
+
+    scores = {"exp_current": 0.4, "exp_candidate": 0.9}
+
+    def gate_samples(experiment_id, label):
+        return [
+            RunSample(
+                run_id=f"{experiment_id}-{t}",
+                task_key=f"t{t}",
+                variant_key=label,
+                verified_pass=True,
+                verified_score=scores[experiment_id],
+            )
+            for t in range(6)
+        ]
+
+    service = GrowService(settings, db)
+    monkeypatch.setattr(service, "_gate_samples", gate_samples)
+    spec, _, _, _ = _spec()
+    current = SimpleNamespace(gate_experiment_id="exp_current")
+    stats = GateStats(experiment_id="exp_candidate", n_valid=6, n_passed=6, pass_rate=1.0)
+    state = GrowState(current_gate_pass_rate=1.0)
+
+    def reason(**gate):
+        gated = spec.model_copy(update={"gate": GrowGate(**gate)})
+        return service._gate_reason(gated, state, current, stats)
+
+    assert GrowGate().metric == "pass_rate"
+    assert reason(require="better_ci") == (
+        "gate: no evidence of improvement, no evidence (6 task(s), pass rate diff [+0.00, +0.00])"
+    )
+    assert reason(require="better_ci", metric="score") is None
+    assert reason(require="not_worse_ci", metric="score") is None
+    scores.update(exp_current=0.9, exp_candidate=0.4)
+    assert reason(require="not_worse_ci") is None
+    assert reason(require="not_worse_ci", metric="score") == (
+        "gate: evidence of regression (6 task(s), score diff [-0.50, -0.50])"
+    )
+    assert reason(require="no_regression", metric="score") is None  # still pass rates

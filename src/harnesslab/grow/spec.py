@@ -22,6 +22,7 @@ from harnesslab.experiments.spec import (
     resolve_suite_reference,
     select_tasks,
 )
+from harnesslab.experiments.stats import VerdictMetric
 from harnesslab.harness.bundle import BundleError, HarnessBundle
 
 SPLIT_KEYS = ("train", "gate", "final")
@@ -91,11 +92,14 @@ class GrowGate(BaseModel):
     ``not_worse_ci``: reject only with evidence of a regression (paired bootstrap interval of the
     per-task difference entirely below zero, at least ``min_tasks`` gate tasks).
     ``better_ci``: accept only with evidence of an improvement (interval entirely above zero).
+    The two ``_ci`` rules judge ``metric`` (pass rate, partial score or improvement ratio);
+    ``no_regression`` always compares pass rates.
     """
 
     model_config = ConfigDict(extra="forbid")
 
     require: Literal["no_regression", "not_worse_ci", "better_ci"] = "no_regression"
+    metric: VerdictMetric = "pass_rate"
     resamples: int = Field(default=2000, ge=100)
     min_tasks: int = Field(default=5, ge=1)
     seed: int = 0

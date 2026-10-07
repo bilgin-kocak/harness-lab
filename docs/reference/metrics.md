@@ -56,6 +56,23 @@ tool calls, cost, each with the delta and a "lower is better" marker) and classi
 *both passed*, *both failed*, *A only*, *B only*, *mixed* (repetitions disagree) or *unverified*.
 There is deliberately no composite "winner" score.
 
+### Paired verdicts
+
+> **Unreleased.** On `main`; ships in the next release.
+
+Below the side-by-side table, the paired evidence (see [Statistics](../guides/results.md#statistics))
+shows per-task differences of pass rate, score, cost, `llm_calls` and, for improvement tasks, the
+improvement ratio, each with a bootstrap interval. The verdict is about one of them, the *verdict
+metric*: `pass_rate` (default), `score` or `improve_ratio`. Its interval decides the verdict; its
+per-task differences give wins, losses, ties and the sign test; and `min_tasks` counts the tasks
+where both sides have it. `PairedComparison` records the choice as `metric`, the count as
+`n_metric_tasks` (next to `n_tasks`, every paired task) and the score interval as `score_diff`.
+
+Use `score` for improvement tasks: it counts a broken final state as 0 and an objective minimized
+to 0 as 1, which the ratio cannot. `improve_ratio` only uses tasks where both sides have a ratio.
+Choose the metric with `experiment compare --metric`, `?metric=` on the compare view, `ablate run
+--metric`, `verdict_metric` in a sweep and `gate.metric` in a grow spec.
+
 ## Sweep and grow reports
 
 A sweep's `ConfigResult` carries `pass_rate`, `n_valid`, the median objective, `median_tokens`,

@@ -26,6 +26,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from harnesslab.core.ids import hash_value
+from harnesslab.experiments.stats import VerdictMetric
 
 # ---------------------------------------------------------------------------
 # Task specification
@@ -321,6 +322,8 @@ class SweepSpec(BaseModel):
     # Factor levels of the minimal configuration every recommendation is compared against,
     # e.g. {toolset: minimal, action_granularity: batched}; None means no baseline comparison.
     baseline: dict[str, str] | None = None
+    # The metric the paired verdicts (vs runner-up, vs baseline) are about.
+    verdict_metric: VerdictMetric = "pass_rate"
     sample: SweepSample | None = None
     budget: SweepBudget | None = None
     objective: SweepObjective = Field(default_factory=SweepObjective)

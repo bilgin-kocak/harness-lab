@@ -96,3 +96,111 @@ def test_compare_variants_carries_paired_evidence():
     comparison = compare_variants(samples, "A", "B", [f"t{i}" for i in range(5)])
     assert comparison.paired is not None and comparison.paired.verdict == "better"
     assert comparison.paired.n_tasks == 5
+
+
+def _m(task, variant, passed, score=None, ratio=None, rep=0):
+    return RunSample(
+        run_id=f"{task}-{variant}-{rep}",
+        task_key=task,
+        variant_key=variant,
+        repetition=rep,
+        verified_pass=passed,
+        verified_score=score,
+        improve_ratio=ratio,
+    )
+
+
+def test_score_verdict_where_pass_rate_has_no_evidence():
+    # Both sides pass every task; B's partial score is higher on all six.
+    samples = [
+        x
+        for i in range(6)
+        for x in (_m(f"t{i}", "A", True, score=0.5), _m(f"t{i}", "B", True, score=0.8))
+    ]
+    by_rate = paired_comparison(samples, "A", "B")
+    assert by_rate.verdict == "no evidence" and by_rate.metric == "pass_rate"
+    assert by_rate.score_diff.estimate == pytest.approx(0.3)
+    by_score = paired_comparison(samples, "A", "B", metric="score")
+    assert by_score.verdict == "better" and by_score.metric == "score"
+    assert by_score.metric_diff == by_score.score_diff
+    assert by_score.pass_rate_diff == by_rate.pass_rate_diff  # still reported alongside
+    assert by_score.tasks[0].a_score == 0.5 and by_score.tasks[0].b_score == 0.8
+    # The sign test runs on the score differences too: six wins, no losses.
+    assert (by_score.wins, by_score.losses, by_score.ties) == (6, 0, 0)
+    assert by_score.sign_test_p == pytest.approx(0.03125)
+    assert (by_rate.wins, by_rate.losses, by_rate.ties) == (0, 0, 6)
+    assert by_rate.sign_test_p is None
+
+
+def test_score_averages_repetitions_and_ignores_runs_without_score():
+    samples = [
+        _m("t1", "A", True, score=0.2),
+        _m("t1", "A", True, score=0.4, rep=1),
+        _m("t1", "A", True, score=None, rep=2),
+        _m("t1", "B", False),  # no score at all on B
+    ]
+    (task,) = paired_tasks(samples, "A", "B")
+    assert task.a_score == pytest.approx(0.3) and task.b_score is None
+
+
+def test_min_tasks_counts_tasks_that_have_the_metric():
+    samples = []
+    for i in range(6):
+        has = i < 4  # only four tasks have a score on both sides
+        samples.append(_m(f"t{i}", "A", False, score=0.0 if has else None))
+        samples.append(_m(f"t{i}", "B", True, score=1.0 if has else None))
+    by_score = paired_comparison(samples, "A", "B", metric="score")
+    assert by_score.n_tasks == 6 and by_score.n_metric_tasks == 4
+    assert by_score.verdict == "not enough tasks" and not by_score.enough_tasks
+    assert (by_score.wins, by_score.losses, by_score.ties) == (4, 0, 0)
+    assert paired_comparison(samples, "A", "B", metric="score", min_tasks=4).verdict == "better"
+    by_rate = paired_comparison(samples, "A", "B")
+    assert by_rate.n_metric_tasks == 6 and by_rate.verdict == "better"
+
+
+def test_improve_ratio_verdict_uses_only_tasks_with_both_ratios():
+    samples = []
+    for i in range(7):
+        # A has no ratio on two tasks (its final state failed there); B improves everywhere.
+        samples.append(_m(f"t{i}", "A", True, ratio=1.2 if i < 5 else None))
+        samples.append(_m(f"t{i}", "B", True, ratio=2.0))
+    result = paired_comparison(samples, "A", "B", metric="improve_ratio")
+    assert result.n_metric_tasks == 5 and result.verdict == "better"
+    assert result.metric_diff == result.improve_ratio_diff
+    assert result.metric_diff.estimate == pytest.approx(0.8)
+    assert (result.wins, result.losses, result.ties) == (5, 0, 0)
+    assert paired_comparison(samples, "A", "B", metric="improve_ratio", min_tasks=6).verdict == (
+        "not enough tasks"
+    )
+
+
+def test_default_metric_is_pass_rate_and_unchanged():
+    # B passes more often but scores lower: the default verdict is about pass rate only.
+    samples = [
+        x
+        for i in range(6)
+        for x in (_m(f"t{i}", "A", False, score=0.9), _m(f"t{i}", "B", True, score=0.1))
+    ]
+    default = paired_comparison(samples, "A", "B")
+    assert default == paired_comparison(samples, "A", "B", metric="pass_rate")
+    assert default.verdict == "better" and default.wins == 6
+    assert default.n_metric_tasks == default.n_tasks == 6
+    assert default.metric_diff == default.pass_rate_diff
+    assert paired_comparison(samples, "A", "B", metric="score").verdict == "worse"
+
+
+def test_unknown_metric_raises():
+    with pytest.raises(ValueError, match="unknown verdict metric"):
+        paired_comparison([_m("t1", "A", True), _m("t1", "B", True)], "A", "B", metric="cost")
+
+
+def test_compare_variants_passes_the_metric_through():
+    samples = [
+        x
+        for i in range(5)
+        for x in (_m(f"t{i}", "A", True, score=0.1), _m(f"t{i}", "B", True, score=0.9))
+    ]
+    tasks = [f"t{i}" for i in range(5)]
+    assert compare_variants(samples, "A", "B", tasks).paired.verdict == "no evidence"
+    scored = compare_variants(samples, "A", "B", tasks, metric="score")
+    assert scored.paired.metric == "score" and scored.paired.verdict == "better"

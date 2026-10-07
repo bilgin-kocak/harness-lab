@@ -98,3 +98,15 @@ def test_optimizer_options_for_hooks_and_verifier_detail():
     assert opted.options["allow_hooks"] is True
     with pytest.raises(ValidationError):
         GrowOptimizerSpec(kind="fake", verifier_detail="everything")
+
+
+def test_gate_metric_defaults_to_pass_rate_and_is_validated():
+    from pydantic import ValidationError
+
+    from harnesslab.grow.spec import GrowGate
+
+    assert _spec().gate.metric == "pass_rate"
+    gate = GrowGate(require="better_ci", metric="score")
+    assert GrowGate(**gate.model_dump()).metric == "score"
+    with pytest.raises(ValidationError):
+        GrowGate(metric="cost")

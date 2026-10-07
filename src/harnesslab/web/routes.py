@@ -16,6 +16,7 @@ from harnesslab.experiments.aggregate import (
     samples_from_rows,
 )
 from harnesslab.experiments.export import export_experiment
+from harnesslab.experiments.stats import METRIC_LABELS, VERDICT_METRICS, VerdictMetric
 from harnesslab.experiments.sweep import report_for_experiment
 from harnesslab.grow.report import lineage_json, report_for_session
 from harnesslab.storage.repository import Repository
@@ -82,7 +83,11 @@ def experiment_page(request: Request, exp_id: str) -> HTMLResponse:
 
 @router.get("/experiments/{exp_id}/compare", response_class=HTMLResponse)
 def compare_page(
-    request: Request, exp_id: str, a: str | None = None, b: str | None = None
+    request: Request,
+    exp_id: str,
+    a: str | None = None,
+    b: str | None = None,
+    metric: str | None = None,
 ) -> HTMLResponse:
     ctx = _experiment_context(_repo(request), exp_id)
     keys = ctx["variant_keys"]
@@ -90,8 +95,17 @@ def compare_page(
         raise HTTPException(status_code=404, detail="experiment has no variants")
     a = a if a in keys else keys[0]
     b = b if b in keys else (keys[1] if len(keys) > 1 else keys[0])
-    comparison = compare_variants(ctx["samples"], a, b, ctx["task_keys"])
-    ctx.update({"a": a, "b": b, "comparison": comparison})
+    chosen: VerdictMetric = next((m for m in VERDICT_METRICS if m == metric), "pass_rate")
+    comparison = compare_variants(ctx["samples"], a, b, ctx["task_keys"], metric=chosen)
+    ctx.update(
+        {
+            "a": a,
+            "b": b,
+            "metric": chosen,
+            "metrics": METRIC_LABELS,
+            "comparison": comparison,
+        }
+    )
     template = "partials/compare_body.html" if request.headers.get("HX-Request") else "compare.html"
     return _render(request, template, ctx)
 

@@ -565,10 +565,11 @@ class GrowService:
             resamples=spec.gate.resamples,
             seed=spec.gate.seed,
             min_tasks=spec.gate.min_tasks,
+            metric=spec.gate.metric,
         )
-        iv = evidence.pass_rate_diff
+        iv = evidence.metric_diff
         span = f"[{iv.low:+.2f}, {iv.high:+.2f}]" if iv else "[—]"
-        detail = f"{evidence.n_tasks} task(s), diff {span}"
+        detail = f"{evidence.n_metric_tasks} task(s), {evidence.metric_label} diff {span}"
         if rule == "not_worse_ci" and evidence.verdict == "worse":
             return f"gate: evidence of regression ({detail})"
         if rule == "better_ci" and evidence.verdict != "better":

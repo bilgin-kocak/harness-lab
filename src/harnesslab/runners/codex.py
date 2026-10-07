@@ -2,20 +2,20 @@
 
 Invocation (defaults)::
 
-    codex exec --json --full-auto --skip-git-repo-check --color never -C <worktree> -
+    codex exec --json --sandbox workspace-write --skip-git-repo-check --color never -C <worktree> -
 
-with the prompt on stdin.  ``--full-auto`` selects the ``workspace-write``
-sandbox (writes limited to the worktree, network disabled by default).  The
-sandbox can be changed through the ``sandbox`` option; ``danger-full-access``
-is never selected implicitly.
+with the prompt on stdin.  The ``workspace-write`` sandbox limits writes to the
+worktree, with the network disabled by default; ``codex exec`` never stops to ask
+for approval.  The sandbox can be changed through the ``sandbox`` option;
+``danger-full-access`` is never selected implicitly.  ``--full-auto`` is not passed:
+Codex CLI 0.153 rejects it, and ``--sandbox`` already selects the same sandbox.
 
 Improvement rounds with ``improve_session: resume`` continue the first round's
 thread (Codex keeps sessions by default) with a different argv::
 
     codex exec resume --json --skip-git-repo-check -c sandbox_mode="workspace-write" ... <id> -
 
-``codex exec resume`` takes no ``--sandbox``, ``-C``, ``--full-auto``, ``--color`` or
-``--profile``: the sandbox goes through ``-c``, the worktree is the process's working
+``codex exec resume`` takes no ``--sandbox``, ``-C``, ``--color`` or ``--profile``: the sandbox goes through ``-c``, the worktree is the process's working
 directory, and a ``profile`` cannot be combined with resume mode.
 
 Options::
@@ -23,7 +23,7 @@ Options::
     executable: codex
     model: (variant-level)               -> -m <model>
     sandbox: workspace-write|read-only|danger-full-access
-    full_auto: true                      -> --full-auto (ignored when sandbox is read-only)
+    full_auto: (ignored; kept so older variant files still load)
     network_access: false                -> -c sandbox_workspace_write.network_access=<bool>
     reasoning_effort: null               -> -c model_reasoning_effort=<value>
     action_policy: null                  -> batched|fine|<free text>, prepended to the prompt
@@ -78,8 +78,6 @@ def build_codex_command(
         # Explicit opt-in only: never selected by default.
         argv.append("--dangerously-bypass-approvals-and-sandbox")
     elif not resume:
-        if bool(config.get("full_auto", True)) and sandbox == "workspace-write":
-            argv.append("--full-auto")
         argv.extend(["--sandbox", sandbox])
     if config.get("skip_git_repo_check", True):
         argv.append("--skip-git-repo-check")

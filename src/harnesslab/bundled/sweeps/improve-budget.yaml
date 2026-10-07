@@ -14,6 +14,8 @@ factors:
     many: { improve_eval_budget: 10 }
 repetitions: 2
 parallelism: 2
+# Improvement tasks: judge on the improvement score, which counts a broken final state as 0.
+verdict_metric: score
 baseline: { model: claude-haiku-4-5, evaluator: none }
 objective:
   require: { min_pass_rate: 0.5 }

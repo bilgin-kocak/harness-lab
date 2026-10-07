@@ -11,7 +11,7 @@ harnesslab run demo --variants codex-default
 ## What the adapter runs
 
 ```text
-codex exec --json --full-auto --sandbox workspace-write --skip-git-repo-check
+codex exec --json --sandbox workspace-write --skip-git-repo-check
       --color never -C <worktree> -c sandbox_workspace_write.network_access=false
       -o <last-message-file> -
 ```
@@ -34,7 +34,7 @@ Two honest gaps:
 | --- | --- | --- |
 | `model` | CLI default | `-m` |
 | `sandbox` | `workspace-write` | `workspace-write`, `read-only`, or the explicit opt-in `danger-full-access` |
-| `full_auto` | `true` | `--full-auto` (only with `workspace-write`) |
+| `full_auto` | none | No effect. Codex CLI 0.153 rejects `--full-auto`; `--sandbox workspace-write` already selects the same sandbox, and `codex exec` never stops for approval. |
 | `network_access` | `false` | `-c sandbox_workspace_write.network_access=` |
 | `reasoning_effort` | unset | `-c model_reasoning_effort=` |
 | `profile` | unset | `--profile` |

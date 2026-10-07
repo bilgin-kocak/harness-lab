@@ -116,12 +116,13 @@ def test_ties_go_to_the_earlier_variant():
     assert routing_gap(samples, ["t0", "t1", "t2"], ["B", "A"]).best_single == "B"
 
 
-def test_fewer_than_two_variants_or_no_complete_task():
-    samples = _grid({"A": {"t0"}}, ["t0"], reps=2)
-    assert routing_gap(samples, ["t0"], ["A"]) is None
-    assert routing_gap(samples, ["t0"], []) is None
-    empty = routing_gap(samples, ["t0"], ["A", "B"])
-    assert empty.n_tasks == 0 and empty.n_excluded == 1 and empty.best_single is None
+def test_fewer_than_two_variants_or_tasks_or_no_complete_task():
+    samples = _grid({"A": {"t0"}}, ["t0", "t1"], reps=2)
+    assert routing_gap(samples, ["t0", "t1"], ["A"]) is None
+    assert routing_gap(samples, ["t0", "t1"], []) is None
+    assert routing_gap(samples, ["t0"], ["A", "B"]) is None  # one task: nothing to choose
+    empty = routing_gap(samples, ["t0", "t1"], ["A", "B"])
+    assert empty.n_tasks == 0 and empty.n_excluded == 2 and empty.best_single is None
     assert empty.gap is None and empty.held_out_gain is None
     assert "no task has valid runs from every variant" in empty.summary()
 

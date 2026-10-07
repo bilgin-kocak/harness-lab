@@ -116,12 +116,14 @@ def _held_out_gain(
 def routing_gap(
     samples: list[RunSample], task_keys: list[str], variant_keys: list[str]
 ) -> RoutingGap | None:
-    """Compare per-task selection with the best single variant (None with fewer than 2 variants).
+    """Compare per-task selection with the best single variant.
+
+    None with fewer than two variants or two tasks: then there is nothing to choose between.
 
     Only valid runs count, and only tasks on which every variant has at least one valid run.
     Ties go to the earlier variant in ``variant_keys``.
     """
-    if len(variant_keys) < 2:
+    if len(variant_keys) < 2 or len(task_keys) < 2:
         return None
     wanted_tasks, wanted_variants = set(task_keys), set(variant_keys)
     valid = [

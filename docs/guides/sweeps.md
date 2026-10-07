@@ -105,9 +105,10 @@ and with few repetitions that maximum is high by chance: identical configuration
 outcomes show a large in-sample gap and a held-out gain near zero. Only a held-out gain well above
 zero, over many tasks, says that per-task selection is worth building. It needs at least two
 repetitions; with one, the line says `held out: needs at least 2 repetitions per variant`. With
-`workload_by: task` each workload has one task, so the gap is always zero; use `suite` or `tag`.
+`workload_by: task` each workload has one task and nothing to choose between, so the line is
+left out; use `suite` or `tag`.
 
-`experiment show` prints the same line for any experiment with two or more variants, the
+`experiment show` prints the same line for any experiment with two or more variants and tasks, the
 dashboard's experiment page shows it as a panel, and the export has it under `routing` (per sweep
 workload under `sweep_report.workloads[].routing`).
 

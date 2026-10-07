@@ -84,7 +84,7 @@ rate and counts, the median gate `llm_calls` and cost, and the optimizer's cost.
 
 > **Unreleased.** On `main`; ships in the next release.
 
-`routing`, per experiment with two or more variants and per sweep workload:
+`routing`, per experiment or sweep workload with two or more variants and tasks:
 `best_single` and its mean per-task pass rate `best_single_rate`, `oracle_rate` (the best variant's
 pass rate on each task, averaged; in sample), `gap` (`oracle_rate − best_single_rate`),
 `n_improvable` (tasks some variant does better on), `per_task_best`, and `held_out_gain` over

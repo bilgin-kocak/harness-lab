@@ -48,7 +48,8 @@ def test_codex_command_defaults_are_sandboxed(tmp_path: Path):
     argv = build_codex_command(
         RunnerConfig(runner="codex", options={}), tmp_path, tmp_path / "last.txt"
     )
-    assert argv[:3] == ["codex", "exec", "--json"] and "--full-auto" in argv and argv[-1] == "-"
+    # Codex CLI 0.153 rejects --full-auto; --sandbox alone selects the sandbox.
+    assert argv[:3] == ["codex", "exec", "--json"] and "--full-auto" not in argv and argv[-1] == "-"
     assert "--sandbox" in argv and argv[argv.index("--sandbox") + 1] == "workspace-write"
     assert (
         "sandbox_workspace_write.network_access=false" in argv

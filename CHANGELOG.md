@@ -1,5 +1,26 @@
 # Changelog
 
+## Unreleased
+
+- Verdicts on a chosen metric: a paired comparison can judge pass rate (the default), score or
+  improvement ratio, with the sign test and the minimum task count following that metric, and
+  every comparison now shows a score interval. Choose it with `experiment compare --metric`,
+  `ablate run --metric`, `verdict_metric` in a sweep, `gate.metric` in a grow spec, or
+  `?metric=` on the dashboard's compare view. For improvement tasks use `score`: it counts a
+  broken final state as 0 and minimizing to 0 as 1. The verdict line now names its metric
+  ("better on pass rate over ...").
+- Per-task selection: sweep reports, `experiment show`, the dashboard's experiment page and
+  exports say whether choosing the best variant for each task would beat the best single
+  variant: the in-sample gap and a held-out gain from splitting repetitions, which is the number
+  to trust.
+- Improvement tasks can resume one agent session across rounds (`improve_session: resume`,
+  through `claude --resume` and `codex exec resume`) instead of starting a fresh session each
+  round; later rounds get a short delta prompt that says when files were reverted. New
+  `fake-improver-resumed` and `claude-resumed` demo variants and an `improve-session` sweep; the
+  bundled improvement sweeps judge on the improvement score.
+- Fixed: the Codex runner no longer passes `--full-auto`, which Codex CLI 0.153 rejects, so real
+  Codex runs failed; `--sandbox workspace-write` selects the same sandbox.
+
 ## 0.2.0 (2026-10-06)
 
 - Improvement tasks (`improve:` in a task): the repository already passes and the agent gets

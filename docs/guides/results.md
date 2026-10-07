@@ -33,6 +33,10 @@ The document contains:
   `metrics`, the verifier result, and, unless disabled, the normalized events and the text
   artifacts (diff, verifier output) inline;
 - `aggregates`: per-variant statistics (see [Metrics](../reference/metrics.md));
+- `routing` *(unreleased)*: whether choosing a variant per task would beat the best single
+  variant, in sample and held out (see
+  [Would choosing per task help?](sweeps.md#would-choosing-per-task-help)); `null` with fewer
+  than two variants;
 - `sweep_report`: the recommendation report when the experiment was a sweep, including paired
   evidence against the runner-up and the baseline;
 - `ablation_report`: per-component verdicts when the experiment was an ablation.

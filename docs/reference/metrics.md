@@ -79,3 +79,15 @@ A sweep's `ConfigResult` carries `pass_rate`, `n_valid`, the median objective, `
 `median_wall_time`, `median_tool_calls`, `median_llm_calls`, `median_files_changed`, eligibility
 and reason. A grow session's version report carries the window tasks and fixes, the gate pass
 rate and counts, the median gate `llm_calls` and cost, and the optimizer's cost.
+
+## Per-task selection
+
+> **Unreleased.** On `main`; ships in the next release.
+
+`routing`, per experiment with two or more variants and per sweep workload:
+`best_single` and its mean per-task pass rate `best_single_rate`, `oracle_rate` (the best variant's
+pass rate on each task, averaged; in sample), `gap` (`oracle_rate − best_single_rate`),
+`n_improvable` (tasks some variant does better on), `per_task_best`, and `held_out_gain` over
+`n_held_out_tasks` (choices made on even repetitions and scored on odd ones, and back). It covers
+the `n_tasks` tasks every variant has valid runs on, with `n_excluded` left out; see
+[Would choosing per task help?](../guides/sweeps.md#would-choosing-per-task-help).

@@ -16,6 +16,7 @@ from harnesslab.experiments.aggregate import (
     samples_from_rows,
 )
 from harnesslab.experiments.export import export_experiment
+from harnesslab.experiments.routing import routing_gap
 from harnesslab.experiments.stats import METRIC_LABELS, VERDICT_METRICS, VerdictMetric
 from harnesslab.experiments.sweep import report_for_experiment
 from harnesslab.grow.report import lineage_json, report_for_session
@@ -53,6 +54,7 @@ def _experiment_context(repo: Repository, exp_ref: str) -> dict[str, Any]:
         "samples": samples,
         "matrix": build_matrix(samples, task_keys, variant_keys),
         "aggregates": aggregate_variants(samples, variant_keys),
+        "routing": routing_gap(samples, task_keys, variant_keys),
         "runs_by_id": {r.id: r for r in exp.runs},
         "tasks_by_id": tasks_by_id,
         "variants_by_id": variants_by_id,

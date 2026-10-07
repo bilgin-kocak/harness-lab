@@ -31,6 +31,7 @@ from pydantic import BaseModel, Field
 
 from harnesslab.core.models import RunStatus, SweepSpec, VariantSpec
 from harnesslab.experiments.aggregate import RunSample, samples_from_rows
+from harnesslab.experiments.routing import RoutingGap, routing_gap
 from harnesslab.experiments.stats import PairedComparison, VerdictMetric, paired_comparison
 
 # ---------------------------------------------------------------------------
@@ -165,6 +166,7 @@ class WorkloadReport(BaseModel):
     baseline: str | None = None  # variant key of the spec's baseline configuration
     vs_runner_up: PairedComparison | None = None  # recommended (B) vs runner-up (A)
     vs_baseline: PairedComparison | None = None  # recommended (B) vs baseline (A)
+    routing: RoutingGap | None = None  # per-task selection vs the best single configuration
 
 
 class FactorEffect(BaseModel):
@@ -389,6 +391,7 @@ def analyze_sweep(
             if eligible
             else next((c for c in ordered if c.pass_rate is not None), None),
             pareto=_pareto(configs),
+            routing=routing_gap(samples, tasks, variant_keys),
         )
         if report.recommended is not None:
             in_workload = [s for s in samples if s.task_key in tasks]

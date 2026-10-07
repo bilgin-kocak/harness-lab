@@ -7,6 +7,7 @@ from typing import Any
 
 from harnesslab.experiments.ablation import report_for_experiment as ablation_report_for
 from harnesslab.experiments.aggregate import aggregate_variants, samples_from_rows
+from harnesslab.experiments.routing import routing_gap
 from harnesslab.experiments.sweep import report_for_experiment
 from harnesslab.storage.repository import Repository
 
@@ -31,7 +32,9 @@ def export_experiment(
     tasks_by_id = {t.id: t for t in exp.tasks}
     variants_by_id = {v.id: v for v in exp.variants}
     samples = samples_from_rows(exp.runs, tasks_by_id, variants_by_id)
-    aggregates = aggregate_variants(samples, [v.variant_key for v in exp.variants])
+    variant_keys = [v.variant_key for v in exp.variants]
+    aggregates = aggregate_variants(samples, variant_keys)
+    routing = routing_gap(samples, [t.task_key for t in exp.tasks], variant_keys)
 
     runs: list[dict[str, Any]] = []
     for run in exp.runs:
@@ -182,6 +185,7 @@ def export_experiment(
             for t in exp.tasks
         ],
         "aggregates": {k: v.model_dump(mode="json") for k, v in aggregates.items()},
+        "routing": routing.model_dump(mode="json") if routing else None,
         "ablation": (exp.spec_json or {}).get("ablation"),
         "ablation_report": (
             ab.model_dump(mode="json") if (ab := ablation_report_for(exp)) else None

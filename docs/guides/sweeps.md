@@ -55,7 +55,9 @@ Per workload, in the terminal, the dashboard and the JSON export:
   `only 3 of 6 required valid runs`, …);
 - the pass-rate versus cost **Pareto front**;
 - **factor effects**: the marginal mean pass rate and median objective per factor level, which is
-  the component-ablation view.
+  the component-ablation view;
+- **per-task selection** *(unreleased)*: whether choosing a configuration per task would beat the
+  best single one (see below).
 
 A configuration is *eligible* when its verified pass rate over valid runs meets
 `require.min_pass_rate` and it has at least `require.min_valid_runs` valid runs. The objective for
@@ -71,6 +73,43 @@ ranking are not affected by it.
 
 A sweep is an ordinary experiment whose variants carry `factors`, so `experiment show`, the
 compare view and the export all work on it.
+
+## Would choosing per task help?
+
+> **Unreleased.** On `main`; ships in the next release.
+
+A sweep recommends one configuration per workload. Some work suggests that building the harness
+per query beats the best fixed harness. The runs a sweep already has answer whether that holds for
+your tasks, without running anything new. Each workload's report ends with one line:
+
+```text
+per-task selection: best single model=claude-sonnet-5|… 62% · best per task 78% (+16 points, 5 of 12 tasks) · held out +4 points
+```
+
+Only valid runs count, and only tasks on which every configuration has at least one valid run;
+the line says how many tasks were left out.
+
+- **best single** is the configuration with the highest mean per-task pass rate (ties go to the
+  configuration listed first).
+- **best per task** picks, after seeing the results, the configuration that did best on each task
+  and averages those per-task pass rates. The difference to the best single configuration is the
+  in-sample gap, followed by how many tasks some configuration does better on.
+- **held out** is the same comparison made honestly. Each configuration's runs on a task are split
+  by repetition into even and odd. The per-task choice and the best single configuration are
+  picked on one half and both are scored on the other half, in both directions, and the two
+  differences are averaged. A task's choice stays with the best single configuration unless
+  another one did strictly better on that half.
+
+Trust the held-out number. The in-sample gap takes a maximum over several configurations per task,
+and with few repetitions that maximum is high by chance: identical configurations with coin-flip
+outcomes show a large in-sample gap and a held-out gain near zero. Only a held-out gain well above
+zero, over many tasks, says that per-task selection is worth building. It needs at least two
+repetitions; with one, the line says `held out: needs at least 2 repetitions per variant`. With
+`workload_by: task` each workload has one task, so the gap is always zero; use `suite` or `tag`.
+
+`experiment show` prints the same line for any experiment with two or more variants, the
+dashboard's experiment page shows it as a panel, and the export has it under `routing` (per sweep
+workload under `sweep_report.workloads[].routing`).
 
 ## Harness bundles as a factor
 

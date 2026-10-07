@@ -70,6 +70,38 @@
   </table>
 </section>
 
+{% if routing %}
+<section class="routing">
+  <h2>Per-task selection <span class="muted small">would choosing a variant per task beat one variant for all tasks? · {{ routing.n_tasks }} tasks every variant has verified runs on{% if routing.n_excluded %} · {{ routing.n_excluded }} left out{% endif %}</span></h2>
+  {% if routing.best_single %}
+  <div class="cards">
+    <div class="card metric">
+      <div class="label">best single variant</div>
+      <div class="value">{{ routing.best_single_rate|pct }}</div>
+      <div class="sub mono">{{ routing.best_single }}</div>
+    </div>
+    <div class="card metric">
+      <div class="label">best per task (in sample)</div>
+      <div class="value">{{ routing.oracle_rate|pct }}</div>
+      <div class="sub">{{ "%+.0f"|format(routing.gap * 100) }} points · {{ routing.n_improvable }} of {{ routing.n_tasks }} tasks improvable · biased upward</div>
+    </div>
+    <div class="card metric">
+      <div class="label">held-out gain</div>
+      {% if routing.held_out_gain is not none %}
+        <div class="value">{{ "%+.0f"|format(routing.held_out_gain * 100) }} points</div>
+        <div class="sub">chosen on even repetitions, scored on odd ones, and back · {{ routing.n_held_out_tasks }} tasks</div>
+      {% else %}
+        <div class="value">—</div>
+        <div class="sub">{{ routing.note }}</div>
+      {% endif %}
+    </div>
+  </div>
+  {% else %}
+  <p class="muted small">{{ routing.note }}</p>
+  {% endif %}
+</section>
+{% endif %}
+
 <section>
   <h2>Aggregate metrics per variant</h2>
   <table class="data aggregates">

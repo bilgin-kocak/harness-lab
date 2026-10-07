@@ -42,6 +42,7 @@ from harnesslab.experiments.ablation import AblationReport, plan_ablation
 from harnesslab.experiments.ablation import report_for_experiment as ablation_report_for
 from harnesslab.experiments.aggregate import aggregate_variants, build_matrix, samples_from_rows
 from harnesslab.experiments.export import export_experiment
+from harnesslab.experiments.routing import RoutingGap, routing_gap
 from harnesslab.experiments.service import ExperimentOutcome, ExperimentService, RunProgress
 from harnesslab.experiments.spec import (
     SpecError,
@@ -180,6 +181,12 @@ def _print_paired(p: PairedComparison, title: str | None = None) -> None:
             f"  [dim]fewer than {p.min_tasks} paired tasks{with_metric}: no verdict "
             "(repetitions do not count as tasks)[/]"
         )
+
+
+def _print_routing(gap: RoutingGap | None, indent: str = "") -> None:
+    """One line: best single variant vs choosing per task, in sample and held out."""
+    if gap is not None:
+        console.print(f"{indent}per-task selection: {escape(gap.summary())}")
 
 
 @app.callback()
@@ -981,6 +988,7 @@ def experiment_show(ctx: typer.Context, experiment_id: Annotated[str, typer.Argu
     stat_row("median estimated cost (USD)", lambda a: a.estimated_cost_usd.median, 4)
     at.add_row("infra failures", *[str(aggs[vk].n_infra_failures) for vk in variant_keys])
     console.print(at)
+    _print_routing(routing_gap(samples, task_keys, variant_keys))
 
     rt = Table(title="runs")
     for col in (
@@ -1175,6 +1183,7 @@ def _print_sweep_report(report: SweepReport) -> None:
                 console.print(
                     f"  best effort: {b.variant_key}  pass {b.pass_rate:.0%} · {kind} {_fmt_objective(b.objective, kind)}"
                 )
+        _print_routing(w.routing, indent="  ")
         table = Table(show_header=True, box=None, padding=(0, 1))
         for col in (
             "",

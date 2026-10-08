@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
+import re
 import shutil
 from pathlib import Path
 from typing import Any
@@ -55,6 +57,126 @@ async def probe_cli(
     return Availability(
         runner=runner, available=True, executable=path, version=version, detail="ok"
     )
+
+
+# A flag in help text: -x or --long-name, not the middle of a word or a path.
+_HELP_FLAG = re.compile(r"(?<![\w/.-])(--?[A-Za-z][A-Za-z0-9_-]*)")
+# A flag in a command line: the whole word, optionally with =value.
+_ARGV_FLAG = re.compile(r"--?[A-Za-z][A-Za-z0-9_-]*(?:=.*)?")
+# How a CLI refuses a flag it does not know: commander (Claude Code) and clap (Codex).
+_REJECTED = re.compile(r"(?:unknown option|unexpected argument) '(--?[A-Za-z][A-Za-z0-9_-]*)'")
+
+_HELP_CACHE: dict[tuple[str, int, tuple[str, ...]], frozenset[str] | None] = {}
+
+
+def help_flags(text: str) -> frozenset[str] | None:
+    """The flags a CLI's ``--help`` output lists, or None when ``text`` is not help output."""
+    if not text or "usage:" not in text.lower():
+        return None
+    return frozenset(_HELP_FLAG.findall(text))
+
+
+def argv_flags(argv: list[str]) -> list[str]:
+    """The flags of a command line (each once, in order), without their values."""
+    flags: list[str] = []
+    for word in argv[1:]:
+        if _ARGV_FLAG.fullmatch(word):
+            flag = word.split("=", 1)[0]
+            if flag not in flags:
+                flags.append(flag)
+    return flags
+
+
+def rejected_flag(stderr: str) -> str | None:
+    """The flag a CLI refused at startup, from its error output."""
+    match = _REJECTED.search(stderr or "")
+    return match.group(1) if match else None
+
+
+def refusal_message(cli: str, version: str | None, stderr: str) -> str | None:
+    """The error for a run the CLI refused at startup because of a flag, or None."""
+    flag = rejected_flag(stderr)
+    if flag is None:
+        return None
+    return (
+        f"{version or cli} rejected {flag}: the installed {cli} CLI does not accept a flag "
+        "Harness Lab passes; update the CLI or Harness Lab, or change the variant's options"
+    )
+
+
+def clear_help_cache() -> None:
+    _HELP_CACHE.clear()
+
+
+async def cli_help_flags(path: str, help_args: list[str]) -> frozenset[str] | None:
+    """The flags ``path <help_args>`` lists; cached until the executable changes."""
+    try:
+        key = (path, os.stat(path).st_mtime_ns, tuple(help_args))
+    except OSError:
+        return None
+    if key in _HELP_CACHE:
+        return _HELP_CACHE[key]
+    flags: frozenset[str] | None = None
+    try:
+        proc = await asyncio.create_subprocess_exec(
+            path,
+            *help_args,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+            stdin=asyncio.subprocess.DEVNULL,
+        )
+        try:
+            out, err = await asyncio.wait_for(proc.communicate(), timeout=20)
+            flags = help_flags(
+                out.decode("utf-8", errors="replace") + "\n" + err.decode("utf-8", errors="replace")
+            )
+        except TimeoutError:
+            proc.kill()
+    except OSError:
+        pass
+    _HELP_CACHE[key] = flags
+    return flags
+
+
+async def check_flags(
+    availability: Availability,
+    commands: list[tuple[list[str], list[str]]],
+    unlisted: frozenset[str] = frozenset(),
+    hint: str = "",
+) -> Availability:
+    """Mark an installed CLI unavailable when a command Harness Lab would run uses a flag its
+    ``--help`` does not list.
+
+    ``commands`` pairs each command line with the help arguments that describe it (for example
+    ``["exec", "--help"]``). ``unlisted`` are flags the CLI accepts without listing them. When the
+    help cannot be read, nothing is checked: a run that the CLI rejects is still caught from its
+    error output (see :func:`rejected_flag`).
+    """
+    path = availability.executable
+    if not availability.available or path is None:
+        return availability
+    for argv, help_args in commands:
+        known = await cli_help_flags(path, help_args)
+        if known is None:
+            continue
+        missing = [f for f in argv_flags(argv) if f not in known and f not in unlisted]
+        if missing:
+            shown = ", ".join(missing[:5]) + (
+                f" and {len(missing) - 5} more" if len(missing) > 5 else ""
+            )
+            name = Path(path).name
+            return availability.model_copy(
+                update={
+                    "available": False,
+                    "unsupported_flags": missing,
+                    "detail": (
+                        f"{availability.version or name} does not accept {shown} "
+                        f"(not listed by `{' '.join([name, *help_args])}`); update the CLI or "
+                        f"Harness Lab{hint}"
+                    ),
+                }
+            )
+    return availability
 
 
 class SanitizedStreamWriter:

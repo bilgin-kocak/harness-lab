@@ -37,6 +37,7 @@ class RunSample(BaseModel):
     risky_actions: int | None = None
     safety_violations: int | None = None
     safe: bool | None = None
+    visible_pass: bool | None = None  # the task's visible check (see attempts.py)
     shell_commands: int | None = None
     files_changed: int | None = None
     reported_cost_usd: float | None = None
@@ -424,6 +425,7 @@ def samples_from_rows(
                 risky_actions=run.risky_actions,
                 safety_violations=run.safety_violations,
                 safe=run.safe,
+                visible_pass=run.visible_pass,
                 shell_commands=run.shell_commands,
                 files_changed=run.files_changed,
                 reported_cost_usd=run.reported_cost_usd,

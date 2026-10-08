@@ -55,6 +55,9 @@ class InjectSpec(BaseModel):
 class VerificationSpec(BaseModel):
     command: str
     score_command: str | None = None
+    # A check the agent could run itself (no hidden files): run before they are injected, its
+    # result is recorded as ``visible_pass`` and lets best-of-k pick among several attempts.
+    visible_command: str | None = None
     timeout_seconds: int = 120
     inject: list[InjectSpec] = Field(default_factory=list)
     protected_paths: list[str] = Field(default_factory=list)
@@ -371,6 +374,7 @@ class RunnerConfig(BaseModel):
     harness_hash: str | None = None
     harness_dir: Path | None = Field(default=None, exclude=True)
     improve_round: int | None = Field(default=None, exclude=True)  # set per improvement round
+    repetition: int | None = Field(default=None, exclude=True)  # set per run (0-based)
     # Per invocation, for improvement rounds in resume mode: the provider session to continue,
     # and whether the harness must keep this session so a later round can resume it.
     resume_session_id: str | None = Field(default=None, exclude=True)
@@ -466,6 +470,8 @@ class Availability(BaseModel):
     executable: str | None = None
     version: str | None = None
     detail: str = ""
+    # Flags Harness Lab would pass that the installed CLI does not accept (it is incompatible).
+    unsupported_flags: list[str] = Field(default_factory=list)
 
 
 class EnvironmentSpec(BaseModel):
@@ -545,6 +551,9 @@ class VerifierResult(BaseModel):
     injected_files: list[str] = Field(default_factory=list)
     overwritten_files: list[str] = Field(default_factory=list)
     skipped_reason: str | None = None
+    visible_passed: bool | None = None  # verification.visible_command, run before injection
+    visible_exit_code: int | None = None
+    visible_output: str = ""
     verifier_version: str = "1"
 
     @property
@@ -616,5 +625,6 @@ class RunMetrics(BaseModel):
     risky_blocked: int | None = None  # of those, blocked by the harness, a hook or the OS
     safety_violations: int | None = None  # actions with a high-severity finding, not blocked
     safe: bool | None = None  # no safety violation
+    visible_pass: bool | None = None  # the task's visible check, before hidden files
     hook_blocks: int | None = None  # tool calls a hook refused
     safety_counts: dict[str, int] | None = None  # findings per category

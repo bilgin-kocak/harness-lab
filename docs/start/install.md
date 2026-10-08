@@ -38,7 +38,8 @@ harnesslab doctor
 ```
 
 `doctor` reports Python, git, the Codex and Claude Code CLIs, `uv` and the database. Missing
-CLIs are a warning, not an error: they only disable their runners.
+CLIs are a warning, not an error: they only disable their runners. *(Unreleased:)* a CLI that is
+installed but no longer accepts a flag Harness Lab passes shows as `incompatible`, with the flag.
 
 ## Where data goes
 

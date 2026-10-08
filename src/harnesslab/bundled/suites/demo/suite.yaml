@@ -22,6 +22,13 @@ variants:
     description: Fake agent that claims success without changing anything (control).
     behavior: noop
 
+  - id: fake-flaky
+    runner: fake
+    description: >
+      Fake agent that breaks the code, fixes it, then changes nothing, in turn over repetitions
+      (run with --repetitions 3 to see pass@k and best-of-k).
+    behaviors: [fail, solve, noop]
+
   - id: fake-partial
     runner: fake
     description: Fake agent that solves only the bug-fix task.

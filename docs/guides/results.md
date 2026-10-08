@@ -37,6 +37,8 @@ The document contains:
   variant, in sample and held out (see
   [Would choosing per task help?](sweeps.md#would-choosing-per-task-help)); `null` with fewer
   than two variants or tasks;
+- `attempts` *(unreleased)*: per variant, pass@k and best-of-k over its repeated attempts (see
+  [Several attempts](#several-attempts-passk-and-best-of-k));
 - `sweep_report`: the recommendation report when the experiment was a sweep, including paired
   evidence against the runner-up and the baseline;
 - `ablation_report`: per-component verdicts when the experiment was an ablation.
@@ -121,6 +123,39 @@ The compare view has the same choice (links above the evidence table, or `?metri
 set it with `verdict_metric` ([sweep format](../reference/sweep-format.md)), ablations with
 `ablate run --metric` ([ablation](ablation.md)) and the grow gate with `gate.metric`
 ([grow format](../reference/grow-format.md)).
+
+### Several attempts: pass@k and best-of-k
+
+> **Unreleased.** On `main`; ships in the next release.
+
+With `--repetitions`, a variant makes several attempts at every task. Two numbers say what more
+attempts are worth, next to pass@1, the plain pass rate:
+
+- **pass@k**: the chance that at least one of k attempts passes (the unbiased estimator of Chen
+  et al., 2021, from all of a task's attempts). It is a ceiling: something would have to tell
+  which attempt passed.
+- **best-of-k**: the chance that the attempt *picked by the task's visible check* passes the
+  hidden tests. The visible check is `verification.visible_command`, a check the agent could run
+  itself; Harness Lab runs it before injecting the hidden files and records `visible_pass`. Of k
+  attempts, the pick is one that passes the visible check, or any attempt when none does.
+
+Both are averaged over tasks. Best-of-k minus pass@1 per task gets the same bootstrap interval and
+verdict as the comparisons above, so a visible check that cannot tell good attempts from bad ones
+shows no gain. Best-of-k costs k attempts; the line shows that cost when it is known.
+
+```text
+attempts: fake-flaky pass@1 33% · pass@3 100% · best-of-3 50% (+17 points over one attempt, not enough tasks)
+```
+
+`harnesslab run` prints this line for every variant with at least two attempts per task,
+`experiment show` prints it too, the dashboard's experiment page has a table, and the export has
+it under `attempts`. The demo's `fake-flaky` variant breaks the code, fixes it and changes
+nothing in turn; its gap between best-of-3 and pass@3 is the attempt that changes nothing, which
+passes the visible tests and fails the hidden ones.
+
+```bash
+harnesslab run demo --variants fake-flaky --repetitions 3
+```
 
 ## Reading a single run
 

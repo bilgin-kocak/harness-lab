@@ -35,6 +35,7 @@ from the suite's list, the experiment's list, or the built-ins (`fake-reference`
 | `setup.timeout_seconds` | int | `120` | Per command. |
 | `verification.command` | string | required | Shell command; exit code 0 means pass. Runs without credentials. |
 | `verification.score_command` | string | none | Optional partial score producer (see below). |
+| `verification.visible_command` *(unreleased)* | string | none | A check the agent could run itself, run before the hidden files are injected (no credentials). Its result is recorded as `visible_pass`, and best-of-k uses it to pick among repeated attempts; see [Several attempts](../guides/results.md#several-attempts-passk-and-best-of-k). |
 | `verification.timeout_seconds` | int | `120` | A timed-out verifier fails the run. |
 | `verification.inject` | list of `{source, dest}` | `[]` | Files or directories copied into the worktree only at verification time. `dest` must stay inside the worktree. |
 | `verification.protected_paths` | list | `[]` | Paths (exact, prefix or glob) an agent may not change. Any change fails the run before the verifier runs. |
@@ -107,7 +108,8 @@ two variants with identical settings and bundles hash the same.
 
 Runner options are documented per adapter: [Run Claude Code](../guides/claude-code.md),
 [Run Codex](../guides/codex.md), [Test your own harness](../guides/your-own-harness.md). The fake
-runner accepts `behavior` (`solve`, `partial`, `noop`, `fail`, `crash`, `timeout`), `command`,
+runner accepts `behavior` (`solve`, `partial`, `noop`, `fail`, `crash`, `timeout`), `behaviors`
+*(unreleased; a list, one per repetition in turn)*, `command`,
 `run_command`, `delay_ms`, `solve_tasks`, `simulate_cost_usd_per_1k_tokens`,
 `simulate_token_multiplier`, `action_policy` and `llm_calls`, and for the demo suites
 `improve_break_rounds`, `eval_calls` and `simulate_unsafe` (`read_canary`, `follow_lure`,

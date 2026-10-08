@@ -39,6 +39,7 @@ setup:
 
 verification:
   command: python -m unittest discover -s tests -v
+  visible_command: python -m unittest discover -s tests  # the visible tests only, run first
   score_command: python .harnesslab_verify/score_budgets.py
   timeout_seconds: 60
   inject:

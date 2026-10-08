@@ -52,9 +52,11 @@ from harnesslab.execution.process import build_child_env, run_process
 from harnesslab.harness.bundle import HarnessBundle, materialize_claude_plugin
 from harnesslab.runners._cli import (
     SanitizedStreamWriter,
+    check_flags,
     option_list,
     probe_cli,
     redact_file_in_place,
+    refusal_message,
 )
 from harnesslab.runners.base import HarnessRunner, register_runner
 from harnesslab.runners.policies import action_policy_text
@@ -188,6 +190,31 @@ def build_claude_command(
     return argv
 
 
+# Flags Claude Code accepts without listing them in --help (checked on 2.1.294), so the flag check
+# must not count them as unsupported.
+CLAUDE_UNLISTED_FLAGS = frozenset({"--max-turns", "--append-system-prompt-file"})
+PLACEHOLDER_SESSION = "00000000-0000-4000-8000-000000000000"
+
+
+def commands_to_check(config: RunnerConfig) -> list[tuple[list[str], list[str]]]:
+    """The command lines a run of ``config`` can use, each with the help that describes it."""
+    files = (
+        {"system_prompt_file": Path("system_prompt.txt"), "plugin_dir": Path("plugin")}
+        if config.harness_dir
+        else {}
+    )
+    configs = [config]
+    if config.get("improve_session") == "resume" and config.resume_session_id is None:
+        configs.append(config.model_copy(update={"resume_session_id": PLACEHOLDER_SESSION}))
+    commands = []
+    for each in configs:
+        try:
+            commands.append((build_claude_command(each, PLACEHOLDER_SESSION, **files), ["--help"]))
+        except ValueError:
+            pass  # an invalid configuration is reported when the run starts
+    return commands
+
+
 # Flags that would stop a later improvement round from resuming the first round's session.
 RESUME_CLASHING_FLAGS = (
     "--no-session-persistence",
@@ -232,8 +259,16 @@ class ClaudeCodeRunner(HarnessRunner):
         return super().resume_error(config)
 
     async def check_availability(self, config: RunnerConfig | None = None) -> Availability:
+        """The CLI is installed and accepts every flag a run of ``config`` would pass."""
         exe = str(config.get("executable", "claude")) if config else "claude"
-        return await probe_cli(self.name, exe)
+        availability = await check_flags(
+            await probe_cli(self.name, exe),
+            commands_to_check(config or RunnerConfig(runner=self.name)),
+            unlisted=CLAUDE_UNLISTED_FLAGS,
+        )
+        if "--include-hook-events" in availability.unsupported_flags:
+            availability.detail += " (or set include_hook_events: false on the variant)"
+        return availability
 
     async def run(
         self,
@@ -326,6 +361,21 @@ class ClaudeCodeRunner(HarnessRunner):
             stream.close()
         if artifacts:
             redact_file_in_place(artifacts / "agent.stderr.log", emit.redactor)
+        refusal = (
+            refusal_message("claude", availability.version, proc.stderr_tail)
+            if proc.exit_code and not parser.saw_result
+            else None
+        )
+        if refusal:
+            # The CLI refused its arguments before doing anything: the harness is unavailable as
+            # configured, which is not a failed attempt at the task.
+            emit.emit(EventKind.ERROR, name="cli_rejected_flag", payload={"message": refusal})
+            return RunnerResult(
+                status=RunStatus.UNAVAILABLE,
+                exit_code=proc.exit_code,
+                error=refusal,
+                cli_version=availability.version,
+            )
 
         metadata: dict[str, Any] = {
             "result_subtype": parser.result_subtype,

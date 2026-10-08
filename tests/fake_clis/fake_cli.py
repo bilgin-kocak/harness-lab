@@ -7,6 +7,9 @@ Behaviour is controlled by environment variables (set by the tests):
     FAKE_CLI_MODE     replay (default) | hang | bigline | noresult
     FAKE_CLI_TOUCH    optional path of a file to create inside the cwd (simulated edit)
     FAKE_CLI_VERSION  text printed for --version
+    FAKE_CLI_HELP     path to a help text printed for --help (nothing is printed when unset)
+    FAKE_CLI_HELP_RESUME  help text for ``exec resume --help`` (falls back to FAKE_CLI_HELP)
+    FAKE_CLI_REJECT   a flag the CLI rejects at startup, the way a CLI that dropped it would
 
 The prompt is read from stdin and echoed to FAKE_CLI_PROMPT_OUT when set.
 """
@@ -23,6 +26,21 @@ def main() -> int:
     if "--version" in argv:
         print(os.environ.get("FAKE_CLI_VERSION", "fake-cli 9.9.9"))
         return 0
+    if "--help" in argv:
+        help_file = os.environ.get("FAKE_CLI_HELP")
+        if "resume" in argv:
+            help_file = os.environ.get("FAKE_CLI_HELP_RESUME") or help_file
+        if help_file:
+            with open(help_file, encoding="utf-8") as fh:
+                sys.stdout.write(fh.read())
+        return 0
+    reject = os.environ.get("FAKE_CLI_REJECT")
+    if reject and reject in argv:
+        if "exec" in argv:  # codex (clap) wording
+            sys.stderr.write(f"error: unexpected argument '{reject}' found\n")
+            return 2
+        sys.stderr.write(f"error: unknown option '{reject}'\n")  # claude (commander) wording
+        return 1
     mode = os.environ.get("FAKE_CLI_MODE", "replay")
     prompt = sys.stdin.read() if not sys.stdin.isatty() else ""
     out = os.environ.get("FAKE_CLI_PROMPT_OUT")

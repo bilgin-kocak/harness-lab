@@ -49,8 +49,8 @@ def _cap(text: str, cap: int = OUTPUT_CAP) -> str:
 class CommandVerifier(Verifier):
     """Runs ``verification.command``; exit code 0 means the task passed.
 
-    Steps: protected paths -> inject hidden files -> run command -> optional
-    partial-score command (see :class:`ScoreVerifier`).
+    Steps: protected paths -> optional visible check -> inject hidden files -> run command ->
+    optional partial-score command (see :class:`ScoreVerifier`).
     """
 
     def __init__(self, redactor: Redactor | None = None) -> None:
@@ -90,7 +90,10 @@ class CommandVerifier(Verifier):
         sandbox: ExecutionSandbox,
         ctx: SandboxContext,
         changes: DiffSummary,
+        *,
+        visible: bool = True,
     ) -> VerifierResult:
+        """Verify the worktree; ``visible=False`` skips the visible check (scratch evaluations)."""
         spec = task.verification
         result = VerifierResult(command=spec.command, score_command=spec.score_command)
 
@@ -102,6 +105,17 @@ class CommandVerifier(Verifier):
             result.skipped_reason = "protected paths were modified: " + ", ".join(violations)
             result.stderr = result.skipped_reason
             return result
+
+        if visible and spec.visible_command:
+            # What the agent itself could see: no hidden files yet, no credentials.
+            check = await sandbox.run_command(
+                ctx, spec.visible_command, timeout=spec.timeout_seconds, include_auth=False
+            )
+            result.visible_exit_code = check.exit_code
+            result.visible_passed = None if check.error else check.ok
+            result.visible_output = self.redactor.redact_text(
+                _cap((check.stdout + check.stderr_tail)[-20_000:])
+            )
 
         try:
             result.injected_files, result.overwritten_files = self.inject_files(task, ctx)

@@ -318,7 +318,7 @@ class ExperimentService:
         keep_worktree: bool,
         progress: ProgressCallback | None,
     ) -> RunOutcome:
-        config: RunnerConfig = variant.runner_config()
+        config: RunnerConfig = variant.runner_config().model_copy(update={"repetition": repetition})
         run_id = self.repo.create_run(
             exp_id=exp_id,
             variant_row_id=variant_row_id,
@@ -447,30 +447,47 @@ class ExperimentService:
                     runner_result = await self._invoke_runner(runner, task, ctx, config, emitter)
                 agent_seconds = time.monotonic() - agent_t0
 
-                # 3. capture what the agent changed
-                changes = await self.sandbox.capture_changes(ctx)
-                self._write_change_artifacts(run_id, artifacts_dir, changes, run_redactor)
-                self._flag_suite_access(task, emitter, runner_result)
-                safety_report = self._analyze_safety(
-                    run_id, task, ctx, emitter, changes, runner_result, artifacts_dir, run_redactor
-                )
+                if runner_result.status == RunStatus.UNAVAILABLE and not _did_work(improve_result):
+                    # The harness turned out to be unavailable and never ran (its CLI refused its
+                    # arguments, say). As with a harness found unavailable before the run, there
+                    # is nothing to capture or verify, and the run stays out of the pass rates.
+                    emitter.emit(
+                        EventKind.SYSTEM,
+                        name="verification_skipped",
+                        payload={"reason": runner_result.error},
+                    )
+                else:
+                    # 3. capture what the agent changed
+                    changes = await self.sandbox.capture_changes(ctx)
+                    self._write_change_artifacts(run_id, artifacts_dir, changes, run_redactor)
+                    self._flag_suite_access(task, emitter, runner_result)
+                    safety_report = self._analyze_safety(
+                        run_id,
+                        task,
+                        ctx,
+                        emitter,
+                        changes,
+                        runner_result,
+                        artifacts_dir,
+                        run_redactor,
+                    )
 
-                # 4. independent verification
-                verifier_t0 = time.monotonic()
-                verifier_result = await verifier.verify(task, self.sandbox, ctx, changes)
-                verifier_seconds = time.monotonic() - verifier_t0
-                self._write_verifier_artifacts(run_id, artifacts_dir, verifier_result)
-                emitter.emit(
-                    EventKind.SYSTEM,
-                    name="verification",
-                    payload={
-                        "outcome": verifier_result.outcome.value,
-                        "exit_code": verifier_result.exit_code,
-                        "score": verifier_result.verified_score,
-                        "timed_out": verifier_result.timed_out,
-                        "protected_violations": verifier_result.protected_violations,
-                    },
-                )
+                    # 4. independent verification
+                    verifier_t0 = time.monotonic()
+                    verifier_result = await verifier.verify(task, self.sandbox, ctx, changes)
+                    verifier_seconds = time.monotonic() - verifier_t0
+                    self._write_verifier_artifacts(run_id, artifacts_dir, verifier_result)
+                    emitter.emit(
+                        EventKind.SYSTEM,
+                        name="verification",
+                        payload={
+                            "outcome": verifier_result.outcome.value,
+                            "exit_code": verifier_result.exit_code,
+                            "score": verifier_result.verified_score,
+                            "timed_out": verifier_result.timed_out,
+                            "protected_violations": verifier_result.protected_violations,
+                        },
+                    )
         except asyncio.CancelledError:
             interrupted = True
             error = "interrupted"
@@ -664,10 +681,13 @@ class ExperimentService:
     def _write_verifier_artifacts(
         self, run_id: str, artifacts_dir: Path, result: VerifierResult
     ) -> None:
-        for filename, kind, content in (
+        outputs = [
             ("verifier_stdout.txt", "verifier_stdout", result.stdout),
             ("verifier_stderr.txt", "verifier_stderr", result.stderr),
-        ):
+        ]
+        if result.visible_passed is not None or result.visible_output:
+            outputs.append(("visible_check.txt", "visible_check", result.visible_output))
+        for filename, kind, content in outputs:
             path = artifacts_dir / filename
             path.write_text(content, encoding="utf-8")
             self.repo.add_artifact(run_id, kind, path, "text/plain")
@@ -736,6 +756,13 @@ class ExperimentService:
                 hits += 1
         if hits:
             runner_result.metadata["possible_suite_access"] = hits
+
+
+def _did_work(improve_result: ImproveResult | None) -> bool:
+    """Whether an improvement run had at least one round in which the harness ran."""
+    return improve_result is not None and any(
+        r.status != RunStatus.UNAVAILABLE.value for r in improve_result.rounds
+    )
 
 
 def _apply_improvement(

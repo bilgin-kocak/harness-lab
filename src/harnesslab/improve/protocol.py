@@ -297,7 +297,7 @@ async def evaluate_state(
     try:
         eval_ctx = dataclasses.replace(ctx, workdir=eval_dir)
         changes = await sandbox.capture_changes(ctx)
-        verdict = await verifier.verify(task, sandbox, eval_ctx, changes)
+        verdict = await verifier.verify(task, sandbox, eval_ctx, changes, visible=False)
         if not verdict.passed:
             detail = verdict.skipped_reason or f"verification exit code {verdict.exit_code}"
             return Evaluation(gate_passed=verdict.passed, detail=detail)

@@ -28,6 +28,7 @@ setup:
 
 verification:
   command: python -m unittest discover -s tests -v
+  visible_command: python -m unittest discover -s tests  # the visible tests only, run first
   timeout_seconds: 60
   inject:
     - source: consolidate-money-formatting/verify/test_hidden_formatting.py

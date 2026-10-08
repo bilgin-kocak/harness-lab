@@ -28,6 +28,17 @@ Two honest gaps:
   [pricing table](../reference/pricing.md) for estimates.
 - Codex's stream does not expose model invocations, so `llm_calls` is `null`.
 
+## The flag check
+
+> **Unreleased.** On `main`; ships in the next release.
+
+Before a run, Harness Lab compares every flag of the command above with the CLI's `--help` (`codex exec --help`, and `codex exec resume --help` for resumed improvement rounds).
+A flag the installed version no longer lists makes the run *unavailable*: it is not verified, it
+does not count in pass rates, and its error names the flag and the CLI version. `harnesslab
+doctor` shows such a CLI as `incompatible`. A run the CLI still refuses at startup (an unknown
+option) is reported the same way rather than as a failed attempt. Update the CLI or Harness Lab,
+or change the variant's options.
+
 ## Variant options
 
 | Option | Default | Effect |

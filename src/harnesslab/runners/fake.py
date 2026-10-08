@@ -10,6 +10,7 @@ the *verifier* is the authority: a ``noop`` variant claims success and fails.
 Options (all optional)::
 
     behavior: solve | partial | noop | fail | crash | timeout   (default: solve)
+    behaviors: [behavior, ...]   one per repetition, in turn (repetition 0 gets the first)
     command: shell command to run inside the worktree (default: unittest discovery if tests/ exists)
     run_command: true|false
     delay_ms: artificial latency per step (default 0)
@@ -264,7 +265,12 @@ class FakeRunner(HarnessRunner):
         config: RunnerConfig,
         emit: EventEmitter,
     ) -> RunnerResult:
-        behavior = str(config.get("behavior", "solve"))
+        behaviors = list(config.get("behaviors") or [])
+        behavior = (
+            str(behaviors[(config.repetition or 0) % len(behaviors)])
+            if behaviors
+            else str(config.get("behavior", "solve"))
+        )
         delay = float(config.get("delay_ms", 0)) / 1000.0
         solve_tasks = config.get("solve_tasks")
         if solve_tasks is not None and behavior == "solve" and task.id not in solve_tasks:

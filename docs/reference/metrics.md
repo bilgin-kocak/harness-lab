@@ -8,6 +8,7 @@ Stored in the `runs` table as columns and as `metrics_json`, shown on the run pa
 | Metric | Meaning |
 | --- | --- |
 | `verified_pass` | Exit code 0 of the verification command. `null` when the verifier could not run (harness unavailable, injection failed). |
+| `visible_pass` *(unreleased)* | Exit code 0 of the task's `visible_command`, run before the hidden files are injected. `null` without one. |
 | `verified_score` | `score / max_score` from the partial-score command if there is one, else `1.0` / `0.0`. |
 | `wall_time_seconds` | The whole pipeline: agent, capture and verifier. Also `agent_wall_time_seconds` and `verifier_wall_time_seconds`. |
 | `input_tokens` | *Uncached* prompt tokens. Codex reports cached tokens inside its input count and Claude Code reports them separately; adapters normalize both to this shape. |
@@ -91,3 +92,13 @@ pass rate on each task, averaged; in sample), `gap` (`oracle_rate − best_singl
 `n_held_out_tasks` (choices made on even repetitions and scored on odd ones, and back). It covers
 the `n_tasks` tasks every variant has valid runs on, with `n_excluded` left out; see
 [Would choosing per task help?](../guides/sweeps.md#would-choosing-per-task-help).
+
+## Several attempts
+
+> **Unreleased.** On `main`; ships in the next release.
+
+`attempts`, per variant over its repeated attempts: `k_max` (the fewest verified attempts on any
+task), `rows` with `pass_at_k` and `best_of_k` for k = 1 to `k_max` (averaged over tasks),
+`selector_gain` (best-of-`k_max` minus pass@1, bootstrap interval over tasks) with its `verdict`,
+`n_tasks`, `n_best_tasks` (tasks whose attempts all have a `visible_pass`) and `cost_per_attempt`;
+see [Several attempts](../guides/results.md#several-attempts-passk-and-best-of-k).

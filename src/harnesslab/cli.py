@@ -40,7 +40,13 @@ from harnesslab.corpus.mine import (
 )
 from harnesslab.experiments.ablation import AblationReport, plan_ablation
 from harnesslab.experiments.ablation import report_for_experiment as ablation_report_for
-from harnesslab.experiments.aggregate import aggregate_variants, build_matrix, samples_from_rows
+from harnesslab.experiments.aggregate import (
+    RunSample,
+    aggregate_variants,
+    build_matrix,
+    samples_from_rows,
+)
+from harnesslab.experiments.attempts import VariantAttempts, attempts_report
 from harnesslab.experiments.export import export_experiment
 from harnesslab.experiments.routing import RoutingGap, routing_gap
 from harnesslab.experiments.service import ExperimentOutcome, ExperimentService, RunProgress
@@ -181,6 +187,13 @@ def _print_paired(p: PairedComparison, title: str | None = None) -> None:
             f"  [dim]fewer than {p.min_tasks} paired tasks{with_metric}: no verdict "
             "(repetitions do not count as tasks)[/]"
         )
+
+
+def _print_attempts(reports: list[VariantAttempts]) -> None:
+    """One line per variant that made several attempts per task: pass@k and best-of-k."""
+    for report in reports:
+        if report.k_max >= 2:
+            console.print(f"attempts: {report.variant_key} {escape(report.summary())}")
 
 
 def _print_routing(gap: RoutingGap | None, indent: str = "") -> None:
@@ -336,7 +349,12 @@ def doctor(ctx: typer.Context) -> None:
     probes = asyncio.run(probe_all())
     for name in ("codex", "claude"):
         a = probes[name]
-        status = "[green]ok[/]" if a.available else "[yellow]not installed[/]"
+        if a.available:
+            status = "[green]ok[/]"
+        elif a.unsupported_flags:
+            status = "[red]incompatible[/]"  # installed, but rejects flags Harness Lab passes
+        else:
+            status = "[yellow]not installed[/]"
         detail = f"{a.version or ''} {a.executable or ''}".strip() if a.available else a.detail
         table.add_row(f"{name} cli", status, detail)
 
@@ -504,7 +522,7 @@ def _print_outcome_table(
 
 
 def _print_axes(outcome: ExperimentOutcome, variants: list[VariantSpec]) -> None:
-    """One line each for safety and improvement, when the runs have them."""
+    """One line each for safety, improvement and several attempts, when the runs have them."""
     safety, improvement = [], []
     for v in variants:
         runs = [r for r in outcome.runs if r.variant_key == v.id]
@@ -526,6 +544,22 @@ def _print_axes(outcome: ExperimentOutcome, variants: list[VariantSpec]) -> None
         console.print("safety: " + " · ".join(safety))
     if improvement:
         console.print("median improvement over baseline: " + " · ".join(improvement))
+    samples = [
+        RunSample(
+            run_id=r.run_id,
+            task_key=r.task_key,
+            variant_key=r.variant_key,
+            repetition=r.repetition,
+            status=r.status.value,
+            verified_pass=r.metrics.verified_pass,
+            visible_pass=r.metrics.visible_pass,
+            reported_cost_usd=r.metrics.reported_cost_usd,
+            estimated_cost_usd=r.metrics.estimated_cost_usd,
+        )
+        for r in outcome.runs
+    ]
+    task_keys = list(dict.fromkeys(r.task_key for r in outcome.runs))
+    _print_attempts(attempts_report(samples, [v.id for v in variants], task_keys))
 
 
 def _load_pricing(settings: Settings, explicit: Path | None) -> PricingTable | None:
@@ -989,6 +1023,7 @@ def experiment_show(ctx: typer.Context, experiment_id: Annotated[str, typer.Argu
     at.add_row("infra failures", *[str(aggs[vk].n_infra_failures) for vk in variant_keys])
     console.print(at)
     _print_routing(routing_gap(samples, task_keys, variant_keys))
+    _print_attempts(attempts_report(samples, variant_keys, task_keys))
 
     rt = Table(title="runs")
     for col in (

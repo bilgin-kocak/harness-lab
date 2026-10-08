@@ -102,6 +102,28 @@
 </section>
 {% endif %}
 
+{% set several = attempts|selectattr("k_max", "ge", 2)|list %}
+{% if several %}
+<section class="attempts">
+  <h2>Several attempts <span class="muted small">pass@k: one of k attempts passes · best-of-k: the attempt the task's visible check picks passes the hidden tests</span></h2>
+  <table class="data">
+    <thead><tr><th>variant</th><th class="num">attempts per task</th><th class="num">one attempt</th><th class="num">any of k</th><th class="num">picked by the visible check</th><th>gain over one attempt</th></tr></thead>
+    <tbody>
+    {% for a in several %}{% set last = a.row(a.k_max) %}
+      <tr>
+        <td class="mono">{{ a.variant_key }}</td>
+        <td class="num">{{ a.k_max }}</td>
+        <td class="num">pass@1 {{ a.row(1).pass_at_k|pct }}</td>
+        <td class="num">pass@{{ a.k_max }} {{ last.pass_at_k|pct }}</td>
+        <td class="num">{% if last.best_of_k is not none %}best-of-{{ a.k_max }} {{ last.best_of_k|pct }}{% else %}—{% endif %}</td>
+        <td>{% if a.selector_gain %}{{ "%+.0f"|format(a.selector_gain.estimate * 100) }} points [{{ "%+.0f"|format(a.selector_gain.low * 100) }}, {{ "%+.0f"|format(a.selector_gain.high * 100) }}] · {{ a.verdict }}{% else %}<span class="muted">{{ a.note }}</span>{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
+
 <section>
   <h2>Aggregate metrics per variant</h2>
   <table class="data aggregates">

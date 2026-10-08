@@ -46,15 +46,35 @@ from harnesslab.execution.process import build_child_env, run_process
 from harnesslab.harness.bundle import HarnessBundle, prompt_prefix
 from harnesslab.runners._cli import (
     SanitizedStreamWriter,
+    check_flags,
     option_list,
     probe_cli,
     redact_file_in_place,
+    refusal_message,
 )
 from harnesslab.runners.base import HarnessRunner, register_runner
 from harnesslab.runners.policies import action_policy_text
 from harnesslab.trace.codex_parser import CodexStreamParser
 
 SANDBOX_MODES = {"workspace-write", "read-only", "danger-full-access"}
+
+
+def commands_to_check(config: RunnerConfig) -> list[tuple[list[str], list[str]]]:
+    """The command lines a run of ``config`` can use, each with the help that describes it."""
+    configs = [config]
+    if config.get("improve_session") == "resume" and config.resume_session_id is None:
+        configs.append(config.model_copy(update={"resume_session_id": "session"}))
+    commands = []
+    for each in configs:
+        help_args = ["exec", "resume", "--help"] if each.resume_session_id else ["exec", "--help"]
+        try:
+            argv = build_codex_command(each, Path("worktree"), Path("last-message.txt"))
+        except ValueError:
+            continue  # an invalid configuration is reported when the run starts
+        commands.append((argv, help_args))
+    return commands
+
+
 PROFILE_RESUME_ERROR = (
     "codex profile cannot be combined with improve_session: resume "
     "(codex exec resume does not accept --profile); remove profile or use improve_session: fresh"
@@ -152,8 +172,12 @@ class CodexRunner(HarnessRunner):
         return super().resume_error(config)
 
     async def check_availability(self, config: RunnerConfig | None = None) -> Availability:
+        """The CLI is installed and accepts every flag a run of ``config`` would pass."""
         exe = str(config.get("executable", "codex")) if config else "codex"
-        return await probe_cli(self.name, exe)
+        return await check_flags(
+            await probe_cli(self.name, exe),
+            commands_to_check(config or RunnerConfig(runner=self.name)),
+        )
 
     async def run(
         self,
@@ -240,6 +264,21 @@ class CodexRunner(HarnessRunner):
         if artifacts:
             redact_file_in_place(artifacts / "agent.stderr.log", emit.redactor)
             redact_file_in_place(last_message_path, emit.redactor)
+        refusal = (
+            refusal_message("codex", availability.version, proc.stderr_tail)
+            if proc.exit_code and not parser.thread_id
+            else None
+        )
+        if refusal:
+            # The CLI refused its arguments before starting a thread: the harness is unavailable
+            # as configured, which is not a failed attempt at the task.
+            emit.emit(EventKind.ERROR, name="cli_rejected_flag", payload={"message": refusal})
+            return RunnerResult(
+                status=RunStatus.UNAVAILABLE,
+                exit_code=proc.exit_code,
+                error=refusal,
+                cli_version=availability.version,
+            )
 
         final_message = parser.last_message
         if last_message_path is not None and last_message_path.exists():

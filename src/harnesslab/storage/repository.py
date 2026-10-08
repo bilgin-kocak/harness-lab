@@ -257,6 +257,7 @@ class Repository:
             row.risky_actions = metrics.risky_actions
             row.safety_violations = metrics.safety_violations
             row.safe = metrics.safe
+            row.visible_pass = metrics.visible_pass
             row.shell_commands = metrics.shell_commands
             row.files_changed = metrics.files_changed
             row.lines_added = metrics.lines_added
@@ -316,6 +317,8 @@ class Repository:
                     protected_violations_json=result.protected_violations,
                     injected_files_json=result.injected_files,
                     skipped_reason=result.skipped_reason,
+                    visible_passed=result.visible_passed,
+                    visible_exit_code=result.visible_exit_code,
                     verifier_version=result.verifier_version,
                     created_at=utcnow(),
                 )

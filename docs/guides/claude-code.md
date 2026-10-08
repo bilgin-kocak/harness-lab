@@ -36,6 +36,17 @@ Guard rails the adapter enforces:
   `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC`. A Claude Code child never sees a parent session's
   `CLAUDECODE` marker.
 
+## The flag check
+
+> **Unreleased.** On `main`; ships in the next release.
+
+Before a run, Harness Lab compares every flag of the command above with the CLI's `--help` (Claude Code accepts a few flags its help does not list, such as `--max-turns`; those are known and allowed).
+A flag the installed version no longer lists makes the run *unavailable*: it is not verified, it
+does not count in pass rates, and its error names the flag and the CLI version. `harnesslab
+doctor` shows such a CLI as `incompatible`. A run the CLI still refuses at startup (an unknown
+option) is reported the same way rather than as a failed attempt. Update the CLI or Harness Lab,
+or change the variant's options; for a Claude Code version without hook events, set `include_hook_events: false`.
+
 ## Default shell allowlist
 
 Commands outside the allowlist are denied, because nobody answers prompts in headless mode. The

@@ -23,14 +23,16 @@
 - Several attempts: with `--repetitions`, `harnesslab run`, `experiment show`, the dashboard and
   exports report pass@k (one of k attempts passes) and best-of-k (the attempt picked by the task's
   visible check passes the hidden tests), with a bootstrap interval for best-of-k over a single
-  attempt. Tasks name the visible check in `verification.visible_command`; it runs before the
-  hidden files are injected and is recorded per run as `visible_pass`. The fake runner gains
-  `behaviors` (one per repetition) and the demo a `fake-flaky` variant.
-- CLI flag check: before a run, the Claude Code and Codex runners compare every flag they would
-  pass with the installed CLI's `--help`; an incompatible CLI makes the run unavailable (not
-  verified, not counted) with the flag and version named, and `harnesslab doctor` shows it as
-  `incompatible`. A run the CLI refuses at startup is reported the same way, and a harness that
-  turns out to be unavailable is no longer verified as a failed attempt.
+  attempt. Tasks name the visible check in `verification.visible_command`; it runs on a scratch
+  copy of the worktree before the hidden files are injected, fails for an attempt that edited
+  protected paths, and is recorded per run as `visible_pass`. The fake runner gains `behaviors`
+  (one per repetition) and the demo a `fake-flaky` variant.
+- CLI flag check: before a run, the Claude Code and Codex runners compare every flag they pass
+  with the installed CLI's `--help` (colour codes removed); an incompatible CLI makes the run
+  unavailable (not verified, not counted) with the flag and version named, and `harnesslab doctor`
+  shows it as `incompatible`. A variant's own `extra_args` are left to the CLI, `flag_check: false`
+  turns the check off, and a run the CLI refuses before printing anything is reported the same
+  way. A harness that turns out to be unavailable is no longer verified as a failed attempt.
 - Fixed: the Codex runner no longer passes `--full-auto`, which Codex CLI 0.153 rejects, so real
   Codex runs failed; `--sandbox workspace-write` selects the same sandbox.
 

@@ -28,10 +28,8 @@ from __future__ import annotations
 
 import asyncio
 import dataclasses
-import os
 import re
 import shutil
-import stat
 import statistics
 from collections.abc import Awaitable, Callable
 from pathlib import Path
@@ -42,6 +40,7 @@ from pydantic import BaseModel, Field
 from harnesslab.core.events import EventEmitter, EventKind
 from harnesslab.core.models import RunnerConfig, RunnerResult, RunStatus, TaskSpec, UsageTotals
 from harnesslab.execution.sandbox import ExecutionSandbox, SandboxContext
+from harnesslab.execution.scratch import fresh_copy
 from harnesslab.improve.checkpoint import anchor, drop_anchor, exclude_in_git, restore, snapshot
 from harnesslab.improve.evaluator import EVAL_DIR, count_calls, install_evaluator, reset_calls
 from harnesslab.improve.objective import (
@@ -253,22 +252,8 @@ def _describe(record: RoundRecord, unit: str, keep_best: bool) -> str:
     return f"{_fmt(record.value)}{unit}, not better than the best."
 
 
-def _copy_regular(source: str, dest: str) -> None:
-    # Like git, skip named pipes, sockets and devices: they are not part of the code.
-    if stat.S_ISREG(os.lstat(source).st_mode):
-        shutil.copy2(source, dest)
-
-
 def _fresh_copy(source: Path, dest: Path) -> None:
-    if dest.exists():
-        shutil.rmtree(dest)
-    shutil.copytree(
-        source,
-        dest,
-        symlinks=True,
-        ignore=shutil.ignore_patterns(".git", EVAL_DIR),
-        copy_function=_copy_regular,
-    )
+    fresh_copy(source, dest, ignore=(".git", EVAL_DIR))
 
 
 def _inject(task: TaskSpec, workdir: Path) -> None:

@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
+import asyncio
 import copy
+import dataclasses
 import fnmatch
 import os
 import shutil
 
 from harnesslab.core.models import DiffSummary, Outcome, TaskSpec, VerifierResult
 from harnesslab.execution.sandbox import ExecutionSandbox, SandboxContext
+from harnesslab.execution.scratch import fresh_copy
 from harnesslab.trace.redaction import Redactor, default_redactor
 from harnesslab.verification.base import Verifier
 from harnesslab.verification.score import ScoreVerifier
@@ -84,6 +87,40 @@ class CommandVerifier(Verifier):
             injected.append(item.dest)
         return injected, overwritten
 
+    async def _visible_check(
+        self,
+        task: TaskSpec,
+        sandbox: ExecutionSandbox,
+        ctx: SandboxContext,
+        result: VerifierResult,
+    ) -> None:
+        """What the agent itself could see: no hidden files yet, no credentials.
+
+        It runs on a scratch copy of the worktree, so nothing it leaves behind (files, a test
+        database) reaches the real verification.
+        """
+        spec = task.verification
+        assert spec.visible_command is not None
+        scratch = ctx.workdir.parent / f"{ctx.run_id}.visible"
+        try:
+            await asyncio.to_thread(fresh_copy, ctx.workdir, scratch)
+            check = await sandbox.run_command(
+                dataclasses.replace(ctx, workdir=scratch),
+                spec.visible_command,
+                timeout=spec.timeout_seconds,
+                include_auth=False,
+            )
+        except Exception as exc:  # e.g. a file the copy cannot read
+            result.visible_output = f"the visible check could not run: {exc}"
+            return
+        finally:
+            await asyncio.to_thread(shutil.rmtree, scratch, True)
+        result.visible_exit_code = check.exit_code
+        result.visible_passed = None if check.error else check.ok
+        result.visible_output = self.redactor.redact_text(
+            _cap(check.stdout, 10_000) + "\n" + _cap(check.stderr_tail, 10_000)
+        ).strip()
+
     async def verify(
         self,
         task: TaskSpec,
@@ -97,6 +134,8 @@ class CommandVerifier(Verifier):
         spec = task.verification
         result = VerifierResult(command=spec.command, score_command=spec.score_command)
 
+        check_visible = visible and bool(spec.visible_command)
+        result.visible_command = spec.visible_command if check_visible else None
         violations = protected_violations(changes, spec.protected_paths)
         if violations:
             result.protected_violations = violations
@@ -104,18 +143,15 @@ class CommandVerifier(Verifier):
             result.outcome = Outcome.FAIL
             result.skipped_reason = "protected paths were modified: " + ", ".join(violations)
             result.stderr = result.skipped_reason
+            if check_visible:
+                # The diff is visible too: an attempt that edited protected paths is not one a
+                # selector would pick.
+                result.visible_passed = False
+                result.visible_output = result.skipped_reason
             return result
 
-        if visible and spec.visible_command:
-            # What the agent itself could see: no hidden files yet, no credentials.
-            check = await sandbox.run_command(
-                ctx, spec.visible_command, timeout=spec.timeout_seconds, include_auth=False
-            )
-            result.visible_exit_code = check.exit_code
-            result.visible_passed = None if check.error else check.ok
-            result.visible_output = self.redactor.redact_text(
-                _cap((check.stdout + check.stderr_tail)[-20_000:])
-            )
+        if check_visible:
+            await self._visible_check(task, sandbox, ctx, result)
 
         try:
             result.injected_files, result.overwritten_files = self.inject_files(task, ctx)

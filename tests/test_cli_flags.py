@@ -234,3 +234,101 @@ def test_doctor_names_an_incompatible_cli(fake_cli: Path, tmp_path: Path):
     env["FAKE_CLI_HELP"] = str(CODEX_HELP)  # Claude's flags are missing from Codex's help
     result = CliRunner().invoke(app, ["doctor"], env=env)
     assert "incompatible" in result.output and "--output-format" in result.output, result.output
+
+
+# -- review fixes ----------------------------------------------------------------------------
+
+
+def test_colored_help_is_still_read():
+    colored = (
+        "\x1b[1mUsage:\x1b[0m codex exec [OPTIONS] [PROMPT]\n\n"
+        "  \x1b[1m--json\x1b[0m             Print events as JSONL\n"
+        "  \x1b[1m-C\x1b[0m, \x1b[1m--cd\x1b[0m <DIR>  Working directory\n"
+    )
+    assert {"--json", "-C", "--cd"} <= help_flags(colored)
+    from harnesslab.runners._cli import help_env
+
+    env = help_env({"CLICOLOR_FORCE": "1", "FORCE_COLOR": "3", "PATH": "/bin"})
+    assert env["NO_COLOR"] == "1" and "CLICOLOR_FORCE" not in env and "FORCE_COLOR" not in env
+    assert env["PATH"] == "/bin"
+
+
+async def test_colored_help_from_the_cli_does_not_block_runs(
+    fake_cli: Path, tmp_path: Path, monkeypatch
+):
+    text = CODEX_HELP.read_text()
+    colored = tmp_path / "colored-help.txt"
+    colored.write_text(text.replace("--", "\x1b[1m--").replace("\n", "\x1b[0m\n"))
+    monkeypatch.setenv("FAKE_CLI_HELP", str(colored))
+    config = RunnerConfig(runner="codex", options={"executable": str(fake_cli)})
+    assert (await CodexRunner().check_availability(config)).available
+
+
+async def test_user_extra_args_are_left_to_the_cli_and_the_check_can_be_turned_off(
+    fake_cli: Path, tmp_path: Path, monkeypatch
+):
+    monkeypatch.setenv("FAKE_CLI_HELP", str(CLAUDE_HELP))
+    hidden = RunnerConfig(
+        runner="claude",
+        options={"executable": str(fake_cli), "extra_args": ["--system-prompt-file", "p.txt"]},
+    )
+    assert (await ClaudeCodeRunner().check_availability(hidden)).available
+    clear_help_cache()
+    monkeypatch.setenv(
+        "FAKE_CLI_HELP", str(_without(CLAUDE_HELP, "--include-hook-events", tmp_path))
+    )
+    off = RunnerConfig(runner="claude", options={"executable": str(fake_cli), "flag_check": False})
+    assert (await ClaudeCodeRunner().check_availability(off)).available
+
+
+async def test_a_refusal_after_the_session_started_is_not_unavailable(
+    fake_cli: Path, tmp_path: Path, monkeypatch
+):
+    worktree, artifacts = tmp_path / "wt", tmp_path / "artifacts"
+    worktree.mkdir()
+    artifacts.mkdir()
+    monkeypatch.setenv("FAKE_CLI_STREAM", str(FIXTURES / "claude" / "stream_success.jsonl"))
+    monkeypatch.setenv("FAKE_CLI_MODE", "noresult")  # the session ran, then the CLI failed
+    monkeypatch.setenv("FAKE_CLI_STDERR_TEXT", "error: unknown option '--frobnicate'")
+    monkeypatch.setenv("FAKE_CLI_EXIT", "1")
+    passthrough = ["FAKE_CLI_STREAM", "FAKE_CLI_MODE", "FAKE_CLI_STDERR_TEXT", "FAKE_CLI_EXIT"]
+    emitter = EventEmitter("r", redactor=Redactor(include_process_env=False))
+    result = await ClaudeCodeRunner(artifacts_dir=artifacts).run(
+        _task(worktree),
+        worktree,
+        RunnerConfig(
+            runner="claude",
+            options={"executable": str(fake_cli), "env_passthrough": passthrough},
+        ),
+        emitter,
+    )
+    assert result.status != RunStatus.UNAVAILABLE, result
+
+
+async def test_a_refused_resume_setting_does_not_block_ordinary_tasks(fake_cli: Path, monkeypatch):
+    monkeypatch.setenv("FAKE_CLI_HELP", str(CODEX_HELP))
+    monkeypatch.setenv("FAKE_CLI_HELP_RESUME", str(CODEX_RESUME_HELP))
+    config = RunnerConfig(
+        runner="codex",
+        options={
+            "executable": str(fake_cli),
+            "improve_session": "resume",
+            "extra_args": ["--add-dir", "/data"],
+        },
+    )
+    assert (await CodexRunner().check_availability(config)).available
+    assert "cannot be combined with resuming" in (CodexRunner().resume_error(config) or "")
+
+
+async def test_concurrent_checks_read_the_help_once(fake_cli: Path, tmp_path: Path, monkeypatch):
+    import asyncio
+
+    log = tmp_path / "help-calls"
+    monkeypatch.setenv("FAKE_CLI_HELP", str(CLAUDE_HELP))
+    monkeypatch.setenv("FAKE_CLI_HELP_LOG", str(log))
+    config = RunnerConfig(runner="claude", options={"executable": str(fake_cli)})
+    results = await asyncio.gather(
+        *(ClaudeCodeRunner().check_availability(config) for _ in range(6))
+    )
+    assert all(r.available for r in results)
+    assert log.read_text().count("help") == 1

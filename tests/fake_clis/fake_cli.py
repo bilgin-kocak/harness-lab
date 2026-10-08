@@ -10,6 +10,8 @@ Behaviour is controlled by environment variables (set by the tests):
     FAKE_CLI_HELP     path to a help text printed for --help (nothing is printed when unset)
     FAKE_CLI_HELP_RESUME  help text for ``exec resume --help`` (falls back to FAKE_CLI_HELP)
     FAKE_CLI_REJECT   a flag the CLI rejects at startup, the way a CLI that dropped it would
+    FAKE_CLI_HELP_LOG path of a file that gets one line per --help call
+    FAKE_CLI_STDERR_TEXT  text written to stderr at the end of a normal run
 
 The prompt is read from stdin and echoed to FAKE_CLI_PROMPT_OUT when set.
 """
@@ -27,6 +29,10 @@ def main() -> int:
         print(os.environ.get("FAKE_CLI_VERSION", "fake-cli 9.9.9"))
         return 0
     if "--help" in argv:
+        log = os.environ.get("FAKE_CLI_HELP_LOG")
+        if log:
+            with open(log, "a", encoding="utf-8") as fh:
+                fh.write("help\n")
         help_file = os.environ.get("FAKE_CLI_HELP")
         if "resume" in argv:
             help_file = os.environ.get("FAKE_CLI_HELP_RESUME") or help_file
@@ -87,6 +93,8 @@ def main() -> int:
         with open(path, "w", encoding="utf-8") as fh:
             fh.write("final message from -o file\n")
     sys.stderr.write("fake cli finished\n")
+    if os.environ.get("FAKE_CLI_STDERR_TEXT"):
+        sys.stderr.write(os.environ["FAKE_CLI_STDERR_TEXT"] + "\n")
     if os.environ.get("FAKE_CLI_STDERR_SECRET"):
         sys.stderr.write("leaked token ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ab\n")
     return int(os.environ.get("FAKE_CLI_EXIT", "0"))

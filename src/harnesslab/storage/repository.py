@@ -317,6 +317,7 @@ class Repository:
                     protected_violations_json=result.protected_violations,
                     injected_files_json=result.injected_files,
                     skipped_reason=result.skipped_reason,
+                    visible_command=result.visible_command,
                     visible_passed=result.visible_passed,
                     visible_exit_code=result.visible_exit_code,
                     verifier_version=result.verifier_version,

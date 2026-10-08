@@ -55,6 +55,7 @@ from harnesslab.core.models import (
 from harnesslab.execution.fixture import iter_fixture_files
 from harnesslab.execution.process import build_child_env, run_process, shell_argv
 from harnesslab.harness.bundle import HarnessBundle
+from harnesslab.runners._cli import option_list
 from harnesslab.runners.base import HarnessRunner, register_runner
 
 FAKE_MODEL = "fake-model-v1"
@@ -265,7 +266,7 @@ class FakeRunner(HarnessRunner):
         config: RunnerConfig,
         emit: EventEmitter,
     ) -> RunnerResult:
-        behaviors = list(config.get("behaviors") or [])
+        behaviors = option_list(config.get("behaviors"))
         behavior = (
             str(behaviors[(config.repetition or 0) % len(behaviors)])
             if behaviors

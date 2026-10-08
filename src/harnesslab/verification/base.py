@@ -21,4 +21,6 @@ class Verifier(ABC):
         sandbox: ExecutionSandbox,
         ctx: SandboxContext,
         changes: DiffSummary,
+        *,
+        visible: bool = True,
     ) -> VerifierResult: ...

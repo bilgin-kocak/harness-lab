@@ -61,19 +61,32 @@ async def probe_cli(
 
 # A flag in help text: -x or --long-name, not the middle of a word or a path.
 _HELP_FLAG = re.compile(r"(?<![\w/.-])(--?[A-Za-z][A-Za-z0-9_-]*)")
+# Terminal colour and style codes, which some CLIs print even into a pipe when forced to.
+_ANSI = re.compile(r"\x1b\[[0-9;?]*[A-Za-z]")
+# Variables that force colour on, whatever the output is.
+_FORCE_COLOR = ("CLICOLOR_FORCE", "FORCE_COLOR")
 # A flag in a command line: the whole word, optionally with =value.
 _ARGV_FLAG = re.compile(r"--?[A-Za-z][A-Za-z0-9_-]*(?:=.*)?")
 # How a CLI refuses a flag it does not know: commander (Claude Code) and clap (Codex).
 _REJECTED = re.compile(r"(?:unknown option|unexpected argument) '(--?[A-Za-z][A-Za-z0-9_-]*)'")
 
 _HELP_CACHE: dict[tuple[str, int, tuple[str, ...]], frozenset[str] | None] = {}
+_HELP_READS: dict[tuple[str, int, tuple[str, ...]], asyncio.Future[frozenset[str] | None]] = {}
 
 
 def help_flags(text: str) -> frozenset[str] | None:
     """The flags a CLI's ``--help`` output lists, or None when ``text`` is not help output."""
-    if not text or "usage:" not in text.lower():
+    text = _ANSI.sub("", text or "")
+    if "usage:" not in text.lower():
         return None
     return frozenset(_HELP_FLAG.findall(text))
+
+
+def help_env(base: dict[str, str] | None = None) -> dict[str, str]:
+    """The environment for reading ``--help``: the caller's, with colour turned off."""
+    env = {k: v for k, v in (os.environ if base is None else base).items() if k not in _FORCE_COLOR}
+    env["NO_COLOR"] = "1"
+    return env
 
 
 def argv_flags(argv: list[str]) -> list[str]:
@@ -106,17 +119,34 @@ def refusal_message(cli: str, version: str | None, stderr: str) -> str | None:
 
 def clear_help_cache() -> None:
     _HELP_CACHE.clear()
+    _HELP_READS.clear()
 
 
 async def cli_help_flags(path: str, help_args: list[str]) -> frozenset[str] | None:
-    """The flags ``path <help_args>`` lists; cached until the executable changes."""
+    """The flags ``path <help_args>`` lists; read once per executable version and cached."""
     try:
         key = (path, os.stat(path).st_mtime_ns, tuple(help_args))
     except OSError:
         return None
     if key in _HELP_CACHE:
         return _HELP_CACHE[key]
+    loop = asyncio.get_running_loop()
+    pending = _HELP_READS.get(key)
+    if pending is not None and pending.get_loop() is loop:
+        return await asyncio.shield(pending)  # another run is reading the same help
+    reading: asyncio.Future[frozenset[str] | None] = loop.create_future()
+    _HELP_READS[key] = reading
     flags: frozenset[str] | None = None
+    try:
+        flags = await _read_help(path, help_args)
+        _HELP_CACHE[key] = flags
+    finally:
+        reading.set_result(flags)
+        _HELP_READS.pop(key, None)
+    return flags
+
+
+async def _read_help(path: str, help_args: list[str]) -> frozenset[str] | None:
     try:
         proc = await asyncio.create_subprocess_exec(
             path,
@@ -124,25 +154,25 @@ async def cli_help_flags(path: str, help_args: list[str]) -> frozenset[str] | No
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
             stdin=asyncio.subprocess.DEVNULL,
+            env=help_env(),
         )
-        try:
-            out, err = await asyncio.wait_for(proc.communicate(), timeout=20)
-            flags = help_flags(
-                out.decode("utf-8", errors="replace") + "\n" + err.decode("utf-8", errors="replace")
-            )
-        except TimeoutError:
-            proc.kill()
     except OSError:
-        pass
-    _HELP_CACHE[key] = flags
-    return flags
+        return None
+    try:
+        out, err = await asyncio.wait_for(proc.communicate(), timeout=20)
+    except TimeoutError:
+        proc.kill()
+        await proc.wait()
+        return None
+    return help_flags(
+        out.decode("utf-8", errors="replace") + "\n" + err.decode("utf-8", errors="replace")
+    )
 
 
 async def check_flags(
     availability: Availability,
     commands: list[tuple[list[str], list[str]]],
     unlisted: frozenset[str] = frozenset(),
-    hint: str = "",
 ) -> Availability:
     """Mark an installed CLI unavailable when a command Harness Lab would run uses a flag its
     ``--help`` does not list.
@@ -172,7 +202,7 @@ async def check_flags(
                     "detail": (
                         f"{availability.version or name} does not accept {shown} "
                         f"(not listed by `{' '.join([name, *help_args])}`); update the CLI or "
-                        f"Harness Lab{hint}"
+                        "Harness Lab, or set flag_check: false on the variant"
                     ),
                 }
             )

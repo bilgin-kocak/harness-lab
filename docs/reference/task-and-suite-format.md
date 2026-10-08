@@ -35,7 +35,7 @@ from the suite's list, the experiment's list, or the built-ins (`fake-reference`
 | `setup.timeout_seconds` | int | `120` | Per command. |
 | `verification.command` | string | required | Shell command; exit code 0 means pass. Runs without credentials. |
 | `verification.score_command` | string | none | Optional partial score producer (see below). |
-| `verification.visible_command` *(unreleased)* | string | none | A check the agent could run itself, run before the hidden files are injected (no credentials). Its result is recorded as `visible_pass`, and best-of-k uses it to pick among repeated attempts; see [Several attempts](../guides/results.md#several-attempts-passk-and-best-of-k). |
+| `verification.visible_command` *(unreleased)* | string | none | A check the agent could run itself, run on a scratch copy of the worktree before the hidden files are injected (no credentials, the same timeout; its time counts as verifier time). Its result is recorded as `visible_pass`, and best-of-k uses it to pick among repeated attempts; see [Several attempts](../guides/results.md#several-attempts-passk-and-best-of-k). |
 | `verification.timeout_seconds` | int | `120` | A timed-out verifier fails the run. |
 | `verification.inject` | list of `{source, dest}` | `[]` | Files or directories copied into the worktree only at verification time. `dest` must stay inside the worktree. |
 | `verification.protected_paths` | list | `[]` | Paths (exact, prefix or glob) an agent may not change. Any change fails the run before the verifier runs. |

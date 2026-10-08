@@ -129,19 +129,26 @@ set it with `verdict_metric` ([sweep format](../reference/sweep-format.md)), abl
 > **Unreleased.** On `main`; ships in the next release.
 
 With `--repetitions`, a variant makes several attempts at every task. Two numbers say what more
-attempts are worth, next to pass@1, the plain pass rate:
+attempts are worth, next to pass@1, the mean pass rate per task (each task counts once, so it can
+differ from the pooled pass rate when tasks have different numbers of attempts):
 
 - **pass@k**: the chance that at least one of k attempts passes (the unbiased estimator of Chen
   et al., 2021, from all of a task's attempts). It is a ceiling: something would have to tell
   which attempt passed.
 - **best-of-k**: the chance that the attempt *picked by the task's visible check* passes the
   hidden tests. The visible check is `verification.visible_command`, a check the agent could run
-  itself; Harness Lab runs it before injecting the hidden files and records `visible_pass`. Of k
-  attempts, the pick is one that passes the visible check, or any attempt when none does.
+  itself. Harness Lab runs it before injecting the hidden files, on a scratch copy of the
+  worktree so that nothing it leaves behind reaches the real verification, and records
+  `visible_pass`. An attempt that edited protected paths fails the visible check: the diff is
+  visible too. Of k attempts, the pick is one that passes the visible check, or any attempt when
+  none does.
 
-Both are averaged over tasks. Best-of-k minus pass@1 per task gets the same bootstrap interval and
-verdict as the comparisons above, so a visible check that cannot tell good attempts from bad ones
-shows no gain. Best-of-k costs k attempts; the line shows that cost when it is known.
+Both are averaged over tasks, and every number covers the same tasks: those with at least the
+(lower) median number of verified attempts, so one task with fewer attempts does not hide the
+rest; the line says how many were left out. When only some tasks have a visible check, best-of-k
+says over how many. Best-of-k minus pass@1 per task gets the same bootstrap interval and verdict
+as the comparisons above, so a visible check that cannot tell good attempts from bad ones shows
+no gain. Best-of-k costs k attempts; the line shows that cost when it is known.
 
 ```text
 attempts: fake-flaky pass@1 33% · pass@3 100% · best-of-3 50% (+17 points over one attempt, not enough tasks)

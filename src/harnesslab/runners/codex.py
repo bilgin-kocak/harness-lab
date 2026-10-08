@@ -53,17 +53,27 @@ from harnesslab.runners._cli import (
     refusal_message,
 )
 from harnesslab.runners.base import HarnessRunner, register_runner
+from harnesslab.runners.claude import own_flags_only
 from harnesslab.runners.policies import action_policy_text
 from harnesslab.trace.codex_parser import CodexStreamParser
 
 SANDBOX_MODES = {"workspace-write", "read-only", "danger-full-access"}
 
 
-def commands_to_check(config: RunnerConfig) -> list[tuple[list[str], list[str]]]:
-    """The command lines a run of ``config`` can use, each with the help that describes it."""
-    configs = [config]
-    if config.get("improve_session") == "resume" and config.resume_session_id is None:
-        configs.append(config.model_copy(update={"resume_session_id": "session"}))
+def commands_to_check(
+    config: RunnerConfig, *, resume: bool = True
+) -> list[tuple[list[str], list[str]]]:
+    """The command lines a run of ``config`` can use, each with the help that describes it.
+
+    ``resume=False`` leaves out the resumed form, for a configuration that cannot resume anyway
+    (its improvement runs fail at setup with the reason).
+    """
+    own = own_flags_only(config)
+    if own is None:
+        return []
+    configs = [own]
+    if resume and own.get("improve_session") == "resume" and own.resume_session_id is None:
+        configs.append(own.model_copy(update={"resume_session_id": "session"}))
     commands = []
     for each in configs:
         help_args = ["exec", "resume", "--help"] if each.resume_session_id else ["exec", "--help"]
@@ -174,9 +184,10 @@ class CodexRunner(HarnessRunner):
     async def check_availability(self, config: RunnerConfig | None = None) -> Availability:
         """The CLI is installed and accepts every flag a run of ``config`` would pass."""
         exe = str(config.get("executable", "codex")) if config else "codex"
+        config = config or RunnerConfig(runner=self.name)
         return await check_flags(
             await probe_cli(self.name, exe),
-            commands_to_check(config or RunnerConfig(runner=self.name)),
+            commands_to_check(config, resume=self.resume_error(config) is None),
         )
 
     async def run(
@@ -266,7 +277,7 @@ class CodexRunner(HarnessRunner):
             redact_file_in_place(last_message_path, emit.redactor)
         refusal = (
             refusal_message("codex", availability.version, proc.stderr_tail)
-            if proc.exit_code and not parser.thread_id
+            if proc.exit_code and not parser.thread_id and not proc.timed_out
             else None
         )
         if refusal:

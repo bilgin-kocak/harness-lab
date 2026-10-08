@@ -101,6 +101,9 @@ def export_experiment(
                 "protected_violations": vr.protected_violations_json,
                 "injected_files": vr.injected_files_json,
                 "skipped_reason": vr.skipped_reason,
+                "visible_command": vr.visible_command,
+                "visible_passed": vr.visible_passed,
+                "visible_exit_code": vr.visible_exit_code,
                 "verifier_version": vr.verifier_version,
             }
         for art in full.artifacts:

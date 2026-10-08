@@ -36,8 +36,11 @@ Before a run, Harness Lab compares every flag of the command above with the CLI'
 A flag the installed version no longer lists makes the run *unavailable*: it is not verified, it
 does not count in pass rates, and its error names the flag and the CLI version. `harnesslab
 doctor` shows such a CLI as `incompatible`. A run the CLI still refuses at startup (an unknown
-option) is reported the same way rather than as a failed attempt. Update the CLI or Harness Lab,
-or change the variant's options.
+option) is reported the same way rather than as a failed attempt. The check covers the flags
+Harness Lab itself passes; a variant's own `extra_args` are left to the CLI, because a CLI can
+accept flags its help does not list, and a refusal of one is still caught at startup. Update the
+CLI or Harness Lab, change the variant's options, or set `flag_check: false` to turn the check
+off.
 
 ## Variant options
 
@@ -55,6 +58,7 @@ or change the variant's options.
 | `skip_git_repo_check` | `true` | `--skip-git-repo-check` |
 | `improve_session` *(unreleased)* | `fresh` | improvement tasks only: `resume` relies on Codex's session persistence (on by default) and continues later rounds with `codex exec resume … <thread id> -`, passing the sandbox as `-c sandbox_mode=` and no `-C`; cannot be combined with `profile`, `--ephemeral` or `extra_args` that `codex exec resume` rejects; see [Fresh or resumed sessions](improvement.md#fresh-or-resumed-sessions) |
 | `extra_args` | `[]` | appended verbatim |
+| `flag_check` *(unreleased)* | `true` | compare the flags Harness Lab passes with the CLI's `--help` before a run; see [the flag check](#the-flag-check) |
 | `env_passthrough` | `[]` | extra environment variables forwarded |
 | `executable` | `codex` | the binary to run |
 

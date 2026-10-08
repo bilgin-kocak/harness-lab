@@ -44,8 +44,11 @@ Before a run, Harness Lab compares every flag of the command above with the CLI'
 A flag the installed version no longer lists makes the run *unavailable*: it is not verified, it
 does not count in pass rates, and its error names the flag and the CLI version. `harnesslab
 doctor` shows such a CLI as `incompatible`. A run the CLI still refuses at startup (an unknown
-option) is reported the same way rather than as a failed attempt. Update the CLI or Harness Lab,
-or change the variant's options; for a Claude Code version without hook events, set `include_hook_events: false`.
+option) is reported the same way rather than as a failed attempt. The check covers the flags
+Harness Lab itself passes; a variant's own `extra_args` are left to the CLI, because a CLI can
+accept flags its help does not list, and a refusal of one is still caught at startup. Update the
+CLI or Harness Lab, change the variant's options, or set `flag_check: false` to turn the check
+off; for a Claude Code version without hook events, set `include_hook_events: false`.
 
 ## Default shell allowlist
 
@@ -82,6 +85,7 @@ Override it per variant with `allowed_tools`.
 | `include_hook_events` | `true` | `--include-hook-events`: every hook that runs becomes a `hook` event in the trace (see [Safety](safety.md#hook-events)); set `false` for CLI versions without the flag |
 | `improve_session` *(unreleased)* | `fresh` | improvement tasks only: `resume` turns session persistence on (no `--no-session-persistence`) and continues later rounds with `--resume <id>` instead of `--session-id`; a resumed round's cost is the session's running total, of which Harness Lab keeps the round's share, and `max_budget_usd` applies to the whole session; see [Fresh or resumed sessions](improvement.md#fresh-or-resumed-sessions) |
 | `extra_args` | `[]` | appended verbatim (forbidden flags rejected) |
+| `flag_check` *(unreleased)* | `true` | compare the flags Harness Lab passes with the CLI's `--help` before a run; see [the flag check](#the-flag-check) |
 | `env_passthrough` | `[]` | extra environment variables forwarded to the CLI |
 | `executable` | `claude` | the binary to run |
 

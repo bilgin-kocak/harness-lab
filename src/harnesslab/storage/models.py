@@ -230,6 +230,7 @@ class VerifierResultRow(Base):
     protected_violations_json: Mapped[list[str]] = mapped_column(JSON, default=list)
     injected_files_json: Mapped[list[str]] = mapped_column(JSON, default=list)
     skipped_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    visible_command: Mapped[str | None] = mapped_column(Text, nullable=True)
     visible_passed: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
     visible_exit_code: Mapped[int | None] = mapped_column(Integer, nullable=True)
     verifier_version: Mapped[str] = mapped_column(String(16), default="1")

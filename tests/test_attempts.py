@@ -242,3 +242,103 @@ def test_cli_prints_attempts_after_a_run_and_in_experiment_show(tmp_path: Path):
     )
     show = runner.invoke(app, ["experiment", "show", exp_id], env=env)
     assert show.exit_code == 0 and "best-of-3" in show.output, show.output
+
+
+# -- review fixes ----------------------------------------------------------------------------
+
+
+async def test_the_visible_check_cannot_change_the_verdict(settings: Settings, db: Database):
+    # The visible check leaves a file behind; the real verification refuses to run with it.
+    def update(task):
+        verification = task.verification.model_copy(
+            update={
+                "visible_command": "touch visible-marker && python -m unittest discover -s tests",
+                "command": "test ! -e visible-marker && " + task.verification.command,
+            }
+        )
+        return {"verification": verification}
+
+    service, outcome = await _run(
+        settings, db, [VariantSpec(id="fixer", runner="fake", behavior="solve")], task_update=update
+    )
+    run = next(r for r in outcome.runs if r.task_key == "fix-month-boundary")
+    assert run.metrics.visible_pass is True and run.metrics.verified_pass is True
+    assert not list(settings.worktrees_dir.rglob("*.visible"))  # the scratch copy is gone
+
+
+class _TestEditor:
+    """Edits a protected test file, then fixes nothing."""
+
+    name = "test-editor"
+
+    def __init__(self, artifacts_dir=None):
+        self.artifacts_dir = artifacts_dir
+
+    async def check_availability(self, config=None):
+        from harnesslab.core.models import Availability
+
+        return Availability(runner=self.name, available=True)
+
+    async def run(self, task, worktree, config, emit):
+        from harnesslab.core.models import RunnerResult, RunStatus
+
+        with open(next((worktree / "tests").glob("test_*.py")), "a", encoding="utf-8") as fh:
+            fh.write("\n# edited by the agent\n")
+        return RunnerResult(status=RunStatus.COMPLETED, exit_code=0, llm_calls=1)
+
+
+async def test_a_protected_path_violation_fails_the_visible_check_too(
+    settings: Settings, db: Database
+):
+    suite, tasks = load_suite(DEMO)
+    task = next(t for t in tasks if t.id == "fix-month-boundary")
+    service = ExperimentService(settings, db, runner_factory=lambda name, **kw: _TestEditor(**kw))
+    outcome = await service.run_experiment(
+        ExperimentSpec(name="protected", suite=str(DEMO), source_path=DEMO),
+        suite,
+        [task],
+        [VariantSpec(id="editor", runner="test-editor")],
+    )
+    metrics = outcome.runs[0].metrics
+    assert metrics.verified_pass is False and metrics.visible_pass is False
+
+
+def test_best_of_k_over_part_of_the_tasks_says_so():
+    tasks = [f"t{i}" for i in range(6)]
+    samples = []
+    for i, t in enumerate(tasks):
+        seen = i < 3  # only half the tasks have a visible check
+        samples += [
+            _s(t, "v", 0, False, False if seen else None),
+            _s(t, "v", 1, True, True if seen else None),
+            _s(t, "v", 2, False, True if seen else None),
+        ]
+    (report,) = attempts_report(samples, ["v"], tasks)
+    assert report.n_best_tasks == 3 and report.n_tasks == 6
+    assert "3 of 6 tasks" in report.summary()
+
+
+def test_one_short_task_does_not_hide_the_report():
+    tasks = [f"t{i}" for i in range(20)]
+    samples = [_s(t, "v", r, r == 0, True) for t in tasks[:19] for r in range(5)]
+    samples += [_s("t19", "v", 0, True, True)]
+    (report,) = attempts_report(samples, ["v"], tasks)
+    assert report.k_max == 5 and report.n_tasks == 19 and report.n_short_tasks == 1
+    assert "1 task" in report.summary()
+
+
+async def test_a_single_behaviors_string_is_one_behavior(settings: Settings, db: Database):
+    _, outcome = await _run(
+        settings, db, [VariantSpec(id="still", runner="fake", behaviors="noop")], repetitions=2
+    )
+    assert all(r.metrics.llm_calls == 1 for r in outcome.runs)  # noop, not "n", "o", "o", "p"
+
+
+async def test_the_export_and_run_page_show_the_visible_check(settings: Settings, db: Database):
+    service, outcome = await _run(settings, db, [VariantSpec(id="fixer", runner="fake")])
+    run_id = next(r.run_id for r in outcome.runs if r.task_key == "fix-month-boundary")
+    exported = export_experiment(service.repo, outcome.experiment_id)
+    verifier = next(r for r in exported["runs"] if r["id"] == run_id)["verifier"]
+    assert verifier["visible_passed"] is True and verifier["visible_command"]
+    with TestClient(create_app(settings, db)) as client:
+        assert "visible check" in client.get(f"/runs/{run_id}").text

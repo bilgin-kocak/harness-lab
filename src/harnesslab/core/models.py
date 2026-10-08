@@ -551,7 +551,8 @@ class VerifierResult(BaseModel):
     injected_files: list[str] = Field(default_factory=list)
     overwritten_files: list[str] = Field(default_factory=list)
     skipped_reason: str | None = None
-    visible_passed: bool | None = None  # verification.visible_command, run before injection
+    visible_command: str | None = None  # run on a scratch copy, before the hidden files
+    visible_passed: bool | None = None
     visible_exit_code: int | None = None
     visible_output: str = ""
     verifier_version: str = "1"

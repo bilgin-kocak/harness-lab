@@ -12,9 +12,12 @@ With repetitions, a variant makes several attempts at every task. Two numbers de
   the agent could also run" against a single attempt, whose expected result is pass@1, the plain
   pass rate.
 
-Both are averaged over tasks. Best-of-k minus pass@1 per task gets the same paired bootstrap
-interval and verdict as comparisons between variants: a selector that does not help leaves the
-interval around zero.
+Both are averaged over tasks, each task counting once (so pass@1 is the mean per-task pass rate,
+which differs from the pooled pass rate when tasks have different numbers of attempts). Every row
+covers the same tasks: those with at least ``k_max`` verified attempts, where ``k_max`` is the
+(lower) median number of attempts per task, so one short task does not hide the rest. Best-of-k minus
+pass@1 per task gets the same paired bootstrap interval and verdict as comparisons between
+variants: a selector that does not help leaves the interval around zero.
 """
 
 from __future__ import annotations
@@ -72,9 +75,10 @@ class AttemptsRow(BaseModel):
 
 class VariantAttempts(BaseModel):
     variant_key: str
-    n_tasks: int = 0  # tasks with at least one verified attempt
-    k_max: int = 0  # the fewest verified attempts on any of those tasks
-    n_best_tasks: int = 0  # tasks where every verified attempt has a visible check result
+    n_tasks: int = 0  # tasks counted: at least k_max verified attempts
+    n_short_tasks: int = 0  # tasks left out with fewer than k_max verified attempts
+    k_max: int = 0  # the lower median number of verified attempts per task
+    n_best_tasks: int = 0  # counted tasks where every attempt has a visible check result
     rows: list[AttemptsRow] = Field(default_factory=list)  # k = 1 .. k_max
     selector_gain: Interval | None = None  # best-of-k_max minus pass@1, per task
     verdict: Verdict = "not enough tasks"  # about selector_gain
@@ -94,12 +98,19 @@ class VariantAttempts(BaseModel):
         line = f"pass@1 {first.pass_at_k:.0%} · pass@{k} {last.pass_at_k:.0%}"
         if last.best_of_k is not None and self.selector_gain is not None:
             gain = self.selector_gain
+            part = self.n_best_tasks < self.n_tasks
             line += (
-                f" · best-of-{k} {last.best_of_k:.0%} ({gain.estimate * 100:+.0f} points over one "
-                f"attempt, {self.verdict})"
+                f" · best-of-{k} {last.best_of_k:.0%}"
+                + (f" over {self.n_best_tasks} of {self.n_tasks} tasks" if part else "")
+                + f" ({gain.estimate * 100:+.0f} points over one attempt"
+                + (" on those tasks" if part else "")
+                + f", {self.verdict})"
             )
         else:
             line += f" · best-of-{k}: {self.note or 'needs a visible check'}"
+        if self.n_short_tasks:
+            plural = "s" if self.n_short_tasks != 1 else ""
+            line += f" · {self.n_short_tasks} task{plural} with fewer attempts left out"
         if self.cost_per_attempt is not None:
             line += f" · {k} attempts cost about ${k * self.cost_per_attempt:.2f} per task"
         return line
@@ -136,11 +147,14 @@ def _variant(
     seed: int,
 ) -> VariantAttempts:
     attempts = {t: by[(variant, t)] for t in task_keys if by.get((variant, t))}
-    result = VariantAttempts(variant_key=variant, n_tasks=len(attempts))
+    result = VariantAttempts(variant_key=variant)
     if not attempts:
         result.note = "no verified attempts"
         return result
-    result.k_max = min(len(runs) for runs in attempts.values())
+    result.k_max = statistics.median_low(len(runs) for runs in attempts.values())
+    short = [t for t, runs in attempts.items() if len(runs) < result.k_max]
+    attempts = {t: runs for t, runs in attempts.items() if t not in short}
+    result.n_tasks, result.n_short_tasks = len(attempts), len(short)
     seen = {
         t: [(bool(r.visible_pass), bool(r.verified_pass)) for r in runs]
         for t, runs in attempts.items()

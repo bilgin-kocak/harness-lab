@@ -196,8 +196,25 @@ CLAUDE_UNLISTED_FLAGS = frozenset({"--max-turns", "--append-system-prompt-file"}
 PLACEHOLDER_SESSION = "00000000-0000-4000-8000-000000000000"
 
 
+def own_flags_only(config: RunnerConfig) -> RunnerConfig | None:
+    """``config`` without the user's ``extra_args``, or None when the flag check is off.
+
+    The check covers the flags Harness Lab itself passes. A CLI can accept flags its help does
+    not list, so the user's own ``extra_args`` are left to the CLI, whose refusal at startup is
+    still caught (see :func:`refusal_message`).
+    """
+    if config.get("flag_check", True) is False:
+        return None
+    options = {k: v for k, v in config.options.items() if k != "extra_args"}
+    return config.model_copy(update={"options": options})
+
+
 def commands_to_check(config: RunnerConfig) -> list[tuple[list[str], list[str]]]:
     """The command lines a run of ``config`` can use, each with the help that describes it."""
+    own = own_flags_only(config)
+    if own is None:
+        return []
+    config = own
     files = (
         {"system_prompt_file": Path("system_prompt.txt"), "plugin_dir": Path("plugin")}
         if config.harness_dir
@@ -361,9 +378,11 @@ class ClaudeCodeRunner(HarnessRunner):
             stream.close()
         if artifacts:
             redact_file_in_place(artifacts / "agent.stderr.log", emit.redactor)
+        # Only a CLI that refused before printing anything: a session that ran and then failed
+        # is a failed attempt, whatever its error output says.
         refusal = (
             refusal_message("claude", availability.version, proc.stderr_tail)
-            if proc.exit_code and not parser.saw_result
+            if proc.exit_code and not proc.lines_seen and not proc.timed_out
             else None
         )
         if refusal:

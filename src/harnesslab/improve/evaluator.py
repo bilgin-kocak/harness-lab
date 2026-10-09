@@ -22,6 +22,7 @@ from harnesslab.improve.objective import parse_value
 
 EVAL_DIR = ".harnesslab_eval"
 LOG_NAME = "calls.jsonl"
+VALUES_NAME = "values.jsonl"
 
 _SCRIPT = '''#!/usr/bin/env python3
 """Harness Lab in-loop evaluator (generated; do not edit).
@@ -43,6 +44,7 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
 CONFIG = json.loads((HERE / "config.json").read_text(encoding="utf-8"))
 LOG = HERE / "{log_name}"
+VALUES = HERE / "{values_name}"
 
 
 {parse_source}
@@ -98,6 +100,8 @@ def main():
         value = measure(work)
     finally:
         shutil.rmtree(work, ignore_errors=True)
+    with VALUES.open("a", encoding="utf-8") as fh:
+        fh.write(json.dumps({{"call": used + 1, "value": value}}) + "\\n")
     left = budget - used - 1
     better = "lower" if CONFIG["direction"] == "minimize" else "higher"
     if value is None:
@@ -149,7 +153,9 @@ def install_evaluator(
     (directory / "config.json").write_text(json.dumps(config, indent=2), encoding="utf-8")
     script = directory / "evaluate.py"
     script.write_text(
-        _SCRIPT.format(log_name=LOG_NAME, parse_source=inspect.getsource(parse_value)),
+        _SCRIPT.format(
+            log_name=LOG_NAME, values_name=VALUES_NAME, parse_source=inspect.getsource(parse_value)
+        ),
         encoding="utf-8",
     )
     script.chmod(0o755)
@@ -158,9 +164,35 @@ def install_evaluator(
 
 
 def reset_calls(worktree: Path) -> None:
-    log = worktree / EVAL_DIR / LOG_NAME
-    if log.parent.exists():
-        log.write_text("", encoding="utf-8")
+    """Start a round: no calls made and no values measured yet."""
+    for name in (LOG_NAME, VALUES_NAME):
+        log = worktree / EVAL_DIR / name
+        if log.parent.exists():
+            log.write_text("", encoding="utf-8")
+
+
+def set_budget(worktree: Path, budget: int) -> None:
+    """The number of calls the evaluator allows in the coming round."""
+    path = worktree / EVAL_DIR / "config.json"
+    if path.exists():
+        config = json.loads(path.read_text(encoding="utf-8"))
+        config["budget"] = budget
+        path.write_text(json.dumps(config, indent=2), encoding="utf-8")
+
+
+def read_values(worktree: Path) -> list[float | None]:
+    """What the evaluator measured this round, in call order (None: the measurement failed)."""
+    path = worktree / EVAL_DIR / VALUES_NAME
+    if not path.exists():
+        return []
+    values: list[float | None] = []
+    for line in path.read_text(encoding="utf-8").splitlines():
+        try:
+            value = json.loads(line).get("value")
+        except (ValueError, AttributeError):
+            continue
+        values.append(float(value) if isinstance(value, int | float) else None)
+    return values
 
 
 def count_calls(worktree: Path) -> int:

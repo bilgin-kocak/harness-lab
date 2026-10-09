@@ -36,11 +36,12 @@ DEFAULT_MIN_TASKS = 5
 
 Verdict = Literal["better", "worse", "no evidence", "not enough tasks"]
 
-VERDICT_METRICS: tuple[VerdictMetric, ...] = ("pass_rate", "score", "improve_ratio")
+VERDICT_METRICS: tuple[VerdictMetric, ...] = ("pass_rate", "score", "improve_ratio", "anytime")
 METRIC_LABELS: dict[str, str] = {
     "pass_rate": "pass rate",
     "score": "score",
     "improve_ratio": "improvement ratio",
+    "anytime": "anytime score",
 }
 
 
@@ -65,6 +66,8 @@ class PairedTask(BaseModel):
     b_llm_calls: float | None = None
     a_improve_ratio: float | None = None
     b_improve_ratio: float | None = None
+    a_anytime: float | None = None  # improvement tasks: how early good results came
+    b_anytime: float | None = None
     a_score: float | None = None  # mean verified_score over the valid runs that have one
     b_score: float | None = None
 
@@ -74,6 +77,8 @@ class PairedTask(BaseModel):
             return self.a_rate, self.b_rate
         if metric == "score":
             return self.a_score, self.b_score
+        if metric == "anytime":
+            return self.a_anytime, self.b_anytime
         return self.a_improve_ratio, self.b_improve_ratio
 
 
@@ -99,6 +104,7 @@ class PairedComparison(BaseModel):
     cost_diff: Interval | None
     llm_calls_diff: Interval | None
     improve_ratio_diff: Interval | None = None  # improvement tasks: B's ratio minus A's
+    anytime_diff: Interval | None = None  # improvement tasks: B's anytime score minus A's
     min_tasks: int
     verdict: Verdict
     tasks: list[PairedTask]
@@ -118,6 +124,7 @@ class PairedComparison(BaseModel):
             "pass_rate": self.pass_rate_diff,
             "score": self.score_diff,
             "improve_ratio": self.improve_ratio_diff,
+            "anytime": self.anytime_diff,
         }[self.metric]
 
 
@@ -182,6 +189,8 @@ def paired_tasks(
                 b_llm_calls=_mean([r.llm_calls for r in runs_b]),
                 a_improve_ratio=_mean([r.improve_ratio for r in runs_a]),
                 b_improve_ratio=_mean([r.improve_ratio for r in runs_b]),
+                a_anytime=_mean([r.improve_anytime for r in runs_a]),
+                b_anytime=_mean([r.improve_anytime for r in runs_b]),
                 a_score=_mean([r.verified_score for r in runs_a]),
                 b_score=_mean([r.verified_score for r in runs_b]),
             )
@@ -307,6 +316,7 @@ def paired_comparison(
         cost_diff=interval(cost_diffs),
         llm_calls_diff=interval(call_diffs),
         improve_ratio_diff=intervals["improve_ratio"],
+        anytime_diff=intervals["anytime"],
         min_tasks=min_tasks,
         verdict=verdict_for(intervals[metric], len(chosen), min_tasks),
         tasks=tasks,

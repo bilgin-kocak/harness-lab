@@ -127,6 +127,12 @@ def load_suite(path: Path) -> tuple[SuiteSpec, list[TaskSpec]]:
             raise SpecError(f"duplicate task id {task.id!r} in suite {suite.name}")
         seen.add(task.id)
         tasks.append(task)
+    for task in tasks:
+        if task.fault_of is not None and task.fault_of not in seen:
+            raise SpecError(
+                f"task {task.id!r} names fault_of {task.fault_of!r}, which is not a task of suite "
+                f"{suite.name}"
+            )
     resolve_variant_harnesses(suite.variants, suite.base_dir)
     return suite, tasks
 

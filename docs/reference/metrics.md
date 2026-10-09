@@ -9,7 +9,8 @@ Stored in the `runs` table as columns and as `metrics_json`, shown on the run pa
 | --- | --- |
 | `verified_pass` | Exit code 0 of the verification command. `null` when the verifier could not run (harness unavailable, injection failed). |
 | `visible_pass` *(unreleased)* | Exit code 0 of the task's `visible_command`, run on a scratch copy of the worktree before the hidden files are injected. `false` when the run edited protected paths; `null` without a visible command or when the check could not run. |
-| `verified_score` | `score / max_score` from the partial-score command if there is one, else `1.0` / `0.0`. |
+| `verified_score` | `score / max_score` from the partial-score command if there is one, the chosen F1 with an [answer key](../guides/discovery.md), else `1.0` / `0.0`. |
+| `task_metrics` *(unreleased)* | The numeric metrics the task's own checks reported: the score command's `metrics`, or the answer key's F1 scores and counts. Booleans count as 0 and 1. |
 | `wall_time_seconds` | The whole pipeline: agent, capture and verifier. Also `agent_wall_time_seconds` and `verifier_wall_time_seconds`. |
 | `input_tokens` | *Uncached* prompt tokens. Codex reports cached tokens inside its input count and Claude Code reports them separately; adapters normalize both to this shape. |
 | `cached_input_tokens`, `cache_write_tokens` | Cache reads and cache writes. |
@@ -22,7 +23,7 @@ Stored in the `runs` table as columns and as `metrics_json`, shown on the run pa
 | `files_changed`, `lines_added`, `lines_deleted` | From `git diff --numstat` against the base commit. |
 | `agent_exit_code`, `verifier_exit_code`, `num_turns`, `permission_denials` | Raw process facts. |
 | `tool_calls_per_turn`, `mean_command_chars`, `edits_per_changed_file` | Realized action granularity, measured regardless of any requested action policy. |
-| `improve_baseline`, `improve_best`, `improve_final`, `improve_ratio`, `improve_progress`, `improve_rounds`, `improve_curve`, `improve_history`, `evaluator_calls` | Improvement tasks only; see [Improvement tasks](../guides/improvement.md#reading-the-results). For them `verified_pass` means "passed the gate and beat the baseline" and `verified_score` is `1 − 1/ratio` (`1` for minimizing to 0). |
+| `improve_baseline`, `improve_best`, `improve_final`, `improve_ratio`, `improve_progress`, `improve_rounds`, `improve_curve`, `improve_history`, `evaluator_calls`, `improve_evaluations`, `improve_evaluation_curve`, `improve_anytime` | Improvement tasks only; see [Improvement tasks](../guides/improvement.md#reading-the-results). For them `verified_pass` means "passed the gate and beat the baseline" and `verified_score` is `1 − 1/ratio` (`1` for minimizing to 0). |
 | `safe`, `safety_violations`, `risky_actions`, `risky_blocked`, `hook_blocks`, `safety_counts` | Every run that reached the agent; see [Safety](../guides/safety.md#reading-the-results). |
 
 `metrics_version` records the version of these definitions.
@@ -45,6 +46,8 @@ Shown on the experiment page and by `experiment show`, exported under `aggregate
 | `score`, `wall_time_seconds`, `input_tokens`, `output_tokens`, `cached_input_tokens`, `tool_calls`, `llm_calls`, `shell_commands`, `files_changed`, `reported_cost_usd`, `estimated_cost_usd` | Each a `Stat`: `n`, `mean`, `median`, `std`, `min`, `max`. |
 | `per_task_pass_rate` | Task key → pass rate over valid runs. |
 | `improve_ratio`, `evaluator_calls`, `n_improved` | Improvement tasks: ratio over runs whose final state passed verification, in-loop measurements, runs that passed by improving (with or without a finite ratio). |
+| `improve_anytime`, `improve_evaluations` *(unreleased)* | Improvement tasks: the anytime score and the objective evaluations, each a `Stat` over valid runs. |
+| `task_metrics` *(unreleased)* | Metric name → `Stat` over the valid runs that reported it. |
 | `safe_rate`, `n_safe`, `safe_pass_rate`, `risky_actions`, `safety_violations` | Share of runs with no executed high-severity finding, how many, and the share of valid runs that passed *and* were safe. |
 
 With repetitions the matrix shows `k/n` per cell and every individual run stays listed. Averages
@@ -63,11 +66,13 @@ There is deliberately no composite "winner" score.
 
 Below the side-by-side table, the paired evidence (see [Statistics](../guides/results.md#statistics))
 shows per-task differences of pass rate, score, cost, `llm_calls` and, for improvement tasks, the
-improvement ratio, each with a bootstrap interval. The verdict is about one of them, the *verdict
-metric*: `pass_rate` (default), `score` or `improve_ratio`. Its interval decides the verdict; its
+improvement ratio and anytime score, each with a bootstrap interval. The verdict is about one of
+them, the *verdict metric*: `pass_rate` (default), `score`, `improve_ratio` or `anytime`
+*(unreleased)*. Its interval decides the verdict; its
 per-task differences give wins, losses, ties and the sign test; and `min_tasks` counts the tasks
 where both sides have it. `PairedComparison` records the choice as `metric`, the count as
-`n_metric_tasks` (next to `n_tasks`, every paired task) and the score interval as `score_diff`.
+`n_metric_tasks` (next to `n_tasks`, every paired task) and the score and anytime intervals as
+`score_diff` and `anytime_diff`.
 
 Use `score` for improvement tasks: it counts a broken final state as 0 and an objective minimized
 to 0 as 1, which the ratio cannot. `improve_ratio` only uses tasks where both sides have a ratio.
@@ -104,3 +109,14 @@ the counted tasks),
 `selector_gain` (best-of-`k_max` minus pass@1, bootstrap interval over tasks) with its `verdict`,
 `n_best_tasks` (counted tasks whose attempts all have a `visible_pass`) and `cost_per_attempt`;
 see [Several attempts](../guides/results.md#several-attempts-passk-and-best-of-k).
+
+## Recovery
+
+> **Unreleased.** On `main`; ships in the next release.
+
+`recovery`, per variant, for suites whose tasks name a fault-free twin with `fault_of`:
+`n_pairs` (task pairs with valid runs on both sides), `nominal_success` and `fault_success` (mean
+pass rates of the fault-free tasks and their twins), `conditional_recovery` (passes with the
+fault among the `n_conditioned` repetitions that passed without it, repetition *r* paired with
+repetition *r*) and `duplicate_effects` (the mean `duplicates` task metric of the runs with a
+fault, when their checks report one); see [Recovery tasks](../guides/recovery.md).

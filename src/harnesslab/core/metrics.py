@@ -53,6 +53,7 @@ def compute_metrics(
     metrics = RunMetrics(
         verified_pass=verifier_result.passed if verifier_result else None,
         visible_pass=verifier_result.visible_passed if verifier_result else None,
+        task_metrics=_numbers(verifier_result.score_metrics) if verifier_result else None,
         verified_score=verifier_result.verified_score if verifier_result else None,
         wall_time_seconds=wall_time_seconds,
         agent_wall_time_seconds=agent_wall_time_seconds,
@@ -94,3 +95,13 @@ def compute_metrics(
             metrics.file_change_events / metrics.files_changed, 3
         )
     return metrics
+
+
+def _numbers(values: dict[str, object]) -> dict[str, float] | None:
+    """The numeric entries of a task's own metrics (true and false count as 1 and 0)."""
+    out = {
+        str(k): float(v)
+        for k, v in values.items()
+        if isinstance(v, int | float) and not (isinstance(v, float) and v != v)
+    }
+    return out or None

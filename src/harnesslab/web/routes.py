@@ -17,6 +17,7 @@ from harnesslab.experiments.aggregate import (
 )
 from harnesslab.experiments.attempts import attempts_report
 from harnesslab.experiments.export import export_experiment
+from harnesslab.experiments.recovery import fault_pairs, recovery_report
 from harnesslab.experiments.routing import routing_gap
 from harnesslab.experiments.stats import METRIC_LABELS, VERDICT_METRICS, VerdictMetric
 from harnesslab.experiments.sweep import report_for_experiment
@@ -46,6 +47,7 @@ def _experiment_context(repo: Repository, exp_ref: str) -> dict[str, Any]:
     samples = samples_from_rows(exp.runs, tasks_by_id, variants_by_id)
     variant_keys = [v.variant_key for v in exp.variants]
     task_keys = [t.task_key for t in exp.tasks]
+    aggregates = aggregate_variants(samples, variant_keys)
     return {
         "exp": exp,
         "tasks": exp.tasks,
@@ -54,9 +56,11 @@ def _experiment_context(repo: Repository, exp_ref: str) -> dict[str, Any]:
         "variant_keys": variant_keys,
         "samples": samples,
         "matrix": build_matrix(samples, task_keys, variant_keys),
-        "aggregates": aggregate_variants(samples, variant_keys),
+        "aggregates": aggregates,
+        "task_metric_names": sorted({n for a in aggregates.values() for n in a.task_metrics}),
         "routing": routing_gap(samples, task_keys, variant_keys),
         "attempts": attempts_report(samples, variant_keys, task_keys),
+        "recovery": recovery_report(samples, variant_keys, fault_pairs(exp.tasks)),
         "runs_by_id": {r.id: r for r in exp.runs},
         "tasks_by_id": tasks_by_id,
         "variants_by_id": variants_by_id,

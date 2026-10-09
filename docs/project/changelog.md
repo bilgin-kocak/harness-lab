@@ -36,6 +36,25 @@ in the repository; this page mirrors it.
   shows it as `incompatible`. A variant's own `extra_args` are left to the CLI, `flag_check: false`
   turns the check off, and a run the CLI refuses before printing anything is reported the same
   way. A harness that turns out to be unavailable is no longer verified as a failed attempt.
+- Find-everything tasks: `verification.answer_key` grades the findings an agent writes (a JSON
+  list or CSV) against a hidden key with three F1 scores taken from ATLAS: discovery (entities
+  found), item (entities and attributes) and row (whole rows right). The chosen one becomes the
+  score, and the run passes when it reaches `pass_threshold`. New `demo-discovery` suite with
+  aliased calls and decoys.
+- Recovery tasks: a task names its fault-free twin with `fault_of`, and `harnesslab run`,
+  `experiment show`, the dashboard and exports report success with and without the fault and
+  recovery given normal success, repetition by repetition, after UndoBench. New `demo-recovery`
+  suite: three invoices paid through a payments stub that drops one acknowledgement, graded on
+  exactly-once payment. `reference_solution.command` lets a reference solution be an action that
+  the fake runner and `suite check` run after the overlay.
+- Task metrics: the numbers a task's checks report (score command `metrics`, answer key F1s) are
+  recorded per run as `task_metrics` and summarised per variant by `experiment show`, the
+  dashboard and exports.
+- Improvement tasks log every objective evaluation (in-loop calls and round evaluations) with the
+  best verified value after it, can cap the total with `improve.max_evaluations` (variant option
+  `improve_max_evaluations`) so harnesses are compared on equal budgets, and report an anytime
+  score (0.7 × mean best-so-far score + 0.3 × final score, after AgenticBBO-Bench) that verdicts
+  can use (`--metric anytime`, `verdict_metric: anytime`).
 - Fixed: the Codex runner no longer passes `--full-auto`, which Codex CLI 0.153 rejects, so real
   Codex runs failed; `--sandbox workspace-write` selects the same sandbox.
 

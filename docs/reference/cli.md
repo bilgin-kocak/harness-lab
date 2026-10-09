@@ -291,7 +291,7 @@ $ harnesslab experiment compare [OPTIONS] {experiment_id} {a} {b}
 * `--resamples <int range>`: [default: 2000; x&gt;=100]
 * `--seed <int>`: [default: 0]
 * `--min-tasks <int range>`: [default: 5; x&gt;=1]
-* `--metric <pass_rate|score|improve_ratio>`: Metric the verdict, wins/losses and sign test are about: pass_rate, score (verified_score; recommended for improvement tasks) or improve_ratio (tasks where both sides have a ratio).  [default: pass_rate]
+* `--metric <pass_rate|score|improve_ratio|anytime>`: Metric the verdict, wins/losses and sign test are about: pass_rate, score (verified_score; recommended for improvement tasks), improve_ratio (tasks where both sides have a ratio) or anytime (improvement tasks: how early good results came, on equal evaluation budgets).  [default: pass_rate]
 * `--help`: Show this message and exit.
 
 ### `harnesslab experiment export`
@@ -588,7 +588,7 @@ $ harnesslab ablate run [OPTIONS] {bundle_dir}
 * `--min-tasks <int range>`: [default: 5; x&gt;=1]
 * `--resamples <int range>`: [default: 2000; x&gt;=100]
 * `--seed <int>`: [default: 0]
-* `--metric <pass_rate|score|improve_ratio>`: Metric the verdict, wins/losses and sign test are about: pass_rate, score (verified_score; recommended for improvement tasks) or improve_ratio (tasks where both sides have a ratio).  [default: pass_rate]
+* `--metric <pass_rate|score|improve_ratio|anytime>`: Metric the verdict, wins/losses and sign test are about: pass_rate, score (verified_score; recommended for improvement tasks), improve_ratio (tasks where both sides have a ratio) or anytime (improvement tasks: how early good results came, on equal evaluation budgets).  [default: pass_rate]
 * `--keep-worktrees`
 * `--pricing <path>`: pricing.yaml for cost estimates.
 * `--plugin <str>`: Python module registering custom runners.

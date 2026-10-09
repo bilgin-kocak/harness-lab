@@ -48,6 +48,7 @@ from harnesslab.experiments.aggregate import (
 )
 from harnesslab.experiments.attempts import VariantAttempts, attempts_report
 from harnesslab.experiments.export import export_experiment
+from harnesslab.experiments.recovery import VariantRecovery, fault_pairs, recovery_report
 from harnesslab.experiments.routing import RoutingGap, routing_gap
 from harnesslab.experiments.service import ExperimentOutcome, ExperimentService, RunProgress
 from harnesslab.experiments.spec import (
@@ -145,11 +146,13 @@ class MetricChoice(StrEnum):
     pass_rate = "pass_rate"
     score = "score"
     improve_ratio = "improve_ratio"
+    anytime = "anytime"
 
 
 METRIC_HELP = (
     "Metric the verdict, wins/losses and sign test are about: pass_rate, score (verified_score; "
-    "recommended for improvement tasks) or improve_ratio (tasks where both sides have a ratio)."
+    "recommended for improvement tasks), improve_ratio (tasks where both sides have a ratio) or "
+    "anytime (improvement tasks: how early good results came, on equal evaluation budgets)."
 )
 
 
@@ -194,6 +197,12 @@ def _print_attempts(reports: list[VariantAttempts]) -> None:
     for report in reports:
         if report.k_max >= 2:
             console.print(f"attempts: {report.variant_key} {escape(report.summary())}")
+
+
+def _print_recovery(reports: list[VariantRecovery]) -> None:
+    """One line per variant for suites with fault tasks: recovery given normal success."""
+    for report in reports:
+        console.print(f"recovery: {report.variant_key} {escape(report.summary())}")
 
 
 def _print_routing(gap: RoutingGap | None, indent: str = "") -> None:
@@ -280,6 +289,8 @@ def init(
         directory / "sweeps": bundled_sweeps_dir(),
         directory / "suites" / "demo-improve": bundled_suites_dir() / "demo-improve",
         directory / "suites" / "demo-safety": bundled_suites_dir() / "demo-safety",
+        directory / "suites" / "demo-discovery": bundled_suites_dir() / "demo-discovery",
+        directory / "suites" / "demo-recovery": bundled_suites_dir() / "demo-recovery",
         directory / "harnesses" / "baseline": bundled_harnesses_dir() / "baseline",
         directory / "harnesses" / "sentinel": bundled_harnesses_dir() / "sentinel",
         directory / "grow": bundled_grow_dir(),
@@ -521,8 +532,10 @@ def _print_outcome_table(
     console.print(table)
 
 
-def _print_axes(outcome: ExperimentOutcome, variants: list[VariantSpec]) -> None:
-    """One line each for safety, improvement and several attempts, when the runs have them."""
+def _print_axes(
+    outcome: ExperimentOutcome, variants: list[VariantSpec], pairs: dict[str, str] | None = None
+) -> None:
+    """One line each for safety, improvement, several attempts and recovery, when runs have them."""
     safety, improvement = [], []
     for v in variants:
         runs = [r for r in outcome.runs if r.variant_key == v.id]
@@ -538,8 +551,14 @@ def _print_axes(outcome: ExperimentOutcome, variants: list[VariantSpec]) -> None
         ratios = sorted(
             r.metrics.improve_ratio for r in runs if r.metrics.improve_ratio is not None
         )
+        anytime = sorted(
+            r.metrics.improve_anytime for r in runs if r.metrics.improve_anytime is not None
+        )
         if ratios:
-            improvement.append(f"{v.id} {ratios[len(ratios) // 2]:.1f}x")
+            improvement.append(
+                f"{v.id} {ratios[len(ratios) // 2]:.1f}x"
+                + (f" (anytime {anytime[len(anytime) // 2]:.3f})" if anytime else "")
+            )
     if any("violation" in s for s in safety):
         console.print("safety: " + " · ".join(safety))
     if improvement:
@@ -553,6 +572,7 @@ def _print_axes(outcome: ExperimentOutcome, variants: list[VariantSpec]) -> None
             status=r.status.value,
             verified_pass=r.metrics.verified_pass,
             visible_pass=r.metrics.visible_pass,
+            task_metrics=r.metrics.task_metrics or {},
             reported_cost_usd=r.metrics.reported_cost_usd,
             estimated_cost_usd=r.metrics.estimated_cost_usd,
         )
@@ -560,6 +580,7 @@ def _print_axes(outcome: ExperimentOutcome, variants: list[VariantSpec]) -> None
     ]
     task_keys = list(dict.fromkeys(r.task_key for r in outcome.runs))
     _print_attempts(attempts_report(samples, [v.id for v in variants], task_keys))
+    _print_recovery(recovery_report(samples, [v.id for v in variants], pairs or {}))
 
 
 def _load_pricing(settings: Settings, explicit: Path | None) -> PricingTable | None:
@@ -642,7 +663,7 @@ def run(
     finally:
         db.dispose()
     _print_outcome_table(outcome, chosen_tasks, chosen_variants)
-    _print_axes(outcome, chosen_variants)
+    _print_axes(outcome, chosen_variants, fault_pairs(chosen_tasks))
     console.print(f"experiment id: [bold]{outcome.experiment_id}[/]")
     console.print(f"inspect:  harnesslab experiment show {outcome.experiment_id}")
     console.print("dashboard: harnesslab serve  →  http://127.0.0.1:8000")
@@ -1020,10 +1041,19 @@ def experiment_show(ctx: typer.Context, experiment_id: Annotated[str, typer.Argu
     stat_row("median files changed", lambda a: a.files_changed.median, 0)
     stat_row("median reported cost (USD)", lambda a: a.reported_cost_usd.median, 4)
     stat_row("median estimated cost (USD)", lambda a: a.estimated_cost_usd.median, 4)
+    if any(aggs[vk].improve_anytime.n for vk in variant_keys):
+        stat_row("median anytime score", lambda a: a.improve_anytime.median, 3)
+        stat_row("median objective evaluations", lambda a: a.improve_evaluations.median, 0)
     at.add_row("infra failures", *[str(aggs[vk].n_infra_failures) for vk in variant_keys])
+    for name in sorted({name for vk in variant_keys for name in aggs[vk].task_metrics}):
+        stat_row(
+            f"task: {name} (mean)",
+            lambda a, name=name: a.task_metrics[name].mean if name in a.task_metrics else None,
+        )
     console.print(at)
     _print_routing(routing_gap(samples, task_keys, variant_keys))
     _print_attempts(attempts_report(samples, variant_keys, task_keys))
+    _print_recovery(recovery_report(samples, variant_keys, fault_pairs(exp.tasks)))
 
     rt = Table(title="runs")
     for col in (

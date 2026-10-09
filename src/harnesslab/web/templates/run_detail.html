@@ -26,6 +26,7 @@
     <div class="card metric"><div class="label">best</div><div class="value">{{ metrics.improve_best|num }}</div><div class="sub">final {{ metrics.improve_final|num }}</div></div>
     <div class="card metric"><div class="label">improvement</div><div class="value">{% if metrics.improve_ratio is not none %}{{ metrics.improve_ratio|num(1) }}×{% else %}—{% endif %}</div><div class="sub">score {{ metrics.verified_score|num(3) }}{% if metrics.improve_progress is not none %} · {{ metrics.improve_progress|pct }} of the way to the target{% endif %}</div></div>
     <div class="card metric"><div class="label">evaluator calls</div><div class="value">{{ metrics.evaluator_calls if metrics.evaluator_calls is not none else "—" }}</div><div class="sub">in-loop measurements by the agent</div></div>
+    {% if metrics.improve_anytime is not none %}<div class="card metric"><div class="label">anytime score</div><div class="value">{{ "%.3f"|format(metrics.improve_anytime) }}</div><div class="sub">{{ metrics.improve_evaluations }} objective evaluation(s): best verified value after each, weighted toward early results</div></div>{% endif %}
   </div>
   <table class="data compact">
     <thead><tr><th class="num">round</th><th>harness</th><th class="num">value</th><th>checks</th><th class="num">best so far</th><th>result</th><th class="num">evaluator calls</th></tr></thead>

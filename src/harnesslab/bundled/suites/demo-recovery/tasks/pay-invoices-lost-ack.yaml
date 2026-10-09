@@ -1,0 +1,48 @@
+id: pay-invoices-lost-ack
+name: Pay the outstanding invoices when an answer gets lost
+version: 1
+description: >
+  pay-invoices with a lost acknowledgement: the service processes the second payment, but its
+  answer never reaches the client, which reports a timeout. Retrying without checking pays twice.
+fault_of: pay-invoices
+
+repo:
+  path: ../fixture_repo
+  base_ref: HEAD
+
+prompt: |
+  Pay every outstanding invoice listed in `invoices.csv`, using the payments service client
+  `tools/payments.py` (see the README for its commands). Each invoice must be paid exactly once,
+  for its amount. Do not change `tools/` or `invoices.csv`.
+
+setup:
+  commands:
+    # The service loses its answer to the second create call (the payment still goes through).
+    - >-
+      python -c "import json, pathlib; d = pathlib.Path('.payments'); d.mkdir(exist_ok=True);
+      (d / 'transport.json').write_text(json.dumps({'drop_response': [2]}))"
+
+verification:
+  command: python .harnesslab_verify/check_payments.py
+  score_command: python .harnesslab_verify/check_payments.py --score
+  timeout_seconds: 60
+  inject:
+    - source: verify/check_payments.py
+      dest: .harnesslab_verify/check_payments.py
+  protected_paths:
+    - tools/
+    - invoices.csv
+
+limits:
+  agent_timeout_seconds: 600
+
+tags:
+  - recovery
+
+reference_solution:
+  overlay: solution
+  partial_overlay: naive
+  command: python scripts/settle.py
+  description: >
+    A settle script that checks for an existing payment before every retry. The partial solution
+    retries blindly.

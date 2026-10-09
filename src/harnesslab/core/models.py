@@ -23,12 +23,12 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from harnesslab.core.ids import hash_value
 
 # What a paired comparison's verdict judges (see harnesslab.experiments.stats).
-VerdictMetric = Literal["pass_rate", "score", "improve_ratio"]
+VerdictMetric = Literal["pass_rate", "score", "improve_ratio", "anytime"]
 
 # ---------------------------------------------------------------------------
 # Task specification
@@ -52,14 +52,44 @@ class InjectSpec(BaseModel):
     dest: str
 
 
+class AnswerKeySpec(BaseModel):
+    """A "find everything" task: the agent's findings are graded against a hidden key."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    key: str  # task-relative path of the answer key (.json list or .csv); never shown to the agent
+    findings: str = "findings.json"  # worktree-relative path of the file the agent writes
+    id: list[str] = Field(min_length=1)  # the fields that identify an entity
+    fields: list[str] | None = None  # graded attributes (default: every other key column)
+    score: Literal["row_f1", "item_f1", "discovery_f1"] = "row_f1"  # becomes verified_score
+    pass_threshold: float = Field(default=1.0, ge=0.0, le=1.0)  # on ``score``
+    ignore_case: bool = False
+
+    @field_validator("findings")
+    @classmethod
+    def _inside_worktree(cls, value: str) -> str:
+        path = Path(value)
+        if path.is_absolute() or ".." in path.parts:
+            raise ValueError("answer_key.findings must be a path inside the worktree")
+        return value
+
+
 class VerificationSpec(BaseModel):
     command: str
     score_command: str | None = None
+    answer_key: AnswerKeySpec | None = None
     # A check the agent could run itself (no hidden files): run before they are injected, its
     # result is recorded as ``visible_pass`` and lets best-of-k pick among several attempts.
     visible_command: str | None = None
     timeout_seconds: int = 120
     inject: list[InjectSpec] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def _one_score(self) -> VerificationSpec:
+        if self.answer_key is not None and self.score_command is not None:
+            raise ValueError("verification takes an answer_key or a score_command, not both")
+        return self
+
     protected_paths: list[str] = Field(default_factory=list)
 
 
@@ -73,6 +103,9 @@ class ReferenceSolutionSpec(BaseModel):
     overlay: str | None = None
     partial_overlay: str | None = None
     improve_overlays: list[str] = Field(default_factory=list)  # one per improvement round
+    # Run in the worktree after the overlay (by the fake runner's solve and partial behaviours,
+    # and so by suite check), for solutions that are actions rather than file changes.
+    command: str | None = None
     description: str | None = None
 
 
@@ -130,6 +163,9 @@ class ImproveSpec(BaseModel):
     keep_best: bool = True  # revert rounds that break the gate or do not beat the best
     min_improvement: float = Field(default=0.0, ge=0.0)  # relative; 0.05 = 5% better than baseline
     evaluator: ImproveEvaluatorSpec = Field(default_factory=ImproveEvaluatorSpec)
+    # Every objective evaluation after the baseline counts, Harness Lab's own after each round
+    # and the agent's in-loop calls; the rounds stop when the budget is spent.
+    max_evaluations: int | None = Field(default=None, ge=1)
 
 
 class TaskSpec(BaseModel):
@@ -148,6 +184,8 @@ class TaskSpec(BaseModel):
     reference_solution: ReferenceSolutionSpec | None = None
     improve: ImproveSpec | None = None
     safety: SafetySpec | None = None
+    # Recovery tasks: the id of this task's fault-free twin in the same suite (see recovery.py).
+    fault_of: str | None = None
     source_path: Path | None = Field(default=None, exclude=True)
 
     @field_validator("id")
@@ -621,11 +659,16 @@ class RunMetrics(BaseModel):
     improve_curve: list[float | None] | None = None  # best so far: baseline, then after each round
     improve_history: list[dict[str, Any]] | None = None
     evaluator_calls: int | None = None
+    improve_evaluations: int | None = None  # objective evaluations after the baseline
+    improve_anytime: float | None = None  # how early good results came (see protocol.py)
+    improve_evaluation_curve: list[dict[str, Any]] | None = None  # every evaluation in order
     # Safety (from the trace of every run that reached the agent)
     risky_actions: int | None = None  # actions with any finding, executed or blocked
     risky_blocked: int | None = None  # of those, blocked by the harness, a hook or the OS
     safety_violations: int | None = None  # actions with a high-severity finding, not blocked
     safe: bool | None = None  # no safety violation
     visible_pass: bool | None = None  # the task's visible check, before hidden files
+    # Numbers the task's own checks report (score command metrics, answer-key F1 scores).
+    task_metrics: dict[str, float] | None = None
     hook_blocks: int | None = None  # tool calls a hook refused
     safety_counts: dict[str, int] | None = None  # findings per category

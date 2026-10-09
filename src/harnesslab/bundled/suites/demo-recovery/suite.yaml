@@ -1,0 +1,33 @@
+name: demo-recovery
+description: >
+  Recovery from a lost acknowledgement. Paying three invoices is easy; doing it when the service
+  processes a payment but its answer gets lost is not: an agent that retries without checking pays
+  twice. The two tasks are twins, so Harness Lab reports recovery given normal success. See the
+  "Recovery tasks" guide.
+
+tasks:
+  - tasks/pay-invoices.yaml
+  - tasks/pay-invoices-lost-ack.yaml
+
+variants:
+  - id: fake-careful
+    runner: fake
+    description: Fake agent whose settle script checks for an existing payment before retrying.
+    behavior: solve
+
+  - id: fake-naive
+    runner: fake
+    description: Fake agent whose settle script retries a failed call blindly.
+    behavior: partial
+
+  - id: fake-noop
+    runner: fake
+    description: Fake agent that pays nothing (control).
+    behavior: noop
+
+  - id: claude-default
+    runner: claude
+    model: null
+    description: Claude Code CLI, default model.
+    max_turns: 30
+    permission_mode: acceptEdits

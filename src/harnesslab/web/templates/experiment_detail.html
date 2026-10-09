@@ -102,6 +102,27 @@
 </section>
 {% endif %}
 
+{% if recovery %}
+<section class="recovery">
+  <h2>Recovery <span class="muted small">tasks with an injected fault next to their fault-free twins · recovery counts only the repetitions that succeed without the fault</span></h2>
+  <table class="data">
+    <thead><tr><th>variant</th><th class="num">task pairs</th><th class="num">succeeds normally</th><th class="num">with a fault</th><th class="num">recovers, given normal success</th><th class="num">duplicate effects per run with a fault</th></tr></thead>
+    <tbody>
+    {% for r in recovery %}
+      <tr>
+        <td class="mono">{{ r.variant_key }}</td>
+        <td class="num">{{ r.n_pairs }}</td>
+        <td class="num">{{ r.nominal_success|pct }}</td>
+        <td class="num">{{ r.fault_success|pct }}</td>
+        <td class="num"><strong>{{ r.conditional_recovery|pct }}</strong> <span class="muted">({{ r.n_conditioned }})</span></td>
+        <td class="num">{% if r.duplicate_effects is not none %}{{ "%.1f"|format(r.duplicate_effects) }}{% else %}—{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
+
 {% set several = attempts|selectattr("k_max", "ge", 2)|list %}
 {% if several %}
 <section class="attempts">
@@ -145,6 +166,8 @@
       {% if aggregates.values()|selectattr("improve_ratio.n")|list %}
       <tr><td>median improvement <span class="muted">(× baseline)</span></td>{% for vk in variant_keys %}<td class="num">{% if aggregates[vk].improve_ratio.median is not none %}{{ aggregates[vk].improve_ratio.median|num(2) }}×{% else %}—{% endif %}</td>{% endfor %}</tr>
       <tr><td>median evaluator calls</td>{% for vk in variant_keys %}<td class="num">{{ aggregates[vk].evaluator_calls.median|int }}</td>{% endfor %}</tr>
+      <tr><td>median anytime score <span class="muted">(how early good results came)</span></td>{% for vk in variant_keys %}<td class="num">{% if aggregates[vk].improve_anytime.median is not none %}{{ "%.3f"|format(aggregates[vk].improve_anytime.median) }}{% else %}—{% endif %}</td>{% endfor %}</tr>
+      <tr><td>median objective evaluations</td>{% for vk in variant_keys %}<td class="num">{{ aggregates[vk].improve_evaluations.median|int }}</td>{% endfor %}</tr>
       {% endif %}
       {% if aggregates.values()|selectattr("safe_rate", "ne", none)|list %}
       <tr><td>safe runs <span class="muted">(no high-severity action executed)</span></td>{% for vk in variant_keys %}{% set a = aggregates[vk] %}<td class="num">{{ a.safe_rate|pct }} <span class="muted">({{ a.n_safe }})</span></td>{% endfor %}</tr>
@@ -152,6 +175,9 @@
       <tr><td>median risky actions</td>{% for vk in variant_keys %}<td class="num">{{ aggregates[vk].risky_actions.median|int }}</td>{% endfor %}</tr>
       {% endif %}
       <tr><td>infrastructure failures</td>{% for vk in variant_keys %}<td class="num">{{ aggregates[vk].n_infra_failures }}</td>{% endfor %}</tr>
+      {% for name in task_metric_names %}
+      <tr><td>task: <span class="mono">{{ name }}</span> <span class="muted">(mean)</span></td>{% for vk in variant_keys %}{% set stat = aggregates[vk].task_metrics.get(name) %}<td class="num">{% if stat and stat.mean is not none %}{{ "%.2f"|format(stat.mean) }} <span class="muted">({{ stat.n }})</span>{% else %}—{% endif %}</td>{% endfor %}</tr>
+      {% endfor %}
     </tbody>
   </table>
 </section>

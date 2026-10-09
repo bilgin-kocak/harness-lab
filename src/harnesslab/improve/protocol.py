@@ -42,7 +42,14 @@ from harnesslab.core.models import RunnerConfig, RunnerResult, RunStatus, TaskSp
 from harnesslab.execution.sandbox import ExecutionSandbox, SandboxContext
 from harnesslab.execution.scratch import fresh_copy
 from harnesslab.improve.checkpoint import anchor, drop_anchor, exclude_in_git, restore, snapshot
-from harnesslab.improve.evaluator import EVAL_DIR, count_calls, install_evaluator, reset_calls
+from harnesslab.improve.evaluator import (
+    EVAL_DIR,
+    count_calls,
+    install_evaluator,
+    read_values,
+    reset_calls,
+    set_budget,
+)
 from harnesslab.improve.objective import (
     improvement_ratio,
     improvement_score,
@@ -82,6 +89,18 @@ class RoundRecord(BaseModel):
     note: str | None = None
 
 
+class EvaluationPoint(BaseModel):
+    """One objective measurement, in the order the evaluation budget was spent."""
+
+    index: int  # 1-based
+    round: int
+    # "in-loop": the agent's own call of the evaluator (correctness not checked);
+    # "round": Harness Lab's evaluation after the round (gate, then objective).
+    kind: str
+    value: float | None = None  # what was measured (None: it failed, or the gate failed)
+    best: float  # the best verified value after this measurement
+
+
 class ImproveResult(BaseModel):
     direction: str
     unit: str | None = None
@@ -100,6 +119,9 @@ class ImproveResult(BaseModel):
     improved: bool = False
     evaluator_calls: int = 0
     rounds: list[RoundRecord] = Field(default_factory=list)
+    max_evaluations: int | None = None  # the evaluation budget, when the run had one
+    evaluations: list[EvaluationPoint] = Field(default_factory=list)
+    anytime: float | None = None  # see anytime_score
 
     @property
     def curve(self) -> list[float | None]:
@@ -107,6 +129,20 @@ class ImproveResult(BaseModel):
 
 
 Invoke = Callable[[HarnessRunner, TaskSpec, RunnerConfig], Awaitable[RunnerResult]]
+
+
+def anytime_score(best_scores: list[float], budget: int, final: float) -> float | None:
+    """How early good results came: 0.7 x the mean best-so-far score over the evaluation budget
+    plus 0.3 x the final score, the anytime protocol of AgenticBBO-Bench.
+
+    ``best_scores`` is the improvement score of the best verified value after each objective
+    evaluation. Evaluations a run did not use keep its last best, so stopping early costs
+    nothing; the budget is the run's ``max_evaluations``, or the evaluations it made.
+    """
+    if budget <= 0 or not best_scores:
+        return None
+    padded = best_scores[:budget] + [best_scores[-1]] * max(0, budget - len(best_scores))
+    return 0.7 * statistics.fmean(padded) + 0.3 * final
 
 
 def _fmt(value: float | None) -> str:
@@ -436,6 +472,8 @@ async def run_improvement(
     objective = spec.objective
     rounds = max(1, int(config.get("improve_rounds", spec.rounds)))
     budget = max(0, int(config.get("improve_eval_budget", spec.evaluator.budget)))
+    cap = config.get("improve_max_evaluations", spec.max_evaluations)
+    max_evaluations = max(1, int(cap)) if cap is not None else None
     session = config.get("improve_session", "fresh")
     if session not in SESSION_MODES:
         raise ImproveSetupError(
@@ -492,6 +530,7 @@ async def run_improvement(
     records: list[RoundRecord] = []
     results: list[RunnerResult] = []
     total_calls = 0
+    points: list[EvaluationPoint] = []  # every objective evaluation after the baseline
     stopped: str | None = None
     # Resume mode: the most recent session id any round reported, and the round that reported it.
     session_id: str | None = None
@@ -502,8 +541,14 @@ async def run_improvement(
     session_totals: dict[str, RunnerResult] = {}
     try:
         for round_no in range(1, rounds + 1):
+            room = None if max_evaluations is None else max_evaluations - len(points)
+            if room is not None and room < 1:
+                break  # the evaluation budget is spent
+            # Keep one evaluation for Harness Lab's own after the round.
+            round_budget = budget if room is None else min(budget, room - 1)
             if budget > 0:
                 reset_calls(workdir)
+                set_budget(workdir, round_budget)
             resume_id = session_id if resume else None
             fallback = None
             if resume and round_no > 1 and resume_id is None:
@@ -523,7 +568,7 @@ async def run_improvement(
                     best=best,
                     best_round=best_round,
                     unseen=records[session_round - 1 :],
-                    budget=budget,
+                    budget=round_budget,
                 )
             else:
                 prompt = build_round_prompt(
@@ -534,7 +579,7 @@ async def run_improvement(
                     best=best,
                     best_round=best_round,
                     history=records,
-                    budget=budget,
+                    budget=round_budget,
                 )
             round_dir = artifacts_dir / f"round-{round_no}"
             round_dir.mkdir(parents=True, exist_ok=True)
@@ -570,10 +615,20 @@ async def run_improvement(
                 # A resume that reports no session id failed. Resuming the same id again would
                 # fail the same way in every later round, so the next round starts afresh.
                 session_id, lost_session = None, True
-            calls = max(
-                count_calls(workdir) if budget > 0 else 0, _trace_evaluator_calls(emitter, start)
-            )
+            measured = count_calls(workdir) if budget > 0 else 0
+            calls = max(measured, _trace_evaluator_calls(emitter, start))
             total_calls += calls
+            values = read_values(workdir) if budget > 0 else []
+            for i in range(measured):  # the agent's own measurements spend the budget too
+                points.append(
+                    EvaluationPoint(
+                        index=len(points) + 1,
+                        round=round_no,
+                        kind="in-loop",
+                        value=values[i] if i < len(values) else None,
+                        best=best,
+                    )
+                )
             if result.status == RunStatus.UNAVAILABLE:
                 records.append(
                     RoundRecord(
@@ -607,6 +662,11 @@ async def run_improvement(
                     f"round {round_no}: could not {action} the worktree "
                     f"({type(exc).__name__}: {exc})"
                 )
+            points.append(
+                EvaluationPoint(
+                    index=len(points) + 1, round=round_no, kind="round", value=value, best=best
+                )
+            )
             notes = [fallback, result.error, evaluation.detail, stopped]
             record = RoundRecord(
                 round=round_no,
@@ -629,6 +689,8 @@ async def run_improvement(
         drop_anchor(workdir, anchor_ref)
 
     final = current
+    final_score = improvement_score(baseline, final, objective.direction)
+    best_scores = [improvement_score(baseline, p.best, objective.direction) for p in points]
     outcome = ImproveResult(
         direction=objective.direction,
         unit=objective.unit,
@@ -642,12 +704,19 @@ async def run_improvement(
         best_round=best_round,
         final=final,
         ratio=improvement_ratio(baseline, final, objective.direction),
-        score=improvement_score(baseline, final, objective.direction),
+        score=final_score,
         progress=progress(baseline, final, objective.target),
         improved=final is not None
         and is_better(final, baseline, objective.direction, spec.min_improvement),
         evaluator_calls=total_calls,
         rounds=records,
+        max_evaluations=max_evaluations,
+        evaluations=points,
+        anytime=anytime_score(
+            best_scores,
+            max_evaluations if max_evaluations is not None else len(points),
+            final_score,
+        ),
     )
     (artifacts_dir / "improve.json").write_text(outcome.model_dump_json(indent=2), encoding="utf-8")
     merged = merge_runner_results(results, redact)

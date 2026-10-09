@@ -139,6 +139,38 @@ the score instead (`experiment compare --metric score`, `verdict_metric: score` 
 score counts a broken final state as 0 and minimizing to 0 as 1, which the ratio cannot. See
 [Verdict metric](results.md#verdict-metric).
 
+## Equal budgets and anytime scores
+
+> **Unreleased.** On `main`; ships in the next release.
+
+Rounds and evaluator budget limit *how often* an agent may measure, but two harnesses can still
+spend different amounts: one uses every in-loop call, the other none. AgenticBBO-Bench (2026)
+compares optimizers on an equal number of objective evaluations and scores how early good results
+came, not only where the run ended. Harness Lab does both:
+
+- Every objective evaluation after the baseline counts: the agent's own in-loop calls, and Harness
+  Lab's evaluation after each round. They are logged in order as the **evaluation curve**, with the
+  value measured and the best *verified* value after each one. In-loop values are not checked for
+  correctness, so they do not move the best.
+- `improve.max_evaluations` (or the variant option `improve_max_evaluations`) caps the total. Each
+  round may use the in-loop evaluator at most `max_evaluations − used − 1` times, keeping one
+  evaluation for Harness Lab's own after the round, and the protocol stops when the cap is spent.
+- The **anytime score** is `0.7 × mean best-so-far score + 0.3 × final score`, where each score is
+  the improvement score (`1 − 1/ratio`) and the mean runs over the evaluation budget. A run that
+  stops early keeps its last best for the evaluations it did not use, so finishing early costs
+  nothing. Without a cap the budget is the evaluations the run made.
+
+```yaml
+improve:
+  rounds: 5
+  evaluator: { budget: 3 }
+  max_evaluations: 12        # in-loop calls and round evaluations together
+```
+
+Compare harnesses on the anytime score with `experiment compare --metric anytime` or
+`verdict_metric: anytime` in a sweep. Two variants with the same cap then had the same number of
+measurements, and the one that found its improvements sooner scores higher.
+
 ## Fresh or resumed sessions
 
 > **Unreleased.** On `main`; ships in the next release.
@@ -223,6 +255,9 @@ your own with at least five tasks (`min_tasks`) to get one.
 | `improve_history` | Per round: harness status, value, gate result, best so far, kept or reverted, evaluator calls, and a note (the harness's error, why the round could not be evaluated, or why the protocol stopped), redacted like everything else. |
 | `evaluator_calls` | In-loop measurements the agent made across all rounds. |
 | `improve_session` *(unreleased)* | `fresh` or `resume`: whether every round ran in a new agent session or the rounds continued one. |
+| `improve_evaluations` *(unreleased)* | Objective evaluations after the baseline: in-loop calls and round evaluations. |
+| `improve_evaluation_curve` *(unreleased)* | Per evaluation: index, round, kind (`in-loop` or `round`), value measured, and the best verified value after it. |
+| `improve_anytime` *(unreleased)* | The anytime score; see [Equal budgets and anytime scores](#equal-budgets-and-anytime-scores). |
 
 The run page shows the rounds table and the improvement cards; the experiment page adds the median
 improvement, the number of runs that passed by improving (including those without a finite ratio)

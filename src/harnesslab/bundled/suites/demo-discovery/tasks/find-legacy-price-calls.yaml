@@ -1,0 +1,55 @@
+id: find-legacy-price-calls
+name: Find every call of a deprecated helper
+version: 1
+description: >
+  A "find everything" task: list every call of `shop.compat.legacy_price` before it is removed.
+  Graded against a hidden answer key with discovery, item and row F1.
+
+repo:
+  path: ../fixture_repo
+  base_ref: HEAD
+
+prompt: |
+  `shop.compat.legacy_price` is deprecated and will be removed. Before that, we need a complete
+  list of the places that still call it.
+
+  Write `findings.json` at the repository root: a JSON list with one object per call of
+  `shop.compat.legacy_price` in the `shop/` package (ignore `tests/`). Count every way of calling
+  it: by its name, through an alias, or as `compat.legacy_price`. Each object has:
+
+  - `file`: the path from the repository root, for example `shop/cart.py`;
+  - `line`: the line number of the call;
+  - `function`: the function the call is in, as `Class.method` for a method.
+
+  Find all of them: a missed call breaks the build when the helper is removed, and a wrong entry
+  wastes a reviewer's time. Do not change any code.
+
+setup:
+  commands: []
+
+verification:
+  command: python -c "import json; json.load(open('findings.json'))"
+  timeout_seconds: 60
+  answer_key:
+    key: find-legacy-price-calls/answer.json
+    findings: findings.json
+    id: [file, line]
+    fields: [function]
+  protected_paths:
+    - shop/
+    - tests/
+
+limits:
+  agent_timeout_seconds: 600
+
+tags:
+  - python
+  - discovery
+
+reference_solution:
+  overlay: find-legacy-price-calls/solution
+  partial_overlay: find-legacy-price-calls/partial
+  description: >
+    The complete list of seven calls. The partial answer is what a text search finds: it misses
+    the aliased call, includes the supplier's unrelated function, and names a method without its
+    class.

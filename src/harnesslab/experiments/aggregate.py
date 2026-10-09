@@ -38,6 +38,9 @@ class RunSample(BaseModel):
     safety_violations: int | None = None
     safe: bool | None = None
     visible_pass: bool | None = None  # the task's visible check (see attempts.py)
+    task_metrics: dict[str, float] = Field(default_factory=dict)  # the task's own numbers
+    improve_anytime: float | None = None  # improvement tasks (see improve/protocol.py)
+    improve_evaluations: int | None = None
     shell_commands: int | None = None
     files_changed: int | None = None
     reported_cost_usd: float | None = None
@@ -95,6 +98,8 @@ class VariantAggregate(BaseModel):
     tool_calls: Stat = Field(default_factory=Stat)
     llm_calls: Stat = Field(default_factory=Stat)
     improve_ratio: Stat = Field(default_factory=Stat)
+    improve_anytime: Stat = Field(default_factory=Stat)  # how early good results came
+    improve_evaluations: Stat = Field(default_factory=Stat)  # objective evaluations used
     evaluator_calls: Stat = Field(default_factory=Stat)
     n_improved: int = 0  # improvement tasks: valid runs that beat the baseline
     risky_actions: Stat = Field(default_factory=Stat)
@@ -107,6 +112,9 @@ class VariantAggregate(BaseModel):
     reported_cost_usd: Stat = Field(default_factory=Stat)
     estimated_cost_usd: Stat = Field(default_factory=Stat)
     per_task_pass_rate: dict[str, float | None] = Field(default_factory=dict)
+    # The numbers tasks' own checks report (answer-key F1 scores, score command metrics), over
+    # the valid runs that report each one.
+    task_metrics: dict[str, Stat] = Field(default_factory=dict)
 
 
 INFRA_FAILURE_STATUSES = {
@@ -139,6 +147,12 @@ def aggregate_variant(variant_key: str, samples: list[RunSample]) -> VariantAggr
         tool_calls=describe([s.tool_calls for s in samples]),
         llm_calls=describe([s.llm_calls for s in samples]),
         improve_ratio=describe([s.improve_ratio for s in valid]),
+        improve_anytime=describe([s.improve_anytime for s in valid]),
+        improve_evaluations=describe([s.improve_evaluations for s in valid]),
+        task_metrics={
+            name: describe([s.task_metrics.get(name) for s in valid])
+            for name in sorted({name for s in valid for name in s.task_metrics})
+        },
         evaluator_calls=describe([s.evaluator_calls for s in samples]),
         n_improved=sum(1 for s in passed if s.is_improvement),
         risky_actions=describe([s.risky_actions for s in samples]),
@@ -426,6 +440,9 @@ def samples_from_rows(
                 safety_violations=run.safety_violations,
                 safe=run.safe,
                 visible_pass=run.visible_pass,
+                task_metrics=(run.metrics_json or {}).get("task_metrics") or {},
+                improve_anytime=(run.metrics_json or {}).get("improve_anytime"),
+                improve_evaluations=(run.metrics_json or {}).get("improve_evaluations"),
                 shell_commands=run.shell_commands,
                 files_changed=run.files_changed,
                 reported_cost_usd=run.reported_cost_usd,

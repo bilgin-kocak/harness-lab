@@ -11,6 +11,9 @@ Options (all optional)::
 
     behavior: solve | partial | noop | fail | crash | timeout   (default: solve)
     behaviors: [behavior, ...]   one per repetition, in turn (repetition 0 gets the first)
+
+``solve`` and ``partial`` copy the task's reference overlay; when the reference solution also names
+a ``command``, it runs next, for solutions that are actions rather than file changes.
     command: shell command to run inside the worktree (default: unittest discovery if tests/ exists)
     run_command: true|false
     delay_ms: artificial latency per step (default 0)
@@ -207,6 +210,35 @@ class FakeRunner(HarnessRunner):
             )
         return learned
 
+    async def _shell(
+        self, task: TaskSpec, worktree: Path, command: str, call_id: str, emit: EventEmitter
+    ) -> int:
+        """Run ``command`` in the worktree as the agent would, and record it as a command."""
+        emit.emit(
+            EventKind.COMMAND_STARTED, name="shell", call_id=call_id, payload={"command": command}
+        )
+        proc = await run_process(
+            shell_argv(command),
+            cwd=worktree,
+            env=build_child_env(include_auth=False),
+            timeout=min(task.limits.agent_timeout_seconds, 300),
+        )
+        output = (proc.stdout + ("\n" + proc.stderr_tail if proc.stderr_tail else "")).strip()
+        emit.emit(
+            EventKind.COMMAND_FINISHED,
+            name="shell",
+            call_id=call_id,
+            duration_ms=proc.duration_ms,
+            payload={
+                "command": command,
+                "exit_code": proc.exit_code,
+                "timed_out": proc.timed_out,
+                "output": output[-OUTPUT_PREVIEW:],
+                "output_truncated": len(output) > OUTPUT_PREVIEW,
+            },
+        )
+        return proc.exit_code if proc.exit_code is not None else 1
+
     def _log_sentinel(self, decision: object) -> None:
         if self.artifacts_dir is None:
             return
@@ -356,6 +388,10 @@ class FakeRunner(HarnessRunner):
             overlay = self._overlay_dir(task, behavior, config.improve_round)
             if overlay is not None and overlay.exists():
                 written = self._apply_overlay(overlay, worktree, emit, delay)
+                solution = task.reference_solution
+                if solution is not None and solution.command and task.improve is None:
+                    # A solution that is an action (making payments, say), not only a file change.
+                    await self._shell(task, worktree, solution.command, "fake-solution", emit)
             elif task.improve is not None:
                 emit.emit(
                     EventKind.SYSTEM,
@@ -451,34 +487,7 @@ class FakeRunner(HarnessRunner):
             )
         exit_code = 0
         if config.get("run_command", True):
-            call_id = "fake-cmd-1"
-            emit.emit(
-                EventKind.COMMAND_STARTED,
-                name="shell",
-                call_id=call_id,
-                payload={"command": command},
-            )
-            proc = await run_process(
-                shell_argv(str(command)),
-                cwd=worktree,
-                env=build_child_env(include_auth=False),
-                timeout=min(task.limits.agent_timeout_seconds, 300),
-            )
-            exit_code = proc.exit_code if proc.exit_code is not None else 1
-            output = (proc.stdout + ("\n" + proc.stderr_tail if proc.stderr_tail else "")).strip()
-            emit.emit(
-                EventKind.COMMAND_FINISHED,
-                name="shell",
-                call_id=call_id,
-                duration_ms=proc.duration_ms,
-                payload={
-                    "command": command,
-                    "exit_code": proc.exit_code,
-                    "timed_out": proc.timed_out,
-                    "output": output[-OUTPUT_PREVIEW:],
-                    "output_truncated": len(output) > OUTPUT_PREVIEW,
-                },
-            )
+            exit_code = await self._shell(task, worktree, str(command), "fake-cmd-1", emit)
 
         # 4. deterministic usage
         multiplier = float(config.get("simulate_token_multiplier", 1.0))

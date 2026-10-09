@@ -39,6 +39,8 @@ The document contains:
   than two variants or tasks;
 - `attempts` *(unreleased)*: per variant, pass@k and best-of-k over its repeated attempts (see
   [Several attempts](#several-attempts-passk-and-best-of-k));
+- `recovery` *(unreleased)*: per variant, success with and without a fault and recovery given
+  normal success, for suites with [recovery tasks](recovery.md); empty without them;
 - `sweep_report`: the recommendation report when the experiment was a sweep, including paired
   evidence against the runner-up and the baseline;
 - `ablation_report`: per-component verdicts when the experiment was an ablation.
@@ -103,6 +105,7 @@ The verdict, the wins/losses/ties and the sign test are about one metric, chosen
 | `pass_rate` (default) | Share of valid runs that passed. | Every paired task. |
 | `score` | Mean `verified_score` over the task's valid runs. | Tasks where both sides have a score. |
 | `improve_ratio` | Mean `improve_ratio` over the task's valid runs. | Tasks where both sides have a ratio. |
+| `anytime` *(unreleased)* | Mean `improve_anytime` over the task's valid runs. | Improvement tasks where both sides have one. |
 
 The interval of the chosen metric decides the verdict, and `--min-tasks` applies to the tasks
 counted for it, not to every paired task. The other metrics are still shown, with a score row
@@ -113,7 +116,9 @@ command, and for [improvement tasks](improvement.md): there `verified_score` is 
 when the final state fails and `1` when the objective was minimized to zero, so every run counts.
 `improve_ratio` only uses tasks where both sides have a ratio. A run whose final state broke has
 none and is left out of its task's mean, and a task where one side never kept a working final
-state is not counted at all, so breaking the code is never held against that side.
+state is not counted at all, so breaking the code is never held against that side. `anytime` also
+credits how early the improvements came; give both sides the same evaluation cap
+([Equal budgets and anytime scores](improvement.md#equal-budgets-and-anytime-scores)).
 
 ```bash
 harnesslab experiment compare <experiment-id> <a> <b> --metric score

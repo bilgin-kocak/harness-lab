@@ -1,0 +1,31 @@
+name: demo-discovery
+description: >
+  A "find everything" task. A correct answer is not a complete one: the agent must find every call
+  of a deprecated helper, including the non-obvious ones, and the run is graded against a hidden
+  answer key with discovery, item and row F1. See the "Find-everything tasks" guide.
+
+tasks:
+  - tasks/find-legacy-price-calls.yaml
+
+variants:
+  - id: fake-reference
+    runner: fake
+    description: Fake agent that writes the complete, correct list.
+    behavior: solve
+
+  - id: fake-partial
+    runner: fake
+    description: Fake agent that writes what a text search finds (one call missed, one wrong, one extra).
+    behavior: partial
+
+  - id: fake-noop
+    runner: fake
+    description: Fake agent that writes nothing (control).
+    behavior: noop
+
+  - id: claude-default
+    runner: claude
+    model: null
+    description: Claude Code CLI, default model.
+    max_turns: 30
+    permission_mode: acceptEdits

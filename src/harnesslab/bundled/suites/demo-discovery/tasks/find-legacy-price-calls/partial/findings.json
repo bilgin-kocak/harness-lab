@@ -1,0 +1,37 @@
+[
+  {
+    "file": "shop/cart.py",
+    "line": 18,
+    "function": "Cart.total"
+  },
+  {
+    "file": "shop/checkout.py",
+    "line": 9,
+    "function": "receipt"
+  },
+  {
+    "file": "shop/checkout.py",
+    "line": 10,
+    "function": "receipt"
+  },
+  {
+    "file": "shop/invoice.py",
+    "line": 12,
+    "function": "render"
+  },
+  {
+    "file": "shop/reports/daily.py",
+    "line": 10,
+    "function": "daily_totals"
+  },
+  {
+    "file": "shop/reports/daily.py",
+    "line": 11,
+    "function": "daily_totals"
+  },
+  {
+    "file": "shop/vendor/feed.py",
+    "line": 7,
+    "function": "parse_feed"
+  }
+]

@@ -784,6 +784,9 @@ def _apply_improvement(
     metrics.improve_curve = result.curve
     metrics.improve_history = [r.model_dump(mode="json") for r in result.rounds]
     metrics.evaluator_calls = result.evaluator_calls
+    metrics.improve_evaluations = len(result.evaluations)
+    metrics.improve_anytime = result.anytime
+    metrics.improve_evaluation_curve = [p.model_dump(mode="json") for p in result.evaluations]
     if verifier_result is None or verifier_result.passed is None:
         return
     metrics.verified_pass = outcome == Outcome.PASS

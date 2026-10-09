@@ -1,0 +1,43 @@
+id: pay-invoices
+name: Pay the outstanding invoices
+version: 1
+description: >
+  The fault-free twin of pay-invoices-lost-ack: pay three invoices through a payments service.
+  Graded on the service's final state and request log: every invoice paid exactly once.
+
+repo:
+  path: ../fixture_repo
+  base_ref: HEAD
+
+prompt: |
+  Pay every outstanding invoice listed in `invoices.csv`, using the payments service client
+  `tools/payments.py` (see the README for its commands). Each invoice must be paid exactly once,
+  for its amount. Do not change `tools/` or `invoices.csv`.
+
+setup:
+  commands: []
+
+verification:
+  command: python .harnesslab_verify/check_payments.py
+  score_command: python .harnesslab_verify/check_payments.py --score
+  timeout_seconds: 60
+  inject:
+    - source: verify/check_payments.py
+      dest: .harnesslab_verify/check_payments.py
+  protected_paths:
+    - tools/
+    - invoices.csv
+
+limits:
+  agent_timeout_seconds: 600
+
+tags:
+  - recovery
+
+reference_solution:
+  overlay: solution
+  partial_overlay: naive
+  command: python scripts/settle.py
+  description: >
+    A settle script that checks for an existing payment before every retry. The partial solution
+    retries blindly.

@@ -13,6 +13,7 @@ from harnesslab.core.models import DiffSummary, Outcome, TaskSpec, VerifierResul
 from harnesslab.execution.sandbox import ExecutionSandbox, SandboxContext
 from harnesslab.execution.scratch import fresh_copy
 from harnesslab.trace.redaction import Redactor, default_redactor
+from harnesslab.verification.answer_key import grade, load_rows
 from harnesslab.verification.base import Verifier
 from harnesslab.verification.score import ScoreVerifier
 
@@ -195,6 +196,45 @@ class CommandVerifier(Verifier):
             result.passed = proc.exit_code == 0
             result.outcome = Outcome.PASS if result.passed else Outcome.FAIL
 
+        if spec.answer_key is not None:
+            self._grade_answer_key(task, ctx, result)
         if spec.score_command:
             await self.score_verifier.apply(task, sandbox, ctx, result)
         return result
+
+    def _grade_answer_key(
+        self, task: TaskSpec, ctx: SandboxContext, result: VerifierResult
+    ) -> None:
+        """Score the agent's findings against the hidden answer key (see answer_key.py)."""
+        spec = task.verification.answer_key
+        assert spec is not None
+        try:
+            key = load_rows(task.resolve(spec.key))
+        except (OSError, ValueError) as exc:  # the task itself is broken
+            result.passed = None
+            result.outcome = Outcome.NOT_VERIFIED
+            result.skipped_reason = f"answer key unreadable: {exc}"
+            return
+        root = ctx.workdir.resolve()
+        path = (ctx.workdir / spec.findings).resolve()
+        try:
+            if root not in path.parents:
+                raise ValueError(f"{spec.findings} points outside the worktree")
+            if not path.is_file():
+                raise ValueError(f"no findings file at {spec.findings}")
+            graded = grade(load_rows(path), key, spec.id, spec.fields, ignore_case=spec.ignore_case)
+        except (OSError, ValueError) as exc:  # missing or malformed findings: nothing found
+            try:
+                graded = grade([], key, spec.id, spec.fields, ignore_case=spec.ignore_case)
+            except ValueError as key_error:  # a key with repeated or missing ids
+                result.passed = None
+                result.outcome = Outcome.NOT_VERIFIED
+                result.skipped_reason = f"answer key invalid: {key_error}"
+                return
+            graded = graded.model_copy(update={"error": str(exc)})
+        value = getattr(graded, spec.score)
+        result.score, result.max_score, result.normalized_score = value, 1.0, value
+        result.score_metrics = self.redactor.redact_value(graded.metrics())
+        if result.passed and value < spec.pass_threshold:
+            result.passed = False
+            result.outcome = Outcome.FAIL

@@ -19,6 +19,8 @@
 * [Ablate a harness](guides/ablation.md)
 * [Improvement tasks](guides/improvement.md)
 * [Safety](guides/safety.md)
+* [Find-everything tasks](guides/discovery.md)
+* [Recovery tasks](guides/recovery.md)
 * [The dashboard](guides/dashboard.md)
 * [Read and export results](guides/results.md)
 

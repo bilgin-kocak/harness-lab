@@ -13,7 +13,8 @@ Options (all optional)::
     behaviors: [behavior, ...]   one per repetition, in turn (repetition 0 gets the first)
 
 ``solve`` and ``partial`` copy the task's reference overlay; when the reference solution also names
-a ``command``, it runs next, for solutions that are actions rather than file changes.
+a ``command``, it runs next, for solutions that are actions rather than file changes (``solve``
+runs it even without an overlay).
     command: shell command to run inside the worktree (default: unittest discovery if tests/ exists)
     run_command: true|false
     delay_ms: artificial latency per step (default 0)
@@ -386,12 +387,16 @@ class FakeRunner(HarnessRunner):
         written = 0
         if behavior in ("solve", "partial"):
             overlay = self._overlay_dir(task, behavior, config.improve_round)
-            if overlay is not None and overlay.exists():
-                written = self._apply_overlay(overlay, worktree, emit, delay)
-                solution = task.reference_solution
-                if solution is not None and solution.command and task.improve is None:
-                    # A solution that is an action (making payments, say), not only a file change.
-                    await self._shell(task, worktree, solution.command, "fake-solution", emit)
+            has_overlay = overlay is not None and overlay.exists()
+            solution = task.reference_solution
+            # A solution that is an action (making payments, say), not only a file change. It
+            # follows the overlay; without one, only the full solution runs it.
+            action = solution.command if solution is not None and task.improve is None else None
+            if has_overlay or (action and behavior == "solve"):
+                if overlay is not None and has_overlay:
+                    written = self._apply_overlay(overlay, worktree, emit, delay)
+                if action:
+                    await self._shell(task, worktree, action, "fake-solution", emit)
             elif task.improve is not None:
                 emit.emit(
                     EventKind.SYSTEM,

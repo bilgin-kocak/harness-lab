@@ -17,7 +17,8 @@ scores taken from ATLAS (Exa, 2026), a benchmark of exhaustive search:
 | **row F1** | whole rows, correct only when every graded attribute is right | anything about a row is wrong |
 
 Each is the harmonic mean of precision (what share of what the agent claimed is right; a repeated or
-unknown entity is a false claim) and recall (what share of the key it found).
+unknown entity is a false claim) and recall (what share of the key it found). An agent that claims
+nothing has no precision, and an F1 of 0.
 
 ```bash
 harnesslab run demo-discovery --variants fake-reference,fake-partial,fake-noop   # no keys
@@ -47,9 +48,17 @@ verification:
 ```
 
 The key is a JSON list of objects or a CSV file with a header, one row per entity. A `null` value in
-the key is not graded, for facts nobody could settle. Values compare as text after trimming, and
-numbers compare by value, so `12` matches `"12"`. A missing or unreadable findings file scores 0.
-`answer_key` and `score_command` cannot be combined: each sets the score.
+the key is not graded, for facts nobody could settle. Values compare as text after trimming.
+Numbers compare by their exact value, so `12` matches `"12"` and `12.5` matches `"12.50"`, while
+`37.7749` does not match `37.774929`. Text counts as a number only when it is written like one:
+`"007"` and `"02134"` stay text, so codes keep their leading zeros. Note that version strings such
+as `"1.10"` and `"1.1"` look like numbers and match; give them a prefix (`v1.10`) to keep them
+apart. `true` and `false` match in any case.
+
+A missing, unreadable or malformed findings file scores 0, and so does a findings file that is a
+link: by the time the key is graded the hidden files are in the worktree. A key that cannot be
+read, repeats an id or lacks one of the `fields` makes the run `not_verified`. `answer_key` and
+`score_command` cannot be combined: each sets the score.
 
 Good find-everything tasks have non-obvious members: an aliased import, a call through a module, a
 generated name. They also have decoys: a different function with the same name, a mention in a

@@ -42,11 +42,11 @@ from the suite's list, the experiment's list, or the built-ins (`fake-reference`
 | `verification.protected_paths` | list | `[]` | Paths (exact, prefix or glob) an agent may not change. Any change fails the run before the verifier runs. |
 | `limits.agent_timeout_seconds` | int | `600` | The harness process is killed as a process group after this; the run is still verified. |
 | `tags` | list | `[]` | Free labels; sweeps can report per tag. |
-| `fault_of` *(unreleased)* | task id | none | Makes the task the twin of another task of the same suite with a fault injected, for [recovery tasks](../guides/recovery.md). Reports pair the two. |
+| `fault_of` *(unreleased)* | task id | none | Makes the task the twin of another task of the same suite with a fault injected, for [recovery tasks](../guides/recovery.md). Reports pair the two. The twin must be a different task without a `fault_of` of its own. |
 | `reference_solution.overlay` | path | none | Directory copied over the worktree by the fake runner's `solve` behaviour and by `suite check`. |
 | `reference_solution.partial_overlay` | path | none | Used by the fake runner's `partial` behaviour. |
 | `reference_solution.improve_overlays` | list of paths | `[]` | Improvement tasks: applied by the fake runner's `solve` behaviour one per round. |
-| `reference_solution.command` *(unreleased)* | string | none | A shell command the fake runner and `suite check` run in the worktree after the overlay, for solutions that are actions (such as calls to a service) rather than file changes. Not run for improvement tasks. |
+| `reference_solution.command` *(unreleased)* | string | none | A shell command the fake runner and `suite check` run in the worktree after the overlay, for solutions that are actions (such as calls to a service) rather than file changes. The `solve` behaviour runs it even without an overlay; `partial` only after a `partial_overlay`. Not run for improvement tasks. |
 | `reference_solution.description` | string | none | Free text. |
 | `improve` | mapping | none | Turns the task into an [improvement task](../guides/improvement.md); see below. |
 | `safety` | mapping | none | Canaries and lures that make the task a [safety measurement](../guides/safety.md); see below. |
@@ -101,14 +101,16 @@ reads the agent's findings from the worktree and grades them against a key that 
 | `answer_key.key` | required | The key, relative to the task file: a JSON list of objects or a CSV file with a header, one row per entity. A `null` cell is not graded. |
 | `answer_key.findings` | `findings.json` | The file the agent writes, relative to the worktree, in the same formats. |
 | `answer_key.id` | required | The fields that identify an entity; every key row needs them, and no two rows may share them. |
-| `answer_key.fields` | every other key column | The graded attributes. |
+| `answer_key.fields` | every other key column | The graded attributes; each must be a column of the key. |
 | `answer_key.score` | `row_f1` | The F1 that becomes `verified_score`: `row_f1`, `item_f1` or `discovery_f1`. |
 | `answer_key.pass_threshold` | `1.0` | The run passes when `command` passes and the score reaches this. |
 | `answer_key.ignore_case` | `false` | Compare values without regard to case. |
 
 All three F1 scores, their precision and recall, and the counts `n_key`, `n_predicted`, `n_found`
-and `n_rows_correct` are recorded as task metrics. A missing or malformed findings file scores 0;
-an unreadable or invalid key makes the run `not_verified`.
+and `n_rows_correct` are recorded as task metrics (precision only when the agent claimed
+something). Numbers compare by exact value, and text counts as a number only when written like one
+(`"007"` stays text). A missing or malformed findings file, or one that is a link, scores 0; an
+unreadable or invalid key makes the run `not_verified`.
 
 ## Variant
 

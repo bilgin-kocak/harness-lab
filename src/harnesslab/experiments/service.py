@@ -791,3 +791,5 @@ def _apply_improvement(
         return
     metrics.verified_pass = outcome == Outcome.PASS
     metrics.verified_score = result.score if verifier_result.passed else 0.0
+    if not verifier_result.passed:  # a broken final state earns no final credit
+        metrics.improve_anytime = result.anytime_given(0.0)

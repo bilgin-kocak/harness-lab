@@ -216,14 +216,17 @@ class CommandVerifier(Verifier):
             result.skipped_reason = f"answer key unreadable: {exc}"
             return
         root = ctx.workdir.resolve()
-        path = (ctx.workdir / spec.findings).resolve()
+        written = root / spec.findings
+        path = written.resolve()
         try:
             if root not in path.parents:
                 raise ValueError(f"{spec.findings} points outside the worktree")
+            if path != written:  # hidden files are in the worktree by now; never grade those
+                raise ValueError(f"{spec.findings} is a link; write the findings as a file")
             if not path.is_file():
                 raise ValueError(f"no findings file at {spec.findings}")
             graded = grade(load_rows(path), key, spec.id, spec.fields, ignore_case=spec.ignore_case)
-        except (OSError, ValueError) as exc:  # missing or malformed findings: nothing found
+        except (OSError, ValueError, RecursionError) as exc:  # unusable findings: nothing found
             try:
                 graded = grade([], key, spec.id, spec.fields, ignore_case=spec.ignore_case)
             except ValueError as key_error:  # a key with repeated or missing ids

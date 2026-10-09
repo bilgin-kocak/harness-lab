@@ -127,6 +127,13 @@ class ImproveResult(BaseModel):
     def curve(self) -> list[float | None]:
         return [self.baseline] + [r.best for r in self.rounds]
 
+    def anytime_given(self, final_score: float) -> float | None:
+        """The anytime score over the logged evaluations, with ``final_score`` as its final term
+        (0 when the final state failed its verification)."""
+        best = [improvement_score(self.baseline, p.best, self.direction) for p in self.evaluations]
+        budget = self.max_evaluations if self.max_evaluations is not None else len(best)
+        return anytime_score(best, budget, final_score)
+
 
 Invoke = Callable[[HarnessRunner, TaskSpec, RunnerConfig], Awaitable[RunnerResult]]
 
@@ -239,6 +246,8 @@ def build_resume_prompt(
         ]
     if budget > 0:
         lines += [_evaluator_text(budget), ""]
+    else:
+        lines += ["You cannot measure the objective directly in this round.", ""]
     lines.append(
         f"Keep improving: make the objective {better} while every correctness check keeps "
         "passing. Harness Lab measures and checks this round the same way as the earlier ones."
@@ -618,14 +627,14 @@ async def run_improvement(
             measured = count_calls(workdir) if budget > 0 else 0
             calls = max(measured, _trace_evaluator_calls(emitter, start))
             total_calls += calls
-            values = read_values(workdir) if budget > 0 else []
-            for i in range(measured):  # the agent's own measurements spend the budget too
+            values = read_values(workdir) if budget > 0 else {}
+            for call in range(1, measured + 1):  # the agent's own measurements spend the budget
                 points.append(
                     EvaluationPoint(
                         index=len(points) + 1,
                         round=round_no,
                         kind="in-loop",
-                        value=values[i] if i < len(values) else None,
+                        value=values.get(call),
                         best=best,
                     )
                 )
@@ -690,7 +699,6 @@ async def run_improvement(
 
     final = current
     final_score = improvement_score(baseline, final, objective.direction)
-    best_scores = [improvement_score(baseline, p.best, objective.direction) for p in points]
     outcome = ImproveResult(
         direction=objective.direction,
         unit=objective.unit,
@@ -712,12 +720,8 @@ async def run_improvement(
         rounds=records,
         max_evaluations=max_evaluations,
         evaluations=points,
-        anytime=anytime_score(
-            best_scores,
-            max_evaluations if max_evaluations is not None else len(points),
-            final_score,
-        ),
     )
+    outcome.anytime = outcome.anytime_given(final_score)
     (artifacts_dir / "improve.json").write_text(outcome.model_dump_json(indent=2), encoding="utf-8")
     merged = merge_runner_results(results, redact)
     if stopped:

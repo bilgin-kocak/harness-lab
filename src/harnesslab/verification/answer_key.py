@@ -8,16 +8,21 @@ three F1 scores separate *finding* from *describing*:
 * **item F1** counts cells: each entity's identity and each of its graded attributes;
 * **row F1** counts whole rows, correct only when the entity and every graded attribute are right.
 
-Precision divides by what the agent claimed (a repeated or unknown entity is a false claim),
-recall by what the key holds. A key cell that is ``null`` is not graded, the way ATLAS leaves
-unresolved values out. Values compare as text after trimming, and numbers compare by value, so
-``12`` matches ``"12"``.
+Precision divides by what the agent claimed (a repeated or unknown entity is a false claim), and
+is left out when it claimed nothing; recall divides by what the key holds. A key cell that is
+``null`` is not graded, the way ATLAS leaves unresolved values out. Values compare as text after
+trimming. Numbers compare by their exact value, so ``12`` matches ``"12"`` and ``12.5`` matches
+``"12.50"``; text counts as a number only when it is written like one, so ``"007"`` stays text.
+``true`` and ``false`` match in any case.
 """
 
 from __future__ import annotations
 
 import csv
+import io
 import json
+import re
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any
 
@@ -25,14 +30,15 @@ from pydantic import BaseModel
 
 
 class AnswerKeyGrade(BaseModel):
-    discovery_precision: float = 0.0
-    discovery_recall: float = 0.0
+    # Precision is None when nothing was claimed, recall when the key is empty.
+    discovery_precision: float | None = None
+    discovery_recall: float | None = None
     discovery_f1: float = 0.0
-    item_precision: float = 0.0
-    item_recall: float = 0.0
+    item_precision: float | None = None
+    item_recall: float | None = None
     item_f1: float = 0.0
-    row_precision: float = 0.0
-    row_recall: float = 0.0
+    row_precision: float | None = None
+    row_recall: float | None = None
     row_f1: float = 0.0
     n_key: int = 0  # entities in the answer key
     n_predicted: int = 0  # rows the agent wrote
@@ -45,40 +51,76 @@ class AnswerKeyGrade(BaseModel):
 
 
 def load_rows(path: Path) -> list[dict[str, Any]]:
-    """Rows from a JSON list of objects or a CSV file with a header."""
-    text = path.read_text(encoding="utf-8")
-    if path.suffix.lower() == ".csv":
-        return [dict(row) for row in csv.DictReader(text.splitlines())]
-    data = json.loads(text)
+    """Rows from a JSON list of objects or a CSV file with a header (a byte order mark is fine).
+
+    Raises ValueError for anything else, including files too deep or too wide to parse.
+    """
+    text = path.read_text(encoding="utf-8-sig")
+    try:
+        if path.suffix.lower() == ".csv":
+            return [dict(row) for row in csv.DictReader(io.StringIO(text, newline=""))]
+        data = json.loads(text)
+    except (csv.Error, RecursionError) as exc:
+        raise ValueError(f"{path.name} cannot be parsed: {type(exc).__name__}: {exc}") from exc
     if not isinstance(data, list) or not all(isinstance(row, dict) for row in data):
         raise ValueError(f"{path.name} must hold a JSON list of objects")
     return data
 
 
+# Text written like a number: no leading zeros (so codes such as 007 stay text), no separators.
+_NUMBER = re.compile(r"[+-]?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?")
+
+
+def _canonical(number: Decimal) -> str | None:
+    """One spelling per value: no exponent, no trailing zeros (an exponent only when huge)."""
+    if not number.is_finite():
+        return None
+    sign, digits, exponent = number.as_tuple()
+    assert isinstance(exponent, int)
+    text = "".join(map(str, digits)).lstrip("0")
+    if not text:
+        return "0"
+    stripped = text.rstrip("0")
+    exponent += len(text) - len(stripped)
+    text, minus = stripped, "-" if sign else ""
+    if 0 <= exponent <= 64:
+        return minus + text + "0" * exponent
+    if -64 <= exponent < 0:
+        if -exponent < len(text):
+            return f"{minus}{text[:exponent]}.{text[exponent:]}"
+        return f"{minus}0.{'0' * (-exponent - len(text))}{text}"
+    return f"{minus}{text}e{exponent}"
+
+
 def _norm(value: Any, ignore_case: bool) -> str | None:
     if value is None:
         return None
+    text: str | None = None
     if isinstance(value, bool):
         text = "true" if value else "false"
-    elif isinstance(value, int | float):
-        text = format(value, "g") if isinstance(value, float) else str(value)
-    else:
+    elif isinstance(value, int):
+        text = _canonical(Decimal(value))
+    elif isinstance(value, float):
+        text = _canonical(Decimal(repr(value)))  # the shortest spelling of the float
+    if text is None:
         text = str(value).strip()
-        try:
-            number = float(text)
-        except ValueError:
-            pass
-        else:
-            text = str(int(number)) if number.is_integer() else format(number, "g")
+        if text.lower() in ("true", "false"):
+            text = text.lower()
+        elif _NUMBER.fullmatch(text):
+            try:
+                text = _canonical(Decimal(text)) or text
+            except InvalidOperation:
+                pass
     if text == "":
         return None
     return text.lower() if ignore_case else text
 
 
-def _f1(correct: int, claimed: int, expected: int) -> tuple[float, float, float]:
-    precision = correct / claimed if claimed else 1.0
-    recall = correct / expected if expected else 1.0
-    f1 = 0.0 if precision + recall == 0 else 2 * precision * recall / (precision + recall)
+def _f1(correct: int, claimed: int, expected: int) -> tuple[float | None, float | None, float]:
+    precision = correct / claimed if claimed else None
+    recall = correct / expected if expected else None
+    # 2PR / (P + R) simplifies to this, which is exact at round values such as 0.5.
+    f1 = 2 * correct / (claimed + expected) if claimed + expected else 1.0
     return precision, recall, f1
 
 
@@ -91,9 +133,11 @@ def grade(
     ignore_case: bool = False,
 ) -> AnswerKeyGrade:
     """Score ``findings`` against ``key``; ``fields`` default to every other key column."""
+    columns = dict.fromkeys(name for row in key for name in row)
     if fields is None:
-        columns = dict.fromkeys(name for row in key for name in row)
         fields = [name for name in columns if name not in id_fields]
+    elif key and (unknown := [name for name in fields if name not in columns]):
+        raise ValueError(f"graded field(s) not in the answer key: {', '.join(unknown)}")
 
     def ident(row: dict[str, Any]) -> tuple[str | None, ...]:
         return tuple(_norm(row.get(name), ignore_case) for name in id_fields)

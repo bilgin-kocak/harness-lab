@@ -158,7 +158,8 @@ came, not only where the run ended. Harness Lab does both:
 - The **anytime score** is `0.7 × mean best-so-far score + 0.3 × final score`, where each score is
   the improvement score (`1 − 1/ratio`) and the mean runs over the evaluation budget. A run that
   stops early keeps its last best for the evaluations it did not use, so finishing early costs
-  nothing. Without a cap the budget is the evaluations the run made.
+  nothing. Without a cap the budget is the evaluations the run made. When the final state fails
+  its verification, the final score is 0, as it is for `verified_score`.
 
 ```yaml
 improve:

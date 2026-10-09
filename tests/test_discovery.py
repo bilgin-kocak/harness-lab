@@ -137,6 +137,10 @@ async def test_demo_discovery_scores_partial_finds_and_summarises_task_metrics(
     with TestClient(create_app(settings, db)) as client:
         page = client.get(f"/experiments/{outcome.experiment_id}").text
         assert "discovery_recall" in page
+        run_page = client.get(f"/runs/{by['fake-partial'].run_id}").text
+        assert "answer key" in run_page and "row_f1" in run_page  # the grade, not only FAIL
+        noop_page = client.get(f"/runs/{by['fake-noop'].run_id}").text
+        assert "no findings file" in noop_page  # why it scored 0
 
 
 def test_experiment_show_lists_task_metrics_and_suite_check_passes(tmp_path: Path):
@@ -151,3 +155,94 @@ def test_experiment_show_lists_task_metrics_and_suite_check_passes(tmp_path: Pat
     exp_id = next(line.split()[-1] for line in run.output.splitlines() if "experiment id" in line)
     show = runner.invoke(app, ["experiment", "show", exp_id], env=env)
     assert show.exit_code == 0 and "row_f1" in show.output, show.output
+
+
+def _same(a, b) -> bool:
+    return grade([{"id": "x", "v": b}], [{"id": "x", "v": a}], ["id"], ["v"]).row_f1 == 1.0
+
+
+def test_numbers_compare_by_exact_value():
+    assert _same(12, "12") and _same("12.50", 12.5) and _same(2500000, 2500000.0)
+    assert _same(1e20, "1e20") and _same(0.1, "0.1") and _same(-3, "-3.0")
+    assert _same(12345678901234567890, "12345678901234567890")
+    assert _same(True, "true") and _same("True", True)
+    assert not _same(1500000.25, 1500000.75)  # no rounding to a few significant digits
+    assert not _same(37.774929, "37.7749") and not _same(0.1234567, 0.1234571)
+    assert not _same("12345678901234567890", "12345678901234567891")
+    # Text that only looks like a number stays text.
+    assert not _same("007", 7) and not _same("02134", "2134") and not _same("1_000", 1000)
+    assert not _same("Nan", "nan") and _same("1e999999999", "1e999999999")
+
+
+def test_f1_is_exact_and_precision_needs_a_claim():
+    key = [{"id": i} for i in range(13)]
+    found = [{"id": i} for i in range(6)] + [{"id": 100 + i} for i in range(5)]
+    assert grade(found, key, ["id"]).discovery_f1 == 0.5  # 6 right of 11 claimed and 13 expected
+    nothing = grade([], key, ["id"])
+    assert nothing.discovery_precision is None and nothing.discovery_f1 == 0.0
+    assert "discovery_precision" not in nothing.metrics()  # no claim: no precision to average
+
+
+def test_a_graded_field_the_key_does_not_have_is_an_error():
+    with pytest.raises(ValueError, match="funtion"):
+        grade([dict(r) for r in KEY], KEY, ["file", "line"], ["funtion"])
+
+
+def test_loading_handles_bom_quoted_newlines_and_bad_files(tmp_path: Path):
+    csv = tmp_path / "key.csv"
+    csv.write_bytes('﻿file,note\nshop/a.py,"line one\nline two"\n'.encode())
+    assert load_rows(csv) == [{"file": "shop/a.py", "note": "line one\nline two"}]
+    bom = tmp_path / "found.json"
+    bom.write_bytes('﻿[{"file": "shop/a.py"}]'.encode())
+    assert load_rows(bom) == [{"file": "shop/a.py"}]
+    deep = tmp_path / "deep.json"
+    deep.write_text("[" * 100_000 + "]" * 100_000)
+    with pytest.raises(ValueError):
+        load_rows(deep)
+    wide = tmp_path / "wide.csv"
+    wide.write_text("file\n" + "x" * 200_000 + "\n")
+    with pytest.raises(ValueError):
+        load_rows(wide)
+
+
+def _grade_in(work: Path, key_dir: Path, findings: str = "findings.json"):
+    """The verifier's answer-key step on its own, for a worktree that already holds the files."""
+    from types import SimpleNamespace
+
+    from harnesslab.core.models import VerifierResult
+    from harnesslab.verification.command import CommandVerifier
+
+    (key_dir / "answer.json").write_text('[{"file": "a.py"}, {"file": "b.py"}]')
+    task = TaskSpec(
+        id="t",
+        name="t",
+        repo={"path": "."},
+        prompt="p",
+        verification={
+            "command": "true",
+            "answer_key": {"key": "answer.json", "id": ["file"], "findings": findings},
+        },
+        source_path=key_dir / "task.yaml",
+    )
+    result = VerifierResult(passed=True)
+    CommandVerifier()._grade_answer_key(task, SimpleNamespace(workdir=work), result)
+    return result
+
+
+def test_the_verifier_scores_unreadable_or_linked_findings_as_nothing_found(tmp_path: Path):
+    work, key_dir = tmp_path / "work", tmp_path / "task"
+    work.mkdir()
+    key_dir.mkdir()
+    (work / "findings.json").write_text("[" * 100_000 + "]" * 100_000)
+    deep = _grade_in(work, key_dir)
+    assert deep.score == 0.0 and deep.passed is False and "error" in deep.score_metrics
+    # A link could point the grader at hidden files injected for the verification command.
+    (work / "findings.json").unlink()
+    (work / ".hidden").mkdir()
+    (work / ".hidden" / "answer.json").write_text('[{"file": "a.py"}, {"file": "b.py"}]')
+    (work / "findings.json").symlink_to(work / ".hidden" / "answer.json")
+    linked = _grade_in(work, key_dir)
+    assert linked.score == 0.0 and "link" in linked.score_metrics["error"]
+    (work / "findings.json").unlink()
+    (work / "findings.json").write_text('[{"file": "a.py"}, {"file": "b.py"}]')
+    assert _grade_in(work, key_dir).score == 1.0

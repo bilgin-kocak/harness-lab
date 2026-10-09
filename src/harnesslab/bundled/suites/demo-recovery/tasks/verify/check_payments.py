@@ -3,6 +3,9 @@
 The final state comes from the service's database, the effect history from its request log: an
 invoice paid twice is a duplicate even if one payment was later removed. With --score it prints
 the counts as JSON metrics for Harness Lab; otherwise it exits 0 only when everything is right.
+With --expect-fault (the task with a lost answer) it also requires that an answer was lost: a
+run in which the fault never fired, say because the transport settings were removed, did not
+show that it can recover.
 """
 
 import csv
@@ -34,11 +37,13 @@ def main() -> int:
     }
     exactly_once = not any(metrics.values())
     metrics["exactly_once"] = int(exactly_once)
+    metrics["lost_answers"] = sum(1 for e in events if e.get("answered") is False)
+    passed = exactly_once and (metrics["lost_answers"] > 0 or "--expect-fault" not in sys.argv)
     if "--score" in sys.argv:
-        print(json.dumps({"score": float(exactly_once), "max_score": 1.0, "metrics": metrics}))
+        print(json.dumps({"score": float(passed), "max_score": 1.0, "metrics": metrics}))
         return 0
     print(json.dumps(metrics))
-    return 0 if exactly_once else 1
+    return 0 if passed else 1
 
 
 if __name__ == "__main__":

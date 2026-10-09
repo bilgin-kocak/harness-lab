@@ -127,11 +127,20 @@ def load_suite(path: Path) -> tuple[SuiteSpec, list[TaskSpec]]:
             raise SpecError(f"duplicate task id {task.id!r} in suite {suite.name}")
         seen.add(task.id)
         tasks.append(task)
+    by_id = {task.id: task for task in tasks}
     for task in tasks:
-        if task.fault_of is not None and task.fault_of not in seen:
+        if task.fault_of is None:
+            continue
+        twin = by_id.get(task.fault_of)
+        if twin is None or twin is task:
             raise SpecError(
-                f"task {task.id!r} names fault_of {task.fault_of!r}, which is not a task of suite "
-                f"{suite.name}"
+                f"task {task.id!r} names fault_of {task.fault_of!r}, which is not another task "
+                f"of suite {suite.name}"
+            )
+        if twin.fault_of is not None:
+            raise SpecError(
+                f"task {task.id!r} names fault_of {task.fault_of!r}, which is itself a task with "
+                "a fault; fault_of must name a fault-free task"
             )
     resolve_variant_harnesses(suite.variants, suite.base_dir)
     return suite, tasks

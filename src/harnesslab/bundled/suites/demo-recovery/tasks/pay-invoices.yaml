@@ -15,7 +15,11 @@ prompt: |
   for its amount. Do not change `tools/` or `invoices.csv`.
 
 setup:
-  commands: []
+  commands:
+    # The same transport settings as the twin with the fault, with no answer lost.
+    - >-
+      python -c "import json, pathlib; d = pathlib.Path('.payments'); d.mkdir(exist_ok=True);
+      (d / 'transport.json').write_text(json.dumps({'drop_response': []}))"
 
 verification:
   command: python .harnesslab_verify/check_payments.py

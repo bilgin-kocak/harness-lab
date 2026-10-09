@@ -9,7 +9,7 @@
   <table class="data compact">
     <thead><tr><th>per-task difference (B − A)</th><th class="num">mean</th><th class="num">{{ ((p.pass_rate_diff.level if p.pass_rate_diff else 0.95) * 100)|round|int }}% interval</th><th class="num">P(&gt; 0)</th></tr></thead>
     <tbody>
-    {% for key, label, iv, unit in [("pass_rate", "pass rate", p.pass_rate_diff, "pts"), ("score", "score", p.score_diff, ""), ("cost", p.cost_kind, p.cost_diff, ""), ("llm_calls", "llm_calls", p.llm_calls_diff, ""), ("improve_ratio", "improvement ratio", p.improve_ratio_diff, "")] if iv is not none or key in ("pass_rate", "cost", "llm_calls") or key == p.metric %}
+    {% for key, label, iv, unit in [("pass_rate", "pass rate", p.pass_rate_diff, "pts"), ("score", "score", p.score_diff, ""), ("cost", p.cost_kind, p.cost_diff, ""), ("llm_calls", "llm_calls", p.llm_calls_diff, ""), ("improve_ratio", "improvement ratio", p.improve_ratio_diff, ""), ("anytime", "anytime score", p.anytime_diff, "")] if iv is not none or key in ("pass_rate", "cost", "llm_calls") or key == p.metric %}
       <tr>
         <td>{% if key == p.metric %}<strong>{{ label }}</strong> <span class="muted small">(verdict)</span>{% else %}{{ label }}{% endif %}</td>
         {% if iv %}

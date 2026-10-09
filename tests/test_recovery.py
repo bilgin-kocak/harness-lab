@@ -79,6 +79,17 @@ def test_fault_of_must_name_a_task_of_the_suite(tmp_path: Path):
     )
     with pytest.raises(SpecError):
         load_suite(suite_dir / "suite.yaml")
+    task = "id: {0}\nname: {0}\nrepo: {{path: ../repo}}\nprompt: p\nverification: {{command: 'true'}}\n"
+    for twins in ({"a": "a"}, {"a": "b", "b": "a"}, {"b": "a", "c": "b"}):  # self, mutual, chain
+        names = sorted({*twins, *twins.values()})
+        (suite_dir / "suite.yaml").write_text(
+            "name: s\ntasks: [" + ", ".join(f"tasks/{n}.yaml" for n in names) + "]\n"
+        )
+        for name in names:
+            extra = f"fault_of: {twins[name]}\n" if name in twins else ""
+            (suite_dir / "tasks" / f"{name}.yaml").write_text(task.format(name) + extra)
+        with pytest.raises(SpecError, match="fault_of"):
+            load_suite(suite_dir / "suite.yaml")
     suite, tasks = load_suite(RECOVERY)
     assert fault_pairs(tasks) == {"pay-invoices-lost-ack": "pay-invoices"}
 
@@ -168,3 +179,55 @@ def test_cli_prints_recovery_after_a_run_and_in_experiment_show(tmp_path: Path):
     exp_id = next(line.split()[-1] for line in run.output.splitlines() if "experiment id" in line)
     show = runner.invoke(app, ["experiment", "show", exp_id], env=env)
     assert "recovery: fake-careful" in show.output, show.output
+
+
+def test_a_reference_solution_can_be_only_an_action(tmp_path: Path):
+    suite_dir = tmp_path / "suite"
+    (suite_dir / "tasks").mkdir(parents=True)
+    (suite_dir / "repo").mkdir()
+    (suite_dir / "repo" / "README.md").write_text("x\n")
+    (suite_dir / "suite.yaml").write_text("name: s\ntasks: [tasks/a.yaml]\n")
+    (suite_dir / "tasks" / "a.yaml").write_text(
+        "id: a\nname: a\nrepo: {path: ../repo}\nprompt: p\n"
+        "verification: {command: 'test -f .done'}\n"
+        "reference_solution: {command: 'touch .done'}\n"
+    )
+    check = CliRunner().invoke(
+        app, ["suite", "check", str(suite_dir / "suite.yaml")], env=_env(tmp_path)
+    )
+    assert check.exit_code == 0, check.output
+    assert "no reference solution" not in check.output and "ok" in check.output
+
+
+def _settle(repo: Path, *, careful: bool, drop: list[int] | None) -> None:
+    state = repo / ".payments"
+    state.mkdir(exist_ok=True)
+    if drop is not None:
+        (state / "transport.json").write_text(json.dumps({"drop_response": drop}))
+    script = "solution" if careful else "naive"
+    source = RECOVERY.parent / "tasks" / script / "scripts" / "settle.py"
+    subprocess.run([sys.executable, str(source)], cwd=repo, capture_output=True, check=False)
+
+
+def _check(repo: Path, *args: str) -> subprocess.CompletedProcess:
+    checker = RECOVERY.parent / "tasks" / "verify" / "check_payments.py"
+    return subprocess.run(
+        [sys.executable, str(checker), *args], cwd=repo, capture_output=True, text=True
+    )
+
+
+def test_the_fault_check_fails_when_the_fault_never_fired(tmp_path: Path):
+    for name, drop, expect_pass in (("faulty", [2], True), ("tampered", None, False)):
+        repo = tmp_path / name
+        subprocess.run(["cp", "-R", str(RECOVERY.parent / "fixture_repo"), str(repo)], check=True)
+        _settle(repo, careful=True, drop=drop)
+        assert _check(repo).returncode == 0  # paid exactly once either way
+        assert (_check(repo, "--expect-fault").returncode == 0) is expect_pass, name
+        score = json.loads(_check(repo, "--score", "--expect-fault").stdout)
+        assert score["metrics"]["lost_answers"] == (1 if drop else 0)
+        assert score["score"] == (1.0 if expect_pass else 0.0)
+    _, tasks = load_suite(RECOVERY)
+    by = {t.id: t for t in tasks}
+    assert "--expect-fault" in by["pay-invoices-lost-ack"].verification.command
+    # Both twins start with the service's state directory, so its presence gives nothing away.
+    assert all(".payments" in " ".join(t.setup.commands) for t in tasks)

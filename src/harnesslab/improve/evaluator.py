@@ -180,18 +180,22 @@ def set_budget(worktree: Path, budget: int) -> None:
         path.write_text(json.dumps(config, indent=2), encoding="utf-8")
 
 
-def read_values(worktree: Path) -> list[float | None]:
-    """What the evaluator measured this round, in call order (None: the measurement failed)."""
+def read_values(worktree: Path) -> dict[int, float | None]:
+    """What the evaluator measured this round, by call number (None: the measurement failed).
+
+    A call that was killed before it finished has no entry, so the calls after it keep theirs.
+    """
     path = worktree / EVAL_DIR / VALUES_NAME
     if not path.exists():
-        return []
-    values: list[float | None] = []
+        return {}
+    values: dict[int, float | None] = {}
     for line in path.read_text(encoding="utf-8").splitlines():
         try:
-            value = json.loads(line).get("value")
-        except (ValueError, AttributeError):
+            entry = json.loads(line)
+            call, value = int(entry["call"]), entry.get("value")
+        except (ValueError, TypeError, KeyError, AttributeError):
             continue
-        values.append(float(value) if isinstance(value, int | float) else None)
+        values[call] = float(value) if isinstance(value, int | float) else None
     return values
 
 

@@ -34,17 +34,23 @@ the repository (`tools/payments.py`, backed by SQLite under the ignored `.paymen
 `pay-invoices-lost-ack`, the service processes the second payment but its answer never reaches the
 client, which reports a timeout that "may or may not have been processed". The hidden check reads
 the service's database (the final state) and its request log (the effect history) and reports
-`duplicates`, `missing`, `wrong_amount`, `unknown_invoice`, `state_mismatch` and `exactly_once`. It
-passes only when every invoice was paid exactly once, for its amount.
+`duplicates`, `missing`, `wrong_amount`, `unknown_invoice`, `state_mismatch`, `exactly_once` and
+`lost_answers`. It passes only when every invoice was paid exactly once, for its amount, and, in
+the task with the fault (`--expect-fault`), only when an answer was actually lost: a run that
+removed the fault did not show that it can recover.
 
 The fake variants run a settle script: `fake-careful` checks for an existing payment before every
 retry, and `fake-naive` retries blindly, so it succeeds normally and pays twice under the fault. The
-fault comes from the service stub's transport settings; an agent that reads the stub can see how
-it works. The demo measures what the agent does, not whether it can spot the setup.
+fault comes from the service stub's transport settings, which both twins' setup writes, so their
+presence gives nothing away. An agent that reads the stub can still see how the fault works, and
+the service's state lives in the worktree, where a determined agent could edit it. The demo
+measures what the agent does, not whether it can spot or undo the setup; for a real benchmark,
+keep the service outside the worktree.
 
 ## Writing one
 
-Write the ordinary task first, then its twin with the fault, and link the twin with `fault_of`:
+Write the ordinary task first, then its twin with the fault, and link the twin with `fault_of`.
+The twin must be another task of the suite without a `fault_of` of its own:
 
 ```yaml
 id: pay-invoices-lost-ack
@@ -57,14 +63,15 @@ verification:
   score_command: python .harnesslab_verify/check.py --score   # report duplicates and the like
 ```
 
-- Make the fault deterministic, so repetitions of the twins are comparable.
+- Make the fault deterministic, so repetitions of the twins are comparable, and check in the
+  fault task that it fired.
 - Grade the final state and the effect history, not the agent's account of what it did. Report the
   damage as score command metrics, such as `duplicates`. Harness Lab averages `duplicates` over the
   runs with a fault, and summarises every metric per variant.
 - Protect the service and its inputs with `protected_paths`, and keep its state in an ignored
   directory, so setup leaves the worktree clean.
 - A reference solution that is an action, such as making payments, can name a `command` that the
-  fake runner and `suite check` run after its overlay:
+  fake runner and `suite check` run after its overlay, or on its own:
 
 ```yaml
 reference_solution:

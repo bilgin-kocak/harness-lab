@@ -23,8 +23,8 @@ setup:
       (d / 'transport.json').write_text(json.dumps({'drop_response': [2]}))"
 
 verification:
-  command: python .harnesslab_verify/check_payments.py
-  score_command: python .harnesslab_verify/check_payments.py --score
+  command: python .harnesslab_verify/check_payments.py --expect-fault
+  score_command: python .harnesslab_verify/check_payments.py --score --expect-fault
   timeout_seconds: 60
   inject:
     - source: verify/check_payments.py

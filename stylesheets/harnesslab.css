@@ -1,0 +1,185 @@
+/* Harness Lab site styles. Landing-page rules are scoped to .hl-home and use only Material's
+   colour variables, so the light and dark schemes both work. */
+
+/* :has() is progressive enhancement: it gets a rule of its own, because an unsupported selector
+   would invalidate the whole list it sits in. Without it the edit button simply shows. */
+.md-content:has(.hl-home) .md-content__button {
+  display: none;
+}
+
+.md-typeset .hl-home .headerlink {
+  display: none;
+}
+
+.md-typeset .hl-home h2 {
+  margin-top: 2.4em;
+  text-align: center;
+}
+
+/* Hero */
+.md-typeset .hl-hero {
+  margin: 1.2rem 0 1.8rem;
+  text-align: center;
+}
+
+.md-typeset .hl-hero h1 {
+  margin: 0 0 0.25em;
+  color: var(--md-default-fg-color);
+  font-size: 2.6em;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.md-typeset .hl-tagline {
+  margin: 0 auto 0.6em;
+  font-size: 1.35em;
+  font-weight: 600;
+}
+
+.md-typeset .hl-lede,
+.md-typeset .hl-note {
+  max-width: 38em;
+  margin: 0 auto 1em;
+  color: var(--md-default-fg-color--light);
+}
+
+.md-typeset .hl-note {
+  font-size: 0.85em;
+}
+
+.md-typeset .hl-hero .highlight {
+  max-width: 34em;
+  margin: 0 auto 0.8em;
+  text-align: left;
+}
+
+.md-typeset .hl-hero .md-button {
+  margin: 0.25em 0.3em;
+}
+
+/* The problem section: the question, centred text, problem-and-fix cards */
+.md-typeset .hl-question {
+  margin: 0 auto 0.8em;
+  font-size: 1.2em;
+  text-align: center;
+}
+
+.md-typeset .hl-intro {
+  max-width: 44em;
+  margin: 0 auto 1em;
+  color: var(--md-default-fg-color--light);
+  text-align: center;
+}
+
+/* Screenshots: framed wherever they appear (the tour's are matched by path, since the tour is
+   plain Markdown); slightly dimmed in the dark scheme, as the dashboard itself is light. */
+.md-typeset img.hl-shot,
+.md-typeset img[src*="assets/screenshots/"] {
+  border: 0.05rem solid var(--md-default-fg-color--lightest);
+  border-radius: 0.3rem;
+  box-shadow: var(--md-shadow-z2);
+}
+
+[data-md-color-scheme="slate"] .md-typeset img[src*="assets/screenshots/"] {
+  filter: brightness(0.92);
+}
+
+.md-typeset img[src*="assets/terminal/"] {
+  border-radius: 0.3rem;
+}
+
+/* How it works: stacked with arrows down on small screens, five columns from 60em */
+.md-typeset .hl-home .hl-steps > ol {
+  display: grid;
+  gap: 1.4rem;
+  margin: 1em 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: hl-step;
+}
+
+.md-typeset .hl-home .hl-steps > ol > li {
+  position: relative;
+  margin: 0;
+  padding: 0.8em 0.9em;
+  border: 0.05rem solid var(--md-default-fg-color--lightest);
+  border-radius: 0.3rem;
+  background: var(--md-code-bg-color);
+  font-size: 0.85em;
+  line-height: 1.5;
+  list-style: none;
+  counter-increment: hl-step;
+}
+
+.md-typeset .hl-home .hl-steps > ol > li::before {
+  content: counter(hl-step);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.7em;
+  height: 1.7em;
+  margin-bottom: 0.5em;
+  border-radius: 50%;
+  background: var(--md-primary-fg-color);
+  color: var(--md-primary-bg-color);
+  font-weight: 700;
+}
+
+.md-typeset .hl-home .hl-steps > ol > li:not(:last-child)::after {
+  content: "↓";
+  position: absolute;
+  bottom: -1.35rem;
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--md-default-fg-color--light);
+  font-weight: 700;
+}
+
+@media screen and (min-width: 60em) {
+  .md-typeset .hl-home .hl-steps > ol {
+    grid-template-columns: repeat(5, 1fr);
+  }
+
+  .md-typeset .hl-home .hl-steps > ol > li:not(:last-child)::after {
+    content: "→";
+    top: 50%;
+    right: -1.15rem;
+    bottom: auto;
+    left: auto;
+    transform: translateY(-50%);
+  }
+}
+
+/* Two-column lists: when to use it, research principles */
+.md-typeset .hl-home .hl-uses > ul {
+  display: grid;
+  gap: 0.2rem 2.4rem;
+}
+
+.md-typeset .hl-home .hl-uses > ul > li {
+  margin-bottom: 0.4em;
+}
+
+@media screen and (min-width: 60em) {
+  .md-typeset .hl-home .hl-uses > ul {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Tables and lone buttons centred under their centred headings (tables still scroll on phones) */
+.md-typeset .hl-home .md-typeset__scrollwrap,
+.md-typeset .hl-center {
+  text-align: center;
+}
+
+.md-typeset .hl-home .md-typeset__table {
+  text-align: left;
+}
+
+/* Footer links */
+.md-typeset .hl-links {
+  margin: 2.4em 0 1em;
+  color: var(--md-default-fg-color--light);
+  font-size: 0.85em;
+  text-align: center;
+}

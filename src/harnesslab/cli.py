@@ -57,6 +57,7 @@ from harnesslab.experiments.spec import (
     bundled_fallback_name,
     load_run_target,
     load_suite,
+    load_sweep,
     load_sweep_target,
     resolve_suite_target,
     resolve_variant_harnesses,
@@ -244,6 +245,91 @@ def _load_plugins_or_exit(modules: list[str]) -> None:
     except PluginError as exc:
         err_console.print(f"[red]{exc}[/]")
         raise typer.Exit(code=2) from exc
+
+
+# Runners and optimizers that need nothing but this machine.  Every other one starts an agent
+# CLI (or a plugin's harness) that may use a paid API, so commands say so before they start.
+OFFLINE_RUNNERS = frozenset({"fake"})
+OFFLINE_OPTIMIZERS = frozenset({"fake", "manual"})
+YES_HELP = "Start runs of harnesses that may use a paid API without asking (scripts never ask)."
+
+
+def _interactive() -> bool:
+    """Whether a person can answer a question here (stdin and stdout are terminals)."""
+    try:
+        return sys.stdin.isatty() and sys.stdout.isatty()
+    except (AttributeError, ValueError):  # closed or replaced streams
+        return False
+
+
+def _paid_harnesses(variants: list[VariantSpec]) -> list[VariantSpec]:
+    return [v for v in variants if v.runner not in OFFLINE_RUNNERS]
+
+
+def _confirm_paid_runs(
+    variants: list[VariantSpec],
+    runs: int | None,
+    *,
+    yes: bool,
+    cost_cap: str | None = None,
+    optimizer: str | None = None,
+    up_to: bool = False,
+) -> None:
+    """Before starting harnesses that may use a paid API, say what will start and, in a
+    terminal, ask (default no).  ``variants`` are the paid ones; scripts are told, not asked."""
+    paid_optimizer = optimizer is not None and optimizer not in OFFLINE_OPTIMIZERS
+    if not variants and not paid_optimizer:
+        return
+    parts: list[str] = []
+    if variants:
+        labels = sorted({v.runner + (f" ({v.model})" if v.model else "") for v in variants})
+        count = f"{'up to ' if up_to else ''}{runs} run(s)" if runs is not None else "runs"
+        parts.append(f"{count} of {', '.join(labels)}")
+    if paid_optimizer:
+        parts.append(f"the {optimizer} optimizer")
+    err_console.print(
+        f"[yellow]This starts {' and '.join(parts)}, which may use paid API usage "
+        f"({cost_cap or 'no cost cap'}).[/]"
+    )
+    if yes:
+        return
+    if not _interactive():
+        err_console.print("[dim]Not a terminal, so not asking; pass --yes to say it explicitly.[/]")
+        return
+    if not typer.confirm("Start?", default=False):
+        err_console.print("Aborted; nothing was run.")
+        raise typer.Exit(code=1)
+
+
+def _cap(max_cost_usd: float | None, optimizer_cost_usd: float | None = None) -> str | None:
+    caps = []
+    if max_cost_usd is not None:
+        caps.append(f"cost cap ${max_cost_usd:g}")
+    if optimizer_cost_usd is not None:
+        caps.append(f"optimizer cap ${optimizer_cost_usd:g}")
+    return ", ".join(caps) or None
+
+
+def _confirm_grow(
+    base_variant: dict[str, Any],
+    optimizer: str | None,
+    budget: dict[str, Any] | None,
+    *,
+    yes: bool,
+) -> None:
+    """:func:`_confirm_paid_runs` for a grow session (from its spec, or a stored one)."""
+    budget = budget or {}
+    variant = VariantSpec(
+        id="grow", runner=str(base_variant.get("runner")), model=base_variant.get("model")
+    )
+    _confirm_paid_runs(
+        _paid_harnesses([variant]),
+        budget.get("max_runs"),
+        yes=yes,
+        cost_cap=_cap(budget.get("max_cost_usd"), budget.get("max_optimizer_cost_usd")),
+        optimizer=optimizer,
+        up_to=True,
+    )
 
 
 @app.command()
@@ -663,6 +749,7 @@ def run(
         list[str] | None,
         typer.Option("--plugin", help="Python module that registers custom runners (repeatable)."),
     ] = None,
+    yes: Annotated[bool, typer.Option("--yes", "-y", help=YES_HELP)] = False,
 ) -> None:
     """Run every task of a suite against one or more harness variants."""
     settings = _settings(ctx)
@@ -687,6 +774,8 @@ def run(
         experiment.name = name
     if keep_worktrees:
         experiment.keep_worktrees = True
+    paid = _paid_harnesses(chosen_variants)
+    _confirm_paid_runs(paid, len(paid) * len(chosen_tasks) * experiment.repetitions, yes=yes)
 
     db = _open_db(settings)
     service = ExperimentService(settings, db, pricing=_load_pricing(settings, pricing))
@@ -1364,13 +1453,37 @@ def _print_sweep_report(report: SweepReport) -> None:
 
 @sweep_app.command("list")
 def sweep_list() -> None:
-    """List bundled sweep templates and ./sweeps/*.yaml."""
-    for name, path in list_bundled_sweeps().items():
-        console.print(f"[bold]{name}[/]  [dim]{path}[/]  (bundled)")
+    """List bundled sweep templates and ./sweeps/*.yaml, with the runners each one uses."""
+    entries = [(name, path, " (bundled)") for name, path in list_bundled_sweeps().items()]
     local = Path("sweeps")
     if local.is_dir():
-        for path in sorted(local.glob("*.yaml")):
-            console.print(f"[bold]{path.stem}[/]  [dim]{path}[/]")
+        entries.extend((path.stem, path, "") for path in sorted(local.glob("*.yaml")))
+    for name, path, origin in entries:
+        runners = _sweep_runners(path)
+        paid = [r for r in runners if r not in OFFLINE_RUNNERS]
+        usage = (
+            f"[yellow]{', '.join(runners)}: may use paid API usage[/]"
+            if paid
+            else f"[green]{', '.join(runners) or '?'}: offline[/]"
+        )
+        console.print(f"[bold]{name}[/]  {usage}  [dim]{path}{origin}[/]", soft_wrap=True)
+
+
+def _sweep_runners(path: Path) -> list[str]:
+    """The runners a sweep's configurations use (base variant and any factor that sets one)."""
+    try:
+        spec = load_sweep(path)
+    except SpecError:
+        return []
+    runners = {str(spec.base_variant.get("runner"))}
+    for factor, levels in spec.factors.items():
+        if isinstance(levels, dict):
+            runners |= {
+                str(o["runner"]) for o in levels.values() if isinstance(o, dict) and "runner" in o
+            }
+        elif factor == "runner":
+            runners |= {str(level) for level in levels}
+    return sorted(runners)
 
 
 @sweep_app.command("run")
@@ -1392,6 +1505,7 @@ def sweep_run(
     dry_run: Annotated[
         bool, typer.Option("--dry-run", help="Print the expanded configurations and exit.")
     ] = False,
+    yes: Annotated[bool, typer.Option("--yes", "-y", help=YES_HELP)] = False,
 ) -> None:
     """Run every configuration of a sweep and report the cheapest verified one per workload."""
     settings = _settings(ctx)
@@ -1411,8 +1525,13 @@ def sweep_run(
     console.print(
         f"[bold]{name or spec.name}[/]: {len(variants)} configuration(s) × {len(tasks)} task(s) × {spec.repetitions} repetition(s) = {total} run(s)"
         + (
-            f" · budget max_runs={spec.budget.max_runs} max_cost_usd={spec.budget.max_cost_usd}"
-            if spec.budget
+            " · budget "
+            + " ".join(
+                f"{key}={value:g}"
+                for key, value in spec.budget.model_dump().items()
+                if value is not None
+            )
+            if spec.budget and any(v is not None for v in spec.budget.model_dump().values())
             else ""
         )
     )
@@ -1424,6 +1543,16 @@ def sweep_run(
         console.print(
             f"[yellow]{total - spec.budget.max_runs} run(s) will be skipped by max_runs; add `sample:` to subset the grid instead.[/]"
         )
+    paid = _paid_harnesses(variants)
+    paid_runs = len(paid) * len(tasks) * spec.repetitions
+    if spec.budget and spec.budget.max_runs is not None:
+        paid_runs = min(paid_runs, spec.budget.max_runs)
+    _confirm_paid_runs(
+        paid,
+        paid_runs,
+        yes=yes,
+        cost_cap=_cap(spec.budget.max_cost_usd if spec.budget else None),
+    )
     experiment = ExperimentSpec(
         name=name or spec.name,
         suite=spec.suite,
@@ -1679,6 +1808,7 @@ def grow_run(
             "--dry-run", help="Print the split, window and first optimizer view; run nothing."
         ),
     ] = False,
+    yes: Annotated[bool, typer.Option("--yes", "-y", help=YES_HELP)] = False,
 ) -> None:
     """Grow a harness: failures -> optimizer -> window check -> gate check -> accept or roll back."""
     settings = _settings(ctx)
@@ -1713,6 +1843,12 @@ def grow_run(
         console.print("[bold]first optimizer view (synthetic failures):[/]")
         console.print(_synthetic_context(spec, suite, split, bundle).model_dump_json(indent=2))
         return
+    _confirm_grow(
+        spec.base_variant,
+        spec.optimizer.kind,
+        spec.budget.model_dump() if spec.budget else None,
+        yes=yes,
+    )
     db = _open_db(settings)
     service = GrowService(settings, db, pricing=_load_pricing(settings, pricing))
     try:
@@ -1749,10 +1885,24 @@ def grow_resume(
             "plugins and its suite's are loaded too).",
         ),
     ] = None,
+    yes: Annotated[bool, typer.Option("--yes", "-y", help=YES_HELP)] = False,
 ) -> None:
     """Continue an interrupted or failed grow session from its saved state."""
     settings = _settings(ctx)
     db = _open_db(settings)
+    row = Repository(db, settings.home).find_grow_session(session_id)
+    if row is not None and row.status != "completed":
+        stored = row.spec_json or {}
+        try:
+            _confirm_grow(
+                stored.get("base_variant") or {},
+                (stored.get("optimizer") or {}).get("kind"),
+                stored.get("budget"),
+                yes=yes,
+            )
+        except typer.Exit:
+            db.dispose()
+            raise
     # Same cost estimates as `grow run`, so budgets also count runners that report no cost.
     service = GrowService(settings, db, pricing=_load_pricing(settings, pricing))
     try:
@@ -1901,6 +2051,7 @@ def ablate_run(
     dry_run: Annotated[
         bool, typer.Option("--dry-run", help="Print the components and variants, run nothing.")
     ] = False,
+    yes: Annotated[bool, typer.Option("--yes", "-y", help=YES_HELP)] = False,
 ) -> None:
     """Run the full bundle, an empty (minimal) bundle and one leave-one-out bundle per component."""
     settings = _settings(ctx)
@@ -1942,6 +2093,8 @@ def ablate_run(
         for v in variants:
             console.print(f"  {v.id}  [dim]{v.harness}[/]")
         return
+    paid = _paid_harnesses(variants)
+    _confirm_paid_runs(paid, len(paid) * len(chosen) * repetitions, yes=yes)
     experiment = ExperimentSpec(
         name=name or f"ablate {bundle_dir.name}",
         suite=str(suite_path),

@@ -13,6 +13,7 @@ factors:
     few: { improve_eval_budget: 2 }
     many: { improve_eval_budget: 10 }
 repetitions: 2
+budget: { max_cost_usd: 10 }               # no new runs once the reported (or estimated) cost reaches $10
 parallelism: 2
 # Improvement tasks: judge on the improvement score, which counts a broken final state as 0.
 verdict_metric: score

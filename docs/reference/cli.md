@@ -105,6 +105,7 @@ $ harnesslab run [OPTIONS] {target}
 * `--keep-worktrees`: Do not delete worktrees after runs.
 * `--pricing <path>`: pricing.yaml for cost estimates.
 * `--plugin <str>`: Python module that registers custom runners (repeatable).
+* `-y, --yes`: Start runs of harnesses that may use a paid API without asking (scripts never ask).
 * `--help`: Show this message and exit.
 
 ## `harnesslab serve`
@@ -338,7 +339,7 @@ $ harnesslab sweep [OPTIONS] COMMAND [ARGS]...
 
 ### `harnesslab sweep list`
 
-List bundled sweep templates and ./sweeps/*.yaml.
+List bundled sweep templates and ./sweeps/*.yaml, with the runners each one uses.
 
 **Usage**:
 
@@ -373,6 +374,7 @@ $ harnesslab sweep run [OPTIONS] {target}
 * `--pricing <path>`: pricing.yaml for cost estimates.
 * `--plugin <str>`: Python module registering custom runners.
 * `--dry-run`: Print the expanded configurations and exit.
+* `-y, --yes`: Start runs of harnesses that may use a paid API without asking (scripts never ask).
 * `--help`: Show this message and exit.
 
 ### `harnesslab sweep report`
@@ -451,6 +453,7 @@ $ harnesslab grow run [OPTIONS] {target}
 * `--pricing <path>`: pricing.yaml for cost estimates.
 * `--plugin <str>`: Python module registering custom runners or optimizers.
 * `--dry-run`: Print the split, window and first optimizer view; run nothing.
+* `-y, --yes`: Start runs of harnesses that may use a paid API without asking (scripts never ask).
 * `--help`: Show this message and exit.
 
 ### `harnesslab grow resume`
@@ -471,6 +474,7 @@ $ harnesslab grow resume [OPTIONS] {session_id}
 
 * `--pricing <path>`: pricing.yaml for cost estimates.
 * `--plugin <str>`: Python module registering custom runners or optimizers (the session&#x27;s own plugins and its suite&#x27;s are loaded too).
+* `-y, --yes`: Start runs of harnesses that may use a paid API without asking (scripts never ask).
 * `--help`: Show this message and exit.
 
 ### `harnesslab grow show`
@@ -596,6 +600,7 @@ $ harnesslab ablate run [OPTIONS] {bundle_dir}
 * `--pricing <path>`: pricing.yaml for cost estimates.
 * `--plugin <str>`: Python module registering custom runners.
 * `--dry-run`: Print the components and variants, run nothing.
+* `-y, --yes`: Start runs of harnesses that may use a paid API without asking (scripts never ask).
 * `--help`: Show this message and exit.
 
 ### `harnesslab ablate report`

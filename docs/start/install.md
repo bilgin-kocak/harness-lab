@@ -12,7 +12,10 @@ The demo needs nothing else. To benchmark real harnesses you also need:
 - the [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) on `PATH` with
   `ANTHROPIC_API_KEY`, `CLAUDE_CODE_OAUTH_TOKEN`, or a completed `claude auth login`;
 - the [OpenAI Codex CLI](https://github.com/openai/codex) on `PATH` with `OPENAI_API_KEY` or a
-  completed `codex login`.
+  completed `codex login`;
+- *(unreleased)* [pi](../guides/pi.md), [OpenCode](../guides/opencode.md) or
+  [Hermes Agent](../guides/hermes.md) on `PATH`, with an API key for your model's provider
+  (`ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `OPENROUTER_API_KEY`, ...) in the environment.
 
 ## Install the package
 
@@ -39,8 +42,9 @@ harnesslab version
 harnesslab doctor
 ```
 
-`doctor` reports Python, git, the Codex and Claude Code CLIs, `uv` and the database. Missing
-CLIs are a warning, not an error: they only disable their runners. A CLI that is installed but no
+`doctor` reports Python, git, the harness CLIs (Codex, Claude Code and, unreleased, pi, OpenCode
+and Hermes Agent), `uv` and the database. Missing CLIs are a warning, not an error: they only
+disable their runners. A CLI that is installed but no
 longer accepts a flag Harness Lab passes shows as `incompatible`, with the flag *(0.3.0)*.
 
 ## Where data goes

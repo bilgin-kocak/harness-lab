@@ -4,8 +4,9 @@ Nothing below is implemented yet. Items are grouped by what they unlock.
 
 ## Measuring better
 
-- **Trace component attribution**: Claude Code hook and skill records as named events, so a failing
-  trace says which harness component was active. The paper's ablation says this locality doubles
+- **Trace component attribution**: Claude Code hook runs are already recorded as `hook` events;
+  skill activations as named events, and both shown to the grow optimizer, would let a failing
+  trace say which harness component was active. The paper's ablation says this locality doubles
   the optimizer's effectiveness.
 - **Growth-curve chart** on the grow session page.
 - **Failure clustering** over normalized traces and verifier output.
@@ -18,9 +19,11 @@ statistics already in place.
 - **Composite strategies**: cascade (cheap model, quality gate on visible checks, escalate) and
   critique (read-only reviewer from another model family, one revision) runners, so sweeps cover
   `strategy × model` with per-stage cost and escalation rate (after GitHub HydraFusion).
-- **Task-class routing policies** learned from sweep results and evaluated on holdout tasks
-  against the best global configuration and the per-task oracle; grow history exported as a
-  playbook of accepted and rejected edits (after Turbo Harness, arXiv 2609.40330).
+- **Task-class routing policies** learned from sweep results. The measurement is in place (sweep
+  reports and `experiment show` give the best single variant against the per-task choice, with a
+  held-out gain); what is missing is a learned policy evaluated the same way on holdout tasks,
+  and grow history exported as a playbook of accepted and rejected edits (after Turbo Harness,
+  arXiv 2609.40330).
 - **Research-driven optimizer**: idea cards (source, harness module, mechanism) proposed through
   the grow loop and accepted only with evidence against the minimal baseline (after ScholarEvolve,
   arXiv 2609.40169).
@@ -42,7 +45,10 @@ statistics already in place.
 ## Isolation and platforms
 
 - **Container isolation** (`DockerSandbox`): run harness CLIs inside containers with an executor
-  abstraction so hidden tests and the host are unreachable.
+  abstraction so hidden tests and the host are unreachable. Today runners start their CLI
+  directly; the sandbox interface covers the working copy, commands and change capture.
+- **Codex hooks**: Codex CLI 0.153 has hooks; applying a bundle's `hooks.json` to Codex would let
+  the sentinel be A/B tested on Codex too (the Codex runner ignores hooks today).
 - **Native Windows support**.
 
 ## Searching smarter

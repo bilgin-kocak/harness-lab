@@ -62,16 +62,20 @@ How the intervals are computed is in [Read and export results](results.md#statis
 
 > **Unreleased.** On `main`; ships in the next release.
 
-`ablate run --metric pass_rate|score|improve_ratio` (default `pass_rate`) chooses what every
+`ablate run --metric pass_rate|score|improve_ratio|anytime` (default `pass_rate`) chooses what every
 verdict above is about: the whole bundle's and each component's. The metric is stored with the
 ablation, so `ablate report` and the dashboard recompute the same verdicts; the component table's
 Δ and interval columns show that metric, and `--min-tasks` counts the tasks where both sides have
 it. Use `score` when the tasks have a partial score, and for
 [improvement tasks](improvement.md), where a component that keeps the code working but improves
 less still shows up and a broken final state counts as 0. `improve_ratio` only uses tasks where
-both sides have a ratio. See [Verdict metric](results.md#verdict-metric).
+both sides have a ratio, and `anytime` (improvement tasks) rewards reaching good values early on
+equal evaluation budgets. See [Verdict metric](results.md#verdict-metric).
 
 ## Simulate it without API keys
+
+`ablate run` uses `--variant claude-default` by default, which is a real harness (it asks before
+starting). Pass a fake variant to try it offline, e.g. `--variant fake-reference`.
 
 The fake runner reads two keys from a bundle's `fake.yaml` that make ablations testable offline:
 `component_solves: {skills/<name>: [task ids]}` solves those tasks only while the component is in

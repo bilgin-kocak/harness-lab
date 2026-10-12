@@ -51,7 +51,7 @@ off.
 | `full_auto` | none | No effect. Codex CLI 0.153 rejects `--full-auto`; `--sandbox workspace-write` already selects the same sandbox, and `codex exec` never stops for approval. |
 | `network_access` | `false` | `-c sandbox_workspace_write.network_access=` |
 | `reasoning_effort` | unset | `-c model_reasoning_effort=` |
-| `profile` | unset | `--profile` |
+| `profile` | unset | `--profile <name>`; with Codex CLI 0.153 a profile is a `<name>.config.toml` file layered over the base configuration |
 | `config_overrides` | `{}` | `-c key=value` for each entry, e.g. a compaction limit |
 | `action_policy` | unset | `batched`, `fine` or free text prepended to the prompt |
 | `harness` | unset | a [harness bundle](../reference/bundle-format.md) directory |

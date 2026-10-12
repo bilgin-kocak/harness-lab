@@ -32,7 +32,7 @@ failure, `—` no run.
 | `/api/experiments/{id}/runs.json` | run samples and per-variant aggregates |
 | `/api/runs/{id}/events.json` | the normalized events of one run |
 | `/api/grow/{id}.json` | the grow session report (`lineage.json`) |
-| `/runs/{id}/artifacts/{kind}` | one artifact as text: `agent_diff`, `diff_stat`, `git_status`, `prompt`, `verifier_stdout`, `verifier_stderr`, `agent_stream`, `agent_stderr` |
+| `/runs/{id}/artifacts/{kind}` | one artifact as text: `agent_diff`, `diff_stat`, `git_status`, `prompt`, `verifier_stdout`, `verifier_stderr`, `visible_check`, `agent_stream`, `agent_stderr`, `agent_last_message` (Codex), `system_prompt` (an appended bundle prompt), `improve` and `round_<n>_*` (improvement tasks), `safety` |
 | `/healthz` | `{"status": "ok"}` |
 
 ## What is deliberately absent

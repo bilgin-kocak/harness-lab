@@ -7,7 +7,7 @@ Stored in the `runs` table as columns and as `metrics_json`, shown on the run pa
 
 | Metric | Meaning |
 | --- | --- |
-| `verified_pass` | Exit code 0 of the verification command. `null` when the verifier could not run (harness unavailable, injection failed). |
+| `verified_pass` | Exit code 0 of the verification command; with an [answer key](../guides/discovery.md) also the chosen F1 at or above `pass_threshold`, and for an [improvement task](../guides/improvement.md) also a final state that beats the baseline. `null` when the verifier could not run (harness unavailable, injection failed). |
 | `visible_pass` *(unreleased)* | Exit code 0 of the task's `visible_command`, run on a scratch copy of the worktree before the hidden files are injected. `false` when the run edited protected paths; `null` without a visible command or when the check could not run. |
 | `verified_score` | `score / max_score` from the partial-score command if there is one, the chosen F1 with an [answer key](../guides/discovery.md), else `1.0` / `0.0`. |
 | `task_metrics` *(unreleased)* | The numeric metrics the task's own checks reported: the score command's `metrics`, or the answer key's F1 scores and counts. Booleans count as 0 and 1. |

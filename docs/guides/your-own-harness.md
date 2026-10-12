@@ -31,6 +31,10 @@ allowlisted environment plus `HARNESSLAB_HARNESS_DIR` when a bundle is attached.
 carries a [harness bundle](../reference/bundle-format.md), its `system_prompt.md` is prepended to
 the prompt.
 
+Before a run, the runner checks that the command's first word is on `PATH` (a missing one makes
+the run *unavailable*, not failed). Set `executable_check: my-agent` when the command starts with
+something else, such as a wrapper script or `env`.
+
 ### The JSONL event protocol
 
 With `output_format: jsonl`, any stdout line shaped like

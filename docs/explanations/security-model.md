@@ -17,6 +17,15 @@ before pointing it at anything you care about.
 - `harnesslab suite mine` runs the mined repository's tests and `--setup` commands on your
   machine while validating; mine only repositories you trust.
 
+## Spending
+
+Real harnesses run with the credentials in your environment, so every run can cost money. Before
+starting any harness other than the fake one (or an optimizer other than `fake` and `manual`),
+`run`, `sweep run`, `grow run`, `grow resume` and `ablate run` print how many runs of which
+harnesses will start and under what cost cap, and in a terminal they ask first, default no.
+Scripts without a terminal are told and go ahead, so give unattended sweeps and grow sessions a
+`budget:` with `max_cost_usd`; the bundled templates that use real harnesses all have one.
+
 ## Hidden tests
 
 Hidden tests are copied into the worktree only at verification time, and visible tests under

@@ -33,11 +33,17 @@ src/harnesslab/
   trace/                 redaction, normalization, the Codex and Claude parsers
   verification/          exit-code verifier, hidden-file injection, partial scores
   storage/               SQLAlchemy models and the repository
-  experiments/           YAML loading, orchestration, aggregates, sweeps, export
+  experiments/           YAML loading, orchestration, aggregates, statistics, sweeps, ablation,
+                         attempts (pass@k, best-of-k), routing, recovery, export
   harness/               harness bundles and the leak lint
   grow/                  grow spec, service, optimizer view, report, optimizers/
+  improve/               improvement-task protocol: objective, evaluator, checkpoints
+  safety/                risky-action rules, the run analysis, the sentinel decider
+  corpus/                `suite mine`: tasks from a repository's git history
   web/                   FastAPI + Jinja2 + HTMX dashboard
-  bundled/               demo suite, sweep and grow templates, baseline bundle, pricing example
+  api.py                 the public extension API (also importable from `harnesslab`)
+  bundled/               suites (demo, demo-improve, demo-safety, demo-discovery, demo-recovery),
+                         sweep and grow templates, baseline and sentinel bundles, pricing example
 tests/                   unit, parser (recorded JSONL fixtures), end-to-end, CLI, web, docs, opt-in integration
 docs/                    this site (GitBook and MkDocs read the same files)
 scripts/                 gen_cli_reference.py

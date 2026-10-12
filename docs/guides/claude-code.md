@@ -15,6 +15,7 @@ harnesslab run demo --variants claude-default
 claude -p --output-format stream-json --verbose --max-turns 30
        --permission-mode acceptEdits --permission-prompts none
        --no-session-persistence --strict-mcp-config --session-id <uuid>
+       --include-hook-events
        --disallowedTools WebFetch WebSearch --allowedTools …
 ```
 
@@ -44,7 +45,10 @@ Before a run, Harness Lab compares every flag of the command above with the CLI'
 A flag the installed version no longer lists makes the run *unavailable*: it is not verified, it
 does not count in pass rates, and its error names the flag and the CLI version. `harnesslab
 doctor` shows such a CLI as `incompatible`. A run the CLI still refuses at startup (an unknown
-option) is reported the same way rather than as a failed attempt. The check covers the flags
+option, or a value it does not accept such as a misspelt `permission_mode`) is reported the same
+way rather than as a failed attempt, with the values the CLI accepts. Values are not checked
+against `--help` beforehand, because a CLI may accept values its help does not list (Claude Code
+still takes `--permission-mode default` although its help lists `manual`). The check covers the flags
 Harness Lab itself passes; a variant's own `extra_args` are left to the CLI, because a CLI can
 accept flags its help does not list, and a refusal of one is still caught at startup. Update the
 CLI or Harness Lab, change the variant's options, or set `flag_check: false` to turn the check
@@ -70,7 +74,10 @@ Override it per variant with `allowed_tools`.
 | --- | --- | --- |
 | `model` | CLI default | `--model` |
 | `max_turns` | `30` | `--max-turns` |
-| `permission_mode` | `acceptEdits` | `default`, `acceptEdits`, `dontAsk`, `auto`, `plan`, `bypassPermissions` (opt-in) |
+| `permission_mode` | `acceptEdits` | `acceptEdits`, `manual` (`default` on older CLIs), `dontAsk`, `auto`, `plan`, `bypassPermissions` (opt-in) |
+| `permission_prompts` | `none` | `--permission-prompts none\|host`: with `none`, a permission prompt is denied automatically in headless runs |
+| `no_session_persistence` | `true` | `--no-session-persistence` (improvement tasks with `improve_session: resume` turn persistence on) |
+| `strict_mcp_config` | `true` | `--strict-mcp-config`: only MCP servers the run passes, none from your configuration |
 | `allowed_tools` | the allowlist above | `--allowedTools` (permission rule syntax, e.g. `Bash(python *)`) |
 | `disallowed_tools` | `[WebFetch, WebSearch]` | `--disallowedTools` |
 | `tools` | unset | `--tools`, restricts the built-in tool set |

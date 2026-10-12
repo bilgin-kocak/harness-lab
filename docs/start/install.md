@@ -31,9 +31,10 @@ Pages marked *New in Harness Lab 0.2.0* need 0.2.0 or later; upgrade with
 pip install git+https://github.com/bilgin-kocak/harness-lab
 ```
 
-Then check the environment:
+Then check the version and the environment:
 
 ```bash
+harnesslab version
 harnesslab doctor
 ```
 

@@ -1,7 +1,8 @@
 # Task and suite YAML
 
-Both files are validated strictly: unknown keys are errors, except on variants, where unknown
-keys are runner options by design.
+Both files are validated strictly: unknown keys are errors in every section (a typo such as
+`protectd_paths` stops the load instead of silently dropping a protection), except on variants,
+where unknown keys are runner options by design.
 
 ## Suite
 
@@ -13,8 +14,18 @@ plugins: []                      # python modules imported before runs (custom r
 tasks:                           # task files, relative to this file
   - tasks/fix-month-boundary.yaml
 variants: []                     # optional variant presets (see below)
-defaults: {}                     # reserved for suite-wide defaults
+defaults:                        # optional variant options by runner, "*" for every runner
+  claude:
+    allowed_tools: [Read, Edit, "Bash(python *)"]
+    max_turns: 30
 ```
+
+`defaults:` fills in options for every variant that runs on the suite, whoever defined it (the
+suite, an experiment, a sweep, a grow session, `ablate` or a built-in), unless the variant sets the
+option itself: `"*"` first, then the runner's own entry. Use it for policies that must hold for
+the whole benchmark, such as a safe tool allowlist. The filled-in options are recorded in each
+variant's configuration and hash like its own. `id`, `runner`, `description`, `factors` and
+`harness` cannot be defaults.
 
 `harnesslab run <suite.yaml>` runs every task against the variants you select with `--variants`
 from the suite's list, the experiment's list, or the built-ins (`fake-reference`, `fake-noop`,
@@ -129,7 +140,8 @@ variants:
     max_turns: 20                        # every other key is a runner option
 ```
 
-Any key not in the list above is passed to the runner verbatim as an option. The configuration
+Any key not in the list above, and not `factors` (set by sweeps) or `harness_hash` (filled in
+when the bundle is loaded), is passed to the runner verbatim as an option. The configuration
 hash covers the runner, model, options, context and tool policy and the harness bundle hash, so
 two variants with identical settings and bundles hash the same.
 

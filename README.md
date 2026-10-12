@@ -37,22 +37,28 @@ and every trace is stored in one provider-neutral schema.
 
 ## Install
 
-Python 3.12+, git 2.20+, Linux or macOS (Windows through WSL).
+Python 3.12 or 3.13, git 2.20+, Linux or macOS (Windows through WSL).
 
 ```bash
 pip install harnesslab            # or: pipx install harnesslab  /  uv tool install harnesslab
-harnesslab doctor
+harnesslab version && harnesslab doctor
 ```
 
 ## Five minutes, no API keys
 
 ```bash
 harnesslab run demo --variants fake-reference,fake-noop   # bundled suite, two fake agents
-harnesslab serve                                          # http://127.0.0.1:8000
-harnesslab init my-lab && cd my-lab                       # editable copy of the demo, sweeps, harnesses
+harnesslab init my-lab && cd my-lab                       # editable copies of the suites, sweeps, harnesses
 harnesslab sweep run sweeps/demo-fake.yaml                # cheapest verified configuration
 harnesslab grow run grow/demo-fake.yaml                   # grow a harness from failures
-harnesslab run suites/demo/suite.yaml --variants claude-default   # a real harness (needs the claude CLI)
+harnesslab serve                                          # dashboard at http://127.0.0.1:8000 (Ctrl-C stops it)
+```
+
+A real harness uses real API usage, so Harness Lab says how many runs of which harness will start
+and, in a terminal, asks first (`--yes` skips the question):
+
+```bash
+harnesslab run suites/demo/suite.yaml --variants claude-default   # needs the claude CLI
 ```
 
 ## What it does
@@ -81,31 +87,43 @@ harnesslab run suites/demo/suite.yaml --variants claude-default   # a real harne
   of tasks from your own code.
 - **Proves each component earns its place**: `ablate` tests every part of a harness bundle against
   its own absence, and every comparison carries paired, task-level confidence intervals.
+- **Counts attempts, discovery and recovery**: pass@k and best-of-k over repetitions, tasks that
+  grade everything an agent found against a hidden answer key, and tasks with an injected fault
+  reported against their fault-free twin.
 
-## Read more
+## Guides
 
-| | |
+| Topic | Read |
 | --- | --- |
-| Quickstart and concepts | [Start here](https://bilgin-kocak.github.io/harness-lab/start/quickstart/) |
-| Claude Code, Codex, your own harness | [Guides](https://bilgin-kocak.github.io/harness-lab/guides/claude-code/) |
-| Task suites, sweeps, growing the harness | [Guides](https://bilgin-kocak.github.io/harness-lab/guides/task-suites/) |
-| CLI, YAML formats, metrics, Python API | [Reference](https://bilgin-kocak.github.io/harness-lab/reference/cli/) |
-| Security model and honest limits | [Explanations](https://bilgin-kocak.github.io/harness-lab/explanations/security-model/) |
-| Contributing and releasing | [Project](https://bilgin-kocak.github.io/harness-lab/project/contributing/) |
+| Architecture: runs, experiments, sweeps, grow sessions | [Concepts](https://bilgin-kocak.github.io/harness-lab/start/concepts/) |
+| The fake demo, step by step | [Quickstart](https://bilgin-kocak.github.io/harness-lab/start/quickstart/) |
+| Running Claude Code | [Run Claude Code](https://bilgin-kocak.github.io/harness-lab/guides/claude-code/) |
+| Running Codex | [Run Codex](https://bilgin-kocak.github.io/harness-lab/guides/codex/) |
+| Creating a task suite | [Write a task suite](https://bilgin-kocak.github.io/harness-lab/guides/task-suites/), [Mine tasks from git history](https://bilgin-kocak.github.io/harness-lab/guides/task-corpus/) |
+| Creating a harness variant | [Task and suite YAML: variants](https://bilgin-kocak.github.io/harness-lab/reference/task-and-suite-format/#variant), [Test your own harness](https://bilgin-kocak.github.io/harness-lab/guides/your-own-harness/) |
+| Interpreting metrics | [Metrics](https://bilgin-kocak.github.io/harness-lab/reference/metrics/), [Read and export results](https://bilgin-kocak.github.io/harness-lab/guides/results/) |
+| Sweeps, grow, ablation | [Configuration sweeps](https://bilgin-kocak.github.io/harness-lab/guides/sweeps/), [Grow the harness](https://bilgin-kocak.github.io/harness-lab/guides/growing/), [Ablate a harness](https://bilgin-kocak.github.io/harness-lab/guides/ablation/) |
+| CLI and YAML reference | [Reference](https://bilgin-kocak.github.io/harness-lab/reference/cli/) |
+| Roadmap | [Roadmap](https://bilgin-kocak.github.io/harness-lab/project/roadmap/) |
 
-The same pages live in [`docs/`](docs/) and can be read on GitHub.
+The same pages live in [`docs/`](https://github.com/bilgin-kocak/harness-lab/tree/main/docs) and
+can be read on GitHub.
 
 ## Security warning
 
 Harness Lab **executes coding agents and agent-written code on your machine**, isolated with git
-worktrees, not containers. Use trusted benchmark repositories and throwaway credentials. Read the
+worktrees, not containers. Use trusted benchmark repositories and throwaway credentials.
+Redaction of secrets in traces and logs is a basic pattern filter, not a formal data-loss
+prevention system. Read the
 [security model](https://bilgin-kocak.github.io/harness-lab/explanations/security-model/) first.
 
 ## Developing
 
 ```bash
 git clone https://github.com/bilgin-kocak/harness-lab && cd harness-lab
-uv sync && uv run pytest && uv run ruff check src tests && uv run mkdocs build --strict
+uv sync && uv run pytest && uv run ruff check src tests && uv run ruff format --check src tests
+uv run mkdocs build --strict
 ```
 
-Changelog: [CHANGELOG.md](CHANGELOG.md). License: MIT.
+Changelog: [CHANGELOG.md](https://github.com/bilgin-kocak/harness-lab/blob/main/CHANGELOG.md).
+License: MIT.

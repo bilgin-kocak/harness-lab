@@ -111,7 +111,8 @@ the suite, and its hidden tests, live. Calls are counted from the evaluator's ow
 before each measurement so that an interrupted call still counts, and from the trace, and
 reported as `evaluator_calls`. The budget is cooperative, like the rest of Harness Lab's
 isolation: an agent can run the measurement itself. When it does, the command shows up in the
-trace.
+trace. The demo's `fake-improver-evaluating` variant calls the evaluator twice per round, so the
+counting can be seen offline.
 
 ## Comparing evaluator budget with model choice
 

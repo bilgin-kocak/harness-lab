@@ -1,11 +1,12 @@
 # Experiment YAML
 
 An experiment file fixes the variants, repetitions and parallelism for a suite so a comparison
-can be re-run exactly. `harnesslab run <experiment.yaml>` accepts it wherever a suite is accepted;
-a file with a `suite:` key and no `tasks:` key is treated as an experiment.
+can be re-run exactly: `harnesslab run <experiment.yaml>` runs it (other commands take suites).
+A file with a `suite:` key is an experiment; a suite file never has one.
 
 ```yaml
-# suites/demo/experiments/baseline.yaml
+# an experiment next to the demo suite (the bundled suites/demo/experiments/baseline.yaml is
+# a shorter version of this)
 name: baseline-comparison                 # required; the experiment's name in the database
 suite: ../suite.yaml                      # required; a path relative to this file or a bundled name
 description: Compare the reference fake agent against a no-op control.

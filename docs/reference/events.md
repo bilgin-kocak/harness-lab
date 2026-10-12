@@ -36,7 +36,7 @@ schema. The dashboard timeline, metrics and aggregation only ever see this schem
 | `usage` | `input_tokens`, `cached_input_tokens`, `cache_write_tokens`, `output_tokens`, `reasoning_output_tokens`, `model` |
 | `error` | `message`, plus provider fields |
 | `reasoning_event` | `count` only. Thinking text and signatures are dropped at parse time and never persisted. |
-| `system` | Named events: `harness_launch` (argv, CLI version, harness hash, applied components), `setup_command`, `verification`, `api_retry`, `compact_boundary`, `permission_denied`, `harness_components_ignored`, `hook` (a Claude Code hook finished: event, name, exit code, decision, `blocked`), `improve_baseline`, `improve_round_started`, `improve_round` (improvement tasks), `safety` (the run's safety summary), `non_json_output`, `unknown_record`, … |
+| `system` | Named events: `harness_launch` (argv, CLI version, harness hash, applied components), `setup_command`, `verification`, `api_retry`, `compact_boundary`, `permission_denied`, `harness_components_ignored`, `hook` (a Claude Code hook finished: event, name, exit code, decision, `blocked`), `improve_baseline`, `improve_round_started`, `improve_round` (improvement tasks), `safety` (the run's safety summary), `non_json_output`, `unknown_event` / `unknown_item` / `unknown_block` (records the parser does not know, summarised without content), `system_<subtype>`, … |
 
 Started and finished events with the same `call_id` are paired in the timeline; a started event
 without a matching finish is closed as `interrupted` when the run ends and counts as
@@ -49,7 +49,9 @@ AWS, Slack and Google keys, `NAME=value` assignments for secret-looking names, p
 and the literal values of secret-looking variables in Harness Lab's own environment), and flushed
 to the `events` table in batches while the run is still executing. Real harness runs also keep a
 sanitized copy of the provider stream as the `agent_stream` artifact and the CLI's stderr as
-`agent_stderr`, both redacted. See [Storage and data layout](storage.md).
+`agent_stderr` (Codex also `agent_last_message`), all redacted, also when the run is cancelled.
+Improvement runs keep them per round (`round_<n>_agent_stream`, `round_<n>_prompt`, ...). See
+[Storage and data layout](storage.md).
 
 ## The generic JSONL protocol
 

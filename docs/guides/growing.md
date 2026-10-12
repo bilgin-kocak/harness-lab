@@ -73,7 +73,7 @@ Every field is listed in [Grow YAML](../reference/grow-format.md).
 5. **Gate check**: the gate set runs against the candidate. Pass rate below the current version's,
    or no valid runs: `rejected`. With `gate.require: not_worse_ci` or `better_ci` the decision uses
    paired intervals instead (see [Grow YAML](../reference/grow-format.md)), of the pass rate or,
-   with `gate.metric` *(unreleased)*, of the score or improvement ratio.
+   with `gate.metric` *(unreleased)*, of the score.
 6. **Accept**: the candidate becomes current, fixed tasks leave the pool, unfixed ones gain an
    attempt, tasks at `max_attempts` retire. Runs that were `not_verified` because of an
    infrastructure failure never cost an attempt.
@@ -87,6 +87,8 @@ Every window and gate evaluation is an ordinary experiment, tagged with its role
 Each version's bundle, the exact optimizer view (`context.json`) and the raw proposal live under
 `.harnesslab/grow/<session>/v<N>/`, so any decision can be audited. `grow resume` continues from
 the saved state and discards a candidate whose evaluation was interrupted rather than accepting it.
+It imports the session's and its suite's plugins again (add more with `--plugin`) and uses the same
+pricing table lookup as `grow run` (`--pricing`), so budgets keep counting estimated costs.
 
 ## Optimizers
 

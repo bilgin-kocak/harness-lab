@@ -64,8 +64,10 @@ Paths are relative to the task file. Every field is listed in
 
 ## The verifier is the contract
 
-- `verified_pass` always comes from the exit code of `verification.command`. Keep agent-specific
-  instructions out of it; the verifier is what "done" means.
+- `verified_pass` comes from the exit code of `verification.command`, never from the agent. Two
+  task kinds add a condition: with an [answer key](discovery.md) the chosen F1 must also reach
+  `pass_threshold`, and an [improvement task](improvement.md) must also beat its baseline. Keep
+  agent-specific instructions out of the command; the verifier is what "done" means.
 - **Hidden tests** live next to the task (`tasks/<task>/verify/`) and are copied into the
   worktree only at verification time. An agent that edits visible tests under `protected_paths`
   fails before the verifier runs.

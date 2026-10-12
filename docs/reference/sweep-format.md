@@ -1,7 +1,9 @@
 # Sweep YAML
 
-`harnesslab sweep run <sweep.yaml|bundled-name>`. Bundled templates: `demo-fake`,
-`claude-config-search`. See [Configuration sweeps](../guides/sweeps.md) for the semantics.
+`harnesslab sweep run <sweep.yaml|bundled-name>`. Bundled templates: `demo-fake` (offline),
+`claude-config-search`, `improve-budget` and `improve-session` (these three use real API usage
+and have a cost cap; `harnesslab sweep list` shows which runners each sweep uses). See
+[Configuration sweeps](../guides/sweeps.md) for the semantics.
 
 ```yaml
 name: claude-config-search
@@ -35,7 +37,7 @@ keep_worktrees: false
 
 | Field | Default | Meaning |
 | --- | --- | --- |
-| `base_variant` | required | Merged under every configuration. Keys other than `runner` and `model` are runner options. |
+| `base_variant` | required | Merged under every configuration; the same keys as a [suite variant](task-and-suite-format.md#variant) except `id` (configurations are named after their factor levels). |
 | `factors` | required | Name → list of scalar levels, or name → `{level: {option: value}}`. The grid is the cartesian product. Configurations are named `factor=level\|…`. |
 | `repetitions` | `2` | "Verified" means the requirement holds over repetitions. |
 | `workload_by` | `suite` | One recommendation per suite, per task, or per tag. |

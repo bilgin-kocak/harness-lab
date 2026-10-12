@@ -20,7 +20,7 @@ Options::
 
     executable: claude
     max_turns: 30
-    permission_mode: acceptEdits            (default|acceptEdits|dontAsk|auto|plan|bypassPermissions)
+    permission_mode: acceptEdits            (acceptEdits|manual|default|dontAsk|auto|plan|bypassPermissions)
     allowed_tools: [...]                    (permission rule syntax, e.g. "Bash(python *)")
     disallowed_tools: [WebFetch, WebSearch]
     tools: null                             (restrict the built-in tool set, e.g. "Bash,Edit,Read")

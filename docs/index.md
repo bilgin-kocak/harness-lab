@@ -47,6 +47,14 @@ and every trace is stored in one provider-neutral schema.
   × harness bundle for the cheapest configuration that still passes.
 - **Grows a harness from its failures.** The `grow` loop edits a harness bundle with an optimizer,
   keeps only edits that fix failures without regressing a held-out gate, and records the lineage.
+- **Proves each component earns its place.** `ablate` tests every part of a harness bundle against
+  its own absence; every comparison carries paired, task-level intervals and a verdict only from
+  enough tasks.
+- **Measures more than pass/fail.** Improvement tasks (rounds against a measured objective),
+  safety as an axis (risky actions, canaries, a sentinel hook to A/B test), find-everything tasks
+  graded with an answer key, recovery from injected faults, and pass@k / best-of-k over attempts.
+- **Builds benchmarks from your code.** `suite mine` turns commits that changed code and tests
+  into verifier-backed tasks.
 
 ## Where to go
 
@@ -56,15 +64,19 @@ and every trace is stored in one provider-neutral schema.
 | Understand runs, experiments, sweeps and grow sessions | [Concepts](start/concepts.md) |
 | Benchmark Claude Code or Codex | [Run Claude Code](guides/claude-code.md), [Run Codex](guides/codex.md) |
 | Plug in your own agent | [Test your own harness](guides/your-own-harness.md) |
-| Build a benchmark of your own tasks | [Write a task suite](guides/task-suites.md) |
+| Build a benchmark of your own tasks | [Write a task suite](guides/task-suites.md), [Mine tasks from git history](guides/task-corpus.md) |
 | Find the cheapest configuration that still passes | [Configuration sweeps](guides/sweeps.md) |
 | Improve a harness automatically with a regression gate | [Grow the harness](guides/growing.md) |
+| Test whether each part of a harness helps | [Ablate a harness](guides/ablation.md) |
+| Measure optimization, safety, discovery or recovery | [Improvement tasks](guides/improvement.md), [Safety](guides/safety.md), [Find-everything tasks](guides/discovery.md), [Recovery tasks](guides/recovery.md) |
+| Read the results and their statistics | [Read and export results](guides/results.md), [The dashboard](guides/dashboard.md) |
 | Look up a flag, a YAML field or a metric | [Reference](reference/cli.md) |
 | Know what is deliberately not solved | [Honest limits](explanations/limits.md) |
 
 ## Requirements
 
-Python 3.12 or newer, git 2.20 or newer, Linux or macOS (Windows through WSL). Nothing else is
+Python 3.12 or 3.13 (the versions CI tests), git 2.20 or newer, Linux or macOS (Windows through
+WSL). Nothing else is
 needed for the demo: the fake runner needs no API keys. The Claude Code and Codex adapters need
 their CLIs on `PATH` and their credentials.
 

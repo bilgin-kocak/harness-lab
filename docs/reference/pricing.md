@@ -7,7 +7,8 @@ attributable.
 
 ## Where it is found
 
-In this order: `--pricing path/to/pricing.yaml` on `run`, `sweep run` or `grow run`; then
+In this order: `--pricing path/to/pricing.yaml` on `run`, `sweep run`, `grow run`, `grow resume`
+or `ablate run`; then
 `pricing.yaml` in the Harness Lab home directory; then `pricing.yaml` in the current directory.
 `harnesslab init` copies `pricing.example.yaml`; copy it to `pricing.yaml` and fill in the rates
 from your provider's current price list. The example's numbers are placeholders, not prices.

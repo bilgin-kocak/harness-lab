@@ -10,8 +10,9 @@ Everything lives under one directory, by default `./.harnesslab` (override with
   repos/<hash>-<commit>/   internal copies of git fixture repositories: base commit and ancestors, no remote
   worktrees/<exp>/<run>/   one detached worktree per run, removed after the run unless kept
   artifacts/<exp>/<run>/   prompt.txt · agent.diff · diff_stat.txt · git_status.txt
-                           verifier_stdout.txt · verifier_stderr.txt
+                           verifier_stdout.txt · verifier_stderr.txt · visible_check.txt
                            agent_stream.sanitized.jsonl · agent.stderr.log   (real harnesses)
+                           codex_last_message.txt                            (Codex)
                            system_prompt.txt · plugin/                       (Claude with a bundle)
   artifacts/<exp>/harness/<hash>/   snapshot of each harness bundle used by the experiment
   grow/<session>/v<N>/bundle/       each grow version's bundle
@@ -22,12 +23,20 @@ Everything lives under one directory, by default `./.harnesslab` (override with
   artifacts/<exp>/<run>/round-<n>/          improvement tasks: each round's prompt and harness files
   artifacts/<exp>/<run>/safety.json         the run's safety report (findings, counts, sentinel decisions)
   artifacts/<exp>/<run>/sentinel.jsonl      sentinel decisions when the sentinel hook ran
+  ablations/<bundle hash>/                  the full, minimal and leave-one-out bundles of `ablate run`
   logs/
 ```
 
+Every file a run writes is registered as an artifact of the run (kind, path, size, SHA-256), so
+the dashboard serves it at `/runs/{id}/artifacts/{kind}` and exports list it; text artifacts and
+small JSON artifacts are also inlined in exports, while the JSONL stream is only listed.
+
 `HARNESSLAB_DB_URL` points the database elsewhere (any SQLAlchemy URL); SQLite is the tested
-path. Schema changes are forward-only: new tables are created and new nullable columns are added
-on start-up, so an older database keeps working.
+path. Schema changes are forward-only: new tables, new nullable columns and new indexes are added
+on start-up, so a database made by an older version keeps working (two commands starting at once
+on an old database are fine). Each experiment records the process that runs it; an experiment
+left "running" by a process that was killed is marked `interrupted` the next time a command or
+the dashboard opens the database on the same machine.
 
 ## Tables
 

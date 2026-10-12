@@ -15,7 +15,7 @@ factors:
   reasoning_effort: [low, high]                       # --effort
   toolset:
     minimal: { allowed_tools: [Read, Edit, "Bash(python *)"] }
-    full:    { allowed_tools: [Read, Edit, Write, MultiEdit, Glob, Grep, LS, "Bash(python *)", "Bash(git diff *)"] }
+    full:    { allowed_tools: [Read, Edit, Write, MultiEdit, Glob, Grep, LS, "Bash(python *)", "Bash(python3 *)", "Bash(git diff *)", "Bash(git status *)"] }
   compaction:
     default: {}
     tight:   { autocompact: 100k }                     # --autocompact
@@ -23,6 +23,7 @@ factors:
     batched: { action_policy: batched }                # appended system prompt
     fine:    { action_policy: fine }
 repetitions: 2                 # "verified" means the pass-rate requirement holds over repetitions
+parallelism: 2
 workload_by: suite             # suite | task | tag  -> one recommendation per workload
 holdout_tasks: [consolidate-money-formatting]   # selected on the other tasks, reported on these
 sample: { max_configs: 8, seed: 7 }             # random subset of the 32-configuration grid
@@ -38,11 +39,17 @@ mapping of level name to option overrides. Every configuration is `base_variant`
 of each factor merged over it, named `factor=level|factor=level|…`.
 
 ```bash
+harnesslab sweep list                                # bundled and ./sweeps templates, offline or paid
 harnesslab sweep run sweeps/demo-fake.yaml           # fake runner: seconds, no credentials
 harnesslab sweep run sweeps/claude-config-search.yaml --dry-run   # print the expanded grid
 harnesslab sweep run sweeps/claude-config-search.yaml             # real API usage!
 harnesslab sweep report <experiment-id>              # recompute from the database
 ```
+
+Before a sweep with real harnesses starts, Harness Lab says how many runs of which harnesses will
+start and under what cost cap, and in a terminal asks first (`--yes` skips the question). Give
+every paid sweep a `budget: {max_cost_usd: …}`: no new run starts once the reported (or
+estimated) cost reaches it.
 
 ## The report
 
@@ -67,9 +74,9 @@ A configuration is *eligible* when its verified pass rate over valid runs meets
 The recommendation is also compared, task by task, with the runner-up and with the `baseline`
 configuration, using the paired analysis in [Read and export results](results.md#statistics).
 *(unreleased)* Those verdicts are about `verdict_metric`: `pass_rate` by default, `score` for
-tasks with a partial score and for [improvement tasks](improvement.md), or `improve_ratio` (only
-tasks where both sides have a ratio). The report header names the metric; eligibility and the
-ranking are not affected by it.
+tasks with a partial score and for [improvement tasks](improvement.md), `improve_ratio` (only
+tasks where both sides have a ratio) or `anytime` (improvement tasks on equal evaluation
+budgets). The report header names the metric; eligibility and the ranking are not affected by it.
 
 A sweep is an ordinary experiment whose variants carry `factors`, so `experiment show`, the
 compare view and the export all work on it.

@@ -57,8 +57,9 @@ For every cell the experiment service:
    (provider credentials go to the agent only, never to the verifier);
 5. captures `git status`, `git diff --stat` and `git diff` against the recorded base commit, which
    stays correct even if the agent committed or reset;
-6. runs the verifier in the same worktree: protected paths, then hidden-file injection, then the
-   verification command, then the optional partial-score command;
+6. runs the verifier in the same worktree: protected paths, then the optional visible check (on
+   a copy, before any hidden file is in place), then hidden-file injection, then the verification
+   command, then the optional partial-score command or answer-key grading;
 7. computes metrics and persists events, verdict and artifacts;
 8. removes the worktree unless `--keep-worktrees` was given.
 

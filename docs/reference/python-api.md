@@ -52,6 +52,7 @@ running totals for the whole session, so Harness Lab keeps only each round's sha
 | `options` | Every unknown variant key, verbatim. `config.get("max_turns", 30)`. |
 | `context_policy`, `tool_policy` | Recorded policies, if the variant set them. |
 | `harness_dir`, `harness_hash` | The harness bundle, if the variant carries one. |
+| `repetition` *(unreleased)* | The run's repetition number (0-based), set per run; the fake runner's `behaviors` list uses it. Not part of `config_hash()`. |
 | `improve_round`, `resume_session_id`, `persist_session` *(unreleased)* | Set per invocation by the improvement protocol (round number, a session to continue, whether to keep the session); not part of `config_hash()`. |
 | `config_hash()` | Stable hash of everything but `variant_id` and `harness_dir`. |
 
@@ -67,16 +68,25 @@ running totals for the whole session, so Harness Lab keeps only each round's sha
 | `provider_session_id`, `model_resolved`, `cli_version` | Provenance. |
 | `metadata` | Free-form dict stored with the run. |
 
+### `Availability`
+
+What `check_availability` returns: `runner`, `available`, `executable` (the resolved path),
+`version`, `detail` (why it is unavailable) and `unsupported_flags`, the flags Harness Lab would
+pass that the installed CLI's `--help` does not list (`harnesslab doctor` shows such a CLI as
+`incompatible`).
+
 ### `EventEmitter`
 
 ```python
 emit.emit(kind, *, name=None, payload=None, source=None, duration_ms=None,
-          call_id=None, parent_call_id=None, raw_metadata=None, timestamp=None) -> Event
+          call_id=None, parent_call_id=None, raw_metadata=None, timestamp=None,
+          unsummarized=None) -> Event
 emit.run_id; emit.redactor; emit.events
 ```
 
 Assigns sequence numbers and timestamps, redacts payloads, and flushes batches to storage while
-the run is executing. See [Events](events.md).
+the run is executing. `unsummarized` is the full value a payload summarizes (a large tool input):
+it is checked for safety canaries and never stored. See [Events](events.md).
 
 ### Process helpers
 

@@ -105,7 +105,8 @@ A mined task starts at `P`, but the source repository also contains `C`, the ans
 experiment snapshots a git repository, Harness Lab fetches **only the base commit and its
 ancestors** into its internal clone: no later commits, no other branches, no tags, no remote. An
 agent that runs `git log --all` in its worktree sees the history up to `P` and nothing after it.
-Each base commit gets its own internal clone under `~/.harnesslab/repos/`.
+Each base commit gets its own internal clone under `repos/` in the Harness Lab home (`./.harnesslab`
+by default).
 
 ## Caveats
 

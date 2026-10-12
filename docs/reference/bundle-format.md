@@ -17,7 +17,8 @@ harnesses/baseline/
 
 ## Rules
 
-- Allowed paths: the five top-level files above and anything under `skills/` or `agents/`.
+- Allowed paths: the four top-level files above (`harness.yaml`, `system_prompt.md`,
+  `hooks.json`, `fake.yaml`) and anything under `skills/` or `agents/`.
   No other files, no symlinks, no `..`.
 - Caps: 64 000 bytes per file, 512 000 bytes per bundle, 64 files.
 - `hooks.json` must be JSON with a top-level `hooks` object; `fake.yaml` and `harness.yaml` must

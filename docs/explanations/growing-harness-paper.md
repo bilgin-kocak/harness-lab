@@ -24,7 +24,7 @@ success halved.
 | Harness code (functions) | A [harness bundle](../reference/bundle-format.md): system prompt, skills, hooks, agents. Claude Code and Codex are closed, so the growable object is the outer layer. |
 | Strategy-free scaffold h₀ | An empty bundle, or `harnesses/baseline`. |
 | Task stream, K, Q, R_max | `split.train`, `window.size`, `window.min_fixed`, `window.max_attempts`. |
-| Function-level trace | The scrubbed optimizer view: trace digest, diff, verifier output, metrics. Hooks and skills as trace components are on the roadmap. |
+| Function-level trace | The scrubbed optimizer view: trace digest, diff, verifier output, metrics. Claude Code hook runs are recorded as `hook` events; showing them and skill activations to the optimizer is on the roadmap. |
 | Optimizer model (GPT-5.x in the paper) | `optimizer.kind: claude-cli` with any model, `manual`, or a plugin. |
 | Edit constraints (L functions, no deletes, no task ids) | `optimizer.max_files`, no deletions, no manifest edits, the leak lint. |
 | Gate set G, acceptance SR(h̃) ≥ SR(h) | `split.gate`; a candidate's gate pass rate must not fall below the current version's. |
@@ -48,8 +48,8 @@ success halved.
   can only grow prompts, skills, hooks and agents. A plugin runner with its own loop around the
   API would close that gap.
 - Its splits are 200 train, 50 gate and 50 final tasks. The bundled suite has three; the loop
-  proves the mechanics, not the effect size. A task corpus generator is on the
-  [roadmap](../project/roadmap.md).
+  proves the mechanics, not the effect size. `harnesslab suite mine` builds larger suites from a
+  repository's history ([Mine tasks from git history](../guides/task-corpus.md)).
 - Its evaluation domains are web retrieval and browsing; coding agents are untested there. That is
   the experiment Harness Lab now makes possible: a sweep with `harness: {baseline, grown}` crossed
   with `model: {small, large}` on a coding suite.

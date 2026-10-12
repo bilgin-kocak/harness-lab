@@ -14,9 +14,13 @@ No native Windows: process groups and worktree cleanup are POSIX-only. WSL works
 
 ## Statistics
 
-The compare view shows raw deltas. With repetitions there are no confidence intervals or
-significance tests yet, and the grow gate compares plain pass rates. On small suites the gate can
-decide on noise. Task-level bootstrap intervals are planned.
+Comparisons are paired by task: a task-level bootstrap interval and an exact sign test, with a
+verdict only from `--min-tasks` (default 5) paired tasks; repetitions reduce noise within a task
+but do not add tasks. The grow gate compares plain pass rates by default (`no_regression`), which
+can decide on noise on small suites; `gate.require: not_worse_ci | better_ci` uses the paired
+intervals instead. The intervals assume tasks are a sample of the work you care about: on a
+hand-picked or mined suite they say how sure the comparison is for those tasks, not for other
+projects. See [Read and export results](../guides/results.md#statistics).
 
 ## Metrics that depend on the harness
 

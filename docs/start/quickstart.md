@@ -13,7 +13,9 @@ harnesslab run demo --variants fake-reference,fake-noop
 
 `fake-reference` applies each task's reference solution. `fake-noop` changes nothing but *claims*
 success. The terminal shows the task × variant matrix: the reference passes every task, the no-op
-fails every task, because the verifier, not the agent, decides.
+fails every task, because the verifier, not the agent, decides. The demo has two more offline
+variants: `fake-partial` solves only the bug fix, and `fake-flaky` breaks the code, solves the
+task, then changes nothing, in turn over repetitions (try it with `--repetitions 3` to see pass@k).
 
 ```text
                     experiment exp_... — demo
@@ -43,9 +45,12 @@ harnesslab init my-lab
 cd my-lab
 ```
 
-`init` copies the demo suite (`suites/demo/`), the sweep templates (`sweeps/`), a starting harness
-bundle (`harnesses/baseline/`), the grow templates (`grow/`) and `pricing.example.yaml`. All of it
-is yours to edit.
+`init` copies the bundled suites (`suites/demo/`, `demo-improve/`, `demo-safety/`,
+`demo-discovery/`, `demo-recovery/`), the sweep templates (`sweeps/`), the grow templates
+(`grow/`), two harness bundles (`harnesses/baseline/`, a starting point, and
+`harnesses/sentinel/`, a hook that blocks risky actions) and `pricing.example.yaml`, plus a
+README. The copied sweep and grow templates point at the copied suites, so your edits are what
+they run. All of it is yours to edit.
 
 ## 4. Check the suite's verifiers
 
@@ -71,6 +76,12 @@ harnesslab grow list
 harnesslab run suites/demo/suite.yaml --variants claude-default   # needs the claude CLI
 harnesslab run suites/demo/suite.yaml --variants codex-default    # needs the codex CLI
 ```
+
+These use real API usage. Before starting any harness other than the fake one, `run`, `sweep run`,
+`grow run`, `grow resume` and `ablate run` say how many runs of which harnesses will start and
+under what cost cap, and in a terminal they ask first (default no). `--yes` skips the question;
+scripts without a terminal are told and go ahead. Bundled templates that use real harnesses carry
+a cost cap (`budget: {max_cost_usd: …}`); `harnesslab sweep list` marks them.
 
 Then [Run Claude Code](../guides/claude-code.md), [Run Codex](../guides/codex.md), or
 [Test your own harness](../guides/your-own-harness.md).

@@ -57,6 +57,20 @@
   margin: 0.25em 0.3em;
 }
 
+/* The problem section: the question, centred text, problem-and-fix cards */
+.md-typeset .hl-question {
+  margin: 0 auto 0.8em;
+  font-size: 1.2em;
+  text-align: center;
+}
+
+.md-typeset .hl-intro {
+  max-width: 44em;
+  margin: 0 auto 1em;
+  color: var(--md-default-fg-color--light);
+  text-align: center;
+}
+
 /* Screenshots: framed wherever they appear (the tour's are matched by path, since the tour is
    plain Markdown); slightly dimmed in the dark scheme, as the dashboard itself is light. */
 .md-typeset img.hl-shot,

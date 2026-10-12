@@ -44,32 +44,85 @@ The demo runs offline fake agents: no API key, done in seconds.
 
 [![The dashboard's task × variant matrix for the bundled demo: four offline fake agents, three tasks, three attempts each](assets/screenshots/experiment-matrix.png){ .hl-shot width="1100" height="1010" }](start/tour.md)
 
-## Why Harness Lab
+## The problem it solves
+
+**Which AI coding-agent setup actually works best on your code, and at what cost?**
+{ .hl-question }
+
+An AI coding agent is two things: the **model** (Claude, GPT, …) and the **harness** around it,
+the program that drives the model (Claude Code, the Codex CLI, …) with its system prompt,
+tools, settings, skills and hooks. Teams pay for both, yet rarely know which combination works
+on their code, because the usual comparisons are unreliable:
+{ .hl-intro }
 
 <div class="grid cards" markdown>
 
--   :material-gavel:{ .lg .middle } __The agent never grades itself__
+-   :material-gavel:{ .lg .middle } __The agent grades itself__
 
     ---
 
-    Hidden tests are injected after the agent exits, and an independent verifier decides. The
-    demo's no-op agent claims success on every task and fails every one.
+    It says "done, all tests pass", and sometimes that is not true; some agents even edit the
+    tests so that they pass.
 
--   :material-source-commit:{ .lg .middle } __Same commit, every run__
+    **Harness Lab:** hidden tests, injected after the agent finishes, decide pass or fail.
 
-    ---
-
-    Each run gets its own git worktree of the task's base commit. Task, prompt, bundle and
-    configuration hashes, CLI version and model are recorded with every run.
-
--   :material-scale-balance:{ .lg .middle } __Cost next to success__
+-   :material-source-commit:{ .lg .middle } __Comparisons are not fair__
 
     ---
 
-    Tokens, cost, LLM calls, tool calls and wall time sit beside verified success, with no
-    composite score. Comparisons are paired by task, with bootstrap intervals and a sign test.
+    Different starting code, different tasks, one lucky run.
+
+    **Harness Lab:** every run starts from the same commit in its own copy, and repeated runs
+    with paired statistics say whether a difference is real.
+
+-   :material-layers-outline:{ .lg .middle } __Model and harness get mixed up__
+
+    ---
+
+    A setup does better, and nobody knows whether the model or the harness did it.
+
+    **Harness Lab:** the model, the CLI version and every setting are recorded separately, so
+    each can be changed on its own.
+
+-   :material-cash-multiple:{ .lg .middle } __Cost is ignored__
+
+    ---
+
+    Two setups solve the same tasks, and one of them costs many times more.
+
+    **Harness Lab:** cost, tokens, LLM calls and time sit next to success, and a sweep finds the
+    cheapest setup that still passes.
+
+-   :material-update:{ .lg .middle } __Things change underneath you__
+
+    ---
+
+    New CLI releases every week, new models, edited instructions: did the change help or hurt?
+
+    **Harness Lab:** run the same tasks before you upgrade or merge, and compare.
+
+-   :material-source-repository:{ .lg .middle } __Benchmarks are not your code__
+
+    ---
+
+    Public leaderboards measure someone else's tasks.
+
+    **Harness Lab:** `suite mine` turns your own git history into tasks with hidden tests.
 
 </div>
+
+!!! example "What an answer looks like (made-up numbers)"
+
+    Your team uses Claude Code and asks: Opus or Sonnet? High or medium reasoning effort? Do our
+    custom instructions help? Harness Lab mines 50 tasks from your repository's history, runs
+    every setup three times on each task, checks every result with the hidden tests, and reports
+    something like: *Sonnet at medium effort passes 84% at $0.40 a task and Opus 86% at $1.90;
+    the 2-point difference is not significant, so use Sonnet. Dropping the custom instructions
+    changes nothing.*
+
+In short: A/B testing for AI coding agents, so that choices of agent, model, settings and
+instructions rest on evidence instead of guesses.
+{ .hl-intro }
 
 ## How it works
 

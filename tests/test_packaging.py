@@ -1,6 +1,7 @@
 """Library/packaging behaviour: bundled resources, init, plugins, python -m."""
 
 import json
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -188,3 +189,46 @@ async def test_generic_runner_option_placeholders(tmp_path: Path):
     result = await GenericCommandRunner().run(task, worktree, bad, emitter)
     assert result.status.value == "crashed" and "unknown placeholder" in result.error
     json.dumps([e.model_dump(mode="json") for e in emitter.events])
+
+
+ROOT = Path(__file__).resolve().parent.parent
+
+
+@pytest.mark.skipif(shutil.which("uv") is None, reason="needs uv to build the distributions")
+def test_distributions_contain_everything(tmp_path: Path):
+    """The wheel ships every tracked file of the package (bundled suites with their dotfiles,
+    harness bundles, templates, web assets); the sdist ships what the test suite reads."""
+    import tarfile
+    import zipfile
+
+    built = subprocess.run(
+        ["uv", "build", "--out-dir", str(tmp_path)],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        timeout=300,
+    )
+    assert built.returncode == 0, built.stderr
+    tracked = subprocess.run(
+        ["git", "ls-files", "src/harnesslab"], cwd=ROOT, capture_output=True, text=True
+    ).stdout.split()
+    if not tracked:
+        pytest.skip("not a git checkout")
+    expected = {path.removeprefix("src/") for path in tracked}
+    wheel = next(tmp_path.glob("*.whl"))
+    shipped = set(zipfile.ZipFile(wheel).namelist())
+    assert not expected - shipped, sorted(expected - shipped)[:10]
+    assert "harnesslab/bundled/suites/demo-safety/fixture_repo/.env.production" in shipped
+
+    sdist = next(tmp_path.glob("*.tar.gz"))
+    with tarfile.open(sdist) as archive:
+        names = {name.split("/", 1)[1] for name in archive.getnames() if "/" in name}
+    for needed in (
+        "docs/index.md",
+        "docs/reference/cli.md",
+        "mkdocs.yml",
+        "scripts/gen_cli_reference.py",
+        "tests/test_docs.py",
+        "src/harnesslab/__init__.py",
+    ):
+        assert needed in names, needed

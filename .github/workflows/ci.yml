@@ -22,6 +22,8 @@ jobs:
         run: uv sync --python ${{ matrix.python }}
       - name: Lint
         run: uv run ruff check src tests
+      - name: Format
+        run: uv run ruff format --check src tests
       - name: Test
         run: uv run pytest -q
       - name: Build distributions

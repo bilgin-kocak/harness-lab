@@ -3,14 +3,17 @@ constructed streams (see tests/fixtures/*/README.md)."""
 
 import asyncio
 import json
+import sqlite3
+from contextlib import closing
 from pathlib import Path
 
 import pytest
+import yaml
 
 from harnesslab.core.events import EventEmitter
 from harnesslab.core.models import RepoSpec, RunnerConfig, RunStatus, TaskSpec, VerificationSpec
-from harnesslab.runners import opencode
-from harnesslab.runners._cli import clear_help_cache, help_flags
+from harnesslab.runners import hermes, opencode
+from harnesslab.runners._cli import argv_flags, clear_help_cache, help_flags
 from harnesslab.runners.opencode import OpenCodeRunner, build_opencode_command
 from harnesslab.runners.pi import (
     OPT_IN_ERROR,
@@ -26,6 +29,7 @@ from tests.conftest import FIXTURES
 PI_HELP = FIXTURES / "cli_help" / "pi-1.1.0.txt"
 OC1_HELP = FIXTURES / "cli_help" / "opencode-1.19.0-run.txt"
 OC2_HELP = FIXTURES / "cli_help" / "opencode-2.0.27-run.txt"
+HERMES_HELP = FIXTURES / "cli_help" / "hermes-v2026.9.24-chat.reconstructed.txt"
 FAKE_VARS = [
     "FAKE_CLI_STREAM",
     "FAKE_CLI_EXIT",
@@ -40,6 +44,7 @@ FAKE_VARS = [
     "FAKE_CLI_STDERR_SECRET",
     "FAKE_CLI_COPY",
     "FAKE_CLI_REJECT_HELP",
+    "FAKE_CLI_REJECT_VALUE",
 ]
 
 
@@ -569,3 +574,231 @@ async def test_opencode_timeout_removes_its_state(fake_cli: Path, tmp_path: Path
     )
     assert result.status == RunStatus.TIMEOUT
     assert not Path(json.loads(env_out.read_text())["XDG_CONFIG_HOME"]).parent.exists()
+
+
+# -- Hermes Agent --------------------------------------------------------------
+
+HERMES_SESSION = "20261012_090000_a1b2c3"
+
+
+def _hermes(
+    fake_cli: Path, model: str | None = "anthropic/claude-sonnet-4.6", **options
+) -> RunnerConfig:
+    return RunnerConfig(
+        runner="hermes",
+        model=model,
+        options={"executable": str(fake_cli), "env_passthrough": FAKE_VARS, **options},
+    )
+
+
+def _state_db(path: Path, *, models: bool = True) -> Path:
+    with closing(sqlite3.connect(path)) as db:
+        db.execute(
+            "CREATE TABLE sessions (id TEXT PRIMARY KEY, model TEXT, started_at REAL,"
+            " api_call_count INTEGER, input_tokens INTEGER, output_tokens INTEGER,"
+            " cache_read_tokens INTEGER, cache_write_tokens INTEGER, reasoning_tokens INTEGER,"
+            " estimated_cost_usd REAL, actual_cost_usd REAL, cost_status TEXT)"
+        )
+        db.execute(
+            "INSERT INTO sessions VALUES (?, 'claude-sonnet-4.6', 1791795600.0, 4, 1500, 330,"
+            " 7300, 1400, 120, 0.0123, 0, 'estimated')",
+            (HERMES_SESSION,),
+        )
+        if models:
+            db.execute(
+                "CREATE TABLE session_model_usage (session_id TEXT, model TEXT, task TEXT,"
+                " api_call_count INTEGER, input_tokens INTEGER, output_tokens INTEGER,"
+                " cache_read_tokens INTEGER, cache_write_tokens INTEGER, reasoning_tokens INTEGER)"
+            )
+            for model, calls in (("claude-sonnet-4.6", 3), ("claude-haiku-4.5", 1)):
+                db.execute(
+                    "INSERT INTO session_model_usage VALUES (?, ?, '', ?, 100, 10, 0, 0, 5)",
+                    (HERMES_SESSION, model, calls),
+                )
+        db.commit()
+    return path
+
+
+def test_hermes_command_and_guards():
+    argv = hermes.build_hermes_command(RunnerConfig(runner="hermes"), Path("/wt"))
+    assert argv == [
+        "hermes",
+        "chat",
+        "--query-file",
+        "-",
+        "--format",
+        "stream-json",
+        "--source",
+        "tool",
+        "--in",
+        "/wt",
+        "-t",
+        "file,terminal",
+    ]
+    full = hermes.build_hermes_command(
+        RunnerConfig(
+            runner="hermes",
+            model="anthropic/claude-sonnet-4.6",
+            options={"provider": "openrouter", "effort": "HIGH", "max_turns": 40, "yolo": True},
+        ),
+        Path("/wt"),
+    )
+    pairs = {full[i]: full[i + 1] for i in range(len(full) - 1)}
+    assert pairs["--provider"] == "openrouter" and pairs["--reasoning"] == "high"
+    assert pairs["--max-turns"] == "40" and full[-1] == "--yolo"
+    known = help_flags(HERMES_HELP.read_text())
+    assert known is not None and set(argv_flags(full)) <= known
+    with pytest.raises(ValueError, match="reasoning level"):
+        hermes.build_hermes_command(
+            RunnerConfig(runner="hermes", options={"reasoning": "huge"}), Path("/wt")
+        )
+    plain = RunnerConfig(runner="hermes")
+    assert hermes.config_error(plain) is None
+    yolo = plain.model_copy(update={"options": {"yolo": True}})
+    assert "allow_dangerous_permissions" in (hermes.config_error(yolo) or "")
+    opted = plain.model_copy(
+        update={"options": {"yolo": True, "allow_dangerous_permissions": True}}
+    )
+    assert hermes.config_error(opted) is None
+    for extra in (["-w"], ["--yolo"], ["--resume", "latest"], ["--profile", "work"]):
+        problem = hermes.config_error(plain.model_copy(update={"options": {"extra_args": extra}}))
+        assert problem and extra[0] in problem, extra
+    env = plain.model_copy(update={"options": {"env_passthrough": ["HERMES_YOLO_MODE"]}})
+    assert "HERMES_YOLO_MODE" in (hermes.config_error(env) or "")
+    assert hermes.config_error(plain.model_copy(update={"options": {"max_turns": "many"}}))
+
+
+def test_hermes_home_is_a_profile_directory_with_safe_settings(tmp_path: Path):
+    home = hermes.prepare_home(tmp_path, "Be careful.")
+    assert home == tmp_path / "profiles" / "harnesslab"
+    config = yaml.safe_load((home / "config.yaml").read_text())
+    assert config["approvals"] == {"mode": "manual", "single_query_mode": "deny"}
+    assert config["memory"] == {"memory_enabled": False, "user_profile_enabled": False}
+    assert config["auxiliary"]["title_generation"]["enabled"] is False
+    assert config["auxiliary"]["background_review"]["enabled"] is False
+    assert config["curator"]["enabled"] is False and config["updates"]["check"] is False
+    assert config["agent"]["system_prompt"] == "Be careful."
+    bare = hermes.prepare_home(tmp_path / "bare")
+    assert "agent" not in yaml.safe_load((bare / "config.yaml").read_text())
+
+
+def test_hermes_session_costs_from_state_db(tmp_path: Path):
+    assert hermes.read_session(tmp_path, None) == {}
+    _state_db(tmp_path / "state.db")
+    session = hermes.read_session(tmp_path, HERMES_SESSION)
+    assert session["cost_usd"] == pytest.approx(0.0123) and session["cost_kind"] == "estimated"
+    assert session["api_calls"] == 4 and session["reasoning_tokens"] == 120
+    assert set(session["usage_by_model"]) == {"claude-sonnet-4.6", "claude-haiku-4.5"}
+    only = tmp_path / "only"
+    only.mkdir()
+    _state_db(only / "state.db", models=False)
+    assert hermes.read_session(only, "another-id")["api_calls"] == 4  # the latest session
+    broken = tmp_path / "broken"
+    broken.mkdir()
+    (broken / "state.db").write_text("not a database")
+    assert "cannot read Hermes state.db" in hermes.read_session(broken, None)["error"]
+
+
+async def test_hermes_runs_end_to_end(fake_cli: Path, tmp_path: Path, monkeypatch):
+    worktree, artifacts = _dirs(tmp_path)
+    env_out, copied = tmp_path / "env.json", tmp_path / "copied"
+    db = _state_db(tmp_path / "state.db")
+    monkeypatch.setenv("FAKE_CLI_STREAM", str(FIXTURES / "hermes" / "chat_success.jsonl"))
+    monkeypatch.setenv("FAKE_CLI_PROMPT_OUT", str(tmp_path / "prompt.txt"))
+    monkeypatch.setenv("FAKE_CLI_ENV_OUT", str(env_out))
+    monkeypatch.setenv("FAKE_CLI_VERSION", "Hermes Agent v2026.9.24 (2026-09-24)")
+    monkeypatch.setenv("FAKE_CLI_HELP", str(HERMES_HELP))
+    monkeypatch.setenv(
+        "FAKE_CLI_COPY",
+        f"$HERMES_HOME/config.yaml=>{copied}/config.yaml;{db}=>$HERMES_HOME/state.db",
+    )
+    monkeypatch.setenv("OPENROUTER_API_KEY", "sk-or-test")
+    monkeypatch.setenv("CODEX_HOME", "/somewhere/codex")
+    config = _hermes(fake_cli, provider="openrouter", action_policy="fine")
+    config.harness_dir = _bundle(tmp_path)
+    emit = _emitter()
+    result = await hermes.HermesRunner(artifacts_dir=artifacts).run(
+        _task(worktree), worktree, config, emit
+    )
+
+    assert result.status == RunStatus.COMPLETED and result.error is None, result.error
+    assert result.final_message == "Fixed: add() now returns a + b, and the test passes."
+    assert result.usage.input_tokens == 1500 and result.usage.reasoning_output_tokens == 120
+    assert result.reported_cost_usd == pytest.approx(0.0123)
+    assert (result.llm_calls, result.num_turns) == (4, 4)
+    assert set(result.usage_by_model) == {"claude-sonnet-4.6", "claude-haiku-4.5"}
+    assert result.model_resolved == "claude-sonnet-4.6"
+    assert result.provider_session_id == HERMES_SESSION
+    assert result.cli_version == "Hermes Agent v2026.9.24 (2026-09-24)"
+    assert result.metadata["blocked_actions"] == 1 and result.metadata["cost_kind"] == "estimated"
+    assert (tmp_path / "prompt.txt").read_text() == "Fix the bug please"
+
+    env = json.loads(env_out.read_text())
+    home = Path(env["HERMES_HOME"])
+    assert home.parent.name == "profiles" and home.name == "harnesslab"
+    assert home.parent.parent.name.startswith("harnesslab-hermes-")
+    assert not home.parent.parent.exists()
+    assert env["HERMES_WRITE_SAFE_ROOT"] == str(worktree) and env["OTEL_SDK_DISABLED"] == "true"
+    assert env["OPENROUTER_API_KEY"] == "sk-or-test" and "CODEX_HOME" not in env
+    settings = yaml.safe_load((copied / "config.yaml").read_text())
+    assert settings["approvals"]["mode"] == "manual"
+    prompt = settings["agent"]["system_prompt"]
+    assert prompt.startswith("Always run the tests.") and "## Skill: tests-first" in prompt
+    assert "small, incremental steps" in prompt
+    assert (artifacts / "system_prompt.txt").read_text() == prompt
+
+    launch = next(e for e in emit.events if e.name == "harness_launch")
+    argv = launch.payload["argv"]
+    assert argv[1:4] == ["chat", "--query-file", "-"]
+    assert argv[argv.index("--in") + 1] == str(worktree)
+    assert launch.payload["harness_components"] == ["system_prompt", "skills"]
+    ignored = next(e for e in emit.events if e.name == "harness_components_ignored")
+    assert ignored.payload["components"] == ["hooks.json"]
+    sanitized = (artifacts / "agent_stream.sanitized.jsonl").read_text()
+    assert sanitized.count("\n") == 18 and "SECRET" not in sanitized
+    assert "SECRET" not in json.dumps([e.payload for e in emit.events])
+    report = analyze_run(emit.events, worktree=worktree, home=tmp_path / "home")
+    assert report.safe and report.blocked == 1
+
+
+async def test_hermes_that_cannot_start_is_unavailable(fake_cli: Path, tmp_path: Path, monkeypatch):
+    worktree, _ = _dirs(tmp_path)
+    monkeypatch.setenv("FAKE_CLI_STREAM", str(FIXTURES / "hermes" / "chat_failed_start.jsonl"))
+    monkeypatch.setenv("FAKE_CLI_EXIT", "1")
+    monkeypatch.setenv("FAKE_CLI_STDERR_TEXT", "No API key found for provider 'openrouter'")
+    result = await hermes.HermesRunner().run(
+        _task(worktree), worktree, _hermes(fake_cli), _emitter()
+    )
+    assert result.status == RunStatus.UNAVAILABLE
+    assert "stopped before calling a model (exit 1)" in (result.error or "")
+    assert "No API key found" in (result.error or "")
+    assert "credentials or agent init failed" in (result.error or "")
+
+
+async def test_hermes_refusals_of_a_flag_and_a_value(fake_cli: Path, tmp_path: Path, monkeypatch):
+    worktree, _ = _dirs(tmp_path)
+    monkeypatch.setenv("FAKE_CLI_REJECT", "--source")
+    monkeypatch.setenv("FAKE_CLI_REJECT_STYLE", "argparse")
+    result = await hermes.HermesRunner().run(
+        _task(worktree), worktree, _hermes(fake_cli), _emitter()
+    )
+    assert result.status == RunStatus.UNAVAILABLE and "rejected --source" in (result.error or "")
+
+    monkeypatch.delenv("FAKE_CLI_REJECT")
+    monkeypatch.setenv("FAKE_CLI_REJECT_VALUE", "--reasoning")
+    config = _hermes(fake_cli, reasoning="low")
+    result = await hermes.HermesRunner().run(_task(worktree), worktree, config, _emitter())
+    assert result.status == RunStatus.UNAVAILABLE
+    assert "rejected --reasoning 'low' (it accepts: one, two)" in (result.error or "")
+
+
+async def test_hermes_timeout_removes_its_home(fake_cli: Path, tmp_path: Path, monkeypatch):
+    worktree, _ = _dirs(tmp_path)
+    env_out = tmp_path / "env.json"
+    monkeypatch.setenv("FAKE_CLI_MODE", "hang")
+    monkeypatch.setenv("FAKE_CLI_ENV_OUT", str(env_out))
+    result = await hermes.HermesRunner().run(
+        _task(worktree, timeout=1), worktree, _hermes(fake_cli), _emitter()
+    )
+    assert result.status == RunStatus.TIMEOUT
+    assert not Path(json.loads(env_out.read_text())["HERMES_HOME"]).exists()

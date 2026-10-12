@@ -134,6 +134,6 @@ def _load_entry_point_runners() -> None:
 
 def _ensure_builtin_runners() -> None:
     # Import side effects register the built-in adapters.
-    from harnesslab.runners import claude, codex, fake, generic, opencode, pi  # noqa: F401
+    from harnesslab.runners import claude, codex, fake, generic, hermes, opencode, pi  # noqa: F401
 
     _load_entry_point_runners()

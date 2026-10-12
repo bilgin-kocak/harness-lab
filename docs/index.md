@@ -1,5 +1,4 @@
 ---
-title: Harness Lab
 description: >-
   Open-source controlled experiments for AI coding-agent harnesses: the same task, from the same
   commit, through Claude Code, Codex or your own agent, judged by hidden tests and compared with

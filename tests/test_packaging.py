@@ -1,14 +1,17 @@
 """Library/packaging behaviour: bundled resources, init, plugins, python -m."""
 
 import json
+import re
 import shutil
 import subprocess
 import sys
 from pathlib import Path
 
 import pytest
+import yaml
 from typer.testing import CliRunner
 
+import harnesslab
 from harnesslab.bundled import bundled_suite_path, list_bundled_suites, list_bundled_sweeps
 from harnesslab.cli import app
 from harnesslab.experiments.spec import SpecError, load_run_target, resolve_suite_target
@@ -224,6 +227,7 @@ def test_distributions_contain_everything(tmp_path: Path):
     with tarfile.open(sdist) as archive:
         names = {name.split("/", 1)[1] for name in archive.getnames() if "/" in name}
     for needed in (
+        "CITATION.cff",
         "docs/index.md",
         "docs/start/overview.md",
         "docs/reference/cli.md",
@@ -236,3 +240,21 @@ def test_distributions_contain_everything(tmp_path: Path):
         "src/harnesslab/__init__.py",
     ):
         assert needed in names, needed
+
+
+def test_citation_matches_the_release():
+    """CITATION.cff, the landing page's BibTeX and the changelog name the same release, so
+    "Cite this repository" never points at an old version (see docs/project/releasing.md)."""
+    root = Path(__file__).resolve().parent.parent
+    citation = yaml.safe_load((root / "CITATION.cff").read_text(encoding="utf-8"))
+    assert citation["cff-version"] == "1.2.0"
+    assert citation["version"] == harnesslab.__version__
+    heading = re.search(
+        rf"^## {re.escape(harnesslab.__version__)} \((\d{{4}}-\d{{2}}-\d{{2}})\)$",
+        (root / "CHANGELOG.md").read_text(encoding="utf-8"),
+        re.M,
+    )
+    assert heading is not None, "CHANGELOG.md has no heading for this version"
+    assert str(citation["date-released"]) == heading.group(1)
+    landing = (root / "docs" / "index.md").read_text(encoding="utf-8")
+    assert f"version = {{{harnesslab.__version__}}}" in landing

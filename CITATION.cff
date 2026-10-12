@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+message: If you use Harness Lab in your research, please cite it as below.
+type: software
+title: "Harness Lab: controlled experiments for AI coding-agent harnesses"
+abstract: >-
+  A local-first experimentation platform for evaluating AI coding-agent harnesses. The same task,
+  from the same commit, runs through Claude Code, the Codex CLI or any other agent in isolated git
+  worktrees; an independent verifier with hidden tests decides success, and runs are compared on
+  verified success, cost, tokens, LLM calls and behaviour with paired, task-level statistics.
+authors:
+  - family-names: Kocak
+    given-names: Bilgin
+version: 0.3.0
+date-released: "2026-10-12"
+license: MIT
+repository-code: https://github.com/bilgin-kocak/harness-lab
+url: https://bilgin-kocak.github.io/harness-lab/
+keywords:
+  - AI coding agents
+  - agent harness
+  - evaluation
+  - benchmarking
+  - reproducibility
+  - Claude Code
+  - Codex CLI

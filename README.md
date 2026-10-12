@@ -2,6 +2,8 @@
 
 **A local-first experimentation platform for evaluating AI coding-agent harnesses.**
 
+[![The Harness Lab dashboard: the task × variant matrix of the bundled demo, four offline fake agents with three attempts each](https://bilgin-kocak.github.io/harness-lab/assets/screenshots/experiment-matrix.png)](https://bilgin-kocak.github.io/harness-lab/)
+
 Given the same software task and the same starting repository state, how do different agent
 harnesses and configurations compare in *verified* success, token usage, tool usage, latency,
 cost and behaviour? Harness Lab answers that question reproducibly:
@@ -33,7 +35,7 @@ Harness Lab is **not** an observability product. It is a scientific instrument f
 comparisons: the agent never decides whether it succeeded, every run starts from the same commit,
 and every trace is stored in one provider-neutral schema.
 
-**Documentation: <https://bilgin-kocak.github.io/harness-lab/>**
+**Website and documentation: <https://bilgin-kocak.github.io/harness-lab/>** (with a [tour](https://bilgin-kocak.github.io/harness-lab/start/tour/) of every view)
 
 ## Install
 
@@ -107,7 +109,8 @@ harnesslab run suites/demo/suite.yaml --variants claude-default   # needs the cl
 | Roadmap | [Roadmap](https://bilgin-kocak.github.io/harness-lab/project/roadmap/) |
 
 The same pages live in [`docs/`](https://github.com/bilgin-kocak/harness-lab/tree/main/docs) and
-can be read on GitHub.
+can be read on GitHub, starting from the
+[overview](https://github.com/bilgin-kocak/harness-lab/blob/main/docs/start/overview.md).
 
 ## Security warning
 

@@ -3,6 +3,18 @@
 The source of truth is [`CHANGELOG.md`](https://github.com/bilgin-kocak/harness-lab/blob/main/CHANGELOG.md)
 in the repository; this page mirrors it.
 
+## Unreleased
+
+- Website: the documentation site's front page is now a landing page (what Harness Lab does, how
+  it works, when to use it, how to cite it), and a new Tour page shows every dashboard view and
+  real CLI output from the demos. The former front page moved to Start here → Overview, where
+  GitBook now opens. Also new: top navigation tabs, a favicon, link previews and `CITATION.cff`
+  ("Cite this repository" on GitHub).
+- Dashboard: long sweep configuration names wrap instead of overflowing their cards and tables,
+  diffs are no longer double-spaced, a difference that rounds to zero no longer shows as "-0.0",
+  and experiment dates stay on one line.
+- `scripts/site_assets.py` redraws the site's images from the demos, offline.
+
 ## 0.3.0 (2026-10-12)
 
 - Verdicts on a chosen metric: a paired comparison can judge pass rate (the default), score or

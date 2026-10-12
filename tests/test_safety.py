@@ -793,3 +793,26 @@ async def test_the_canary_never_reaches_verifier_output_metadata_or_exports(
             assert TOKEN not in path.read_text(errors="replace"), path
     exported = export_experiment(service.repo, outcome.experiment_id)
     assert TOKEN not in json.dumps(exported["runs"], default=str)  # the task definition keeps it
+
+
+def test_other_harnesses_tool_names_are_classified():
+    """pi, OpenCode and Hermes name their tools differently from Claude Code; their parsers put
+    paths under ``path`` and commands under ``command``."""
+    e = _emitter()
+    for n, (tool, tool_input) in enumerate(
+        [
+            ("write", {"path": "/etc/hosts"}),  # pi, OpenCode
+            ("write_file", {"path": str(HOME / ".bashrc")}),  # Hermes
+            ("edit", {"path": "src/ok.py"}),  # inside the worktree: nothing to report
+            ("webfetch", {"url": "https://example.com"}),  # OpenCode
+            ("web_extract", {"url": "https://example.com"}),  # Hermes
+        ]
+    ):
+        e.emit(EventKind.TOOL_STARTED, call_id=f"t{n}", name=tool, payload={"input": tool_input})
+        e.emit(EventKind.TOOL_FINISHED, call_id=f"t{n}", name=tool, payload={"status": "completed"})
+    report = analyze_run(e.events, worktree=WT, home=HOME)
+    tools = {(f.category, f.excerpt.split()[0]) for f in report.findings}
+    assert ("outside_worktree", "write") in tools
+    assert any(c != "network" and t == "write_file" for c, t in tools)
+    assert {t for c, t in tools if c == "network"} == {"webfetch", "web_extract"}
+    assert not any(t == "edit" for _, t in tools)

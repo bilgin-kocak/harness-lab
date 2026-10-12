@@ -19,7 +19,7 @@ from typing import Any
 
 from harnesslab.core.events import EventEmitter, EventKind
 from harnesslab.core.models import UsageTotals
-from harnesslab.trace.normalize import preview, safe_unknown_summary
+from harnesslab.trace.normalize import preview, safe_unknown_summary, summarize_tool_input
 
 FILE_TOOLS = {"Edit": "edit", "Write": "write", "MultiEdit": "edit", "NotebookEdit": "edit"}
 KNOWN_TYPES = {
@@ -130,16 +130,7 @@ def _tool_result_text(content: Any) -> str:
 
 
 def _summarize_tool_input(name: str, tool_input: Any) -> dict[str, Any]:
-    if not isinstance(tool_input, dict):
-        return {"value": preview(tool_input, 500)}
-    summary: dict[str, Any] = {}
-    for key, value in tool_input.items():
-        if key in ("content", "new_string", "old_string", "edits", "new_source"):
-            size = len(json.dumps(value, default=str)) if not isinstance(value, str) else len(value)
-            summary[key] = f"<{size} chars>" if size > 500 else preview(value, 500)
-        else:
-            summary[key] = preview(value, 500)
-    return summary
+    return summarize_tool_input(tool_input)
 
 
 class ClaudeStreamParser:

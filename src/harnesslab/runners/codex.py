@@ -48,12 +48,12 @@ from harnesslab.runners._cli import (
     SanitizedStreamWriter,
     check_flags,
     option_list,
+    own_flags_only,
     probe_cli,
     redact_file_in_place,
     refusal_message,
 )
 from harnesslab.runners.base import HarnessRunner, register_runner
-from harnesslab.runners.claude import own_flags_only
 from harnesslab.runners.policies import action_policy_text
 from harnesslab.trace.codex_parser import CodexStreamParser
 

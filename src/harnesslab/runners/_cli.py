@@ -7,17 +7,29 @@ import json
 import os
 import re
 import shutil
+import tempfile
+from collections.abc import Iterator, Mapping
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 
-from harnesslab.core.models import Availability
+from harnesslab.core.models import Availability, RunnerConfig
 from harnesslab.trace.redaction import Redactor, default_redactor
 
 
 async def probe_cli(
-    runner: str, executable: str, version_args: list[str] | None = None
+    runner: str,
+    executable: str,
+    version_args: list[str] | None = None,
+    *,
+    env: Mapping[str, str] | None = None,
+    cwd: Path | None = None,
 ) -> Availability:
-    """Locate ``executable`` on PATH and ask it for its version."""
+    """Locate ``executable`` on PATH and ask it for its version.
+
+    ``env`` and ``cwd`` keep the probe away from the user's own configuration, for CLIs that
+    read or migrate it on every start (the default is the caller's environment and directory).
+    """
     path = shutil.which(executable)
     if path is None:
         return Availability(
@@ -33,6 +45,8 @@ async def probe_cli(
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
             stdin=asyncio.subprocess.DEVNULL,
+            env=dict(env) if env is not None else None,
+            cwd=str(cwd) if cwd is not None else None,
         )
         try:
             out, err = await asyncio.wait_for(proc.communicate(), timeout=20)
@@ -67,8 +81,16 @@ _ANSI = re.compile(r"\x1b\[[0-9;?]*[A-Za-z]")
 _FORCE_COLOR = ("CLICOLOR_FORCE", "FORCE_COLOR")
 # A flag in a command line: the whole word, optionally with =value.
 _ARGV_FLAG = re.compile(r"--?[A-Za-z][A-Za-z0-9_-]*(?:=.*)?")
-# How a CLI refuses a flag it does not know: commander (Claude Code) and clap (Codex).
-_REJECTED = re.compile(r"(?:unknown option|unexpected argument) '(--?[A-Za-z][A-Za-z0-9_-]*)'")
+# How a CLI refuses a flag it does not know: commander (Claude Code), clap (Codex), pi
+# ("Unknown option: -x", "Unknown option(s): --x, --y"), Effect (OpenCode 2: "Unrecognized flag:
+# --x in command opencode run") and argparse (Hermes: "unrecognized arguments: --x").
+_FLAG = r"(--?[A-Za-z][A-Za-z0-9_-]*)"
+_REJECTED_PATTERNS = (
+    re.compile(rf"(?:unknown option|unexpected argument) '{_FLAG}'"),
+    re.compile(rf"Unknown option(?:\(s\))?: {_FLAG}"),
+    re.compile(rf"Unrecognized flag: {_FLAG}"),
+    re.compile(rf"unrecognized arguments: {_FLAG}"),
+)
 # How a CLI refuses a value of a flag it knows.  Commander: "option '--permission-mode <mode>'
 # argument 'x' is invalid. Allowed choices are a, b."  Clap: "invalid value 'x' for
 # '--sandbox <SANDBOX_MODE>'" followed by "[possible values: a, b]".  Values are not checked
@@ -79,17 +101,30 @@ _REJECTED_COMMANDER_VALUE = re.compile(
     re.M,
 )
 _REJECTED_CLAP_VALUE = re.compile(r"invalid value '([^']*)' for '([^']*)'")
+# argparse: "argument --reasoning: invalid choice: 'x' (choose from 'a', 'b')".
+_REJECTED_ARGPARSE_VALUE = re.compile(
+    r"argument ([^:]+): invalid choice: '([^']*)'(?: \(choose from ([^)]*)\))?"
+)
 _CLAP_POSSIBLE = re.compile(r"\[possible values: ([^\]]*)\]")
 
 _HELP_CACHE: dict[tuple[str, int, tuple[str, ...]], frozenset[str] | None] = {}
 _HELP_READS: dict[tuple[str, int, tuple[str, ...]], asyncio.Future[frozenset[str] | None]] = {}
 
 
-def help_flags(text: str) -> frozenset[str] | None:
-    """The flags a CLI's ``--help`` output lists, or None when ``text`` is not help output."""
+def help_flags(text: str, markers: tuple[str, ...] | None = None) -> frozenset[str] | None:
+    """The flags a CLI's ``--help`` output lists, or None when ``text`` is not help output.
+
+    Help output is recognised by ``usage:`` anywhere, or, with ``markers``, by a line that starts
+    with one of them (case ignored): yargs and Effect help (OpenCode) has no ``usage:``.
+    """
     text = _ANSI.sub("", text or "")
-    if "usage:" not in text.lower():
-        return None
+    if markers is None:
+        if "usage:" not in text.lower():
+            return None
+    else:
+        starts = "|".join(re.escape(m) for m in markers)
+        if not re.search(rf"^\s*(?:{starts})", text, re.I | re.M):
+            return None
     return frozenset(_HELP_FLAG.findall(text))
 
 
@@ -113,8 +148,12 @@ def argv_flags(argv: list[str]) -> list[str]:
 
 def rejected_flag(stderr: str) -> str | None:
     """The flag a CLI refused at startup, from its error output."""
-    match = _REJECTED.search(stderr or "")
-    return match.group(1) if match else None
+    text = _ANSI.sub("", stderr or "")
+    for pattern in _REJECTED_PATTERNS:
+        match = pattern.search(text)
+        if match:
+            return match.group(1)
+    return None
 
 
 def _option_name(spec: str) -> str:
@@ -135,6 +174,10 @@ def rejected_value(stderr: str) -> tuple[str, str, str | None] | None:
         possible = _CLAP_POSSIBLE.search(text, match.end())
         allowed = possible.group(1).strip() if possible else None
         return _option_name(match.group(2)), match.group(1), allowed
+    match = _REJECTED_ARGPARSE_VALUE.search(text)
+    if match:
+        allowed = match.group(3).replace("'", "").strip() if match.group(3) else None
+        return _option_name(match.group(1)), match.group(2), allowed
     return None
 
 
@@ -162,8 +205,19 @@ def clear_help_cache() -> None:
     _HELP_READS.clear()
 
 
-async def cli_help_flags(path: str, help_args: list[str]) -> frozenset[str] | None:
-    """The flags ``path <help_args>`` lists; read once per executable version and cached."""
+async def cli_help_flags(
+    path: str,
+    help_args: list[str],
+    *,
+    env: Mapping[str, str] | None = None,
+    cwd: Path | None = None,
+    markers: tuple[str, ...] | None = None,
+) -> frozenset[str] | None:
+    """The flags ``path <help_args>`` lists; read once per executable version and cached.
+
+    ``env`` and ``cwd`` isolate the read (see :func:`probe_cli`); they are not part of the cache
+    key, since a per-run temporary directory would defeat the cache.
+    """
     try:
         key = (path, os.stat(path).st_mtime_ns, tuple(help_args))
     except OSError:
@@ -178,7 +232,7 @@ async def cli_help_flags(path: str, help_args: list[str]) -> frozenset[str] | No
     _HELP_READS[key] = reading
     flags: frozenset[str] | None = None
     try:
-        flags = await _read_help(path, help_args)
+        flags = await _read_help(path, help_args, env=env, cwd=cwd, markers=markers)
         _HELP_CACHE[key] = flags
     finally:
         reading.set_result(flags)
@@ -186,7 +240,14 @@ async def cli_help_flags(path: str, help_args: list[str]) -> frozenset[str] | No
     return flags
 
 
-async def _read_help(path: str, help_args: list[str]) -> frozenset[str] | None:
+async def _read_help(
+    path: str,
+    help_args: list[str],
+    *,
+    env: Mapping[str, str] | None = None,
+    cwd: Path | None = None,
+    markers: tuple[str, ...] | None = None,
+) -> frozenset[str] | None:
     try:
         proc = await asyncio.create_subprocess_exec(
             path,
@@ -194,7 +255,8 @@ async def _read_help(path: str, help_args: list[str]) -> frozenset[str] | None:
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
             stdin=asyncio.subprocess.DEVNULL,
-            env=help_env(),
+            env=help_env(dict(env) if env is not None else None),
+            cwd=str(cwd) if cwd is not None else None,
         )
     except OSError:
         return None
@@ -205,7 +267,8 @@ async def _read_help(path: str, help_args: list[str]) -> frozenset[str] | None:
         await proc.wait()
         return None
     return help_flags(
-        out.decode("utf-8", errors="replace") + "\n" + err.decode("utf-8", errors="replace")
+        out.decode("utf-8", errors="replace") + "\n" + err.decode("utf-8", errors="replace"),
+        markers,
     )
 
 
@@ -213,6 +276,10 @@ async def check_flags(
     availability: Availability,
     commands: list[tuple[list[str], list[str]]],
     unlisted: frozenset[str] = frozenset(),
+    *,
+    env: Mapping[str, str] | None = None,
+    cwd: Path | None = None,
+    markers: tuple[str, ...] | None = None,
 ) -> Availability:
     """Mark an installed CLI unavailable when a command Harness Lab would run uses a flag its
     ``--help`` does not list.
@@ -226,7 +293,7 @@ async def check_flags(
     if not availability.available or path is None:
         return availability
     for argv, help_args in commands:
-        known = await cli_help_flags(path, help_args)
+        known = await cli_help_flags(path, help_args, env=env, cwd=cwd, markers=markers)
         if known is None:
             continue
         missing = [f for f in argv_flags(argv) if f not in known and f not in unlisted]
@@ -305,3 +372,81 @@ def redact_file_in_place(
     if truncated:
         out = f"[truncated to the last {cap_bytes} bytes]\n" + out
     path.write_text(out, encoding="utf-8")
+
+
+# A session id that only stands in for a real one in the flag check.
+PLACEHOLDER_SESSION = "00000000-0000-4000-8000-000000000000"
+
+
+def own_flags_only(config: RunnerConfig) -> RunnerConfig | None:
+    """``config`` without the user's ``extra_args``, or None when the flag check is off.
+
+    The check covers the flags Harness Lab itself passes. A CLI can accept flags its help does
+    not list, so the user's own ``extra_args`` are left to the CLI, whose refusal at startup is
+    still caught (see :func:`refusal_message`).
+    """
+    if config.get("flag_check", True) is False:
+        return None
+    options = {k: v for k, v in config.options.items() if k != "extra_args"}
+    return config.model_copy(update={"options": options})
+
+
+@contextmanager
+def isolated_state(prefix: str) -> Iterator[Path]:
+    """A fresh directory for one run's harness configuration, sessions and memory, removed when
+    the run ends, also when it is cancelled (removal never awaits)."""
+    with tempfile.TemporaryDirectory(prefix=prefix, ignore_cleanup_errors=True) as tmp:
+        yield Path(tmp)
+
+
+def guard_options(
+    config: RunnerConfig,
+    *,
+    forbidden_args: frozenset[str] = frozenset(),
+    forbidden_prefixes: tuple[str, ...] = (),
+    forbidden_env: frozenset[str] = frozenset(),
+) -> str | None:
+    """Why a variant's ``extra_args`` or ``env_passthrough`` would undo the adapter's isolation
+    or safety defaults, or None."""
+    refused = []
+    for arg in option_list(config.get("extra_args")):
+        name = str(arg).split("=", 1)[0]
+        if name in forbidden_args or (forbidden_prefixes and name.startswith(forbidden_prefixes)):
+            refused.append(name)
+    if refused:
+        return (
+            f"extra_args {', '.join(sorted(set(refused)))} would undo how Harness Lab runs this "
+            "harness (isolation or permissions); use the variant's options instead"
+        )
+    env = [name for name in option_list(config.get("env_passthrough")) if name in forbidden_env]
+    if env:
+        return (
+            f"env_passthrough {', '.join(sorted(set(env)))} would undo how Harness Lab runs this "
+            "harness (isolation or permissions); use the variant's options instead"
+        )
+    return None
+
+
+def startup_failure(
+    cli: str,
+    version: str | None,
+    *,
+    exit_code: int | None,
+    timed_out: bool,
+    llm_calls: int,
+    tool_events: int,
+    stderr: str,
+    stdout_text: str = "",
+) -> str | None:
+    """The error for a harness that stopped before calling a model, or None.
+
+    A non-zero exit without a timeout, an LLM call or a tool call is a harness that could not
+    start (missing credentials, a refused model, a broken configuration): it is reported as
+    unavailable rather than counted as a failed attempt at the task.
+    """
+    if not exit_code or timed_out or llm_calls or tool_events:
+        return None
+    detail = " ".join(part.strip() for part in (stderr[-600:], stdout_text[-300:]) if part.strip())
+    return f"{version or cli} stopped before calling a model (exit {exit_code})" + (
+        f": {detail}" if detail else ""
+    )

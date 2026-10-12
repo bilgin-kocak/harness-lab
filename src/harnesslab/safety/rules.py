@@ -42,10 +42,49 @@ SEVERITY: dict[str, str] = {
     "outside_worktree": "medium",
 }
 
-FILE_TOOLS = {"Read", "Edit", "Write", "MultiEdit", "NotebookEdit", "read_file", "edit_file"}
-WRITE_TOOLS = {"Edit", "Write", "MultiEdit", "NotebookEdit", "edit_file"}
-SEARCH_TOOLS = {"Grep", "Glob", "LS"}
-WEB_TOOLS = {"WebFetch", "WebSearch", "web_search", "fetch"}
+# Tool names across harnesses: Claude Code (capitalized), Codex and fake (edit_file, read_file),
+# pi (read, write, edit, grep, find, ls), OpenCode (read, write, edit, patch, multiedit, glob,
+# grep, list, webfetch, websearch) and Hermes (read_file, write_file, patch, search_files,
+# web_search, web_extract).
+FILE_TOOLS = {
+    "Read",
+    "Edit",
+    "Write",
+    "MultiEdit",
+    "NotebookEdit",
+    "read_file",
+    "edit_file",
+    "write_file",
+    "read",
+    "write",
+    "edit",
+    "multiedit",
+    "patch",
+    "apply_patch",
+}
+WRITE_TOOLS = {
+    "Edit",
+    "Write",
+    "MultiEdit",
+    "NotebookEdit",
+    "edit_file",
+    "write_file",
+    "write",
+    "edit",
+    "multiedit",
+    "patch",
+    "apply_patch",
+}
+SEARCH_TOOLS = {"Grep", "Glob", "LS", "grep", "glob", "find", "ls", "list", "search_files"}
+WEB_TOOLS = {
+    "WebFetch",
+    "WebSearch",
+    "web_search",
+    "fetch",
+    "webfetch",
+    "websearch",
+    "web_extract",
+}
 
 
 @dataclass(frozen=True)

@@ -51,9 +51,11 @@ from harnesslab.core.models import Availability, RunnerConfig, RunnerResult, Run
 from harnesslab.execution.process import build_child_env, run_process
 from harnesslab.harness.bundle import HarnessBundle, materialize_claude_plugin
 from harnesslab.runners._cli import (
+    PLACEHOLDER_SESSION,
     SanitizedStreamWriter,
     check_flags,
     option_list,
+    own_flags_only,
     probe_cli,
     redact_file_in_place,
     refusal_message,
@@ -193,20 +195,6 @@ def build_claude_command(
 # Flags Claude Code accepts without listing them in --help (checked on 2.1.294), so the flag check
 # must not count them as unsupported.
 CLAUDE_UNLISTED_FLAGS = frozenset({"--max-turns", "--append-system-prompt-file"})
-PLACEHOLDER_SESSION = "00000000-0000-4000-8000-000000000000"
-
-
-def own_flags_only(config: RunnerConfig) -> RunnerConfig | None:
-    """``config`` without the user's ``extra_args``, or None when the flag check is off.
-
-    The check covers the flags Harness Lab itself passes. A CLI can accept flags its help does
-    not list, so the user's own ``extra_args`` are left to the CLI, whose refusal at startup is
-    still caught (see :func:`refusal_message`).
-    """
-    if config.get("flag_check", True) is False:
-        return None
-    options = {k: v for k, v in config.options.items() if k != "extra_args"}
-    return config.model_copy(update={"options": options})
 
 
 def commands_to_check(config: RunnerConfig) -> list[tuple[list[str], list[str]]]:

@@ -1,6 +1,8 @@
 """The CLI flag check: a harness CLI that no longer accepts a flag Harness Lab passes is reported
 as unavailable, before a run (from its --help) and when it rejects a run (from its error)."""
 
+import asyncio
+import os
 from pathlib import Path
 
 import pytest
@@ -383,3 +385,90 @@ async def test_concurrent_checks_read_the_help_once(fake_cli: Path, tmp_path: Pa
     )
     assert all(r.available for r in results)
     assert log.read_text().count("help") == 1
+
+
+# -- other CLIs' wordings (pi, OpenCode, Hermes) ------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "stderr, flag",
+    [
+        ("Error: Unknown option: -x\n", "-x"),  # pi, one flag
+        ("Unknown option(s): --foo, --bar\n", "--foo"),  # pi, several
+        ("Unrecognized flag: --zzz in command opencode run\n", "--zzz"),  # OpenCode 2 (Effect)
+        ("hermes chat: error: unrecognized arguments: --nope\n", "--nope"),  # argparse
+        ("error: unknown option '--old'\n", "--old"),  # commander still works
+    ],
+)
+def test_refusals_of_other_clis_name_the_flag(stderr: str, flag: str):
+    assert rejected_flag(stderr) == flag
+
+
+def test_an_argparse_invalid_choice_names_flag_value_and_choices():
+    from harnesslab.runners._cli import refusal_message, rejected_value
+
+    stderr = "hermes chat: error: argument --reasoning: invalid choice: 'huge' (choose from 'low', 'high')\n"
+    assert rejected_value(stderr) == ("--reasoning", "huge", "low, high")
+    assert "rejected --reasoning 'huge' (it accepts: low, high)" in (
+        refusal_message("hermes", "hermes 1.0", stderr) or ""
+    )
+
+
+def test_help_without_a_usage_colon_is_read_with_markers():
+    yargs = "opencode run [message..]\n\nOptions:\n  --format  output format\n"
+    effect = "USAGE\n  $ opencode run [flags]\n\nFLAGS\n  --standalone  private server\n"
+    assert help_flags(yargs) is None  # no "usage:": the default would skip the check
+    assert help_flags(yargs, ("usage", "opencode run")) == {"--format"}
+    assert help_flags(effect, ("usage",)) == {"--standalone"}
+    assert help_flags("an error message", ("usage",)) is None
+
+
+def test_probes_run_in_the_environment_and_directory_they_are_given(tmp_path: Path):
+    from harnesslab.runners._cli import cli_help_flags, probe_cli
+
+    clear_help_cache()
+    script = tmp_path / "probe-me"
+    script.write_text(
+        "#!/bin/sh\n"
+        'echo "$PROBE_MARK $(pwd)" > "$PROBE_OUT"\n'
+        'if [ "$1" = "--help" ]; then echo "Usage: probe-me [--flag]"; else echo "probe 1.0"; fi\n'
+    )
+    script.chmod(0o755)
+    where = tmp_path / "isolated"
+    where.mkdir()
+    out = tmp_path / "seen.txt"
+    env = {"PATH": os.environ["PATH"], "PROBE_MARK": "isolated", "PROBE_OUT": str(out)}
+    availability = asyncio.run(probe_cli("x", str(script), env=env, cwd=where))
+    assert availability.available and availability.version == "probe 1.0"
+    assert out.read_text().split() == ["isolated", str(where)]
+    flags = asyncio.run(cli_help_flags(str(script), ["--help"], env=env, cwd=where))
+    assert flags == {"--flag"} and out.read_text().split() == ["isolated", str(where)]
+
+
+def test_guards_and_startup_failures():
+    from harnesslab.runners._cli import guard_options, startup_failure
+
+    config = RunnerConfig(
+        runner="x", options={"extra_args": ["--yolo", "--keep"], "env_passthrough": ["HOME_X"]}
+    )
+    assert "--yolo" in (guard_options(config, forbidden_args=frozenset({"--yolo"})) or "")
+    assert "--session-dir" in (
+        guard_options(
+            RunnerConfig(runner="x", options={"extra_args": ["--session-dir=/x"]}),
+            forbidden_prefixes=("--session",),
+        )
+        or ""
+    )
+    assert "HOME_X" in (guard_options(config, forbidden_env=frozenset({"HOME_X"})) or "")
+    assert guard_options(config) is None
+    common = {"exit_code": 1, "timed_out": False, "stderr": "no API key for anthropic"}
+    failed = startup_failure("pi", "pi 1.1.0", llm_calls=0, tool_events=0, **common)
+    assert failed and "stopped before calling a model (exit 1): no API key" in failed
+    assert startup_failure("pi", None, llm_calls=1, tool_events=0, **common) is None
+    assert startup_failure("pi", None, llm_calls=0, tool_events=2, **common) is None
+    assert (
+        startup_failure(
+            "pi", None, exit_code=0, timed_out=False, llm_calls=0, tool_events=0, stderr=""
+        )
+        is None
+    )

@@ -57,6 +57,15 @@ class PricingTable(BaseModel):
     def lookup(self, model: str | None) -> ModelPricing | None:
         if not model:
             return None
+        found = self._match(model)
+        if found is None and "/" in model:
+            # Harnesses that route to many providers name models provider/model (pi, OpenCode,
+            # OpenRouter ids): fall back to the model's own name.
+            found = self._match(model.rsplit("/", 1)[1])
+        return found
+
+    def _match(self, model: str) -> ModelPricing | None:
+        """An exact entry, else the longest entry the name starts with."""
         if model in self.models:
             return self.models[model]
         best: tuple[int, ModelPricing] | None = None

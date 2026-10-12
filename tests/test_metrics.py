@@ -149,3 +149,13 @@ def test_llm_calls_pass_through_metrics():
     assert metrics.llm_calls == 5
     empty = compute_metrics([], RunnerResult(), None, None, wall_time_seconds=1.0)
     assert empty.llm_calls is None
+
+
+def test_pricing_falls_back_to_the_model_name_after_a_provider_prefix(tmp_path: Path):
+    path = tmp_path / "pricing.yaml"
+    path.write_text("models:\n  claude-x:\n    input_per_million: 3\n    output_per_million: 15\n")
+    table = PricingTable.load(path)
+    usage = UsageTotals(input_tokens=1_000_000)
+    assert table.estimate("anthropic/claude-x", usage) == 3.0  # pi and OpenCode: provider/model
+    assert table.estimate("openrouter/anthropic/claude-x-2026", usage) == 3.0
+    assert table.estimate("anthropic/other", usage) is None

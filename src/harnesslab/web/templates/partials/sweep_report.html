@@ -10,11 +10,11 @@
     <div class="card metric">
       <div class="label">workload: {{ w.workload }} <span class="muted">({{ w.kind }})</span></div>
       {% if w.recommended %}
-        <div class="value badge-pass">{{ w.recommended.variant_key }}</div>
+        <div class="value badge-pass">{{ w.recommended.variant_key|breakable }}</div>
         <div class="sub">pass {{ w.recommended.pass_rate|pct }} ({{ w.recommended.n_passed }}/{{ w.recommended.n_valid }}) ·
           {% if kind.endswith("cost_usd") %}{{ w.recommended.objective|cost }}{% elif kind == "wall_time_seconds" %}{{ w.recommended.objective|seconds }}{% elif kind == "llm_calls" %}{{ w.recommended.objective|int }} calls{% else %}{{ w.recommended.objective|int }} tokens{% endif %}
           · tokens {{ w.recommended.median_tokens|int }} · {{ w.recommended.median_wall_time|seconds }}</div>
-        {% if w.runner_up %}<div class="sub">runner-up: {{ w.runner_up.variant_key }}</div>{% endif %}
+        {% if w.runner_up %}<div class="sub">runner-up: {{ w.runner_up.variant_key|breakable }}</div>{% endif %}
         {% if w.holdout %}<div class="sub">holdout ({{ w.holdout.task_keys|join(", ") }}): pass {{ w.holdout.pass_rate|pct }} over {{ w.holdout.n_valid }} runs</div>{% endif %}
         {% if w.routing %}<div class="sub">per-task selection: {{ w.routing.summary() }}</div>{% endif %}
       {% else %}
@@ -38,7 +38,7 @@
       {% for c in w.configs %}
         <tr class="{% if c.eligible %}eligible{% endif %}">
           <td>{% if c.eligible %}<span class="badge badge-pass">✔</span>{% elif c.variant_key in w.pareto %}<span class="badge badge-warn">◆</span>{% endif %}</td>
-          <td class="mono small">{{ c.variant_key }}</td>
+          <td class="mono small">{{ c.variant_key|breakable }}</td>
           {% for f in sr.factor_effects|map(attribute="factor")|unique %}<td>{{ c.factors.get(f, "") }}</td>{% endfor %}
           <td class="num">{{ c.pass_rate|pct }}</td>
           <td class="num">{{ c.n_valid }}/{{ c.n_total }}</td>

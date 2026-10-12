@@ -239,3 +239,27 @@ async def test_grow_pages(settings: Settings, db: Database):
         assert run_page.status_code == 200 and data["versions"][1]["harness_hash"] in run_page.text
         assert client.get("/grow/nope").status_code == 404
         assert client.get("/api/grow/nope.json").status_code == 404
+
+
+def test_configuration_keys_wrap_at_separators_and_stay_escaped():
+    from harnesslab.web.filters import breakable
+
+    assert str(breakable("model=a<b>|effort=high")) == "model=a&lt;b&gt;|<wbr>effort=high"
+    assert str(breakable(None)) == ""
+
+
+def test_a_delta_that_rounds_to_zero_has_no_sign():
+    from harnesslab.web.filters import fmt_delta
+
+    assert fmt_delta(-0.03, 1) == "0.0"
+    assert fmt_delta(0.25, 1) == "+0.2" and fmt_delta(-1.26, 1) == "-1.3"
+
+
+def test_diff_lines_are_not_double_spaced():
+    from harnesslab.web.filters import highlight_diff
+
+    rendered = str(highlight_diff("@@ -1 +1 @@\n-old <b>\n+new"))
+    assert rendered == (
+        '<span class="diff-hunk">@@ -1 +1 @@</span><span class="diff-del">-old &lt;b&gt;</span>'
+        '<span class="diff-add">+new</span>'
+    )

@@ -12,7 +12,7 @@ a { color: var(--accent); text-decoration: none; } a:hover { text-decoration: un
 .topbar .muted { margin-left: auto; }
 .container { max-width: 1400px; margin: 0 auto; padding: 20px 24px 60px; }
 h1 { font-size: 22px; margin: 8px 0 6px; } h2 { font-size: 16px; margin: 26px 0 8px; border-bottom: 1px solid var(--line); padding-bottom: 4px; }
-.muted { color: var(--muted); } .small { font-size: 12px; } .mono { font-family: var(--mono); } .center { text-align: center; } .num { text-align: right; font-variant-numeric: tabular-nums; }
+.muted { color: var(--muted); } .nowrap { white-space: nowrap; } .small { font-size: 12px; } .mono { font-family: var(--mono); } .center { text-align: center; } .num { text-align: right; font-variant-numeric: tabular-nums; }
 .crumbs { color: var(--muted); margin-bottom: 4px; }
 .actions { margin: 10px 0; }
 .button { display: inline-block; padding: 6px 12px; border-radius: 6px; background: var(--accent); color: #fff; font-weight: 600; }
@@ -39,7 +39,7 @@ table.data tbody tr:hover td.cell-pass { background: #bbf7d0; } table.data tbody
 .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
 .card.empty { padding: 20px; }
 .card.metric .label { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
-.card.metric .value { font-size: 22px; font-weight: 700; margin: 2px 0; } .card.metric .sub { font-size: 12px; color: var(--muted); }
+.card.metric .value { font-size: 22px; font-weight: 700; margin: 2px 0; overflow-wrap: anywhere; } .card.metric .sub { font-size: 12px; color: var(--muted); }
 .value.badge-pass { color: var(--pass); background: none; } .value.badge-fail { color: var(--fail); background: none; } .value.badge-neutral { background: none; }
 pre { background: #0f172a; color: #e2e8f0; padding: 10px 12px; border-radius: 6px; overflow: auto; font-family: var(--mono); font-size: 12px; margin: 6px 0; max-height: 480px; }
 pre.small { font-size: 11px; } pre.wrap { white-space: pre-wrap; word-break: break-word; } pre.message { background: #f8fafc; color: var(--ink); border: 1px solid var(--line); max-height: none; }
@@ -69,4 +69,5 @@ td.better { color: var(--pass); font-weight: 600; } td.worse { color: var(--fail
 ul.artifacts { padding-left: 18px; }
 
 .sweep details { margin: 8px 0; } .sweep summary { cursor: pointer; padding: 6px 0; } tr.eligible td { background: #f0fdf4; }
+.sweep td.mono { overflow-wrap: anywhere; }  /* long configuration keys wrap instead of widening the page */
 .evidence { margin: 6px 0 14px; } .evidence table { max-width: 720px; }

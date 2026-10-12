@@ -86,7 +86,7 @@ def fmt_json(value: Any) -> str:
 def fmt_delta(delta: Any, digits: int = 2) -> str:
     if _missing(delta):
         return "—"
-    d = float(delta)
+    d = round(float(delta), digits) or 0.0  # no "-0.0" for a difference that rounds away
     sign = "+" if d > 0 else ""
     return f"{sign}{d:,.{digits}f}"
 
@@ -118,7 +118,16 @@ def highlight_diff(text: str | None) -> Markup:
         elif line.startswith("-"):
             cls = "diff-del"
         out.append(f'<span class="{cls}">{escape(line)}</span>')
-    return Markup("\n".join(out))
+    # The spans are blocks, one line each: a newline between them would add an empty line.
+    return Markup("".join(out))
+
+
+def breakable(value: Any) -> Markup:
+    """A configuration key such as ``model=x|effort=high`` that may wrap after each ``|``
+    (each part escaped)."""
+    if _missing(value):
+        return Markup("")
+    return Markup("|<wbr>").join(str(value).split("|"))
 
 
 def outcome_class(outcome: str | None) -> str:
@@ -148,6 +157,7 @@ FILTERS = {
     "json": fmt_json,
     "delta": fmt_delta,
     "diff": highlight_diff,
+    "breakable": breakable,
     "outcome_class": outcome_class,
     "status_class": status_class,
     "state_symbol": state_symbol,

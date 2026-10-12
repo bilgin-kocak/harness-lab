@@ -174,3 +174,34 @@ async def test_fake_runner_honours_bundle_fake_yaml(settings: Settings, db: Data
     assert by["add-tag-budgets"].metrics.files_changed == 1
     assert by["consolidate-money-formatting"].metrics.files_changed == 0
     assert all(r.metrics.llm_calls == 7 for r in outcome.runs)
+
+
+async def test_runs_start_from_the_experiments_snapshot(settings: Settings, db: Database):
+    """Each fixture is snapshotted once per experiment and every run's worktree comes from that
+    snapshot, so editing a fixture while an experiment runs cannot change later runs."""
+    from harnesslab.execution.sandbox import LocalWorktreeSandbox
+
+    suite, tasks = load_suite(DEMO_SUITE)
+    calls: list[str] = []
+
+    class RecordingSandbox(LocalWorktreeSandbox):
+        def snapshot(self, task):
+            calls.append(task.id)
+            return super().snapshot(task)
+
+    service = ExperimentService(settings, db, sandbox=RecordingSandbox(settings))
+    outcome = await service.run_experiment(
+        ExperimentSpec(
+            name="pin", suite=str(DEMO_SUITE), repetitions=2, parallelism=2, source_path=DEMO_SUITE
+        ),
+        suite,
+        tasks[:1],
+        [
+            VariantSpec(id="ref", runner="fake", behavior="solve"),
+            VariantSpec(id="noop", runner="fake", behavior="noop"),
+        ],
+    )
+    assert len(outcome.runs) == 4
+    assert calls == [tasks[0].id]  # once for the experiment, not once per run
+    exp = service.repo.get_experiment(outcome.experiment_id)
+    assert {run.base_commit for run in exp.runs} == {exp.tasks[0].base_commit}

@@ -39,6 +39,10 @@ class ExperimentRow(Base):
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     grow_session_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
     grow_role: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    # The process running the experiment, so one left "running" by a killed process can be
+    # recognised and marked interrupted later (Repository.reconcile_orphaned_experiments).
+    owner_pid: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    owner_host: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     variants: Mapped[list[VariantRow]] = relationship(
         back_populates="experiment", cascade="all, delete-orphan", order_by="VariantRow.position"
@@ -229,6 +233,11 @@ class VerifierResultRow(Base):
     score_error: Mapped[str | None] = mapped_column(Text, nullable=True)
     protected_violations_json: Mapped[list[str]] = mapped_column(JSON, default=list)
     injected_files_json: Mapped[list[str]] = mapped_column(JSON, default=list)
+    # Injected paths that already existed in the worktree (from the repository or the agent)
+    # and were replaced by the hidden versions (None: rows written by older versions).
+    overwritten_files_json: Mapped[list[str] | None] = mapped_column(
+        JSON, nullable=True, default=list
+    )
     skipped_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
     visible_command: Mapped[str | None] = mapped_column(Text, nullable=True)
     visible_passed: Mapped[bool | None] = mapped_column(Boolean, nullable=True)

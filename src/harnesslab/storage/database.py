@@ -8,6 +8,7 @@ from pathlib import Path
 
 from sqlalchemy import create_engine, event, inspect, text
 from sqlalchemy.engine import Engine
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
@@ -46,24 +47,43 @@ class Database:
     def create_all(self) -> None:
         Base.metadata.create_all(self.engine)
         self._add_missing_columns()
+        self._add_missing_indexes()
 
     def _add_missing_columns(self) -> None:
         """Forward-only schema migration: add columns that newer versions introduced.
 
         SQLite cannot add constraints in ``ALTER TABLE``, so only nullable/defaulted
-        columns are ever added this way (all additions so far qualify).
+        columns are ever added this way (all additions so far qualify).  Each column is added
+        in its own transaction, and a column that another process added in the meantime (two
+        commands started together on an old database) is not an error.
         """
         inspector = inspect(self.engine)
-        with self.engine.begin() as conn:
-            for table in Base.metadata.sorted_tables:
-                existing = {col["name"] for col in inspector.get_columns(table.name)}
-                for column in table.columns:
-                    if column.name in existing:
-                        continue
-                    col_type = column.type.compile(dialect=self.engine.dialect)
-                    conn.execute(
-                        text(f'ALTER TABLE "{table.name}" ADD COLUMN "{column.name}" {col_type}')
-                    )
+        for table in Base.metadata.sorted_tables:
+            existing = {col["name"] for col in inspector.get_columns(table.name)}
+            for column in table.columns:
+                if column.name in existing:
+                    continue
+                col_type = column.type.compile(dialect=self.engine.dialect)
+                try:
+                    with self.engine.begin() as conn:
+                        conn.execute(
+                            text(
+                                f'ALTER TABLE "{table.name}" ADD COLUMN "{column.name}" {col_type}'
+                            )
+                        )
+                except OperationalError as exc:
+                    if "duplicate column" not in str(exc).lower():
+                        raise
+
+    def _add_missing_indexes(self) -> None:
+        """Create indexes that newer versions declare (``create_all`` skips existing tables)."""
+        for table in Base.metadata.sorted_tables:
+            for index in table.indexes:
+                try:
+                    index.create(self.engine, checkfirst=True)
+                except OperationalError as exc:
+                    if "already exists" not in str(exc).lower():
+                        raise
 
     @contextmanager
     def session(self) -> Iterator[Session]:

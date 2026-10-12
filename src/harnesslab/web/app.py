@@ -35,6 +35,7 @@ def create_app(settings: Settings | None = None, db: Database | None = None) -> 
     app.state.settings = settings
     app.state.db = db
     app.state.repo = Repository(db, settings.home)
+    app.state.repo.reconcile_orphaned_experiments()
     app.state.templates = templates
 
     app.mount("/static", StaticFiles(directory=str(WEB_DIR / "static")), name="static")

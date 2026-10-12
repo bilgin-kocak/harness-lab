@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import hashlib
+import os
+import socket
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -42,6 +44,19 @@ def utcnow() -> datetime:
     return datetime.now(UTC)
 
 
+def _pid_alive(pid: int) -> bool:
+    """Whether a process with this pid exists (any owner).  Errs on the side of "alive"."""
+    if pid == os.getpid():
+        return True
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except OSError:  # e.g. PermissionError: the pid exists but belongs to another user
+        return True
+    return True
+
+
 class Repository:
     def __init__(self, db: Database, home: Path) -> None:
         self.db = db
@@ -75,6 +90,8 @@ class Repository:
                     harnesslab_commit=harnesslab_commit,
                     environment_json=environment.model_dump(mode="json"),
                     environment_hash=environment.environment_hash(),
+                    owner_pid=os.getpid(),
+                    owner_host=socket.gethostname(),
                 )
             )
         return exp_id
@@ -316,6 +333,7 @@ class Repository:
                     score_error=result.score_error,
                     protected_violations_json=result.protected_violations,
                     injected_files_json=result.injected_files,
+                    overwritten_files_json=result.overwritten_files,
                     skipped_reason=result.skipped_reason,
                     visible_command=result.visible_command,
                     visible_passed=result.visible_passed,
@@ -362,10 +380,20 @@ class Repository:
             return text[:cap] + f"\n... [truncated {len(text) - cap} characters]"
         return text
 
-    def mark_stale_runs_interrupted(self) -> int:
+    def mark_stale_runs_interrupted(self, exp_id: str) -> int:
+        """Mark one experiment, and its runs that never finished, as interrupted.
+
+        Scoped to ``exp_id``: other experiments in the same database may be running in other
+        processes.
+        """
         with self.db.session() as s:
             rows = (
-                s.execute(select(RunRow).where(RunRow.status.in_(["running", "pending"])))
+                s.execute(
+                    select(RunRow).where(
+                        RunRow.experiment_id == exp_id,
+                        RunRow.status.in_(["running", "pending"]),
+                    )
+                )
                 .scalars()
                 .all()
             )
@@ -373,15 +401,37 @@ class Repository:
                 row.status = RunStatus.INTERRUPTED.value
                 row.finished_at = row.finished_at or utcnow()
                 row.error_message = row.error_message or "run was interrupted before it finished"
-            exps = (
-                s.execute(select(ExperimentRow).where(ExperimentRow.status == "running"))
-                .scalars()
-                .all()
-            )
-            for exp in exps:
+            exp = s.get(ExperimentRow, exp_id)
+            if exp is not None and exp.status == "running":
                 exp.status = "interrupted"
                 exp.finished_at = exp.finished_at or utcnow()
             return len(rows)
+
+    def reconcile_orphaned_experiments(self) -> list[str]:
+        """Mark experiments whose process is gone as interrupted; return their ids.
+
+        A process that is killed (SIGKILL, a closed terminal, a crash) cannot record that it
+        stopped, so its experiment and runs would stay "running" forever.  Only experiments
+        started on this host with a recorded pid are checked; a pid that still exists (even if
+        reused by another process) is left alone.
+        """
+        host = socket.gethostname()
+        with self.db.session() as s:
+            candidates = (
+                s.execute(
+                    select(ExperimentRow.id, ExperimentRow.owner_pid).where(
+                        ExperimentRow.status == "running",
+                        ExperimentRow.owner_host == host,
+                        ExperimentRow.owner_pid.is_not(None),
+                    )
+                )
+                .tuples()
+                .all()
+            )
+        orphaned = [exp_id for exp_id, pid in candidates if not _pid_alive(pid)]
+        for exp_id in orphaned:
+            self.mark_stale_runs_interrupted(exp_id)
+        return orphaned
 
     # -- reads -------------------------------------------------------------
     def list_experiments(self) -> list[dict[str, Any]]:

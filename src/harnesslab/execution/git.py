@@ -112,9 +112,31 @@ def rev_parse(repo: Path, ref: str = "HEAD") -> str:
 
 
 def head_commit(path: Path) -> str | None:
-    """Commit of the repository containing ``path`` (used to record Harness Lab's own SHA)."""
+    """Commit of the repository containing ``path``."""
     try:
         proc = run_git(["rev-parse", "HEAD"], cwd=path, check=False, timeout=10)
     except GitError:
         return None
     return proc.stdout.strip() if proc.returncode == 0 and proc.stdout.strip() else None
+
+
+def harnesslab_source_commit(package_dir: Path) -> str | None:
+    """Harness Lab's own commit, when it runs from a source checkout (``<repo>/src/harnesslab``).
+
+    An installed package has no commit of its own: when it lives in a virtualenv inside some other
+    git repository (a project's ``.venv``), that repository's HEAD must not be recorded as
+    Harness Lab's.
+    """
+    try:
+        proc = run_git(["rev-parse", "--show-toplevel"], cwd=package_dir, check=False, timeout=10)
+    except GitError:
+        return None
+    if proc.returncode != 0 or not proc.stdout.strip():
+        return None
+    checkout_package = Path(proc.stdout.strip()) / "src" / "harnesslab"
+    try:
+        if checkout_package.resolve() != package_dir.resolve():
+            return None
+    except OSError:
+        return None
+    return head_commit(package_dir)

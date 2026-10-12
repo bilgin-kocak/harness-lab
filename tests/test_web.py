@@ -129,6 +129,33 @@ def test_dashboard_pages(settings: Settings, db: Database, populated):
         assert client.get(f"/runs/{ref.run_id}/artifacts/nope").status_code == 404
 
 
+def test_run_page_without_metrics_or_with_old_metrics(settings: Settings, db: Database, populated):
+    """A run still in progress has no metrics; a run recorded by 0.1.0 lacks newer keys."""
+    from harnesslab.storage.repository import Repository
+
+    repo = Repository(db, settings.home)
+    in_progress, old = populated.runs[0].run_id, populated.runs[1].run_id
+    repo.update_run(in_progress, status="running", outcome="not_verified", metrics_json={})
+    repo.update_run(
+        old,
+        metrics_json={
+            "wall_time_seconds": 1.5,
+            "verified_pass": True,
+            "verified_score": 1.0,
+            "input_tokens": 100,
+            "output_tokens": 20,
+            "tool_calls": 2,
+        },
+    )
+    with TestClient(create_app(settings, db)) as client:
+        for run_id in (in_progress, old):
+            page = client.get(f"/runs/{run_id}")
+            assert page.status_code == 200, run_id
+            # Sections for data the run does not have stay hidden instead of showing defaults.
+            assert ">unsafe<" not in page.text and "Improvement <span" not in page.text
+        assert "running" in client.get(f"/runs/{in_progress}").text
+
+
 def test_nothing_persisted_contains_hidden_reasoning(settings: Settings, db: Database, populated):
     """Scan the whole database and every artifact for the fixture's secret markers."""
     import sqlite3

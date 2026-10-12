@@ -125,6 +125,8 @@ def _open_db(settings: Settings) -> Database:
     settings.ensure_dirs()
     db = Database(settings.resolved_database_url)
     db.create_all()
+    # Experiments left "running" by a process that was killed are marked interrupted.
+    Repository(db, settings.home).reconcile_orphaned_experiments()
     return db
 
 

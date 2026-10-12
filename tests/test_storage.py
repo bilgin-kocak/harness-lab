@@ -164,8 +164,8 @@ def test_round_trip(settings: Settings, db: Database, tmp_path: Path):
     assert repo.find_experiment("nope") is None and repo.count_experiments() == 1
 
 
-def test_mark_stale_runs(settings: Settings, db: Database):
-    repo = Repository(db, settings.home)
+def _running_experiment(repo: Repository) -> tuple[str, str]:
+    """An experiment with one run that never finished (status running)."""
     env = EnvironmentSpec.detect()
     exp_id = repo.create_experiment(
         ExperimentSpec(name="e", suite="s"),
@@ -203,11 +203,104 @@ def test_mark_stale_runs(settings: Settings, db: Database):
         parser_version="1",
         metrics_version="1",
     )
-    assert repo.mark_stale_runs_interrupted() == 1
+    return exp_id, run_id
+
+
+def test_mark_stale_runs_only_touches_that_experiment(settings: Settings, db: Database):
+    repo = Repository(db, settings.home)
+    exp_id, run_id = _running_experiment(repo)
+    other_exp, other_run = _running_experiment(repo)  # e.g. running in another terminal
+    assert repo.mark_stale_runs_interrupted(exp_id) == 1
     assert (
         repo.get_run(run_id).status == "interrupted"
         and repo.get_experiment(exp_id).status == "interrupted"
     )
+    assert (
+        repo.get_run(other_run).status == "running"
+        and repo.get_experiment(other_exp).status == "running"
+    )
+
+
+def test_orphaned_experiments_are_reconciled(settings: Settings, db: Database):
+    import os
+    import subprocess
+
+    from harnesslab.storage.models import ExperimentRow
+
+    repo = Repository(db, settings.home)
+    proc = subprocess.Popen(["true"])
+    proc.wait()  # its pid now names no process
+    dead_exp, dead_run = _running_experiment(repo)
+    alive_exp, _ = _running_experiment(repo)  # owned by this test process
+    elsewhere_exp, _ = _running_experiment(repo)
+    legacy_exp, _ = _running_experiment(repo)  # recorded by a version without owner fields
+    with db.session() as s:
+        s.get(ExperimentRow, dead_exp).owner_pid = proc.pid
+        elsewhere = s.get(ExperimentRow, elsewhere_exp)
+        elsewhere.owner_pid, elsewhere.owner_host = proc.pid, "another-host"
+        legacy = s.get(ExperimentRow, legacy_exp)
+        legacy.owner_pid = legacy.owner_host = None
+    assert repo.get_experiment(alive_exp).owner_pid == os.getpid()
+
+    assert repo.reconcile_orphaned_experiments() == [dead_exp]
+    assert repo.get_experiment(dead_exp).status == "interrupted"
+    assert repo.get_run(dead_run).status == "interrupted"
+    for exp_id in (alive_exp, elsewhere_exp, legacy_exp):
+        assert repo.get_experiment(exp_id).status == "running"
+    assert repo.reconcile_orphaned_experiments() == []
+
+
+def test_schema_upgrade_adds_indexes_and_tolerates_a_concurrent_upgrade(tmp_path, monkeypatch):
+    from sqlalchemy import inspect, text
+
+    import harnesslab.storage.database as database_module
+
+    url = f"sqlite:///{tmp_path / 'old.db'}"
+    db = Database(url)
+    db.create_all()
+    with db.engine.begin() as conn:  # a database first created before the index existed
+        conn.execute(text("DROP INDEX ix_experiments_grow_session_id"))
+    db.dispose()
+
+    real_inspect = inspect
+
+    class StaleInspector:
+        """Reports experiments.grow_role as missing although it exists, like a second process
+        that inspected the schema just before the first one added the column."""
+
+        def __init__(self, engine):
+            self.inner = real_inspect(engine)
+
+        def get_columns(self, table):
+            cols = self.inner.get_columns(table)
+            return [c for c in cols if not (table == "experiments" and c["name"] == "grow_role")]
+
+    monkeypatch.setattr(database_module, "inspect", StaleInspector)
+    db = Database(url)
+    db.create_all()  # must not fail on "duplicate column name"
+    names = {i["name"] for i in real_inspect(db.engine).get_indexes("experiments")}
+    assert "ix_experiments_grow_session_id" in names
+    db.dispose()
+
+
+def test_overwritten_files_are_recorded_and_exported(settings: Settings, db: Database):
+    from harnesslab.experiments.export import export_experiment
+
+    repo = Repository(db, settings.home)
+    exp_id, run_id = _running_experiment(repo)
+    repo.save_verifier_result(
+        run_id,
+        VerifierResult(
+            command="true",
+            passed=True,
+            outcome=Outcome.PASS,
+            injected_files=["tests/test_hidden.py"],
+            overwritten_files=["tests/test_hidden.py"],
+        ),
+    )
+    assert repo.get_run(run_id).verifier_result.overwritten_files_json == ["tests/test_hidden.py"]
+    exported = export_experiment(repo, exp_id)
+    assert exported["runs"][0]["verifier"]["overwritten_files"] == ["tests/test_hidden.py"]
 
 
 async def test_variant_harness_is_snapshotted_and_hashed(settings, db, tmp_path):

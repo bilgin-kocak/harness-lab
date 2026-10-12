@@ -8,6 +8,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse
 
+from harnesslab.core.models import RunMetrics
 from harnesslab.experiments.ablation import report_for_experiment as ablation_report_for
 from harnesslab.experiments.aggregate import (
     aggregate_variants,
@@ -79,7 +80,9 @@ def healthz() -> dict[str, str]:
 
 @router.get("/", response_class=HTMLResponse)
 def experiments_page(request: Request) -> HTMLResponse:
-    rows = _repo(request).list_experiments()
+    repo = _repo(request)
+    repo.reconcile_orphaned_experiments()  # an experiment may have died since the last visit
+    rows = repo.list_experiments()
     return _render(request, "experiments.html", {"experiments": rows})
 
 
@@ -147,7 +150,9 @@ def run_page(request: Request, run_id: str) -> HTMLResponse:
             safety_findings = json.loads(repo.read_artifact(artifacts["safety"]))["findings"]
         except (ValueError, KeyError, TypeError):
             safety_findings = []
-    metrics = run.metrics_json or {}
+    # Every metric key, absent ones as None: a run still in progress (or killed) has no metrics
+    # yet, and runs recorded by older versions lack the keys added since.
+    metrics = RunMetrics().model_dump(mode="json") | (run.metrics_json or {})
     return _render(
         request,
         "run_detail.html",

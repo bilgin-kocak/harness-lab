@@ -101,6 +101,7 @@ def export_experiment(
                 "score_error": vr.score_error,
                 "protected_violations": vr.protected_violations_json,
                 "injected_files": vr.injected_files_json,
+                "overwritten_files": vr.overwritten_files_json or [],
                 "skipped_reason": vr.skipped_reason,
                 "visible_command": vr.visible_command,
                 "visible_passed": vr.visible_passed,

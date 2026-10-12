@@ -6,11 +6,17 @@ import json
 from datetime import datetime
 from typing import Any
 
+from jinja2 import Undefined
 from markupsafe import Markup, escape
 
 
+def _missing(value: Any) -> bool:
+    """None, or a key the template asked for that the data does not have (e.g. an old run)."""
+    return value is None or isinstance(value, Undefined)
+
+
 def fmt_num(value: Any, digits: int = 2) -> str:
-    if value is None:
+    if _missing(value):
         return "—"
     if isinstance(value, bool):
         return "yes" if value else "no"
@@ -24,7 +30,7 @@ def fmt_num(value: Any, digits: int = 2) -> str:
 
 
 def fmt_int(value: Any) -> str:
-    if value is None:
+    if _missing(value):
         return "—"
     try:
         return f"{int(round(float(value))):,}"
@@ -33,7 +39,7 @@ def fmt_int(value: Any) -> str:
 
 
 def fmt_seconds(value: Any) -> str:
-    if value is None:
+    if _missing(value):
         return "—"
     seconds = float(value)
     if seconds < 60:
@@ -46,26 +52,26 @@ def fmt_seconds(value: Any) -> str:
 
 
 def fmt_ms(value: Any) -> str:
-    if value is None:
+    if _missing(value):
         return "—"
     ms = float(value)
     return f"{ms:.0f} ms" if ms < 1000 else fmt_seconds(ms / 1000)
 
 
 def fmt_cost(value: Any) -> str:
-    if value is None:
+    if _missing(value):
         return "—"
     return f"${float(value):,.4f}"
 
 
 def fmt_pct(value: Any) -> str:
-    if value is None:
+    if _missing(value):
         return "—"
     return f"{float(value) * 100:.0f}%"
 
 
 def fmt_dt(value: datetime | None) -> str:
-    if value is None:
+    if _missing(value):
         return "—"
     return value.strftime("%Y-%m-%d %H:%M:%S")
 
@@ -78,7 +84,7 @@ def fmt_json(value: Any) -> str:
 
 
 def fmt_delta(delta: Any, digits: int = 2) -> str:
-    if delta is None:
+    if _missing(delta):
         return "—"
     d = float(delta)
     sign = "+" if d > 0 else ""

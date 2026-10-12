@@ -46,8 +46,15 @@ class ExecutionSandbox(ABC):
 
     @abstractmethod
     async def prepare(
-        self, task: TaskSpec, *, experiment_id: str, run_id: str
-    ) -> SandboxContext: ...
+        self,
+        task: TaskSpec,
+        *,
+        experiment_id: str,
+        run_id: str,
+        snapshot: RepoSnapshot | None = None,
+    ) -> SandboxContext:
+        """Create the run's working copy, from ``snapshot`` when given (the experiment's pinned
+        snapshot of the task's repository), otherwise from a fresh snapshot."""
 
     @abstractmethod
     async def run_command(
@@ -80,10 +87,18 @@ class LocalWorktreeSandbox(ExecutionSandbox):
     def snapshot(self, task: TaskSpec) -> RepoSnapshot:
         return snapshot_repository(task.repo_path, task.repo.base_ref, self.settings)
 
-    async def prepare(self, task: TaskSpec, *, experiment_id: str, run_id: str) -> SandboxContext:
+    async def prepare(
+        self,
+        task: TaskSpec,
+        *,
+        experiment_id: str,
+        run_id: str,
+        snapshot: RepoSnapshot | None = None,
+    ) -> SandboxContext:
         import asyncio
 
-        snapshot = await asyncio.to_thread(self.snapshot, task)
+        if snapshot is None:
+            snapshot = await asyncio.to_thread(self.snapshot, task)
         workdir = self.settings.worktrees_dir / experiment_id / run_id
         await self.worktrees.create(snapshot.repo_dir, snapshot.base_commit, workdir)
         return SandboxContext(
@@ -152,11 +167,17 @@ class DockerSandbox(ExecutionSandbox):
     def __init__(self, *_args: object, **_kwargs: object) -> None:
         raise NotImplementedError(
             "DockerSandbox is not implemented yet; use LocalWorktreeSandbox. "
-            "See README 'Roadmap' for container isolation."
+            "Container isolation is on the roadmap: "
+            "https://bilgin-kocak.github.io/harness-lab/project/roadmap/"
         )
 
     async def prepare(
-        self, task: TaskSpec, *, experiment_id: str, run_id: str
+        self,
+        task: TaskSpec,
+        *,
+        experiment_id: str,
+        run_id: str,
+        snapshot: RepoSnapshot | None = None,
     ) -> SandboxContext:  # pragma: no cover
         raise NotImplementedError
 

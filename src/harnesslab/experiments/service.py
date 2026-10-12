@@ -47,7 +47,8 @@ from harnesslab.core.models import (
     VerifierResult,
 )
 from harnesslab.core.pricing import PricingTable
-from harnesslab.execution.git import git_version, head_commit
+from harnesslab.execution.fixture import RepoSnapshot
+from harnesslab.execution.git import git_version, harnesslab_source_commit
 from harnesslab.execution.sandbox import ExecutionSandbox, LocalWorktreeSandbox, SandboxContext
 from harnesslab.harness.bundle import HarnessBundle
 from harnesslab.improve.protocol import ImproveResult, ImproveSetupError, run_improvement
@@ -119,7 +120,9 @@ class ExperimentService:
         self.runner_factory = runner_factory
         self.redactor = redactor or default_redactor()
         self.verifier = CommandVerifier(redactor=self.redactor)
-        self.harnesslab_commit = head_commit(Path(harnesslab.__file__).resolve().parent)
+        self.harnesslab_commit = harnesslab_source_commit(
+            Path(harnesslab.__file__).resolve().parent
+        )
         self.harnesslab_version = harnesslab.__version__
 
     # ------------------------------------------------------------------
@@ -156,16 +159,20 @@ class ExperimentService:
             harnesslab_commit=self.harnesslab_commit,
         )
 
-        # Snapshot fixture repositories once so every run starts from the same commit.
+        # Snapshot fixture repositories once so every run starts from the same commit: each run's
+        # worktree is created from this snapshot, so editing a fixture (or moving a source
+        # repository's HEAD) while the experiment runs cannot change later runs.
         task_rows: dict[
             str, tuple[str, str, str]
         ] = {}  # task id -> (row id, base_commit, task_hash)
+        snapshots: dict[str, RepoSnapshot | None] = {}
         for position, task in enumerate(tasks):
             snapshot = (
                 await asyncio.to_thread(self.sandbox.snapshot, task)
                 if hasattr(self.sandbox, "snapshot")
                 else None
             )
+            snapshots[task.id] = snapshot
             base_commit = snapshot.base_commit if snapshot else "unknown"
             task_hash = hash_value({"spec": task.spec_hash(), "base_commit": base_commit})
             row_id = self.repo.add_task(
@@ -227,6 +234,7 @@ class ExperimentService:
                     environment=environment,
                     keep_worktree=keep_worktrees or experiment.keep_worktrees,
                     progress=progress,
+                    snapshot=snapshots.get(task.id),
                 )
                 if on_run_finished is not None:
                     on_run_finished(outcome)
@@ -237,7 +245,8 @@ class ExperimentService:
             outcomes = await asyncio.gather(*(guarded(t, v, r) for t, v, r in cells))
         except asyncio.CancelledError:
             status = "interrupted"
-            self.repo.mark_stale_runs_interrupted()
+            # Only this experiment's runs: another experiment may be running in another process.
+            self.repo.mark_stale_runs_interrupted(exp_id)
             raise
         except Exception:
             status = "failed"
@@ -317,6 +326,7 @@ class ExperimentService:
         environment: EnvironmentSpec,
         keep_worktree: bool,
         progress: ProgressCallback | None,
+        snapshot: RepoSnapshot | None = None,
     ) -> RunOutcome:
         config: RunnerConfig = variant.runner_config().model_copy(update={"repetition": repetition})
         run_id = self.repo.create_run(
@@ -400,7 +410,9 @@ class ExperimentService:
 
             if runner is not None:
                 # 1. isolated worktree + setup
-                ctx = await self.sandbox.prepare(task, experiment_id=exp_id, run_id=run_id)
+                ctx = await self.sandbox.prepare(
+                    task, experiment_id=exp_id, run_id=run_id, snapshot=snapshot
+                )
                 self.repo.update_run(
                     run_id, base_commit=ctx.base_commit, worktree_path=str(ctx.workdir)
                 )

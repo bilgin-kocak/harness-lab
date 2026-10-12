@@ -106,3 +106,33 @@ async def test_capture_changes_against_base_commit(plain_fixture: Path, settings
     assert "+    return a + b" in summary.diff_text and not summary.capture_failed
     assert "pkg/later.py" in summary.status_text
     await sandbox.cleanup(ctx)
+
+
+def test_harnesslab_commit_only_from_a_source_checkout(tmp_path: Path):
+    from harnesslab.execution.git import harnesslab_source_commit
+
+    def commit_all(repo: Path) -> str:
+        run_git(["init", "-q", "-b", "main"], cwd=repo, deterministic=True)
+        run_git(["add", "-A"], cwd=repo, deterministic=True)
+        run_git(["commit", "-q", "-m", "c"], cwd=repo, deterministic=True)
+        return run_git(["rev-parse", "HEAD"], cwd=repo).stdout.strip()
+
+    # Installed into a project's virtualenv: the project's HEAD is not Harness Lab's commit.
+    project = tmp_path / "project"
+    installed = project / ".venv" / "lib" / "python3.12" / "site-packages" / "harnesslab"
+    installed.mkdir(parents=True)
+    (project / "app.py").write_text("print('hi')\n")
+    commit_all(project)
+    assert harnesslab_source_commit(installed) is None
+
+    # Running from a Harness Lab checkout: that checkout's HEAD.
+    checkout = tmp_path / "harness-lab"
+    package = checkout / "src" / "harnesslab"
+    package.mkdir(parents=True)
+    (package / "__init__.py").write_text("")
+    head = commit_all(checkout)
+    assert harnesslab_source_commit(package) == head
+
+    plain = tmp_path / "plain" / "harnesslab"
+    plain.mkdir(parents=True)
+    assert harnesslab_source_commit(plain) is None

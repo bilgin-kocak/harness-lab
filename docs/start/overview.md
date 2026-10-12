@@ -64,6 +64,7 @@ and every trace is stored in one provider-neutral schema.
 | See every dashboard view and real CLI output first | [Tour](tour.md) |
 | Understand runs, experiments, sweeps and grow sessions | [Concepts](concepts.md) |
 | Benchmark Claude Code or Codex | [Run Claude Code](../guides/claude-code.md), [Run Codex](../guides/codex.md) |
+| Benchmark pi, OpenCode or Hermes Agent *(unreleased)* | [Run pi](../guides/pi.md), [Run OpenCode](../guides/opencode.md), [Run Hermes Agent](../guides/hermes.md) |
 | Plug in your own agent | [Test your own harness](../guides/your-own-harness.md) |
 | Build a benchmark of your own tasks | [Write a task suite](../guides/task-suites.md), [Mine tasks from git history](../guides/task-corpus.md) |
 | Find the cheapest configuration that still passes | [Configuration sweeps](../guides/sweeps.md) |
@@ -78,8 +79,8 @@ and every trace is stored in one provider-neutral schema.
 
 Python 3.12 or 3.13 (the versions CI tests), git 2.20 or newer, Linux or macOS (Windows through
 WSL). Nothing else is
-needed for the demo: the fake runner needs no API keys. The Claude Code and Codex adapters need
-their CLIs on `PATH` and their credentials.
+needed for the demo: the fake runner needs no API keys. The Claude Code, Codex, pi, OpenCode and
+Hermes Agent adapters need their CLIs on `PATH` and their credentials.
 
 Source and issues: [github.com/bilgin-kocak/harness-lab](https://github.com/bilgin-kocak/harness-lab).
 Package: [pypi.org/project/harnesslab](https://pypi.org/project/harnesslab/). License: MIT.

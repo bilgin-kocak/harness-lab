@@ -5,6 +5,22 @@ in the repository; this page mirrors it.
 
 ## Unreleased
 
+- New adapters for three open-source harnesses that take many model providers: pi
+  (`runner: pi`), OpenCode 1.x and 2.x (`runner: opencode`) and Hermes Agent (`runner: hermes`).
+  Each records a full trace (messages, tool and shell calls, file changes, tokens, LLM calls) and
+  the cost the harness reports (pi and OpenCode in their stream, Hermes Agent in its session
+  store). Every run gets a configuration directory of its own, removed afterwards, receives
+  provider API keys only, and starts with the harness's guard rails set: an injected
+  deny-by-default shell allowlist for OpenCode, manual approvals that refuse dangerous commands
+  for Hermes Agent; pi, which has no permission system, runs only with
+  `allow_dangerous_permissions: true`. A bundle's prompt and skills go where each harness takes
+  them. A run the harness refused, or that stopped before any model call, is unavailable rather
+  than a failed attempt. The adapters were built from each CLI's source and are tested with
+  constructed streams: not yet verified on a real run. See the Run pi, Run OpenCode and Run Hermes
+  Agent guides.
+- `harnesslab doctor` checks all five harness CLIs, in parallel.
+- A pricing table matches a provider-prefixed model id (`openrouter/anthropic/claude-x`) by its
+  last segment, and the safety rules know the tool names of pi, OpenCode and Hermes Agent.
 - Website: the documentation site's front page is now a landing page (what Harness Lab does, how
   it works, when to use it, how to cite it), and a new Tour page shows every dashboard view and
   real CLI output from the demos. The former front page moved to Start here → Overview, where

@@ -26,9 +26,11 @@ harnesses/baseline/
 Claude Code and Codex are closed, so the bundle is the *outer* harness. The Claude adapter passes
 `system_prompt.md` with `--append-system-prompt-file` and materializes skills, hooks and agents as
 a plugin loaded with `--plugin-dir`. Codex gets the system prompt and skills as a prompt prefix
-(hooks and agents are recorded as ignored). The generic runner gets `{harness_dir}` and
-`HARNESSLAB_HARNESS_DIR`. Every run records `harness_hash`, and the hash is part of
-`config_hash`. Details in [Harness bundle](../reference/bundle-format.md).
+(hooks and agents are recorded as ignored). pi, OpenCode and Hermes Agent *(unreleased)* get the
+system prompt as an addition to their own and, for pi and OpenCode, the skills as native skills.
+The generic runner gets `{harness_dir}` and `HARNESSLAB_HARNESS_DIR`. Every run records
+`harness_hash`, and the hash is part of `config_hash`. Details in
+[Harness bundle](../reference/bundle-format.md).
 
 ## Run a session
 

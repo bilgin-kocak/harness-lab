@@ -138,10 +138,11 @@ let a small model match a large one on verified pass rate at a fraction of the c
 ## Honest limits
 
 - **Action granularity** cannot be switched inside closed CLI harnesses. `action_policy` steers it
-  through an appended system prompt (Claude Code) or a prompt prefix (Codex), and the *realized*
+  through an appended system prompt (Claude Code, pi, OpenCode, Hermes Agent) or a prompt prefix
+  (Codex), and the *realized*
   granularity is measured per run: `tool_calls_per_turn`, `mean_command_chars`,
   `edits_per_changed_file`.
-- Cost is only reported by Claude Code. Give Codex or custom harnesses a pricing table;
-  otherwise sweeps rank by total tokens and say so.
+- Cost is reported by Claude Code, pi, OpenCode and Hermes Agent. Give Codex or custom harnesses a
+  pricing table; otherwise sweeps rank by total tokens and say so.
 - Grids explode: use `sample`, `budget`, `tasks:` and `holdout_tasks`. Successive halving and
   Bayesian search are on the [roadmap](../project/roadmap.md).

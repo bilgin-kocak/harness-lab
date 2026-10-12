@@ -15,7 +15,7 @@ cost and behaviour? Harness Lab answers that question reproducibly:
                      │
           ┌──────────┼──────────┐
           ▼          ▼          ▼
-       Harness A  Harness B  Harness C        codex · claude · fake · generic · yours
+       Harness A  Harness B  Harness C        claude · codex · pi · opencode · hermes · yours
           │          │          │
       isolated    isolated    isolated        one git worktree per run
       worktree    worktree    worktree
@@ -65,8 +65,10 @@ harnesslab run suites/demo/suite.yaml --variants claude-default   # needs the cl
 
 ## What it does
 
-- **Runs the same task through different harnesses**: Claude Code, the OpenAI Codex CLI, a
-  deterministic fake agent, any CLI you wrap, or a Python adapter you write.
+- **Runs the same task through different harnesses**: Claude Code, the OpenAI Codex CLI, pi,
+  OpenCode, Hermes Agent, a deterministic fake agent, any CLI you wrap, or a Python adapter you
+  write. Since pi, OpenCode and Hermes Agent take many providers, the same model can run in
+  several harnesses.
 - **Decides success independently**: hidden tests are injected after the agent exits and a
   verifier command produces the verdict.
 - **Normalizes every trace**: tool calls, commands, file changes, tokens, cost and LLM calls in one
@@ -101,6 +103,7 @@ harnesslab run suites/demo/suite.yaml --variants claude-default   # needs the cl
 | The fake demo, step by step | [Quickstart](https://bilgin-kocak.github.io/harness-lab/start/quickstart/) |
 | Running Claude Code | [Run Claude Code](https://bilgin-kocak.github.io/harness-lab/guides/claude-code/) |
 | Running Codex | [Run Codex](https://bilgin-kocak.github.io/harness-lab/guides/codex/) |
+| Running pi, OpenCode or Hermes Agent | [Run pi](https://bilgin-kocak.github.io/harness-lab/guides/pi/), [Run OpenCode](https://bilgin-kocak.github.io/harness-lab/guides/opencode/), [Run Hermes Agent](https://bilgin-kocak.github.io/harness-lab/guides/hermes/) |
 | Creating a task suite | [Write a task suite](https://bilgin-kocak.github.io/harness-lab/guides/task-suites/), [Mine tasks from git history](https://bilgin-kocak.github.io/harness-lab/guides/task-corpus/) |
 | Creating a harness variant | [Task and suite YAML: variants](https://bilgin-kocak.github.io/harness-lab/reference/task-and-suite-format/#variant), [Test your own harness](https://bilgin-kocak.github.io/harness-lab/guides/your-own-harness/) |
 | Interpreting metrics | [Metrics](https://bilgin-kocak.github.io/harness-lab/reference/metrics/), [Read and export results](https://bilgin-kocak.github.io/harness-lab/guides/results/) |

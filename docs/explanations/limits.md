@@ -24,17 +24,40 @@ projects. See [Read and export results](../guides/results.md#statistics).
 
 ## Metrics that depend on the harness
 
-- `reported_cost_usd` exists only when the harness reports cost (Claude Code does, Codex does
-  not). Give other harnesses a [pricing table](../reference/pricing.md).
-- `llm_calls` is exact for Claude Code and the generic JSONL protocol and `null` for Codex, whose
-  stream does not expose model invocations.
+- `reported_cost_usd` exists only when the harness reports cost (Claude Code, pi and OpenCode do,
+  Hermes Agent in its session store; Codex does not). Give other harnesses a
+  [pricing table](../reference/pricing.md).
+- `llm_calls` is exact for Claude Code, pi, OpenCode and the generic JSONL protocol, read from
+  Hermes Agent's session store, and `null` for Codex, whose stream does not expose model
+  invocations.
 - Action granularity cannot be switched inside closed CLIs; `action_policy` steers it through a
   prompt and the realized granularity is measured.
 
+## pi, OpenCode and Hermes Agent
+
+> **Unreleased.** On main; ships in the next release.
+
+- The three adapters were built from each CLI's source and documented output (pi 1.1.0, OpenCode
+  1.19.0 and 2.0.27, Hermes Agent v2026.9.24) and are tested with constructed streams, not yet
+  with a real run. Hermes could not be installed where they were written, so even its `--help`
+  in the tests is reconstructed from its source. Expect differences; report them.
+- None of them resumes a session across improvement rounds (`improve_session: resume` is refused).
+- OpenCode reports a tool call only when it finishes: one still running at a timeout leaves no
+  trace. The model calls of OpenCode subagents do not appear in its stream, which is why the
+  default policy denies them.
+- Hermes Agent's stream has no call ids for most tools: calls pair with their results first in,
+  first out by tool name, which can mismatch overlapping calls of the same tool. Its cost and model
+  calls come from its `state.db`; when that cannot be read they are missing.
+- Model calls a harness makes on its own (titles, memory, reviews, approvals by a second model)
+  are switched off where Harness Lab knows a switch; others would be invisible in the trace.
+- pi, like Claude Code, reads `AGENTS.md` or `CLAUDE.md` files in the directories above the
+  worktree. Keep `HARNESSLAB_HOME` outside any project with such files.
+- OpenCode's download cache (providers, language servers) is shared with your own OpenCode.
+
 ## Growing the harness
 
-- Only the outer harness can be grown for Claude Code and Codex: prompts, skills, hooks, agents.
-  The control loop stays closed.
+- Only the outer harness can be grown for the CLI harnesses: prompts, skills, hooks, agents (as
+  far as each harness takes them). The control loop stays closed.
 - The bundled demo suite has three tasks, enough to prove the mechanics, not to measure an effect.
 - The optimizer sees scrubbed verifier output. By default unittest and pytest assertion details
   are replaced by a placeholder; expected values printed in other ways (custom runners, `print`

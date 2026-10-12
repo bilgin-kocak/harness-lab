@@ -5,9 +5,17 @@ before pointing it at anything you care about.
 
 ## Isolation is git worktrees, not containers
 
-- Agents run with your user's privileges. The Codex adapter uses Codex's own `workspace-write`
-  sandbox with network disabled; the Claude adapter uses `acceptEdits` plus a shell allowlist and
-  denies everything else. Neither is a security boundary against a determined agent.
+- Agents run with your user's privileges. Each adapter starts its harness with that harness's
+  own guard rails set as below; none of them is a security boundary against a determined agent.
+
+  | Runner | What the agent may do by default | Loosening it |
+  | --- | --- | --- |
+  | `claude` | `acceptEdits` plus a shell allowlist (python, pytest, ls, cat, git diff, status and log); WebFetch and WebSearch denied | `permission_mode: bypassPermissions` with `allow_dangerous_permissions: true` |
+  | `codex` | Codex's own `workspace-write` sandbox, network off | `sandbox: danger-full-access` |
+  | `opencode` *(unreleased)* | the same allowlist as an injected permission policy; no web access, subagents, questions or paths outside the worktree | a `permission` that allows any command or path, or `auto: true`, with `allow_dangerous_permissions: true` |
+  | `hermes` *(unreleased)* | file and terminal tools; manual approvals that refuse dangerous commands; writes only inside the worktree | `yolo: true` with `allow_dangerous_permissions: true` |
+  | `pi` *(unreleased)* | anything: pi has no permission system | runs only with `allow_dangerous_permissions: true` |
+  | `generic` | whatever the command does | not applicable |
 - Use only trusted benchmark repositories and throwaway credentials until container isolation
   (`DockerSandbox`, on the [roadmap](../project/roadmap.md)) exists.
 - Git fixture repositories are copied into Harness Lab's home with no remote, so nothing an agent
@@ -43,6 +51,12 @@ any surprising pass.
 The environment passed to agents is an allowlist: `PATH`, locale, proxy and CA settings, and
 provider credentials. Verifier and setup commands receive no credentials at all. Environment
 variables are never logged. The full list is in [Storage and data layout](../reference/storage.md).
+
+*(unreleased)* pi, OpenCode and Hermes Agent get provider API keys only, not Claude Code or Codex
+credentials or a subscription sign-in, and each runs with a configuration directory of its own
+that is removed after the run: your own configuration, credentials, memory, skills and sessions
+for those harnesses are never read, and their transcripts, which hold the model's reasoning,
+are never kept.
 
 ## Redaction before persistence
 

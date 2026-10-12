@@ -14,6 +14,8 @@ Everything lives under one directory, by default `./.harnesslab` (override with
                            agent_stream.sanitized.jsonl · agent.stderr.log   (real harnesses)
                            codex_last_message.txt                            (Codex)
                            system_prompt.txt · plugin/                       (Claude with a bundle)
+                           system_prompt.txt · skills/                       (pi with additions)
+                           system_prompt.txt                                 (OpenCode, Hermes)
   artifacts/<exp>/harness/<hash>/   snapshot of each harness bundle used by the experiment
   grow/<session>/v<N>/bundle/       each grow version's bundle
   grow/<session>/v<N>/context.json  exactly what the optimizer saw
@@ -89,3 +91,17 @@ variables Claude Code and Codex document:
 plus whatever a variant lists in `env_passthrough`. Every child also gets `NO_COLOR=1`, `PYTHONDONTWRITEBYTECODE=1`,
 `PYTHONUNBUFFERED=1`, `GIT_TERMINAL_PROMPT=0` and `HARNESSLAB=1`. Verifier and setup commands
 receive no credentials. Environment variables are never logged.
+
+*(unreleased)* pi, OpenCode and Hermes Agent processes get none of the variables above beyond
+the ones every child gets. They receive provider API keys and endpoints only
+(`PROVIDER_API_KEYS` in `runners/_cli.py`: `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`,
+`OPENAI_BASE_URL`, the `AZURE_OPENAI_*` settings, `GEMINI_API_KEY`, `GOOGLE_API_KEY`,
+`OPENROUTER_API_KEY`, `GROQ_API_KEY`, `DEEPSEEK_API_KEY`, `MISTRAL_API_KEY`, `XAI_API_KEY`,
+`CEREBRAS_API_KEY`, `FIREWORKS_API_KEY`, `TOGETHER_API_KEY`, `MOONSHOT_API_KEY`, `KIMI_API_KEY`,
+`MINIMAX_API_KEY`, `ZAI_API_KEY`, `NVIDIA_API_KEY`, `HF_TOKEN`, `OPENCODE_API_KEY`,
+`AI_GATEWAY_API_KEY`, and for Hermes a few more providers' keys), plus `env_passthrough`. Each
+runs with a configuration directory of its own, created for the run and removed after it:
+`PI_CODING_AGENT_DIR`; OpenCode's `XDG_CONFIG_HOME`, `XDG_DATA_HOME`, `XDG_STATE_HOME`,
+`XDG_RUNTIME_DIR` and `OPENCODE_TEST_HOME`; `HERMES_HOME`. See the
+[pi](../guides/pi.md#isolation), [OpenCode](../guides/opencode.md#isolation) and
+[Hermes Agent](../guides/hermes.md#isolation-and-approvals) guides.

@@ -454,9 +454,17 @@ def init(
 # ---------------------------------------------------------------------------
 
 
+# The runners that drive an installed harness CLI, in the order doctor lists them.
+CLI_RUNNERS = ("codex", "claude", "pi", "opencode", "hermes")
+
+
 @app.command()
 def doctor(ctx: typer.Context) -> None:
-    """Check python, git, codex, claude and the database."""
+    """Check python, git, the harness CLIs and the database.
+
+    The harness CLIs are codex, claude, pi, opencode and hermes. A missing one only disables its
+    runner.
+    """
     from harnesslab.execution.git import git_version
     from harnesslab.runners.base import create_runner
 
@@ -480,13 +488,13 @@ def doctor(ctx: typer.Context) -> None:
     failures += 0 if gv else 1
 
     async def probe_all() -> dict[str, Any]:
-        out = {}
-        for name in ("codex", "claude"):
-            out[name] = await create_runner(name).check_availability()
-        return out
+        found = await asyncio.gather(
+            *(create_runner(name).check_availability() for name in CLI_RUNNERS)
+        )
+        return dict(zip(CLI_RUNNERS, found, strict=True))
 
     probes = asyncio.run(probe_all())
-    for name in ("codex", "claude"):
+    for name in CLI_RUNNERS:
         a = probes[name]
         if a.available:
             status = "[green]ok[/]"
@@ -524,9 +532,10 @@ def doctor(ctx: typer.Context) -> None:
         table.add_row("home dir", "[red]not writable[/]", f"{settings.home}: {exc}")
 
     console.print(table)
-    if not probes["codex"].available or not probes["claude"].available:
+    if not all(probe.available for probe in probes.values()):
         console.print(
-            "[dim]Missing CLIs only disable their runners; the fake runner and dashboard work without them.[/]"
+            "[dim]A missing CLI only disables its runner; the fake runner and the dashboard "
+            "work without any of them.[/]"
         )
     raise typer.Exit(code=1 if failures else 0)
 

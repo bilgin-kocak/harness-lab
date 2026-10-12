@@ -128,7 +128,7 @@ unreadable or invalid key makes the run `not_verified`.
 ```yaml
 variants:
   - id: claude-sonnet-small-context      # required, unique
-    runner: claude                       # required: fake | generic | codex | claude | a plugin name
+    runner: claude                       # required: fake | generic | codex | claude | pi | opencode | hermes | a plugin name
     model: claude-sonnet-5               # optional, runner-specific meaning
     description: ...                     # optional
     harness: ../harnesses/baseline       # optional: a harness bundle directory
@@ -146,7 +146,8 @@ hash covers the runner, model, options, context and tool policy and the harness 
 two variants with identical settings and bundles hash the same.
 
 Runner options are documented per adapter: [Run Claude Code](../guides/claude-code.md),
-[Run Codex](../guides/codex.md), [Test your own harness](../guides/your-own-harness.md). The fake
+[Run Codex](../guides/codex.md), [Run pi](../guides/pi.md), [Run OpenCode](../guides/opencode.md),
+[Run Hermes Agent](../guides/hermes.md), [Test your own harness](../guides/your-own-harness.md). The fake
 runner accepts `behavior` (`solve`, `partial`, `noop`, `fail`, `crash`, `timeout`), `behaviors`
 *(0.3.0; a list, one per repetition in turn)*, `command`,
 `run_command`, `delay_ms`, `solve_tasks`, `simulate_cost_usd_per_1k_tokens`,

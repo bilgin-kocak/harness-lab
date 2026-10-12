@@ -1,8 +1,8 @@
 ---
 description: >-
   Open-source controlled experiments for AI coding-agent harnesses: the same task, from the same
-  commit, through Claude Code, Codex or your own agent, judged by hidden tests and compared with
-  paired statistics.
+  commit, through Claude Code, Codex, OpenCode, pi, Hermes Agent or your own agent, judged by
+  hidden tests and compared with paired statistics.
 hide:
   - navigation
   - toc
@@ -23,8 +23,9 @@ GitBook opens on start/overview.md. tests/test_docs.py keeps it that way. -->
 Controlled experiments for AI coding-agent harnesses.
 { .hl-tagline }
 
-Run the same task, from the same commit, through Claude Code, Codex or your own agent. Hidden
-tests decide what passed; cost, tokens, LLM calls and behaviour sit side by side.
+Run the same task, from the same commit, through Claude Code, Codex, OpenCode, pi, Hermes Agent
+or your own agent. Hidden tests decide what passed; cost, tokens, LLM calls and behaviour sit side
+by side.
 { .hl-lede }
 
 ```bash
@@ -50,7 +51,7 @@ The demo runs offline fake agents: no API key, done in seconds.
 { .hl-question }
 
 An AI coding agent is two things: the **model** (Claude, GPT, …) and the **harness** around it,
-the program that drives the model (Claude Code, the Codex CLI, …) with its system prompt,
+the program that drives the model (Claude Code, the Codex CLI, OpenCode, …) with its system prompt,
 tools, settings, skills and hooks. Teams pay for both, yet rarely know which combination works
 on their code, because the usual comparisons are unreliable:
 { .hl-intro }
@@ -224,6 +225,9 @@ instructions rest on evidence instead of guesses.
 | --- | --- | --- |
 | Claude Code CLI | `claude` | Full trace, reported cost, LLM calls; bundles load as a plugin (prompt, skills, hooks, agents) |
 | OpenAI Codex CLI | `codex` | Full trace; cost from your [pricing table](reference/pricing.md); a bundle's prompt and skills become instructions |
+| [OpenCode](guides/opencode.md) 1.x and 2.x *(unreleased)* | `opencode` | Full trace, reported cost, LLM calls; injected permission policy; bundles as global rules and skills |
+| [pi](guides/pi.md) *(unreleased)* | `pi` | Full trace, reported cost, LLM calls; runs only with an explicit opt-in, since pi has no permission system |
+| [Hermes Agent](guides/hermes.md) *(unreleased)* | `hermes` | Trace, cost and LLM calls from its session store; manual approvals that refuse dangerous commands |
 | Any command-line agent | `generic` | Diff and verdict for any command; a full trace with the [JSONL event protocol](guides/your-own-harness.md#the-jsonl-event-protocol) |
 | Your Python adapter | your own | Whatever your [`HarnessRunner`](guides/your-own-harness.md#2-a-python-module-a-real-adapter) emits, registered directly or as an entry point |
 | Fake agent | `fake` | Deterministic and offline: demos, tests and CI without an API key |

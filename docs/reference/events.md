@@ -1,8 +1,9 @@
 # Events
 
-Every harness adapter converts its native stream (Codex JSONL, Claude Code stream-json, the
-generic JSONL protocol, or direct calls from a Python adapter) into one provider-neutral event
-schema. The dashboard timeline, metrics and aggregation only ever see this schema.
+Every harness adapter converts its native stream (Codex JSONL, Claude Code stream-json, pi's
+JSON events, OpenCode's JSON output, Hermes Agent's stream-json, the generic JSONL protocol, or
+direct calls from a Python adapter) into one provider-neutral event schema. The dashboard
+timeline, metrics and aggregation only ever see this schema.
 
 ## Event
 
@@ -13,7 +14,7 @@ schema. The dashboard timeline, metrics and aggregation only ever see this schem
 | `sequence` | 0-based position in the run; unique per run. |
 | `timestamp` | UTC. |
 | `kind` | One of the kinds below. |
-| `source` | `runner`, `codex`, `claude`, `generic`, `harnesslab`, … |
+| `source` | `runner`, `codex`, `claude`, `pi`, `opencode`, `hermes`, `generic`, `harnesslab`, … |
 | `name` | Tool or command name, or a system event name. |
 | `duration_ms` | Set on finished events and some system events. |
 | `payload` | Kind-specific JSON, redacted before persistence. |
@@ -29,7 +30,7 @@ schema. The dashboard timeline, metrics and aggregation only ever see this schem
 | `run_finished` | `status`, `outcome`, `error`, `exit_code`; `duration_ms` is the wall time |
 | `assistant_message` | `text` (final messages are recorded but are not evidence of success) |
 | `tool_started` | `tool`, `input` |
-| `tool_finished` | `tool`, `status` (`completed`, `error`, `interrupted`), `output` |
+| `tool_finished` | `tool`, `status` (`completed`, `error`, `interrupted`, or a refusal: `denied`, `blocked`, …), `output` |
 | `command_started` | `command`, optional `description` |
 | `command_finished` | `command`, `exit_code`, `output`, optional `stderr`, `timed_out`, `status` |
 | `file_change` | `path`, `kind` (`add`, `update`, `delete`, …), `tool` |
@@ -50,6 +51,8 @@ and the literal values of secret-looking variables in Harness Lab's own environm
 to the `events` table in batches while the run is still executing. Real harness runs also keep a
 sanitized copy of the provider stream as the `agent_stream` artifact and the CLI's stderr as
 `agent_stderr` (Codex also `agent_last_message`), all redacted, also when the run is cancelled.
+A bundle's system prompt, as pi, OpenCode and Hermes Agent receive it, is kept as
+`system_prompt.txt` with the run's artifacts.
 Improvement runs keep them per round (`round_<n>_agent_stream`, `round_<n>_prompt`, ...). See
 [Storage and data layout](storage.md).
 

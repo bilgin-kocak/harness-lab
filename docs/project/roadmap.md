@@ -63,8 +63,11 @@ statistics already in place.
 - **Live event streaming** to the dashboard while a run executes.
 - **Agent causal debugger / delta replay**: replay a trace, locate the first divergence between a
   passing and a failing run, counterfactual interventions on stable event ids.
-- More adapters (OpenCode, OpenAI Agents SDK, LangGraph) through `HarnessRunner`, and an open
+- More adapters (OpenAI Agents SDK, LangGraph) through `HarnessRunner`, and an open
   control-loop runner so the grow loop can edit control code, not only prompts.
+- **pi, OpenCode and Hermes Agent, next steps**: record real runs of each as test fixtures and
+  drop the "not yet verified" notes; resume one session across improvement rounds; a pi
+  extension that enforces a permission policy, so pi can run without the opt-in.
 
 ## Not in scope by design
 

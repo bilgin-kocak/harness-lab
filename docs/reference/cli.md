@@ -23,7 +23,7 @@ $ harnesslab [OPTIONS] COMMAND [ARGS]...
 
 * `version`: Print the Harness Lab version.
 * `init`: Scaffold a lab directory: copies of the...
-* `doctor`: Check python, git, codex, claude and the...
+* `doctor`: Check python, git, the harness CLIs and...
 * `run`: Run every task of a suite against one or...
 * `serve`: Start the local dashboard.
 * `suite`: Inspect and sanity-check task suites.
@@ -69,7 +69,10 @@ $ harnesslab init [OPTIONS] [directory]
 
 ## `harnesslab doctor`
 
-Check python, git, codex, claude and the database.
+Check python, git, the harness CLIs and the database.
+
+The harness CLIs are codex, claude, pi, opencode and hermes. A missing one only disables its
+runner.
 
 **Usage**:
 

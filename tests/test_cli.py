@@ -1,6 +1,7 @@
 import json
 import os
 import re
+import shutil
 from pathlib import Path
 
 import pytest
@@ -24,6 +25,26 @@ def test_doctor_runs_without_external_clis(tmp_path: Path):
     assert result.exit_code == 0, result.output
     for word in ("python", "git", "codex cli", "claude cli", "database"):
         assert word in result.output
+
+
+def test_doctor_probes_every_harness_cli(tmp_path: Path, fake_cli: Path):
+    clis = tmp_path / "clis"
+    clis.mkdir()
+    for name in ("pi", "opencode", "hermes"):
+        (clis / name).symlink_to(fake_cli)
+    git = shutil.which("git")
+    assert git is not None
+    env = _env(tmp_path)
+    env["PATH"] = os.pathsep.join([str(clis), os.path.dirname(git)])
+    result = runner.invoke(app, ["doctor"], env=env)
+    assert result.exit_code == 0, result.output
+    rows = {line.split("│")[1].strip(): line for line in result.output.splitlines() if "│" in line}
+    for name in ("pi cli", "opencode cli", "hermes cli"):
+        assert "ok" in rows[name] and "fake-cli 9.9.9" in rows[name], rows.get(name)
+    for name in ("codex cli", "claude cli"):
+        assert name in rows
+    if "not installed" in result.output:
+        assert "A missing CLI only disables its runner" in result.output
 
 
 def test_suite_list(tmp_path: Path):

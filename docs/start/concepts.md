@@ -10,7 +10,7 @@ TASK × MODEL × HARNESS × CONFIGURATION × ENVIRONMENT → TRACE → VERIFIER 
 | --- | --- | --- |
 | TASK | a task spec: prompt, fixture repository, verifier, limits | `suites/<suite>/tasks/*.yaml` |
 | MODEL | the requested model and the model the harness actually used | variant YAML, `runs` table |
-| HARNESS | the runner (`claude`, `codex`, `fake`, `generic`, yours) plus its CLI version, and optionally a harness bundle | variant YAML, `variants` and `runs` tables |
+| HARNESS | the runner (`claude`, `codex`, `pi`, `opencode`, `hermes`, `fake`, `generic`, yours) plus its CLI version, and optionally a harness bundle | variant YAML, `variants` and `runs` tables |
 | CONFIGURATION | every other key of a variant, hashed as `config_hash` | variant YAML, `variants` and `runs` tables |
 | ENVIRONMENT | sandbox kind, OS, Python, git, hashed as `environment_hash` | `experiments` and `runs` tables |
 | TRACE | the normalized event list | `events` table plus a sanitized stream artifact |

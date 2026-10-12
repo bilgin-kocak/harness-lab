@@ -93,6 +93,9 @@ nav:
   - Guides:
       - Run Claude Code: guides/claude-code.md
       - Run Codex: guides/codex.md
+      - Run pi: guides/pi.md
+      - Run OpenCode: guides/opencode.md
+      - Run Hermes Agent: guides/hermes.md
       - Test your own harness: guides/your-own-harness.md
       - Write a task suite: guides/task-suites.md
       - Mine tasks from git history: guides/task-corpus.md

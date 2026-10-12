@@ -12,11 +12,11 @@ Stored in the `runs` table as columns and as `metrics_json`, shown on the run pa
 | `verified_score` | `score / max_score` from the partial-score command if there is one, the chosen F1 with an [answer key](../guides/discovery.md), else `1.0` / `0.0`. |
 | `task_metrics` *(0.3.0)* | The numeric metrics the task's own checks reported: the score command's `metrics`, or the answer key's F1 scores and counts. Booleans count as 0 and 1. |
 | `wall_time_seconds` | The whole pipeline: agent, capture and verifier. Also `agent_wall_time_seconds` and `verifier_wall_time_seconds`. |
-| `input_tokens` | *Uncached* prompt tokens. Codex reports cached tokens inside its input count and Claude Code reports them separately; adapters normalize both to this shape. |
+| `input_tokens` | *Uncached* prompt tokens. Codex reports cached tokens inside its input count and Claude Code reports them separately; adapters normalize both to this shape (pi, OpenCode and Hermes Agent report uncached input already). |
 | `cached_input_tokens`, `cache_write_tokens` | Cache reads and cache writes. |
 | `output_tokens`, `reasoning_output_tokens`, `total_tokens` | Output, reasoning output where reported, and the sum of input, cached, cache-write and output tokens. |
-| `llm_calls` | Model invocations: distinct assistant messages for Claude Code, `usage` events for the generic JSONL protocol, `fake.yaml` or a per-behaviour default for the fake runner, `null` for Codex. |
-| `reported_cost_usd` | What the harness itself reported (Claude Code does, Codex does not). Never invented. |
+| `llm_calls` | Model invocations: distinct assistant messages for Claude Code, assistant responses plus compaction summaries for pi, steps for OpenCode, the session's API calls (from its `state.db`) for Hermes Agent, `usage` events for the generic JSONL protocol, `fake.yaml` or a per-behaviour default for the fake runner, `null` for Codex. |
+| `reported_cost_usd` | What the harness itself reported: Claude Code, pi and OpenCode do, Hermes Agent does in its session store (an estimate unless it knows the actual cost), Codex does not. A reported 0 for tokens used means the harness had no price for the model and is stored as `null`. Never invented. |
 | `estimated_cost_usd`, `pricing_version` | Computed only from your [pricing table](pricing.md); the version keeps estimates attributable. |
 | `tool_calls`, `shell_commands`, `tool_calls_unfinished`, `subagent_tool_calls` | Counted from normalized events. |
 | `assistant_messages`, `reasoning_events`, `error_events`, `file_change_events`, `events_total` | Event counts. |

@@ -1,8 +1,11 @@
-"""Opt-in tests against the real Codex / Claude Code CLIs.
+"""Opt-in tests against the real harness CLIs: Codex, Claude Code, pi, OpenCode, Hermes Agent.
 
 Enable with ``HARNESSLAB_INTEGRATION=1``; each test is skipped when its CLI is
 not installed.  They assert that a run completes with a result record, not
-that the agent solves the task.
+that the agent solves the task.  The models of the multi-provider harnesses come
+from ``HARNESSLAB_PI_MODEL``, ``HARNESSLAB_OPENCODE_MODEL`` (default
+``anthropic/claude-sonnet-4-5``), ``HARNESSLAB_HERMES_MODEL`` and
+``HARNESSLAB_HERMES_PROVIDER``; their provider keys from the environment.
 """
 
 import os
@@ -22,8 +25,32 @@ pytestmark = pytest.mark.integration
 ENABLED = os.environ.get("HARNESSLAB_INTEGRATION") == "1"
 
 
+def _env_options(**names: str | None) -> dict[str, str]:
+    """Variant options from environment variables (option name -> variable), when set."""
+    return {key: os.environ[var] for key, var in names.items() if var and os.environ.get(var)}
+
+
+CASES = [
+    ("codex", {}),
+    ("claude", {"max_turns": 15}),
+    # pi has no permission system: the opt-in is required. Run it somewhere disposable.
+    ("pi", {"allow_dangerous_permissions": True, **_env_options(model="HARNESSLAB_PI_MODEL")}),
+    (
+        "opencode",
+        {
+            "model": "anthropic/claude-sonnet-4-5",
+            **_env_options(model="HARNESSLAB_OPENCODE_MODEL"),
+        },
+    ),
+    (
+        "hermes",
+        _env_options(model="HARNESSLAB_HERMES_MODEL", provider="HARNESSLAB_HERMES_PROVIDER"),
+    ),
+]
+
+
 @pytest.mark.skipif(not ENABLED, reason="set HARNESSLAB_INTEGRATION=1 to run real CLI tests")
-@pytest.mark.parametrize("runner_name,options", [("codex", {}), ("claude", {"max_turns": 15})])
+@pytest.mark.parametrize("runner_name,options", CASES)
 async def test_real_cli_run(settings: Settings, db: Database, runner_name: str, options: dict):
     if shutil.which(runner_name) is None:
         pytest.skip(f"{runner_name} is not installed")

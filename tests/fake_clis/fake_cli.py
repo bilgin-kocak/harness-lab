@@ -11,13 +11,20 @@ Behaviour is controlled by environment variables (set by the tests):
     FAKE_CLI_HELP_RESUME  help text for ``exec resume --help`` (falls back to FAKE_CLI_HELP)
     FAKE_CLI_REJECT   a flag the CLI rejects at startup, the way a CLI that dropped it would
     FAKE_CLI_REJECT_VALUE  a flag whose value the CLI rejects at startup (invalid choice)
+    FAKE_CLI_REJECT_STYLE  whose wording a refusal uses: pi, effect (OpenCode 2), yargs-help
+                      (OpenCode 1: its help on stderr) or argparse (Hermes); the default is
+                      Claude Code's (commander) or, with ``exec`` in argv, Codex's (clap)
+    FAKE_CLI_ENV_OUT  path of a JSON file that gets the environment the CLI ran with
+    FAKE_CLI_COPY     ``src=>dst``: copy a file before replaying, ``$VARS`` in dst expanded
     FAKE_CLI_HELP_LOG path of a file that gets one line per --help call
     FAKE_CLI_STDERR_TEXT  text written to stderr at the end of a normal run
 
 The prompt is read from stdin and echoed to FAKE_CLI_PROMPT_OUT when set.
 """
 
+import json
 import os
+import shutil
 import signal
 import subprocess
 import sys
@@ -41,7 +48,22 @@ def main() -> int:
             with open(help_file, encoding="utf-8") as fh:
                 sys.stdout.write(fh.read())
         return 0
+    style = os.environ.get("FAKE_CLI_REJECT_STYLE")
     reject = os.environ.get("FAKE_CLI_REJECT")
+    if reject and reject in argv and style:
+        if style == "pi":
+            sys.stderr.write(f"Error: Unknown option: {reject}\n")
+        elif style == "effect":
+            sys.stderr.write(f"Unrecognized flag: {reject} in command opencode run\n")
+        elif style == "yargs-help":  # OpenCode 1 prints its help, nothing else
+            with open(os.environ["FAKE_CLI_HELP"], encoding="utf-8") as fh:
+                sys.stderr.write(fh.read())
+        else:  # argparse
+            sys.stderr.write(
+                f"usage: hermes [-h]\nhermes: error: unrecognized arguments: {reject}\n"
+            )
+            return 2
+        return 1
     if reject and reject in argv:
         if "exec" in argv:  # codex (clap) wording
             sys.stderr.write(f"error: unexpected argument '{reject}' found\n")
@@ -52,6 +74,12 @@ def main() -> int:
     if reject_value and reject_value in argv:
         position = argv.index(reject_value) + 1
         given = argv[position] if position < len(argv) else ""
+        if style == "argparse":
+            sys.stderr.write(
+                f"usage: hermes [-h]\nhermes: error: argument {reject_value}: invalid choice: "
+                f"'{given}' (choose from 'one', 'two')\n"
+            )
+            return 2
         if "exec" in argv:  # codex (clap) wording
             sys.stderr.write(
                 f"error: invalid value '{given}' for '{reject_value} <VALUE>'\n"
@@ -69,6 +97,16 @@ def main() -> int:
     if out:
         with open(out, "w", encoding="utf-8") as fh:
             fh.write(prompt)
+    env_out = os.environ.get("FAKE_CLI_ENV_OUT")
+    if env_out:
+        with open(env_out, "w", encoding="utf-8") as fh:
+            json.dump(dict(os.environ), fh)
+    copy = os.environ.get("FAKE_CLI_COPY")
+    if copy:
+        src, dst = copy.split("=>", 1)
+        dst = os.path.expandvars(dst)
+        os.makedirs(os.path.dirname(dst), exist_ok=True)
+        shutil.copyfile(src, dst)
     cwd_out = os.environ.get("FAKE_CLI_CWD_OUT")
     if cwd_out:
         with open(cwd_out, "w", encoding="utf-8") as fh:

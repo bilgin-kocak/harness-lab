@@ -82,12 +82,13 @@ _FORCE_COLOR = ("CLICOLOR_FORCE", "FORCE_COLOR")
 # A flag in a command line: the whole word, optionally with =value.
 _ARGV_FLAG = re.compile(r"--?[A-Za-z][A-Za-z0-9_-]*(?:=.*)?")
 # How a CLI refuses a flag it does not know: commander (Claude Code), clap (Codex), pi
-# ("Unknown option: -x", "Unknown option(s): --x, --y"), Effect (OpenCode 2: "Unrecognized flag:
-# --x in command opencode run") and argparse (Hermes: "unrecognized arguments: --x").
+# ("Error: Unknown option: -x", "Error: Unknown options: --x, --y"), Effect (OpenCode 2:
+# "Unrecognized flag: --x in command opencode run") and argparse (Hermes: "unrecognized
+# arguments: --x").
 _FLAG = r"(--?[A-Za-z][A-Za-z0-9_-]*)"
 _REJECTED_PATTERNS = (
     re.compile(rf"(?:unknown option|unexpected argument) '{_FLAG}'"),
-    re.compile(rf"Unknown option(?:\(s\))?: {_FLAG}"),
+    re.compile(rf"Unknown options?: {_FLAG}"),
     re.compile(rf"Unrecognized flag: {_FLAG}"),
     re.compile(rf"unrecognized arguments: {_FLAG}"),
 )
@@ -376,6 +377,38 @@ def redact_file_in_place(
 
 # A session id that only stands in for a real one in the flag check.
 PLACEHOLDER_SESSION = "00000000-0000-4000-8000-000000000000"
+
+# Provider API keys and endpoints for the multi-provider harnesses (pi, OpenCode, Hermes Agent),
+# which run without the Claude Code and Codex credentials. Subscription sign-ins (Claude, ChatGPT,
+# Copilot) are not forwarded: those harnesses keep them in their own config, which a run never
+# reads. A variant can forward more variables with env_passthrough.
+PROVIDER_API_KEYS: tuple[str, ...] = (
+    "ANTHROPIC_API_KEY",
+    "OPENAI_API_KEY",
+    "OPENAI_BASE_URL",
+    "AZURE_OPENAI_API_KEY",
+    "AZURE_OPENAI_BASE_URL",
+    "AZURE_OPENAI_RESOURCE_NAME",
+    "AZURE_OPENAI_API_VERSION",
+    "GEMINI_API_KEY",
+    "GOOGLE_API_KEY",
+    "OPENROUTER_API_KEY",
+    "GROQ_API_KEY",
+    "DEEPSEEK_API_KEY",
+    "MISTRAL_API_KEY",
+    "XAI_API_KEY",
+    "CEREBRAS_API_KEY",
+    "FIREWORKS_API_KEY",
+    "TOGETHER_API_KEY",
+    "MOONSHOT_API_KEY",
+    "KIMI_API_KEY",
+    "MINIMAX_API_KEY",
+    "ZAI_API_KEY",
+    "NVIDIA_API_KEY",
+    "HF_TOKEN",
+    "OPENCODE_API_KEY",
+    "AI_GATEWAY_API_KEY",
+)
 
 
 def own_flags_only(config: RunnerConfig) -> RunnerConfig | None:

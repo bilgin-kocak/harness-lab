@@ -224,6 +224,43 @@ def prompt_prefix(bundle: HarnessBundle) -> str:
     return "\n\n".join(parts)
 
 
+def _with_description(data: bytes) -> bytes:
+    """A ``SKILL.md`` whose frontmatter has a ``description``: the first line of its body when
+    it has none (pi, like the Agent Skills specification, skips a skill without one)."""
+    text = data.decode("utf-8", errors="replace")
+    match = _FRONTMATTER.match(text)
+    meta = _parse_frontmatter(text)
+    if match is None or meta is None or meta.get("description"):
+        return data
+    body = text[match.end() :]
+    first = next(
+        (line.strip().lstrip("#").strip() for line in body.splitlines() if line.strip()), ""
+    )
+    meta["description"] = (first or f"Skill {meta.get('name')}")[:1024]
+    front = yaml.safe_dump(meta, sort_keys=False, allow_unicode=True)
+    return f"---\n{front}---\n{body}".encode()
+
+
+def materialize_skill_dirs(bundle: HarnessBundle, dest: Path) -> list[Path]:
+    """Write the bundle's skills as Agent Skills directories under ``dest`` (for pi's
+    ``--skill``): one directory per skill, with its supporting files. Returns the directories
+    that hold a ``SKILL.md``."""
+    dest = Path(dest)
+    if dest.exists():
+        shutil.rmtree(dest)
+    dirs: list[Path] = []
+    for rel, data in sorted(bundle.files.items()):
+        if not rel.startswith("skills/"):
+            continue
+        target = dest / rel.removeprefix("skills/")
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if _is_skill_file(rel):
+            data = _with_description(data)
+            dirs.append(target.parent)
+        target.write_bytes(data)
+    return dirs
+
+
 def materialize_claude_plugin(bundle: HarnessBundle, dest: Path) -> Path | None:
     """Write skills, hooks and agents as a Claude Code plugin directory (``--plugin-dir``)."""
     if not bundle.has_plugin_components:

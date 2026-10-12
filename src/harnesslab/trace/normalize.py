@@ -136,3 +136,47 @@ def worktree_relative(path: Any, worktree: str | None) -> str:
         if text.startswith(root):
             return text[len(root) :]
     return text
+
+
+def cap_strings(value: Any, limit: int) -> Any:
+    """A copy of a JSON value with every string longer than ``limit`` truncated."""
+    if isinstance(value, str):
+        return value if len(value) <= limit else value[:limit] + "... [truncated]"
+    if isinstance(value, list):
+        return [cap_strings(item, limit) for item in value]
+    if isinstance(value, dict):
+        return {key: cap_strings(item, limit) for key, item in value.items()}
+    return value
+
+
+class CallIds:
+    """Call ids for one parser's tool calls.
+
+    A provider's own id is kept while the run's trace has not used it; otherwise the event
+    sequence is appended, because improvement rounds share one trace and some providers reuse
+    ids. A call without an id gets ``<prefix>-<sequence>``.
+    """
+
+    def __init__(self, emit: EventEmitter, prefix: str = "call") -> None:
+        self.emit = emit
+        self.prefix = prefix
+        self._taken = {event.call_id for event in emit.events if event.call_id}
+        self._open: dict[str, str] = {}
+
+    def start(self, provider_id: Any = None) -> str:
+        own = provider_id not in (None, "")
+        base = str(provider_id) if own else f"{self.prefix}-{self.emit.next_sequence}"
+        call_id, n = base, 0
+        while call_id in self._taken:
+            n += 1
+            call_id = f"{base}#{self.emit.next_sequence}" + (f".{n}" if n > 1 else "")
+        self._taken.add(call_id)
+        if own:
+            self._open[str(provider_id)] = call_id
+        return call_id
+
+    def finish(self, provider_id: Any) -> str | None:
+        """The id :meth:`start` gave ``provider_id``, or None for a call that never started."""
+        if provider_id in (None, ""):
+            return None
+        return self._open.pop(str(provider_id), None)

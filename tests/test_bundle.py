@@ -10,6 +10,7 @@ from harnesslab.harness.bundle import (
     bundle_hash,
     is_allowed_path,
     materialize_claude_plugin,
+    materialize_skill_dirs,
     prompt_prefix,
     validate_files,
 )
@@ -111,3 +112,28 @@ def test_write_to_and_plugin(tmp_path: Path):
     assert not (plugin / "system_prompt.md").exists()
     prompt_only = HarnessBundle.from_files(tmp_path / "np", {"system_prompt.md": "x"})
     assert materialize_claude_plugin(prompt_only, tmp_path / "p2") is None
+
+
+def test_skills_become_agent_skills_directories_with_a_description(tmp_path: Path):
+    b = HarnessBundle.from_files(
+        tmp_path / "b",
+        {
+            "skills/a/SKILL.md": "---\nname: a\n---\n\n## Check the edge cases\n\nbody",
+            "skills/a/ref.md": "reference",
+            "skills/b/SKILL.md": "---\nname: b\ndescription: Kept as written\n---\nbody",
+            "skills/c/SKILL.md": "---\nname: c\n---\n",
+            "skills/notes.md": "not a skill",
+            "system_prompt.md": "p",
+        },
+    )
+    dest = tmp_path / "skills"
+    (dest / "stale").mkdir(parents=True)
+    dirs = materialize_skill_dirs(b, dest)
+    assert dirs == [dest / "a", dest / "b", dest / "c"] and not (dest / "stale").exists()
+    a = (dest / "a" / "SKILL.md").read_text()
+    assert a.startswith("---\nname: a\ndescription: Check the edge cases\n---\n")
+    assert a.endswith("body") and (dest / "a" / "ref.md").read_text() == "reference"
+    assert (dest / "b" / "SKILL.md").read_text() == b.text("skills/b/SKILL.md")
+    assert "description: Skill c" in (dest / "c" / "SKILL.md").read_text()
+    assert (dest / "notes.md").read_text() == "not a skill"
+    assert materialize_skill_dirs(HarnessBundle.from_files(tmp_path / "n", {}), dest) == []

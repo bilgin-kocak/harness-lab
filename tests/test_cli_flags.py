@@ -32,6 +32,7 @@ from harnesslab.runners.claude import (
     build_claude_command,
 )
 from harnesslab.runners.codex import CodexRunner, build_codex_command
+from harnesslab.runners.pi import build_pi_command
 from harnesslab.storage.database import Database
 from harnesslab.trace.redaction import Redactor
 from tests.conftest import FIXTURES
@@ -41,6 +42,7 @@ HELP = FIXTURES / "cli_help"
 CLAUDE_HELP = HELP / "claude-2.1.294.txt"
 CODEX_HELP = HELP / "codex-0.153.4-exec.txt"
 CODEX_RESUME_HELP = HELP / "codex-0.153.4-exec-resume.txt"
+PI_HELP = HELP / "pi-1.1.0.txt"
 ALL_CLAUDE_OPTIONS = {
     "effort": "high",
     "autocompact": "100k",
@@ -109,6 +111,13 @@ def test_todays_commands_match_the_help_of_the_cli_versions_checked_here():
     )
     assert set(argv_flags(fresh)) <= help_flags(CODEX_HELP.read_text())
     assert set(argv_flags(resumed)) <= help_flags(CODEX_RESUME_HELP.read_text())
+    pi_options = {"provider": "p", "thinking": "low", "tools": "read", "exclude_tools": "bash"}
+    pi = build_pi_command(
+        RunnerConfig(runner="pi", model="m", options={**pi_options, "context_files": False}),
+        system_prompt_file=Path("/s.txt"),
+        skill_dirs=[Path("/skill")],
+    )
+    assert set(argv_flags(pi)) <= help_flags(PI_HELP.read_text())
 
 
 def _without(path: Path, flag: str, tmp_path: Path) -> Path:
@@ -394,7 +403,7 @@ async def test_concurrent_checks_read_the_help_once(fake_cli: Path, tmp_path: Pa
     "stderr, flag",
     [
         ("Error: Unknown option: -x\n", "-x"),  # pi, one flag
-        ("Unknown option(s): --foo, --bar\n", "--foo"),  # pi, several
+        ("Error: Unknown options: --foo, --bar\n", "--foo"),  # pi, several
         ("Unrecognized flag: --zzz in command opencode run\n", "--zzz"),  # OpenCode 2 (Effect)
         ("hermes chat: error: unrecognized arguments: --nope\n", "--nope"),  # argparse
         ("error: unknown option '--old'\n", "--old"),  # commander still works

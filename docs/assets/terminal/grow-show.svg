@@ -1,0 +1,82 @@
+<svg class="rich-terminal" viewBox="0 0 1238 269.6" xmlns="http://www.w3.org/2000/svg">
+    <!-- Generated with Rich https://www.textualize.io -->
+    <style>
+
+
+    .hl-grow-session-matrix {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", "Liberation Mono", monospace;
+        font-size: 20px;
+        line-height: 24.4px;
+        font-variant-east-asian: full-width;
+    }
+
+    .hl-grow-session-title {
+        font-size: 18px;
+        font-weight: bold;
+        font-family: arial;
+    }
+
+    .hl-grow-session-r1 { fill: #c5c8c6;font-weight: bold }
+.hl-grow-session-r2 { fill: #c5c8c6 }
+.hl-grow-session-r3 { fill: #d0b344 }
+.hl-grow-session-r4 { fill: #98729f }
+.hl-grow-session-r5 { fill: #68a0b3;font-weight: bold }
+.hl-grow-session-r6 { fill: #c5c8c6;font-style: italic; }
+.hl-grow-session-r7 { fill: #68a0b3 }
+.hl-grow-session-r8 { fill: #98a84b }
+.hl-grow-session-r9 { fill: #868887 }
+    </style>
+
+    <defs>
+    <clipPath id="hl-grow-session-clip-terminal">
+      <rect x="0" y="0" width="1219.0" height="218.6" />
+    </clipPath>
+    <clipPath id="hl-grow-session-line-0">
+    <rect x="0" y="1.5" width="1220" height="24.65"/>
+            </clipPath>
+<clipPath id="hl-grow-session-line-1">
+    <rect x="0" y="25.9" width="1220" height="24.65"/>
+            </clipPath>
+<clipPath id="hl-grow-session-line-2">
+    <rect x="0" y="50.3" width="1220" height="24.65"/>
+            </clipPath>
+<clipPath id="hl-grow-session-line-3">
+    <rect x="0" y="74.7" width="1220" height="24.65"/>
+            </clipPath>
+<clipPath id="hl-grow-session-line-4">
+    <rect x="0" y="99.1" width="1220" height="24.65"/>
+            </clipPath>
+<clipPath id="hl-grow-session-line-5">
+    <rect x="0" y="123.5" width="1220" height="24.65"/>
+            </clipPath>
+<clipPath id="hl-grow-session-line-6">
+    <rect x="0" y="147.9" width="1220" height="24.65"/>
+            </clipPath>
+<clipPath id="hl-grow-session-line-7">
+    <rect x="0" y="172.3" width="1220" height="24.65"/>
+            </clipPath>
+    </defs>
+
+    <rect fill="#292929" stroke="rgba(255,255,255,0.35)" stroke-width="1" x="1" y="1" width="1236" height="267.6" rx="8"/><text class="hl-grow-session-title" fill="#c5c8c6" text-anchor="middle" x="618" y="27">Grow&#160;session</text>
+            <g transform="translate(26,22)">
+            <circle cx="0" cy="0" r="7" fill="#ff5f57"/>
+            <circle cx="22" cy="0" r="7" fill="#febc2e"/>
+            <circle cx="44" cy="0" r="7" fill="#28c840"/>
+            </g>
+        
+    <g transform="translate(9, 41)" clip-path="url(#hl-grow-session-clip-terminal)">
+    
+    <g class="hl-grow-session-matrix">
+    <text class="hl-grow-session-r1" x="0" y="20" textLength="451.4" clip-path="url(#hl-grow-session-line-0)">$&#160;harnesslab&#160;grow&#160;show&#160;demo-fake-grow</text><text class="hl-grow-session-r2" x="1220" y="20" textLength="12.2" clip-path="url(#hl-grow-session-line-0)">
+</text><text class="hl-grow-session-r1" x="0" y="44.4" textLength="231.8" clip-path="url(#hl-grow-session-line-1)">grow&#160;demo-fake-grow</text><text class="hl-grow-session-r3" x="256.2" y="44.4" textLength="85.4" clip-path="url(#hl-grow-session-line-1)">session</text><text class="hl-grow-session-r2" x="341.6" y="44.4" textLength="12.2" clip-path="url(#hl-grow-session-line-1)">=</text><text class="hl-grow-session-r4" x="353.8" y="44.4" textLength="292.8" clip-path="url(#hl-grow-session-line-1)">grow_0mv5gljr9a9zr2auwv0</text><text class="hl-grow-session-r3" x="671" y="44.4" textLength="73.2" clip-path="url(#hl-grow-session-line-1)">status</text><text class="hl-grow-session-r2" x="744.2" y="44.4" textLength="12.2" clip-path="url(#hl-grow-session-line-1)">=</text><text class="hl-grow-session-r4" x="756.4" y="44.4" textLength="109.8" clip-path="url(#hl-grow-session-line-1)">completed</text><text class="hl-grow-session-r3" x="890.6" y="44.4" textLength="61" clip-path="url(#hl-grow-session-line-1)">phase</text><text class="hl-grow-session-r2" x="951.6" y="44.4" textLength="12.2" clip-path="url(#hl-grow-session-line-1)">=</text><text class="hl-grow-session-r4" x="963.8" y="44.4" textLength="48.8" clip-path="url(#hl-grow-session-line-1)">done</text><text class="hl-grow-session-r3" x="1037" y="44.4" textLength="122" clip-path="url(#hl-grow-session-line-1)">iterations</text><text class="hl-grow-session-r2" x="1159" y="44.4" textLength="12.2" clip-path="url(#hl-grow-session-line-1)">=</text><text class="hl-grow-session-r5" x="1171.2" y="44.4" textLength="12.2" clip-path="url(#hl-grow-session-line-1)">1</text><text class="hl-grow-session-r2" x="1220" y="44.4" textLength="12.2" clip-path="url(#hl-grow-session-line-1)">
+</text><text class="hl-grow-session-r3" x="0" y="68.8" textLength="48.8" clip-path="url(#hl-grow-session-line-2)">runs</text><text class="hl-grow-session-r2" x="48.8" y="68.8" textLength="12.2" clip-path="url(#hl-grow-session-line-2)">=</text><text class="hl-grow-session-r5" x="61" y="68.8" textLength="12.2" clip-path="url(#hl-grow-session-line-2)">6</text><text class="hl-grow-session-r2" x="73.2" y="68.8" textLength="207.4" clip-path="url(#hl-grow-session-line-2)">&#160;&#160;deployed&#160;cost&#160;$</text><text class="hl-grow-session-r5" x="280.6" y="68.8" textLength="73.2" clip-path="url(#hl-grow-session-line-2)">0.0000</text><text class="hl-grow-session-r2" x="353.8" y="68.8" textLength="219.6" clip-path="url(#hl-grow-session-line-2)">&#160;&#160;optimizer&#160;cost&#160;$</text><text class="hl-grow-session-r5" x="573.4" y="68.8" textLength="73.2" clip-path="url(#hl-grow-session-line-2)">0.0000</text><text class="hl-grow-session-r2" x="1220" y="68.8" textLength="12.2" clip-path="url(#hl-grow-session-line-2)">
+</text><text class="hl-grow-session-r2" x="0" y="93.2" textLength="195.2" clip-path="url(#hl-grow-session-line-3)">gate&#160;pass&#160;rate:&#160;</text><text class="hl-grow-session-r5" x="195.2" y="93.2" textLength="12.2" clip-path="url(#hl-grow-session-line-3)">0</text><text class="hl-grow-session-r2" x="207.4" y="93.2" textLength="24.4" clip-path="url(#hl-grow-session-line-3)">%&#160;</text><text class="hl-grow-session-r1" x="231.8" y="93.2" textLength="12.2" clip-path="url(#hl-grow-session-line-3)">(</text><text class="hl-grow-session-r2" x="244" y="93.2" textLength="24.4" clip-path="url(#hl-grow-session-line-3)">v0</text><text class="hl-grow-session-r1" x="268.4" y="93.2" textLength="12.2" clip-path="url(#hl-grow-session-line-3)">)</text><text class="hl-grow-session-r2" x="280.6" y="93.2" textLength="36.6" clip-path="url(#hl-grow-session-line-3)">&#160;→&#160;</text><text class="hl-grow-session-r5" x="317.2" y="93.2" textLength="12.2" clip-path="url(#hl-grow-session-line-3)">0</text><text class="hl-grow-session-r2" x="329.4" y="93.2" textLength="24.4" clip-path="url(#hl-grow-session-line-3)">%&#160;</text><text class="hl-grow-session-r1" x="353.8" y="93.2" textLength="12.2" clip-path="url(#hl-grow-session-line-3)">(</text><text class="hl-grow-session-r2" x="366" y="93.2" textLength="24.4" clip-path="url(#hl-grow-session-line-3)">v1</text><text class="hl-grow-session-r1" x="390.4" y="93.2" textLength="12.2" clip-path="url(#hl-grow-session-line-3)">)</text><text class="hl-grow-session-r2" x="402.6" y="93.2" textLength="256.2" clip-path="url(#hl-grow-session-line-3)">&#160;·&#160;median&#160;LLM&#160;calls:&#160;</text><text class="hl-grow-session-r5" x="658.8" y="93.2" textLength="12.2" clip-path="url(#hl-grow-session-line-3)">1</text><text class="hl-grow-session-r2" x="671" y="93.2" textLength="36.6" clip-path="url(#hl-grow-session-line-3)">&#160;→&#160;</text><text class="hl-grow-session-r5" x="707.6" y="93.2" textLength="12.2" clip-path="url(#hl-grow-session-line-3)">2</text><text class="hl-grow-session-r2" x="1220" y="93.2" textLength="12.2" clip-path="url(#hl-grow-session-line-3)">
+</text><text class="hl-grow-session-r6" x="0" y="117.6" textLength="1061.4" clip-path="url(#hl-grow-session-line-4)">&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;harness&#160;versions&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="hl-grow-session-r2" x="1220" y="117.6" textLength="12.2" clip-path="url(#hl-grow-session-line-4)">
+</text><text class="hl-grow-session-r1" x="12.2" y="142" textLength="85.4" clip-path="url(#hl-grow-session-line-5)">version</text><text class="hl-grow-session-r1" x="122" y="142" textLength="97.6" clip-path="url(#hl-grow-session-line-5)">status&#160;&#160;</text><text class="hl-grow-session-r1" x="244" y="142" textLength="146.4" clip-path="url(#hl-grow-session-line-5)">window&#160;fixed</text><text class="hl-grow-session-r1" x="414.8" y="142" textLength="109.8" clip-path="url(#hl-grow-session-line-5)">gate&#160;pass</text><text class="hl-grow-session-r1" x="549" y="142" textLength="73.2" clip-path="url(#hl-grow-session-line-5)">gate&#160;n</text><text class="hl-grow-session-r1" x="646.6" y="142" textLength="109.8" clip-path="url(#hl-grow-session-line-5)">llm&#160;calls</text><text class="hl-grow-session-r1" x="780.8" y="142" textLength="48.8" clip-path="url(#hl-grow-session-line-5)">cost</text><text class="hl-grow-session-r1" x="854" y="142" textLength="97.6" clip-path="url(#hl-grow-session-line-5)">opt&#160;cost</text><text class="hl-grow-session-r1" x="976" y="142" textLength="73.2" clip-path="url(#hl-grow-session-line-5)">reason</text><text class="hl-grow-session-r2" x="1220" y="142" textLength="12.2" clip-path="url(#hl-grow-session-line-5)">
+</text><text class="hl-grow-session-r2" x="0" y="166.4" textLength="122" clip-path="url(#hl-grow-session-line-6)">&#160;v0&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="hl-grow-session-r7" x="122" y="166.4" textLength="85.4" clip-path="url(#hl-grow-session-line-6)">initial</text><text class="hl-grow-session-r2" x="207.4" y="166.4" textLength="854" clip-path="url(#hl-grow-session-line-6)">&#160;&#160;&#160;—&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;0%&#160;&#160;&#160;&#160;&#160;&#160;&#160;1&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;1&#160;&#160;&#160;&#160;&#160;—&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;—&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="hl-grow-session-r2" x="1220" y="166.4" textLength="12.2" clip-path="url(#hl-grow-session-line-6)">
+</text><text class="hl-grow-session-r2" x="0" y="190.8" textLength="122" clip-path="url(#hl-grow-session-line-7)">&#160;v1&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="hl-grow-session-r8" x="122" y="190.8" textLength="97.6" clip-path="url(#hl-grow-session-line-7)">accepted</text><text class="hl-grow-session-r2" x="219.6" y="190.8" textLength="841.8" clip-path="url(#hl-grow-session-line-7)">&#160;&#160;2/2&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;0%&#160;&#160;&#160;&#160;&#160;&#160;&#160;1&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;2&#160;&#160;&#160;&#160;&#160;—&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;—&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="hl-grow-session-r2" x="1220" y="190.8" textLength="12.2" clip-path="url(#hl-grow-session-line-7)">
+</text><text class="hl-grow-session-r9" x="0" y="215.2" textLength="402.6" clip-path="url(#hl-grow-session-line-8)">note:&#160;stopped:&#160;failure&#160;pool&#160;empty</text><text class="hl-grow-session-r2" x="1220" y="215.2" textLength="12.2" clip-path="url(#hl-grow-session-line-8)">
+</text>
+    </g>
+    </g>
+</svg>

@@ -1,8 +1,8 @@
 name: Release to PyPI
 
-# One-time setup: on pypi.org create the project "harnesslab" (or reserve it on first upload) and add a
-# "trusted publisher" for this repository with workflow name "release.yml" and environment "pypi".
-# Then push a tag: git tag v0.1.0 && git push origin v0.1.0
+# The trusted publisher for this repository (workflow "release.yml", environment "pypi") is
+# registered on pypi.org. To release, follow docs/project/releasing.md, then push a tag:
+#   git tag -a vX.Y.Z -m "harnesslab X.Y.Z" && git push origin vX.Y.Z
 
 on:
   push:

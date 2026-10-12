@@ -30,7 +30,7 @@ Two honest gaps:
 
 ## The flag check
 
-> **Unreleased.** On `main`; ships in the next release.
+> **New in Harness Lab 0.3.0.** Upgrade an older install with `pip install -U harnesslab`.
 
 Before a run, Harness Lab compares every flag of the command above with the CLI's `--help` (`codex exec --help`, and `codex exec resume --help` for resumed improvement rounds).
 A flag the installed version no longer lists makes the run *unavailable*: it is not verified, it
@@ -56,9 +56,9 @@ off.
 | `action_policy` | unset | `batched`, `fine` or free text prepended to the prompt |
 | `harness` | unset | a [harness bundle](../reference/bundle-format.md) directory |
 | `skip_git_repo_check` | `true` | `--skip-git-repo-check` |
-| `improve_session` *(unreleased)* | `fresh` | improvement tasks only: `resume` relies on Codex's session persistence (on by default) and continues later rounds with `codex exec resume … <thread id> -`, passing the sandbox as `-c sandbox_mode=` and no `-C`; cannot be combined with `profile`, `--ephemeral` or `extra_args` that `codex exec resume` rejects; see [Fresh or resumed sessions](improvement.md#fresh-or-resumed-sessions) |
+| `improve_session` *(0.3.0)* | `fresh` | improvement tasks only: `resume` relies on Codex's session persistence (on by default) and continues later rounds with `codex exec resume … <thread id> -`, passing the sandbox as `-c sandbox_mode=` and no `-C`; cannot be combined with `profile`, `--ephemeral` or `extra_args` that `codex exec resume` rejects; see [Fresh or resumed sessions](improvement.md#fresh-or-resumed-sessions) |
 | `extra_args` | `[]` | appended verbatim |
-| `flag_check` *(unreleased)* | `true` | compare the flags Harness Lab passes with the CLI's `--help` before a run; see [the flag check](#the-flag-check) |
+| `flag_check` *(0.3.0)* | `true` | compare the flags Harness Lab passes with the CLI's `--help` before a run; see [the flag check](#the-flag-check) |
 | `env_passthrough` | `[]` | extra environment variables forwarded |
 | `executable` | `codex` | the binary to run |
 

@@ -24,7 +24,8 @@ pipx install harnesslab
 uv tool install harnesslab
 ```
 
-Pages marked *New in Harness Lab 0.2.0* need 0.2.0 or later; upgrade with
+Pages marked *New in Harness Lab X.Y.Z*, and options or fields marked *(X.Y.Z)*, need that
+version or later; check yours with `harnesslab version` and upgrade with
 `pip install -U harnesslab`. To try changes on `main` before they are released:
 
 ```bash
@@ -39,8 +40,8 @@ harnesslab doctor
 ```
 
 `doctor` reports Python, git, the Codex and Claude Code CLIs, `uv` and the database. Missing
-CLIs are a warning, not an error: they only disable their runners. *(Unreleased:)* a CLI that is
-installed but no longer accepts a flag Harness Lab passes shows as `incompatible`, with the flag.
+CLIs are a warning, not an error: they only disable their runners. A CLI that is installed but no
+longer accepts a flag Harness Lab passes shows as `incompatible`, with the flag *(0.3.0)*.
 
 ## Where data goes
 

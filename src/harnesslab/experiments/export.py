@@ -14,7 +14,8 @@ from harnesslab.experiments.routing import routing_gap
 from harnesslab.experiments.sweep import report_for_experiment
 from harnesslab.storage.repository import Repository
 
-EXPORT_SCHEMA_VERSION = "1"
+# 2 (0.3.0): attempts, routing and recovery blocks; small JSON artifacts inlined as `data`.
+EXPORT_SCHEMA_VERSION = "2"
 # JSON artifacts (safety findings, improvement rounds) up to this size are inlined as `data`.
 JSON_INLINE_CAP_BYTES = 1_000_000
 

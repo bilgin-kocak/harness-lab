@@ -60,7 +60,7 @@ How the intervals are computed is in [Read and export results](results.md#statis
 
 ### Verdict metric
 
-> **Unreleased.** On `main`; ships in the next release.
+> **New in Harness Lab 0.3.0.** Upgrade an older install with `pip install -U harnesslab`.
 
 `ablate run --metric pass_rate|score|improve_ratio|anytime` (default `pass_rate`) chooses what every
 verdict above is about: the whole bundle's and each component's. The metric is stored with the

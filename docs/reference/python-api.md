@@ -20,14 +20,14 @@ from harnesslab.api import (
 class HarnessRunner(ABC):
     name: str                      # the value of `runner:` in YAML
     description: str = ""
-    supports_resume: bool = False           # unreleased: can continue an agent session
-    resume_totals_cumulative: bool = False  # unreleased: resumed cost is a running total
+    supports_resume: bool = False           # 0.3.0: can continue an agent session
+    resume_totals_cumulative: bool = False  # 0.3.0: resumed cost is a running total
 
     def __init__(self, *, artifacts_dir: Path | None = None): ...
     async def run(self, task: TaskSpec, worktree: Path, config: RunnerConfig,
                   emit: EventEmitter) -> RunnerResult: ...          # required
     async def check_availability(self, config: RunnerConfig | None = None) -> Availability: ...
-    def resume_error(self, config: RunnerConfig) -> str | None: ...  # unreleased
+    def resume_error(self, config: RunnerConfig) -> str | None: ...  # 0.3.0
 ```
 
 `run` executes the harness with `worktree` as its working directory and translates its output
@@ -36,7 +36,7 @@ auxiliary files (a sanitized stream, stderr). Runners never touch the database o
 Register with `@register_runner`, list the module under `plugins:`, pass `--plugin`, or expose it
 through the `harnesslab.runners` entry-point group.
 
-*(unreleased)* To support `improve_session: resume` in [improvement tasks](../guides/improvement.md#fresh-or-resumed-sessions),
+*(0.3.0)* To support `improve_session: resume` in [improvement tasks](../guides/improvement.md#fresh-or-resumed-sessions),
 set `supports_resume = True` and honour two per-invocation fields of `RunnerConfig`: keep the
 session when `persist_session` is true, and continue the session `resume_session_id` names when it
 is set; report the session's id as `provider_session_id`. Override `resume_error` to refuse
@@ -52,8 +52,8 @@ running totals for the whole session, so Harness Lab keeps only each round's sha
 | `options` | Every unknown variant key, verbatim. `config.get("max_turns", 30)`. |
 | `context_policy`, `tool_policy` | Recorded policies, if the variant set them. |
 | `harness_dir`, `harness_hash` | The harness bundle, if the variant carries one. |
-| `repetition` *(unreleased)* | The run's repetition number (0-based), set per run; the fake runner's `behaviors` list uses it. Not part of `config_hash()`. |
-| `improve_round`, `resume_session_id`, `persist_session` *(unreleased)* | Set per invocation by the improvement protocol (round number, a session to continue, whether to keep the session); not part of `config_hash()`. |
+| `repetition` *(0.3.0)* | The run's repetition number (0-based), set per run; the fake runner's `behaviors` list uses it. Not part of `config_hash()`. |
+| `improve_round`, `resume_session_id`, `persist_session` *(0.3.0)* | Set per invocation by the improvement protocol (round number, a session to continue, whether to keep the session); not part of `config_hash()`. |
 | `config_hash()` | Stable hash of everything but `variant_id` and `harness_dir`. |
 
 ### `RunnerResult`

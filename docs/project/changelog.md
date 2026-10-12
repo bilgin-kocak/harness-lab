@@ -3,7 +3,7 @@
 The source of truth is [`CHANGELOG.md`](https://github.com/bilgin-kocak/harness-lab/blob/main/CHANGELOG.md)
 in the repository; this page mirrors it.
 
-## Unreleased
+## 0.3.0 (2026-10-12)
 
 - Verdicts on a chosen metric: a paired comparison can judge pass rate (the default), score or
   improvement ratio, with the sign test and the minimum task count following that metric, and
@@ -57,6 +57,54 @@ in the repository; this page mirrors it.
   can use (`--metric anytime`, `verdict_metric: anytime`).
 - Fixed: the Codex runner no longer passes `--full-auto`, which Codex CLI 0.153 rejects, so real
   Codex runs failed; `--sandbox workspace-write` selects the same sandbox.
+
+### Fixes and hardening
+
+- Ask before paid runs: `run`, `sweep run`, `grow run`, `grow resume` and `ablate run` say how many
+  runs of which harnesses (and which grow optimizer) may use paid API usage, and under what cost
+  cap, before anything starts; in a terminal they ask (default no), `--yes` skips the question,
+  scripts are told and go ahead. `sweep list` shows each sweep's runners, and the bundled
+  `improve-budget` and `improve-session` sweeps get a $10 cost cap.
+- Fixed: the dashboard's run page returned HTTP 500 for a run still in progress or left by a
+  killed process, and for every run recorded by 0.1.0 after an upgrade.
+- Fixed: every run of an experiment now starts from the snapshot the experiment took of the task's
+  repository; editing a fixture or moving a source repository's HEAD mid-experiment no longer
+  changes later runs.
+- Fixed: interrupting an experiment marked other experiments' runs as interrupted. Experiments
+  record their process, and one left "running" by a killed process is marked interrupted when a
+  command or the dashboard next opens the database on that machine.
+- Fixed: schema upgrades also create indexes added since a database was made, and two commands
+  upgrading the same old database at once no longer fail; the paths hidden-file injection
+  replaced are recorded; the recorded Harness Lab commit no longer comes from whatever repository
+  contains the virtualenv.
+- Raw agent output is reachable: the sanitized stream, stderr, Codex's last message, the appended
+  system prompt and every improvement round's files are registered artifacts (dashboard, exports).
+  Runners redact stderr also when a run is cancelled; prompts are redacted before they are
+  written; Codex reasoning records keep only their id and type.
+- A flag value the CLI refuses at startup makes the run unavailable, with the values the CLI
+  accepts, instead of a failed attempt; the `claude-cli` optimizer reports a CLI that stops before
+  answering instead of retrying.
+- Agent processes receive the provider variables Claude Code documents for Bedrock
+  (`AWS_BEARER_TOKEN_BEDROCK`, ...), Vertex AI (`VERTEX_REGION_CLAUDE_*`, ...), Microsoft Foundry
+  and model pinning; verifiers still get none.
+- Breaking: every section of a task file (repo, setup, verification, inject, limits,
+  reference_solution) and a sweep's objective, sample and budget reject unknown keys, so a typo
+  such as `protectd_paths` is an error instead of a silently dropped setting.
+- Fixed: experiment files with a `tasks:` subset (the documented format) were read as suites.
+- Suite `defaults:` work: variant options by runner name (`"*"` for every runner), filled in for
+  every variant that runs on the suite unless it sets them, e.g. a safe tool allowlist.
+- `suites/<name>[/suite.yaml]` means the bundled suite outside a lab made by `harnesslab init`,
+  with a note. `init` points the copied sweep and grow templates at the copied suites (they used
+  the packaged ones) and lists everything it copies.
+- `grow resume` imports the session's and its suite's plugins and takes `--plugin` and `--pricing`.
+- `experiment show` prints the safety, improvement and LLM-call rows; exports inline small JSON
+  artifacts (safety findings, improvement rounds); the dashboard shows improvement rows for every
+  improvement experiment and the safety violations; the compare view has an LLM-calls row; a
+  missing best-of-k check is reported once instead of per variant.
+- `metrics_version` is 2 and the export `schema_version` is 2.
+- Packaging: the sdist includes the docs, scripts and MkDocs config the tests read; the build
+  needs hatchling 1.27 or newer; CI checks formatting and the distributions' contents.
+- Documentation brought in line with the code throughout; the README gains a guides table.
 
 ## 0.2.0 (2026-10-06)
 

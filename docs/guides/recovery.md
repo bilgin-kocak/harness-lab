@@ -1,6 +1,6 @@
 # Recovery tasks
 
-> **Unreleased.** On `main`; ships in the next release.
+> **New in Harness Lab 0.3.0.** Upgrade an older install with `pip install -U harnesslab`.
 
 An agent that can do a task may still do damage when something goes wrong. The classic case is a
 lost acknowledgement: a call that changes something succeeds, but its answer never arrives, and

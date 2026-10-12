@@ -46,18 +46,18 @@ from the suite's list, the experiment's list, or the built-ins (`fake-reference`
 | `setup.timeout_seconds` | int | `120` | Per command. |
 | `verification.command` | string | required | Shell command; exit code 0 means pass. Runs without credentials. |
 | `verification.score_command` | string | none | Optional partial score producer (see below). |
-| `verification.answer_key` *(unreleased)* | mapping | none | Grades the agent's findings against a hidden answer key, for [find-everything tasks](../guides/discovery.md); see below. Cannot be combined with `score_command`. |
-| `verification.visible_command` *(unreleased)* | string | none | A check the agent could run itself, run on a scratch copy of the worktree before the hidden files are injected (no credentials, the same timeout; its time counts as verifier time). Its result is recorded as `visible_pass`, and best-of-k uses it to pick among repeated attempts; see [Several attempts](../guides/results.md#several-attempts-passk-and-best-of-k). |
+| `verification.answer_key` *(0.3.0)* | mapping | none | Grades the agent's findings against a hidden answer key, for [find-everything tasks](../guides/discovery.md); see below. Cannot be combined with `score_command`. |
+| `verification.visible_command` *(0.3.0)* | string | none | A check the agent could run itself, run on a scratch copy of the worktree before the hidden files are injected (no credentials, the same timeout; its time counts as verifier time). Its result is recorded as `visible_pass`, and best-of-k uses it to pick among repeated attempts; see [Several attempts](../guides/results.md#several-attempts-passk-and-best-of-k). |
 | `verification.timeout_seconds` | int | `120` | A timed-out verifier fails the run. |
 | `verification.inject` | list of `{source, dest}` | `[]` | Files or directories copied into the worktree only at verification time. `dest` must stay inside the worktree. |
 | `verification.protected_paths` | list | `[]` | Paths (exact, prefix or glob) an agent may not change. Any change fails the run before the verifier runs. |
 | `limits.agent_timeout_seconds` | int | `600` | The harness process is killed as a process group after this; the run is still verified. |
 | `tags` | list | `[]` | Free labels; sweeps can report per tag. |
-| `fault_of` *(unreleased)* | task id | none | Makes the task the twin of another task of the same suite with a fault injected, for [recovery tasks](../guides/recovery.md). Reports pair the two. The twin must be a different task without a `fault_of` of its own. |
+| `fault_of` *(0.3.0)* | task id | none | Makes the task the twin of another task of the same suite with a fault injected, for [recovery tasks](../guides/recovery.md). Reports pair the two. The twin must be a different task without a `fault_of` of its own. |
 | `reference_solution.overlay` | path | none | Directory copied over the worktree by the fake runner's `solve` behaviour and by `suite check`. |
 | `reference_solution.partial_overlay` | path | none | Used by the fake runner's `partial` behaviour. |
 | `reference_solution.improve_overlays` | list of paths | `[]` | Improvement tasks: applied by the fake runner's `solve` behaviour one per round. |
-| `reference_solution.command` *(unreleased)* | string | none | A shell command the fake runner and `suite check` run in the worktree after the overlay, for solutions that are actions (such as calls to a service) rather than file changes. The `solve` behaviour runs it even without an overlay; `partial` only after a `partial_overlay`. Not run for improvement tasks. |
+| `reference_solution.command` *(0.3.0)* | string | none | A shell command the fake runner and `suite check` run in the worktree after the overlay, for solutions that are actions (such as calls to a service) rather than file changes. The `solve` behaviour runs it even without an overlay; `partial` only after a `partial_overlay`. Not run for improvement tasks. |
 | `reference_solution.description` | string | none | Free text. |
 | `improve` | mapping | none | Turns the task into an [improvement task](../guides/improvement.md); see below. |
 | `safety` | mapping | none | Canaries and lures that make the task a [safety measurement](../guides/safety.md); see below. |
@@ -77,8 +77,8 @@ from the suite's list, the experiment's list, or the built-ins (`fake-reference`
 | `improve.keep_best` | `true` | Revert rounds that fail the gate or do not beat the best. |
 | `improve.min_improvement` | `0.0` | Relative margin the final value must beat the baseline by to pass. |
 | `improve.evaluator.budget` | `0` | In-loop measurements the agent may make per round; variant option `improve_eval_budget` overrides it. |
-| `improve.max_evaluations` *(unreleased)* | none | Cap on objective evaluations after the baseline, in-loop calls and round evaluations together; variant option `improve_max_evaluations` overrides it. See [Equal budgets and anytime scores](../guides/improvement.md#equal-budgets-and-anytime-scores). |
-| `improve_session` *(unreleased)* | `fresh` | A variant option, not a task field. `fresh` runs every round in a new agent session with the full prompt; `resume` continues the first round's session with a short delta prompt. `resume` needs a runner that can resume a session (`claude`, `codex`, `fake`); any other value, or another runner, fails the run at setup. See [Fresh or resumed sessions](../guides/improvement.md#fresh-or-resumed-sessions). |
+| `improve.max_evaluations` *(0.3.0)* | none | Cap on objective evaluations after the baseline, in-loop calls and round evaluations together; variant option `improve_max_evaluations` overrides it. See [Equal budgets and anytime scores](../guides/improvement.md#equal-budgets-and-anytime-scores). |
+| `improve_session` *(0.3.0)* | `fresh` | A variant option, not a task field. `fresh` runs every round in a new agent session with the full prompt; `resume` continues the first round's session with a short delta prompt. `resume` needs a runner that can resume a session (`claude`, `codex`, `fake`); any other value, or another runner, fails the run at setup. See [Fresh or resumed sessions](../guides/improvement.md#fresh-or-resumed-sessions). |
 
 ### Safety traps
 
@@ -104,7 +104,7 @@ variant.
 
 ### Answer key
 
-*(unreleased)* For [find-everything tasks](../guides/discovery.md). After `command`, Harness Lab
+*(0.3.0)* For [find-everything tasks](../guides/discovery.md). After `command`, Harness Lab
 reads the agent's findings from the worktree and grades them against a key that never enters it.
 
 | Field | Default | Meaning |
@@ -148,7 +148,7 @@ two variants with identical settings and bundles hash the same.
 Runner options are documented per adapter: [Run Claude Code](../guides/claude-code.md),
 [Run Codex](../guides/codex.md), [Test your own harness](../guides/your-own-harness.md). The fake
 runner accepts `behavior` (`solve`, `partial`, `noop`, `fail`, `crash`, `timeout`), `behaviors`
-*(unreleased; a list, one per repetition in turn)*, `command`,
+*(0.3.0; a list, one per repetition in turn)*, `command`,
 `run_command`, `delay_ms`, `solve_tasks`, `simulate_cost_usd_per_1k_tokens`,
 `simulate_token_multiplier`, `action_policy` and `llm_calls`, and for the demo suites
 `improve_break_rounds`, `eval_calls` and `simulate_unsafe` (`read_canary`, `follow_lure`,

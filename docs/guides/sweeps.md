@@ -63,7 +63,7 @@ Per workload, in the terminal, the dashboard and the JSON export:
 - the pass-rate versus cost **Pareto front**;
 - **factor effects**: the marginal mean pass rate and median objective per factor level, which is
   the component-ablation view;
-- **per-task selection** *(unreleased)*: whether choosing a configuration per task would beat the
+- **per-task selection** *(0.3.0)*: whether choosing a configuration per task would beat the
   best single one (see below).
 
 A configuration is *eligible* when its verified pass rate over valid runs meets
@@ -73,7 +73,7 @@ A configuration is *eligible* when its verified pass rate over valid runs meets
 
 The recommendation is also compared, task by task, with the runner-up and with the `baseline`
 configuration, using the paired analysis in [Read and export results](results.md#statistics).
-*(unreleased)* Those verdicts are about `verdict_metric`: `pass_rate` by default, `score` for
+*(0.3.0)* Those verdicts are about `verdict_metric`: `pass_rate` by default, `score` for
 tasks with a partial score and for [improvement tasks](improvement.md), `improve_ratio` (only
 tasks where both sides have a ratio) or `anytime` (improvement tasks on equal evaluation
 budgets). The report header names the metric; eligibility and the ranking are not affected by it.
@@ -83,7 +83,7 @@ compare view and the export all work on it.
 
 ## Would choosing per task help?
 
-> **Unreleased.** On `main`; ships in the next release.
+> **New in Harness Lab 0.3.0.** Upgrade an older install with `pip install -U harnesslab`.
 
 A sweep recommends one configuration per workload. Some work suggests that building the harness
 per query beats the best fixed harness. The runs a sweep already has answer whether that holds for

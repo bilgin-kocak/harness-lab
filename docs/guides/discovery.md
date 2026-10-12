@@ -1,6 +1,6 @@
 # Find-everything tasks
 
-> **Unreleased.** On `main`; ships in the next release.
+> **New in Harness Lab 0.3.0.** Upgrade an older install with `pip install -U harnesslab`.
 
 A correct answer is not a complete one. An agent asked for every call of a deprecated function can
 list ten real call sites and still miss the five that will break the build when the function is

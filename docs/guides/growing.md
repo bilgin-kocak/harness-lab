@@ -73,7 +73,7 @@ Every field is listed in [Grow YAML](../reference/grow-format.md).
 5. **Gate check**: the gate set runs against the candidate. Pass rate below the current version's,
    or no valid runs: `rejected`. With `gate.require: not_worse_ci` or `better_ci` the decision uses
    paired intervals instead (see [Grow YAML](../reference/grow-format.md)), of the pass rate or,
-   with `gate.metric` *(unreleased)*, of the score.
+   with `gate.metric` *(0.3.0)*, of the score.
 6. **Accept**: the candidate becomes current, fixed tasks leave the pool, unfixed ones gain an
    attempt, tasks at `max_attempts` retire. Runs that were `not_verified` because of an
    infrastructure failure never cost an attempt.

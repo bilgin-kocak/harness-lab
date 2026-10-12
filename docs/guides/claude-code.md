@@ -43,7 +43,7 @@ Guard rails the adapter enforces:
 
 ## The flag check
 
-> **Unreleased.** On `main`; ships in the next release.
+> **New in Harness Lab 0.3.0.** Upgrade an older install with `pip install -U harnesslab`.
 
 Before a run, Harness Lab compares every flag of the command above with the CLI's `--help` (Claude Code accepts a few flags its help does not list, such as `--max-turns`; those are known and allowed).
 A flag the installed version no longer lists makes the run *unavailable*: it is not verified, it
@@ -94,9 +94,9 @@ Override it per variant with `allowed_tools`.
 | `action_policy` | unset | `batched`, `fine` or free text appended to the system prompt |
 | `harness` | unset | a [harness bundle](../reference/bundle-format.md) directory |
 | `include_hook_events` | `true` | `--include-hook-events`: every hook that runs becomes a `hook` event in the trace (see [Safety](safety.md#hook-events)); set `false` for CLI versions without the flag |
-| `improve_session` *(unreleased)* | `fresh` | improvement tasks only: `resume` turns session persistence on (no `--no-session-persistence`) and continues later rounds with `--resume <id>` instead of `--session-id`; a resumed round's cost is the session's running total, of which Harness Lab keeps the round's share, and `max_budget_usd` applies to the whole session; see [Fresh or resumed sessions](improvement.md#fresh-or-resumed-sessions) |
+| `improve_session` *(0.3.0)* | `fresh` | improvement tasks only: `resume` turns session persistence on (no `--no-session-persistence`) and continues later rounds with `--resume <id>` instead of `--session-id`; a resumed round's cost is the session's running total, of which Harness Lab keeps the round's share, and `max_budget_usd` applies to the whole session; see [Fresh or resumed sessions](improvement.md#fresh-or-resumed-sessions) |
 | `extra_args` | `[]` | appended verbatim (forbidden flags rejected) |
-| `flag_check` *(unreleased)* | `true` | compare the flags Harness Lab passes with the CLI's `--help` before a run; see [the flag check](#the-flag-check) |
+| `flag_check` *(0.3.0)* | `true` | compare the flags Harness Lab passes with the CLI's `--help` before a run; see [the flag check](#the-flag-check) |
 | `env_passthrough` | `[]` | extra environment variables forwarded to the CLI |
 | `executable` | `claude` | the binary to run |
 

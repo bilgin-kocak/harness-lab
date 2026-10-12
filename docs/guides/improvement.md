@@ -135,14 +135,14 @@ baseline: { model: claude-haiku-4-5, evaluator: none }
 compare view and in sweep reports includes an **improvement ratio** interval, so "does a bigger
 evaluator budget help more than a bigger model?" gets an answer with an interval, not an anecdote.
 
-*(unreleased)* By default the verdict is still about pass rate. For improvement tasks give it on
+*(0.3.0)* By default the verdict is still about pass rate. For improvement tasks give it on
 the score instead (`experiment compare --metric score`, `verdict_metric: score` in a sweep): the
 score counts a broken final state as 0 and minimizing to 0 as 1, which the ratio cannot. See
 [Verdict metric](results.md#verdict-metric).
 
 ## Equal budgets and anytime scores
 
-> **Unreleased.** On `main`; ships in the next release.
+> **New in Harness Lab 0.3.0.** Upgrade an older install with `pip install -U harnesslab`.
 
 Rounds and evaluator budget limit *how often* an agent may measure, but two harnesses can still
 spend different amounts: one uses every in-loop call, the other none. AgenticBBO-Bench (2026)
@@ -175,7 +175,7 @@ measurements, and the one that found its improvements sooner scores higher.
 
 ## Fresh or resumed sessions
 
-> **Unreleased.** On `main`; ships in the next release.
+> **New in Harness Lab 0.3.0.** Upgrade an older install with `pip install -U harnesslab`.
 
 By default every round runs in a new agent session. Harness Lab owns the state between rounds
 (the worktree, the best checkpoint, the history and the standing) and hands it to a fresh worker
@@ -256,10 +256,10 @@ your own with at least five tasks (`min_tasks`) to get one.
 | `improve_curve` | Best value so far: the baseline, then after each round. This is the improvement curve. |
 | `improve_history` | Per round: harness status, value, gate result, best so far, kept or reverted, evaluator calls, and a note (the harness's error, why the round could not be evaluated, or why the protocol stopped), redacted like everything else. |
 | `evaluator_calls` | In-loop measurements the agent made across all rounds. |
-| `improve_session` *(unreleased)* | `fresh` or `resume`: whether every round ran in a new agent session or the rounds continued one. |
-| `improve_evaluations` *(unreleased)* | Objective evaluations after the baseline: in-loop calls and round evaluations. |
-| `improve_evaluation_curve` *(unreleased)* | Per evaluation: index, round, kind (`in-loop` or `round`), value measured, and the best verified value after it. |
-| `improve_anytime` *(unreleased)* | The anytime score; see [Equal budgets and anytime scores](#equal-budgets-and-anytime-scores). |
+| `improve_session` *(0.3.0)* | `fresh` or `resume`: whether every round ran in a new agent session or the rounds continued one. |
+| `improve_evaluations` *(0.3.0)* | Objective evaluations after the baseline: in-loop calls and round evaluations. |
+| `improve_evaluation_curve` *(0.3.0)* | Per evaluation: index, round, kind (`in-loop` or `round`), value measured, and the best verified value after it. |
+| `improve_anytime` *(0.3.0)* | The anytime score; see [Equal budgets and anytime scores](#equal-budgets-and-anytime-scores). |
 
 The run page shows the rounds table and the improvement cards; the experiment page adds the median
 improvement, the number of runs that passed by improving (including those without a finite ratio)

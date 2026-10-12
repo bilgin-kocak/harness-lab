@@ -654,7 +654,8 @@ class VerifierResult(BaseModel):
 # Metrics
 # ---------------------------------------------------------------------------
 
-METRICS_VERSION = "1"
+# 2 (0.3.0): a harness found unavailable is not verified; task_metrics, visible_pass, anytime.
+METRICS_VERSION = "2"
 
 
 class RunMetrics(BaseModel):

@@ -30,23 +30,26 @@ The document contains:
 - `tasks`: id, name, version, `task_hash`, `spec_hash`, `prompt_hash`, base commit, tags;
 - `runs`: one entry per run with status, outcome, timestamps, a `reproducibility` block (base
   commit, hashes, runner, configuration, models requested and resolved, CLI version), the full
-  `metrics`, the verifier result, and, unless disabled, the normalized events and the text
-  artifacts (diff, verifier output) inline;
+  `metrics`, the verifier result, and, unless disabled, the normalized events and the artifacts:
+  text ones (diff, verifier output, stderr) inline as `content`, small JSON ones (safety
+  findings, improvement rounds) as parsed `data` *(0.3.0)*, the JSONL agent stream listed with its
+  path and hash only;
 - `aggregates`: per-variant statistics (see [Metrics](../reference/metrics.md));
-- `routing` *(unreleased)*: whether choosing a variant per task would beat the best single
+- `routing` *(0.3.0)*: whether choosing a variant per task would beat the best single
   variant, in sample and held out (see
   [Would choosing per task help?](sweeps.md#would-choosing-per-task-help)); `null` with fewer
   than two variants or tasks;
-- `attempts` *(unreleased)*: per variant, pass@k and best-of-k over its repeated attempts (see
+- `attempts` *(0.3.0)*: per variant, pass@k and best-of-k over its repeated attempts (see
   [Several attempts](#several-attempts-passk-and-best-of-k));
-- `recovery` *(unreleased)*: per variant, success with and without a fault and recovery given
+- `recovery` *(0.3.0)*: per variant, success with and without a fault and recovery given
   normal success, for suites with [recovery tasks](recovery.md); empty without them;
 - `sweep_report`: the recommendation report when the experiment was a sweep, including paired
   evidence against the runner-up and the baseline;
 - `ablation_report`: per-component verdicts when the experiment was an ablation.
 
 The same document is served at `/api/experiments/{id}/export.json`. It is plain JSON with no
-NaN values, so it loads with any tool.
+NaN values, so it loads with any tool. Its `schema_version` is `2` from 0.3.0 (the `attempts`,
+`routing` and `recovery` blocks and inlined JSON artifacts), `1` before.
 
 ## Export a grow session
 
@@ -96,7 +99,7 @@ trusting a close call.
 
 ### Verdict metric
 
-> **Unreleased.** On `main`; ships in the next release.
+> **New in Harness Lab 0.3.0.** Upgrade an older install with `pip install -U harnesslab`.
 
 The verdict, the wins/losses/ties and the sign test are about one metric, chosen per comparison:
 
@@ -105,7 +108,7 @@ The verdict, the wins/losses/ties and the sign test are about one metric, chosen
 | `pass_rate` (default) | Share of valid runs that passed. | Every paired task. |
 | `score` | Mean `verified_score` over the task's valid runs. | Tasks where both sides have a score. |
 | `improve_ratio` | Mean `improve_ratio` over the task's valid runs. | Tasks where both sides have a ratio. |
-| `anytime` *(unreleased)* | Mean `improve_anytime` over the task's valid runs. | Improvement tasks where both sides have one. |
+| `anytime` *(0.3.0)* | Mean `improve_anytime` over the task's valid runs. | Improvement tasks where both sides have one. |
 
 The interval of the chosen metric decides the verdict, and `--min-tasks` applies to the tasks
 counted for it, not to every paired task. The other metrics are still shown, with a score row
@@ -131,7 +134,7 @@ set it with `verdict_metric` ([sweep format](../reference/sweep-format.md)), abl
 
 ### Several attempts: pass@k and best-of-k
 
-> **Unreleased.** On `main`; ships in the next release.
+> **New in Harness Lab 0.3.0.** Upgrade an older install with `pip install -U harnesslab`.
 
 With `--repetitions`, a variant makes several attempts at every task. Two numbers say what more
 attempts are worth, next to pass@1, the mean pass rate per task (each task counts once, so it can

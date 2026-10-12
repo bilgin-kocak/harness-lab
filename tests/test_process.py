@@ -81,3 +81,23 @@ def test_child_env_is_allowlisted(monkeypatch: pytest.MonkeyPatch):
         and env_auth["FOO"] == "bar"
     )
     assert "CLAUDECODE" not in env_auth
+
+
+def test_documented_provider_variables_reach_agents_only(monkeypatch: pytest.MonkeyPatch):
+    """Bedrock API keys, Foundry and Vertex settings Claude Code documents are forwarded to agent
+    processes (never to verifiers), including Vertex's per-model region family."""
+    provider = {
+        "AWS_BEARER_TOKEN_BEDROCK": "bedrock-key",
+        "ANTHROPIC_FOUNDRY_RESOURCE": "my-resource",
+        "ANTHROPIC_FOUNDRY_API_KEY": "foundry-key",
+        "ANTHROPIC_VERTEX_BASE_URL": "https://vertex.example",
+        "VERTEX_REGION_CLAUDE_4_6_SONNET": "us-east5",
+        "ANTHROPIC_DEFAULT_HAIKU_MODEL": "claude-haiku-4-5",
+    }
+    for name, value in provider.items():
+        monkeypatch.setenv(name, value)
+    agent = build_child_env(include_auth=True)
+    verifier = build_child_env(include_auth=False)
+    for name, value in provider.items():
+        assert agent[name] == value, name
+        assert name not in verifier, name

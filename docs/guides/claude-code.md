@@ -2,7 +2,11 @@
 
 Requires the [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) on `PATH` and
 either `ANTHROPIC_API_KEY` or `CLAUDE_CODE_OAUTH_TOKEN` in the environment, or a completed
-`claude auth login`. Bedrock, Vertex and Foundry variables are forwarded too.
+`claude auth login`. The Bedrock (including `AWS_BEARER_TOKEN_BEDROCK`), Vertex AI and Microsoft
+Foundry variables Claude Code documents are forwarded too; the full list is in
+[Storage and data layout](../reference/storage.md#environment-variables). Settings saved by
+`/setup-bedrock` or `/setup-vertex` live in Claude Code's settings file, which the child reads
+through `HOME` (forwarded) or `CLAUDE_CONFIG_DIR`.
 
 ```bash
 harnesslab doctor                        # shows "claude cli ok 2.x.y"

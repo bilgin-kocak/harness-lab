@@ -53,32 +53,62 @@ BASE_ENV_ALLOWLIST: tuple[str, ...] = (
 )
 BASE_ENV_PREFIXES: tuple[str, ...] = ("LC_", "XDG_")
 
-# Provider credentials / provider configuration passed only to agent processes.
+# Provider credentials / provider configuration passed only to agent processes: the variables
+# Claude Code documents for the Anthropic API, gateways, Amazon Bedrock, Google Vertex AI and
+# Microsoft Foundry, and Codex's.
 AUTH_ENV_ALLOWLIST: tuple[str, ...] = (
+    # Anthropic API and LLM gateways
     "ANTHROPIC_API_KEY",
     "ANTHROPIC_AUTH_TOKEN",
     "ANTHROPIC_BASE_URL",
-    "ANTHROPIC_MODEL",
-    "ANTHROPIC_SMALL_FAST_MODEL",
+    "ANTHROPIC_CUSTOM_HEADERS",
     "CLAUDE_CODE_OAUTH_TOKEN",
     "CLAUDE_CONFIG_DIR",
+    # model selection
+    "ANTHROPIC_MODEL",
+    "ANTHROPIC_DEFAULT_MODEL",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL",
+    "ANTHROPIC_DEFAULT_FABLE_MODEL",
+    "ANTHROPIC_SMALL_FAST_MODEL",  # deprecated by Claude Code, still read
+    "CLAUDE_CODE_SUBAGENT_MODEL",
+    # Amazon Bedrock
     "CLAUDE_CODE_USE_BEDROCK",
-    "CLAUDE_CODE_USE_VERTEX",
-    "CLAUDE_CODE_USE_FOUNDRY",
+    "AWS_BEARER_TOKEN_BEDROCK",
+    "ANTHROPIC_BEDROCK_BASE_URL",
+    "CLAUDE_CODE_SKIP_BEDROCK_AUTH",
+    "ANTHROPIC_SMALL_FAST_MODEL_AWS_REGION",
     "AWS_ACCESS_KEY_ID",
     "AWS_SECRET_ACCESS_KEY",
     "AWS_SESSION_TOKEN",
     "AWS_REGION",
     "AWS_DEFAULT_REGION",
     "AWS_PROFILE",
-    "GOOGLE_APPLICATION_CREDENTIALS",
-    "CLOUD_ML_REGION",
+    "AWS_CONFIG_FILE",
+    "AWS_SHARED_CREDENTIALS_FILE",
+    # Google Vertex AI (plus VERTEX_REGION_CLAUDE_*, below)
+    "CLAUDE_CODE_USE_VERTEX",
     "ANTHROPIC_VERTEX_PROJECT_ID",
+    "ANTHROPIC_VERTEX_BASE_URL",
+    "CLAUDE_CODE_SKIP_VERTEX_AUTH",
+    "CLOUD_ML_REGION",
+    "GOOGLE_APPLICATION_CREDENTIALS",
+    # Microsoft Foundry
+    "CLAUDE_CODE_USE_FOUNDRY",
+    "ANTHROPIC_FOUNDRY_RESOURCE",
+    "ANTHROPIC_FOUNDRY_BASE_URL",
+    "ANTHROPIC_FOUNDRY_API_KEY",
+    "ANTHROPIC_FOUNDRY_AUTH_TOKEN",
+    "CLAUDE_CODE_SKIP_FOUNDRY_AUTH",
+    # OpenAI Codex
     "OPENAI_API_KEY",
     "OPENAI_BASE_URL",
     "OPENAI_ORG_ID",
     "CODEX_HOME",
 )
+# Families of provider variables, by prefix (Vertex AI's per-model regions).
+AUTH_ENV_PREFIXES: tuple[str, ...] = ("VERTEX_REGION_CLAUDE_",)
 
 # Values that make child tools behave deterministically / non-interactively.
 DEFAULT_CHILD_ENV: dict[str, str] = {
@@ -110,7 +140,7 @@ def build_child_env(
     for name, value in source.items():
         if name in BASE_ENV_ALLOWLIST or name.startswith(BASE_ENV_PREFIXES):
             env[name] = value
-        elif include_auth and name in AUTH_ENV_ALLOWLIST:
+        elif include_auth and (name in AUTH_ENV_ALLOWLIST or name.startswith(AUTH_ENV_PREFIXES)):
             env[name] = value
     for name in passthrough:
         if name in source:

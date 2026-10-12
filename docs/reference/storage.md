@@ -63,10 +63,29 @@ Large blobs (diffs, raw streams, verifier logs) are stored as files and referenc
 | `HARNESSLAB_DB_URL` | Database URL. |
 | `HARNESSLAB_INTEGRATION=1` | Enables the opt-in real-CLI tests. |
 
-Variables forwarded to agent processes: `PATH`, `HOME`, `USER`, `LOGNAME`, `SHELL`, `LANG`,
-`LANGUAGE`, `TERM`, `TZ`, `TMPDIR`, `TMP`, `TEMP`, CA and proxy settings, `LC_*`, `XDG_*`, plus,
-for agents only, `ANTHROPIC_*`, `CLAUDE_CODE_*`, `CLAUDE_CONFIG_DIR`, `AWS_*`,
-`GOOGLE_APPLICATION_CREDENTIALS`, `CLOUD_ML_REGION`, `OPENAI_*`, `CODEX_HOME`, and whatever a
-variant lists in `env_passthrough`. Every child also gets `NO_COLOR=1`, `PYTHONDONTWRITEBYTECODE=1`,
+Variables forwarded to every child process: `PATH`, `HOME`, `USER`, `LOGNAME`, `SHELL`, `LANG`,
+`LANGUAGE`, `TERM`, `TZ`, `TMPDIR`, `TMP`, `TEMP`, CA and proxy settings, `LC_*`, `XDG_*`.
+Forwarded to agent processes only, by exact name (from `execution/process.py`), the provider
+variables Claude Code and Codex document:
+
+- Anthropic API and gateways: `ANTHROPIC_API_KEY`, `ANTHROPIC_AUTH_TOKEN`, `ANTHROPIC_BASE_URL`,
+  `ANTHROPIC_CUSTOM_HEADERS`, `CLAUDE_CODE_OAUTH_TOKEN`, `CLAUDE_CONFIG_DIR`;
+- models: `ANTHROPIC_MODEL`, `ANTHROPIC_DEFAULT_MODEL`, `ANTHROPIC_DEFAULT_OPUS_MODEL`,
+  `ANTHROPIC_DEFAULT_SONNET_MODEL`, `ANTHROPIC_DEFAULT_HAIKU_MODEL`,
+  `ANTHROPIC_DEFAULT_FABLE_MODEL`, `ANTHROPIC_SMALL_FAST_MODEL`, `CLAUDE_CODE_SUBAGENT_MODEL`;
+- Amazon Bedrock: `CLAUDE_CODE_USE_BEDROCK`, `AWS_BEARER_TOKEN_BEDROCK`,
+  `ANTHROPIC_BEDROCK_BASE_URL`, `CLAUDE_CODE_SKIP_BEDROCK_AUTH`,
+  `ANTHROPIC_SMALL_FAST_MODEL_AWS_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`,
+  `AWS_SESSION_TOKEN`, `AWS_REGION`, `AWS_DEFAULT_REGION`, `AWS_PROFILE`, `AWS_CONFIG_FILE`,
+  `AWS_SHARED_CREDENTIALS_FILE`;
+- Google Vertex AI: `CLAUDE_CODE_USE_VERTEX`, `ANTHROPIC_VERTEX_PROJECT_ID`,
+  `ANTHROPIC_VERTEX_BASE_URL`, `CLAUDE_CODE_SKIP_VERTEX_AUTH`, `CLOUD_ML_REGION`,
+  `GOOGLE_APPLICATION_CREDENTIALS` and every `VERTEX_REGION_CLAUDE_*`;
+- Microsoft Foundry: `CLAUDE_CODE_USE_FOUNDRY`, `ANTHROPIC_FOUNDRY_RESOURCE`,
+  `ANTHROPIC_FOUNDRY_BASE_URL`, `ANTHROPIC_FOUNDRY_API_KEY`, `ANTHROPIC_FOUNDRY_AUTH_TOKEN`,
+  `CLAUDE_CODE_SKIP_FOUNDRY_AUTH`;
+- Codex: `OPENAI_API_KEY`, `OPENAI_BASE_URL`, `OPENAI_ORG_ID`, `CODEX_HOME`;
+
+plus whatever a variant lists in `env_passthrough`. Every child also gets `NO_COLOR=1`, `PYTHONDONTWRITEBYTECODE=1`,
 `PYTHONUNBUFFERED=1`, `GIT_TERMINAL_PROMPT=0` and `HARNESSLAB=1`. Verifier and setup commands
 receive no credentials. Environment variables are never logged.

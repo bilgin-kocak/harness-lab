@@ -15,7 +15,9 @@ Behaviour is controlled by environment variables (set by the tests):
                       (OpenCode 1: its help on stderr) or argparse (Hermes); the default is
                       Claude Code's (commander) or, with ``exec`` in argv, Codex's (clap)
     FAKE_CLI_ENV_OUT  path of a JSON file that gets the environment the CLI ran with
-    FAKE_CLI_COPY     ``src=>dst``: copy a file before replaying, ``$VARS`` in dst expanded
+    FAKE_CLI_COPY     ``src=>dst[;src=>dst...]``: copy files before replaying (``$VARS``
+                      expanded; a missing source is skipped)
+    FAKE_CLI_REJECT_HELP  the help a yargs-help refusal prints (falls back to FAKE_CLI_HELP)
     FAKE_CLI_HELP_LOG path of a file that gets one line per --help call
     FAKE_CLI_STDERR_TEXT  text written to stderr at the end of a normal run
 
@@ -56,7 +58,8 @@ def main() -> int:
         elif style == "effect":
             sys.stderr.write(f"Unrecognized flag: {reject} in command opencode run\n")
         elif style == "yargs-help":  # OpenCode 1 prints its help, nothing else
-            with open(os.environ["FAKE_CLI_HELP"], encoding="utf-8") as fh:
+            help_file = os.environ.get("FAKE_CLI_REJECT_HELP") or os.environ["FAKE_CLI_HELP"]
+            with open(help_file, encoding="utf-8") as fh:
                 sys.stderr.write(fh.read())
         else:  # argparse
             sys.stderr.write(
@@ -101,12 +104,11 @@ def main() -> int:
     if env_out:
         with open(env_out, "w", encoding="utf-8") as fh:
             json.dump(dict(os.environ), fh)
-    copy = os.environ.get("FAKE_CLI_COPY")
-    if copy:
-        src, dst = copy.split("=>", 1)
-        dst = os.path.expandvars(dst)
-        os.makedirs(os.path.dirname(dst), exist_ok=True)
-        shutil.copyfile(src, dst)
+    for pair in filter(None, os.environ.get("FAKE_CLI_COPY", "").split(";")):
+        src, dst = (os.path.expandvars(side) for side in pair.split("=>", 1))
+        if os.path.exists(src):
+            os.makedirs(os.path.dirname(dst), exist_ok=True)
+            shutil.copyfile(src, dst)
     cwd_out = os.environ.get("FAKE_CLI_CWD_OUT")
     if cwd_out:
         with open(cwd_out, "w", encoding="utf-8") as fh:

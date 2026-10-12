@@ -9,7 +9,9 @@ import pytest
 
 from harnesslab.core.events import EventEmitter
 from harnesslab.core.models import RepoSpec, RunnerConfig, RunStatus, TaskSpec, VerificationSpec
+from harnesslab.runners import opencode
 from harnesslab.runners._cli import clear_help_cache, help_flags
+from harnesslab.runners.opencode import OpenCodeRunner, build_opencode_command
 from harnesslab.runners.pi import (
     OPT_IN_ERROR,
     PiRunner,
@@ -22,6 +24,8 @@ from harnesslab.trace.redaction import Redactor
 from tests.conftest import FIXTURES
 
 PI_HELP = FIXTURES / "cli_help" / "pi-1.1.0.txt"
+OC1_HELP = FIXTURES / "cli_help" / "opencode-1.19.0-run.txt"
+OC2_HELP = FIXTURES / "cli_help" / "opencode-2.0.27-run.txt"
 FAKE_VARS = [
     "FAKE_CLI_STREAM",
     "FAKE_CLI_EXIT",
@@ -34,6 +38,8 @@ FAKE_VARS = [
     "FAKE_CLI_REJECT_STYLE",
     "FAKE_CLI_STDERR_TEXT",
     "FAKE_CLI_STDERR_SECRET",
+    "FAKE_CLI_COPY",
+    "FAKE_CLI_REJECT_HELP",
 ]
 
 
@@ -342,3 +348,224 @@ async def test_pi_timeout_and_cancellation_remove_the_state(
     with pytest.raises(asyncio.CancelledError):
         await run
     assert not Path(json.loads(env_out.read_text())["PI_CODING_AGENT_DIR"]).parent.exists()
+
+
+# -- OpenCode ----------------------------------------------------------------
+
+
+def _oc(
+    fake_cli: Path, model: str | None = "anthropic/claude-sonnet-4-5", **options
+) -> RunnerConfig:
+    return RunnerConfig(
+        runner="opencode",
+        model=model,
+        options={"executable": str(fake_cli), "env_passthrough": FAKE_VARS, **options},
+    )
+
+
+def test_opencode_commands_for_each_major_version():
+    config = RunnerConfig(
+        runner="opencode", model="openai/gpt-x", options={"effort": "high", "agent": "plan"}
+    )
+    one = build_opencode_command(config, 1)
+    assert one[:4] == ["opencode", "run", "--format", "json"] and "--pure" in one
+    assert one[one.index("-m") + 1] == "openai/gpt-x" and one[one.index("--variant") + 1] == "high"
+    two = build_opencode_command(config, 2)
+    assert "--standalone" in two and "--pure" not in two and "--variant" not in two
+    assert two[two.index("-m") + 1] == "openai/gpt-x#high"
+    assert two[two.index("--agent") + 1] == "plan" and two[two.index("--title") + 1] == "harnesslab"
+    for major, help_file in ((1, OC1_HELP), (2, OC2_HELP)):
+        known = help_flags(help_file.read_text(), opencode.HELP_MARKERS)
+        assert known is not None
+        auto = config.model_copy(update={"options": {**config.options, "auto": True}})
+        argv = build_opencode_command(auto, major)
+        assert {a for a in argv if a.startswith("-")} <= known, (major, argv)
+    for model in (None, "claude-sonnet-4-5"):
+        with pytest.raises(ValueError, match="provider/model"):
+            build_opencode_command(RunnerConfig(runner="opencode", model=model))
+
+
+def test_opencode_permissions_and_guards():
+    plain = RunnerConfig(runner="opencode", model="a/b")
+    assert opencode.config_error(plain) is None
+    policy = opencode.permission_policy(plain)
+    assert policy["bash"]["*"] == "deny" and policy["bash"]["pytest *"] == "allow"
+    assert policy["webfetch"] == policy["task"] == policy["external_directory"] == "deny"
+    assert policy["read"]["*.env"] == "deny" and '"ask"' not in json.dumps(policy)
+    tighter = plain.model_copy(update={"options": {"permission": {"edit": "deny"}}})
+    assert opencode.config_error(tighter) is None
+    assert opencode.permission_policy(tighter)["edit"] == "deny"
+    for loose in ("allow", {"bash": "allow"}, {"bash": {"*": "allow"}}, {"*": "allow"}):
+        config = plain.model_copy(update={"options": {"permission": loose}})
+        assert "allow_dangerous_permissions" in (opencode.config_error(config) or ""), loose
+        opted = config.model_copy(
+            update={"options": {"permission": loose, "allow_dangerous_permissions": True}}
+        )
+        assert opencode.config_error(opted) is None
+    auto = plain.model_copy(update={"options": {"auto": True}})
+    assert "allow_dangerous_permissions" in (opencode.config_error(auto) or "")
+    for extra in (["--attach", "http://x"], ["--thinking"], ["-m", "a/c"], ["--dir=/tmp"]):
+        problem = opencode.config_error(plain.model_copy(update={"options": {"extra_args": extra}}))
+        assert problem and extra[0].split("=")[0] in problem, extra
+    env = plain.model_copy(update={"options": {"env_passthrough": ["OPENCODE_CONFIG_CONTENT"]}})
+    assert "OPENCODE_CONFIG_CONTENT" in (opencode.config_error(env) or "")
+    assert "provider/model" in (opencode.config_error(RunnerConfig(runner="opencode")) or "")
+
+
+async def test_opencode_1x_runs_end_to_end(fake_cli: Path, tmp_path: Path, monkeypatch):
+    worktree, artifacts = _dirs(tmp_path)
+    env_out, copied = tmp_path / "env.json", tmp_path / "copied"
+    monkeypatch.setenv("FAKE_CLI_STREAM", str(FIXTURES / "opencode" / "run_v1_success.jsonl"))
+    monkeypatch.setenv("FAKE_CLI_PROMPT_OUT", str(tmp_path / "prompt.txt"))
+    monkeypatch.setenv("FAKE_CLI_ENV_OUT", str(env_out))
+    monkeypatch.setenv("FAKE_CLI_VERSION", "1.19.0")
+    monkeypatch.setenv("FAKE_CLI_HELP", str(OC1_HELP))
+    monkeypatch.setenv(
+        "FAKE_CLI_COPY",
+        f"$XDG_CONFIG_HOME/opencode/AGENTS.md=>{copied}/AGENTS.md;"
+        f"$XDG_CONFIG_HOME/opencode/skills/tests-first/SKILL.md=>{copied}/SKILL.md",
+    )
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-test-openai")
+    monkeypatch.setenv("CLAUDE_CODE_OAUTH_TOKEN", "oauth-not-for-opencode")
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "users-config"))
+    config = _oc(fake_cli, action_policy="batched")
+    config.harness_dir = _bundle(tmp_path)
+    emit = _emitter()
+    result = await OpenCodeRunner(artifacts_dir=artifacts).run(
+        _task(worktree), worktree, config, emit
+    )
+
+    assert result.status == RunStatus.COMPLETED and result.error is None, result.error
+    assert result.final_message == "Fixed: add() now returns a + b, and the test passes."
+    assert (result.llm_calls, result.num_turns) == (3, 3)
+    assert result.reported_cost_usd == pytest.approx(0.01485)
+    assert result.model_resolved == "anthropic/claude-sonnet-4-5"
+    assert result.usage_by_model == {"anthropic/claude-sonnet-4-5": result.usage}
+    assert result.provider_session_id == "ses_4f1e2d3c4b5aXyZ0abcdEFGH12"
+    assert result.metadata["cli_major"] == 1
+    assert (tmp_path / "prompt.txt").read_text() == "Fix the bug please"
+
+    env = json.loads(env_out.read_text())
+    state = Path(env["XDG_CONFIG_HOME"]).parent
+    assert state.name.startswith("harnesslab-opencode-") and not state.exists()
+    for name in ("XDG_DATA_HOME", "XDG_STATE_HOME", "XDG_RUNTIME_DIR", "OPENCODE_TEST_HOME"):
+        assert Path(env[name]).parent == state, name
+    assert env["OPENCODE_DB"] == ":memory:" and env["OPENCODE_DISABLE_MODELS_FETCH"] == "1"
+    assert "OPENCODE_DISABLE_PROJECT_CONFIG" not in env and env["PWD"] == str(worktree)
+    injected = json.loads(env["OPENCODE_CONFIG_CONTENT"])
+    assert injected["autoupdate"] is False and injected["permission"]["bash"]["*"] == "deny"
+    assert json.loads(env["OPENCODE_PERMISSION"]) == injected["permission"]
+    assert env["OPENAI_API_KEY"] == "sk-test-openai" and "CLAUDE_CODE_OAUTH_TOKEN" not in env
+    rules = (copied / "AGENTS.md").read_text()
+    assert rules.startswith("Always run the tests.") and "batched" in rules
+    assert "description: Write the failing test first" in (copied / "SKILL.md").read_text()
+    assert (artifacts / "system_prompt.txt").read_text() == rules.strip()
+
+    launch = next(e for e in emit.events if e.name == "harness_launch")
+    assert launch.payload["argv"][1:5] == ["run", "--format", "json", "--title"]
+    assert "--pure" in launch.payload["argv"] and launch.payload["config"] == injected
+    assert launch.payload["harness_components"] == ["system_prompt", "skills"]
+    sanitized = (artifacts / "agent_stream.sanitized.jsonl").read_text()
+    assert sanitized.count("\n") == 13 and "SECRET" not in sanitized
+    assert "SECRET" not in json.dumps([e.payload for e in emit.events])
+    report = analyze_run(emit.events, worktree=worktree, home=tmp_path / "home")
+    assert report.safe and report.blocked >= 1  # the denied pipe to sh
+
+
+async def test_opencode_2x_runs_with_its_own_flags(fake_cli: Path, tmp_path: Path, monkeypatch):
+    worktree, _ = _dirs(tmp_path)
+    env_out = tmp_path / "env.json"
+    monkeypatch.setenv("FAKE_CLI_STREAM", str(FIXTURES / "opencode" / "run_v2_success.jsonl"))
+    monkeypatch.setenv("FAKE_CLI_ENV_OUT", str(env_out))
+    monkeypatch.setenv("FAKE_CLI_VERSION", "opencode v2.0.27")
+    monkeypatch.setenv("FAKE_CLI_HELP", str(OC2_HELP))
+    config = _oc(
+        fake_cli, model="openai/gpt-x", variant="high", project_config=False, offline=False
+    )
+    emit = _emitter()
+    result = await OpenCodeRunner().run(_task(worktree), worktree, config, emit)
+    assert result.status == RunStatus.COMPLETED and result.error is None
+    assert result.final_message == "Fixed add() and noted it in NOTES.md. The test passes."
+    argv = next(e for e in emit.events if e.name == "harness_launch").payload["argv"]
+    assert "--standalone" in argv and argv[argv.index("-m") + 1] == "openai/gpt-x#high"
+    env = json.loads(env_out.read_text())
+    assert env["OPENCODE_DISABLE_PROJECT_CONFIG"] == "1"
+    assert "OPENCODE_DISABLE_MODELS_FETCH" not in env
+
+
+async def test_opencode_version_from_help_when_the_version_is_unreadable(
+    fake_cli: Path, tmp_path: Path, monkeypatch
+):
+    worktree, _ = _dirs(tmp_path)
+    monkeypatch.setenv("FAKE_CLI_STREAM", str(FIXTURES / "opencode" / "run_v1_success.jsonl"))
+    monkeypatch.setenv("FAKE_CLI_VERSION", "local build")
+    monkeypatch.setenv("FAKE_CLI_HELP", str(OC1_HELP))
+    emit = _emitter()
+    result = await OpenCodeRunner().run(_task(worktree), worktree, _oc(fake_cli), emit)
+    assert result.status == RunStatus.COMPLETED and result.metadata["cli_major"] == 1
+    assert "--pure" in next(e for e in emit.events if e.name == "harness_launch").payload["argv"]
+
+
+async def test_opencode_that_cannot_start_is_unavailable(
+    fake_cli: Path, tmp_path: Path, monkeypatch
+):
+    worktree, _ = _dirs(tmp_path)
+    empty = tmp_path / "empty.jsonl"
+    empty.write_text("")
+    monkeypatch.setenv("FAKE_CLI_STREAM", str(empty))
+    monkeypatch.setenv("FAKE_CLI_EXIT", "1")
+    monkeypatch.setenv("FAKE_CLI_STDERR_TEXT", "Error: ProviderModelNotFoundError: anthropic/x")
+    result = await OpenCodeRunner().run(_task(worktree), worktree, _oc(fake_cli), _emitter())
+    assert result.status == RunStatus.UNAVAILABLE
+    assert "stopped before calling a model (exit 1)" in (result.error or "")
+    assert "ProviderModelNotFoundError" in (result.error or "")
+
+
+async def test_opencode_flag_refusals_of_both_versions(fake_cli: Path, tmp_path: Path, monkeypatch):
+    worktree, _ = _dirs(tmp_path)
+    monkeypatch.setenv("FAKE_CLI_VERSION", "opencode v2.0.27")
+    monkeypatch.setenv("FAKE_CLI_REJECT", "--standalone")
+    monkeypatch.setenv("FAKE_CLI_REJECT_STYLE", "effect")
+    result = await OpenCodeRunner().run(_task(worktree), worktree, _oc(fake_cli), _emitter())
+    assert result.status == RunStatus.UNAVAILABLE
+    assert "rejected --standalone" in (result.error or "")
+
+    # 1.x prints only its usage: the flags it lacks are found in it.
+    without = tmp_path / "help-1.txt"
+    without.write_text(OC1_HELP.read_text().replace("--pure", "--other"))
+    monkeypatch.setenv("FAKE_CLI_VERSION", "1.19.0")
+    monkeypatch.setenv("FAKE_CLI_REJECT", "--pure")
+    monkeypatch.setenv("FAKE_CLI_REJECT_STYLE", "yargs-help")
+    monkeypatch.setenv("FAKE_CLI_REJECT_HELP", str(without))
+    result = await OpenCodeRunner().run(_task(worktree), worktree, _oc(fake_cli), _emitter())
+    assert result.status == RunStatus.UNAVAILABLE and "rejected --pure" in (result.error or "")
+
+    # And the same help, read before the run, stops it from starting.
+    clear_help_cache()
+    monkeypatch.setenv("FAKE_CLI_HELP", str(without))
+    availability = await OpenCodeRunner().check_availability(_oc(fake_cli))
+    assert not availability.available and "--pure" in availability.detail
+
+
+async def test_opencode_error_after_a_model_call_is_a_completed_run(
+    fake_cli: Path, tmp_path: Path, monkeypatch
+):
+    worktree, _ = _dirs(tmp_path)
+    monkeypatch.setenv("FAKE_CLI_STREAM", str(FIXTURES / "opencode" / "run_v1_error.jsonl"))
+    monkeypatch.setenv("FAKE_CLI_EXIT", "1")
+    monkeypatch.setenv("FAKE_CLI_VERSION", "1.19.0")
+    result = await OpenCodeRunner().run(_task(worktree), worktree, _oc(fake_cli), _emitter())
+    assert result.status == RunStatus.COMPLETED and result.exit_code == 1
+    assert result.error == "opencode: APIError: Overloaded" and result.llm_calls == 1
+
+
+async def test_opencode_timeout_removes_its_state(fake_cli: Path, tmp_path: Path, monkeypatch):
+    worktree, _ = _dirs(tmp_path)
+    env_out = tmp_path / "env.json"
+    monkeypatch.setenv("FAKE_CLI_MODE", "hang")
+    monkeypatch.setenv("FAKE_CLI_ENV_OUT", str(env_out))
+    result = await OpenCodeRunner().run(
+        _task(worktree, timeout=1), worktree, _oc(fake_cli), _emitter()
+    )
+    assert result.status == RunStatus.TIMEOUT
+    assert not Path(json.loads(env_out.read_text())["XDG_CONFIG_HOME"]).parent.exists()

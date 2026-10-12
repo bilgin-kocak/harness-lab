@@ -201,6 +201,27 @@ def refusal_message(cli: str, version: str | None, stderr: str) -> str | None:
     return None
 
 
+def refused_with_help(
+    cli: str, version: str | None, output: str, argv: list[str], markers: tuple[str, ...]
+) -> str | None:
+    """The error for a CLI that printed its usage instead of running, which is how some refuse
+    a flag (OpenCode 1 prints nothing else), naming the flags of ``argv`` the usage lacks."""
+    known = help_flags(output, markers)
+    if known is None:
+        return None
+    missing = [flag for flag in argv_flags(argv) if flag not in known]
+    if missing:
+        return (
+            f"{version or cli} rejected {', '.join(missing)}: the installed {cli} CLI does not "
+            "list a flag Harness Lab passes; update the CLI or Harness Lab, or change the "
+            "variant's options"
+        )
+    return (
+        f"{version or cli} printed its usage instead of running: it refused an argument "
+        "Harness Lab passes; check the variant's options and extra_args"
+    )
+
+
 def clear_help_cache() -> None:
     _HELP_CACHE.clear()
     _HELP_READS.clear()

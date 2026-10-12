@@ -35,18 +35,28 @@ VerdictMetric = Literal["pass_rate", "score", "improve_ratio", "anytime"]
 # ---------------------------------------------------------------------------
 
 
+# Every section of a task file rejects unknown keys: a typo such as ``protectd_paths`` must be an
+# error, not a silently dropped setting.
+
+
 class RepoSpec(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     path: str
     base_ref: str = "HEAD"
 
 
 class SetupSpec(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     commands: list[str] = Field(default_factory=list)
     timeout_seconds: int = 120
 
 
 class InjectSpec(BaseModel):
     """A file copied into the worktree *only* at verification time."""
+
+    model_config = ConfigDict(extra="forbid")
 
     source: str
     dest: str
@@ -75,6 +85,8 @@ class AnswerKeySpec(BaseModel):
 
 
 class VerificationSpec(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     command: str
     score_command: str | None = None
     answer_key: AnswerKeySpec | None = None
@@ -94,11 +106,15 @@ class VerificationSpec(BaseModel):
 
 
 class LimitsSpec(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     agent_timeout_seconds: int = 600
 
 
 class ReferenceSolutionSpec(BaseModel):
     """Optional known-good solution (used by the fake runner and ``suite check``)."""
+
+    model_config = ConfigDict(extra="forbid")
 
     overlay: str | None = None
     partial_overlay: str | None = None
@@ -219,19 +235,11 @@ class TaskSpec(BaseModel):
 # Variant / suite / experiment specifications
 # ---------------------------------------------------------------------------
 
-_VARIANT_KNOWN_FIELDS = {
-    "id",
-    "runner",
-    "model",
-    "description",
-    "harness_version",
-    "model_provider",
-    "context_policy",
-    "tool_policy",
-    "skill_version",
-    "harness",
-    "harness_hash",
-}
+# Variant keys a suite's ``defaults:`` cannot set: they identify a variant, or are resolved when
+# the variant is loaded (a harness bundle path is relative to the file that names it).
+NOT_DEFAULTABLE_KEYS = frozenset(
+    {"id", "runner", "description", "factors", "harness", "harness_hash", "harness_dir"}
+)
 
 
 class VariantSpec(BaseModel):
@@ -273,6 +281,17 @@ class VariantSpec(BaseModel):
             harness_hash=self.harness_hash,
         )
 
+    def with_defaults(self, defaults: dict[str, Any]) -> VariantSpec:
+        """This variant with ``defaults`` filled in for every key it does not set itself
+        (a key set to null counts as set)."""
+        own = self.model_dump(exclude_unset=True)
+        missing = {key: value for key, value in defaults.items() if key not in own}
+        if not missing:
+            return self
+        merged = VariantSpec(**own, **missing)
+        merged.harness_dir = self.harness_dir
+        return merged
+
 
 class SuiteSpec(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -281,13 +300,32 @@ class SuiteSpec(BaseModel):
     description: str | None = None
     tasks: list[str] = Field(default_factory=list)
     variants: list[VariantSpec] = Field(default_factory=list)
-    defaults: dict[str, Any] = Field(default_factory=dict)
+    # Variant options by runner name ("*" for every runner), filled in for every variant that
+    # runs on the suite (from the suite, an experiment, a sweep, a grow session or the
+    # built-ins) unless the variant sets them itself, e.g. a safe tool allowlist for claude.
+    defaults: dict[str, dict[str, Any]] = Field(default_factory=dict)
     plugins: list[str] = Field(default_factory=list)
     source_path: Path | None = Field(default=None, exclude=True)
+
+    @field_validator("defaults")
+    @classmethod
+    def _defaults_are_options(cls, value: dict[str, dict[str, Any]]) -> dict[str, dict[str, Any]]:
+        for runner, options in value.items():
+            fixed = sorted(set(options) & NOT_DEFAULTABLE_KEYS)
+            if fixed:
+                raise ValueError(
+                    f"defaults.{runner}: {', '.join(fixed)} cannot be a suite default "
+                    "(set it on the variant)"
+                )
+        return value
 
     @property
     def base_dir(self) -> Path:
         return self.source_path.parent if self.source_path else Path.cwd()
+
+    def defaults_for(self, runner: str) -> dict[str, Any]:
+        """The suite defaults for a variant of ``runner``: ``"*"``, then the runner's own."""
+        return {**self.defaults.get("*", {}), **self.defaults.get(runner, {})}
 
 
 class ExperimentSpec(BaseModel):
@@ -317,22 +355,30 @@ class ExperimentSpec(BaseModel):
 
 
 class SweepRequirement(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     min_pass_rate: float = 1.0
     min_valid_runs: int | None = None  # default: every planned run of the workload must be valid
 
 
 class SweepObjective(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     require: SweepRequirement = Field(default_factory=SweepRequirement)
     minimize: Literal["cost", "tokens", "wall_time", "llm_calls"] = "cost"
     tie_breaker: Literal["wall_time_seconds", "tokens", "cost", "llm_calls"] = "wall_time_seconds"
 
 
 class SweepSample(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     max_configs: int
     seed: int = 0
 
 
 class SweepBudget(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     max_runs: int | None = None
     max_cost_usd: float | None = None
 

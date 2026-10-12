@@ -4,8 +4,8 @@
 <h1>Experiments</h1>
 {% if not experiments %}
   <div class="card empty">
-    <p>No experiments yet. Run one:</p>
-    <pre>uv run harnesslab run suites/demo/suite.yaml --variants fake-reference,fake-noop</pre>
+    <p>No experiments yet. Run the bundled demo (no API keys needed):</p>
+    <pre>harnesslab run demo --variants fake-reference,fake-noop</pre>
   </div>
 {% else %}
 <table class="data">

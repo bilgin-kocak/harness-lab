@@ -205,3 +205,38 @@ async def test_runs_start_from_the_experiments_snapshot(settings: Settings, db: 
     assert calls == [tasks[0].id]  # once for the experiment, not once per run
     exp = service.repo.get_experiment(outcome.experiment_id)
     assert {run.base_commit for run in exp.runs} == {exp.tasks[0].base_commit}
+
+
+async def test_suite_defaults_apply_to_every_variant(settings: Settings, db: Database):
+    """`defaults:` in a suite fills in options a variant does not set itself, by runner."""
+    import pytest
+    from pydantic import ValidationError
+
+    from harnesslab.core.models import SuiteSpec
+
+    suite, tasks = load_suite(DEMO_SUITE)
+    suite = suite.model_copy(
+        update={"defaults": {"*": {"llm_calls": 4}, "fake": {"behavior": "solve"}}}
+    )
+    variants = [
+        VariantSpec(id="defaulted", runner="fake"),  # gets behavior: solve
+        VariantSpec(id="own", runner="fake", behavior="noop"),  # its own setting wins
+    ]
+    service = ExperimentService(settings, db)
+    outcome = await service.run_experiment(
+        ExperimentSpec(name="defaults", suite=str(DEMO_SUITE), source_path=DEMO_SUITE),
+        suite,
+        tasks[:1],
+        variants,
+    )
+    by = {r.variant_key: r for r in outcome.runs}
+    assert by["defaulted"].outcome == Outcome.PASS and by["own"].outcome == Outcome.FAIL
+    assert by["defaulted"].metrics.llm_calls == 4 and by["own"].metrics.llm_calls == 4
+    exp = service.repo.get_experiment(outcome.experiment_id)
+    recorded = {v.variant_key: v.config_json["options"] for v in exp.variants}
+    assert recorded["defaulted"] == {"llm_calls": 4, "behavior": "solve"}
+    assert recorded["own"] == {"behavior": "noop", "llm_calls": 4}
+    with pytest.raises(ValidationError, match="cannot be a suite default"):
+        SuiteSpec(name="s", defaults={"claude": {"runner": "codex"}})
+    with pytest.raises(ValidationError):
+        SuiteSpec(name="s", defaults={"max_turns": 30})  # options go under a runner name

@@ -3,6 +3,7 @@ import os
 import re
 from pathlib import Path
 
+import pytest
 from typer.testing import CliRunner
 
 from harnesslab.cli import app
@@ -108,6 +109,56 @@ def test_run_accepts_experiment_yaml(tmp_path: Path):
     assert "baseline-comparison" in result.output and "2 run(s)" in result.output
 
 
+def test_experiment_yaml_with_a_task_subset(tmp_path: Path):
+    """The documented experiment format: a suite reference plus a ``tasks:`` subset of ids."""
+    experiment = tmp_path / "experiment.yaml"
+    experiment.write_text(
+        f"name: subset\nsuite: {DEMO_SUITE}\ntasks: [fix-month-boundary]\n"
+        "variants:\n  - id: ref\n    runner: fake\n    behavior: solve\n"
+    )
+    result = runner.invoke(app, ["run", str(experiment)], env=_env(tmp_path))
+    assert result.exit_code == 0, result.output
+    assert "subset" in result.output and "1 run(s)" in result.output
+    assert "fix-month-boundary" in result.output and "add-tag-budgets" not in result.output
+
+
+def test_bundled_suite_paths_work_outside_a_lab(tmp_path: Path, monkeypatch):
+    """`suites/demo/suite.yaml` (the original quickstart) means the bundled suite outside a lab
+    made by `harnesslab init`, with a note saying so."""
+    monkeypatch.chdir(tmp_path)
+    env = _env(tmp_path)
+    result = runner.invoke(
+        app,
+        [
+            "run",
+            "suites/demo/suite.yaml",
+            "--variants",
+            "fake-reference",
+            "-t",
+            "fix-month-boundary",
+        ],
+        env=env,
+    )
+    assert result.exit_code == 0, result.output
+    assert "bundled suite 'demo'" in result.output and "✔" in result.output
+    listing = runner.invoke(app, ["suite", "list", "suites/demo"], env=env)
+    assert listing.exit_code == 0 and "fix-month-boundary" in listing.output
+    missing = runner.invoke(app, ["suite", "check", "suites/nope/suite.yaml"], env=env)
+    assert missing.exit_code == 2 and "suite not found" in missing.output
+
+
+def test_task_files_reject_unknown_keys(tmp_path: Path):
+    from harnesslab.experiments.spec import SpecError, load_task
+
+    task = tmp_path / "task.yaml"
+    task.write_text(
+        "id: t\nname: t\nrepo: {path: .}\nprompt: p\n"
+        "verification: {command: 'true', protectd_paths: [tests/]}\n"
+    )
+    with pytest.raises(SpecError, match="protectd_paths"):
+        load_task(task)
+
+
 def test_grow_run_show_export_and_resume(tmp_path: Path):
     env = _env(tmp_path)
     dry = runner.invoke(app, ["grow", "run", "demo-fake", "--dry-run"], env=env)
@@ -116,6 +167,7 @@ def test_grow_run_show_export_and_resume(tmp_path: Path):
     result = runner.invoke(app, ["grow", "run", "demo-fake"], env=env)
     assert result.exit_code == 0, result.output
     assert "accepted" in result.output and "session id:" in result.output
+    assert "median LLM calls: 1 → 2" in result.output
     sid = re.search(r"session id: (\S+)", result.output).group(1)
     listing = runner.invoke(app, ["grow", "list"], env=env)
     assert listing.exit_code == 0 and sid in listing.output and "completed" in listing.output
@@ -142,6 +194,19 @@ def test_harness_check_and_init_scaffold(tmp_path: Path):
     assert (target / "harnesses" / "baseline" / "system_prompt.md").exists()
     assert (target / "grow" / "demo-fake.yaml").exists()
     assert "grow run" in (target / "README.md").read_text()
+    # The copied templates run the copied suites, so edits to them take effect.
+    from harnesslab.experiments.spec import load_sweep_target
+    from harnesslab.grow.spec import load_grow_target
+
+    assert "suite: ../suites/demo/suite.yaml" in (target / "sweeps" / "demo-fake.yaml").read_text()
+    assert (
+        "../suites/demo-improve/suite.yaml"
+        in (target / "sweeps" / "improve-budget.yaml").read_text()
+    )
+    _, suite, _ = load_sweep_target(target / "sweeps" / "demo-fake.yaml")
+    assert suite.source_path == (target / "suites" / "demo" / "suite.yaml").resolve()
+    _, grow_suite, _, _ = load_grow_target(str(target / "grow" / "demo-fake.yaml"))
+    assert grow_suite.source_path == (target / "suites" / "demo" / "suite.yaml").resolve()
     bundle = target / "harnesses" / "baseline"
     ok = runner.invoke(app, ["harness", "check", str(bundle), "--suite", "demo"], env=env)
     assert ok.exit_code == 0, ok.output

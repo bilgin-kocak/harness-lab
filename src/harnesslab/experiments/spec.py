@@ -59,6 +59,25 @@ def _read_yaml(path: Path) -> dict[str, Any]:
     return data
 
 
+def bundled_fallback_name(ref: str | Path) -> str | None:
+    """The bundled suite a missing ``suites/<name>`` or ``suites/<name>/suite.yaml`` stands for.
+
+    ``harnesslab init`` copies the bundled suites to ``./suites``; outside such a directory the
+    same path (as in older docs and the original quickstart) means the bundled suite.
+    """
+    path = Path(ref).expanduser()
+    if path.exists():
+        return None
+    parts = path.parts
+    if (
+        len(parts) not in (2, 3)
+        or parts[0] != "suites"
+        or (len(parts) == 3 and parts[2] != "suite.yaml")
+    ):
+        return None
+    return parts[1] if parts[1] in list_bundled_suites() else None
+
+
 def resolve_suite_target(ref: str | Path) -> Path:
     """Accept a path to a suite/experiment YAML or the name of a bundled suite (e.g. ``demo``)."""
     path = Path(ref).expanduser()
@@ -67,6 +86,9 @@ def resolve_suite_target(ref: str | Path) -> Path:
     bundled = list_bundled_suites()
     if str(ref) in bundled:
         return bundled[str(ref)]
+    fallback = bundled_fallback_name(ref)
+    if fallback is not None:
+        return bundled[fallback]
     names = ", ".join(sorted(bundled)) or "none"
     raise SpecError(
         f"suite not found: {ref!r} is neither a file nor a bundled suite (bundled: {names})"
@@ -159,8 +181,9 @@ def load_experiment(path: Path) -> ExperimentSpec:
 
 
 def is_experiment_file(path: Path) -> bool:
-    data = _read_yaml(Path(path))
-    return "suite" in data and "tasks" not in data
+    """An experiment file names its suite; a suite file never has a ``suite:`` key (suites reject
+    unknown keys).  Both may have ``tasks:`` (task files there, a task-id subset here)."""
+    return "suite" in _read_yaml(Path(path))
 
 
 def resolve_suite_reference(ref: str, base_dir: Path) -> Path:

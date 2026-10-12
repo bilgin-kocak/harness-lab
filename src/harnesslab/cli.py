@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 import platform
+import re
 import shlex
 import shutil
 import sys
@@ -53,6 +54,7 @@ from harnesslab.experiments.routing import RoutingGap, routing_gap
 from harnesslab.experiments.service import ExperimentOutcome, ExperimentService, RunProgress
 from harnesslab.experiments.spec import (
     SpecError,
+    bundled_fallback_name,
     load_run_target,
     load_suite,
     load_sweep_target,
@@ -267,14 +269,40 @@ harnesslab grow run grow/demo-fake.yaml                        # grow a harness 
 harnesslab serve                                               # http://127.0.0.1:8000
 ```
 
-- `suites/demo/` - a copy of the bundled demo suite: tasks, hidden tests (`tasks/<id>/verify`), reference solutions.
-- `sweeps/` - configuration-sweep templates (`claude-config-search.yaml` costs real API usage).
-- `harnesses/baseline/` - a starting harness bundle (system prompt, skills, hooks, fake.yaml).
-- `grow/` - Growing Harness session templates (`claude-grow.yaml` costs real API usage).
+- `suites/` - copies of the bundled suites: tasks, hidden tests (`tasks/<id>/verify`), reference
+  solutions. `demo` (three coding tasks), `demo-improve` (improvement rounds), `demo-safety`
+  (canaries and risky actions), `demo-discovery` (find-everything with an answer key),
+  `demo-recovery` (a fault and its fault-free twin).
+- `sweeps/` - configuration-sweep templates. `demo-fake.yaml` runs offline;
+  `claude-config-search.yaml`, `improve-budget.yaml` and `improve-session.yaml` use real API usage.
+- `harnesses/baseline/` - a starting harness bundle (system prompt, harness.yaml, fake.yaml).
+- `harnesses/sentinel/` - a pre-tool-use hook that blocks risky actions, to A/B test on `demo-safety`.
+- `grow/` - Growing Harness session templates (`claude-grow.yaml` uses real API usage).
 - `pricing.example.yaml` - copy to `pricing.yaml` and fill in rates to get estimated costs for harnesses that do not report cost.
 
+The sweep and grow templates point at the copies in `suites/`, so edits there are what they run.
 Data (database, worktrees, artifacts) is written to `./.harnesslab`.
 """
+
+# `suite: <bundled name>` in a copied template, rewritten to the copy next to it.
+_TEMPLATE_SUITE = re.compile(r"^suite:[ \t]*([A-Za-z0-9_.-]+)[ \t]*$", re.M)
+
+
+def _point_templates_at_copies(directory: Path, suites: set[str]) -> None:
+    """Make the copied sweep and grow templates use the copied suites, not the packaged ones."""
+    for folder in ("sweeps", "grow"):
+        for template in sorted((directory / folder).glob("*.yaml")):
+            text = template.read_text(encoding="utf-8")
+            updated = _TEMPLATE_SUITE.sub(
+                lambda m: (
+                    f"suite: ../suites/{m.group(1)}/suite.yaml"
+                    if m.group(1) in suites
+                    else m.group(0)
+                ),
+                text,
+            )
+            if updated != text:
+                template.write_text(updated, encoding="utf-8")
 
 
 @app.command()
@@ -285,7 +313,8 @@ def init(
     ] = Path("."),
     force: Annotated[bool, typer.Option("--force", help="Overwrite existing files.")] = False,
 ) -> None:
-    """Scaffold a lab directory with the demo suite, sweep templates and a pricing example."""
+    """Scaffold a lab directory: copies of the bundled suites, sweep and grow templates, the
+    baseline and sentinel harness bundles, and a pricing example."""
     directory = directory.expanduser().resolve()
     targets = {
         directory / "suites" / "demo": bundled_suites_dir() / "demo",
@@ -317,6 +346,9 @@ def init(
         else:
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(source, target)
+    _point_templates_at_copies(
+        directory, {t.name for t in targets if t.parent == directory / "suites"}
+    )
     gitignore = directory / ".gitignore"
     if not gitignore.exists():
         gitignore.write_text(".harnesslab/\n__pycache__/\n", encoding="utf-8")
@@ -411,6 +443,16 @@ def doctor(ctx: typer.Context) -> None:
 # ---------------------------------------------------------------------------
 
 
+def _note_bundled_fallback(target: str | None) -> None:
+    """Say so when a missing ``suites/<name>[/suite.yaml]`` path is read as the bundled suite."""
+    name = bundled_fallback_name(target) if target else None
+    if name:
+        err_console.print(
+            f"[dim]note: {target} does not exist here; using the bundled suite '{name}' "
+            "(harnesslab init copies the bundled suites into ./suites to edit them)[/]"
+        )
+
+
 def _find_suites(target: str | None) -> list[Path]:
     if target is None:
         found = list(list_bundled_suites().values())
@@ -423,8 +465,11 @@ def _find_suites(target: str | None) -> list[Path]:
         return [path]
     if path.is_dir():
         return sorted(p for p in path.rglob("suite.yaml"))
-    bundled = list_bundled_suites().get(target)
-    return [bundled] if bundled else []
+    bundled = list_bundled_suites()
+    name = target if target in bundled else bundled_fallback_name(target)
+    if name and name != target:
+        _note_bundled_fallback(target)
+    return [bundled[name]] if name else []
 
 
 @suite_app.command("list")
@@ -621,6 +666,7 @@ def run(
 ) -> None:
     """Run every task of a suite against one or more harness variants."""
     settings = _settings(ctx)
+    _note_bundled_fallback(target)
     try:
         experiment, suite, all_tasks = load_run_target(target)
         _load_plugins_or_exit(list(plugin or []) + suite.plugins + experiment.plugins)
@@ -684,6 +730,7 @@ def suite_check(
 ) -> None:
     """Sanity-check verifiers: reference solutions must pass, the untouched repo must fail."""
     settings = _settings(ctx)
+    _note_bundled_fallback(target)
     try:
         suite_path = resolve_suite_target(target)
         suite, tasks = load_suite(suite_path)
@@ -1462,7 +1509,7 @@ def _print_grow_report(report: GrowReport) -> None:
         console.print(
             f"gate pass rate: {_fmt_rate(report.initial.gate_pass_rate)} (v{report.initial.number})"
             f" → {_fmt_rate(report.current.gate_pass_rate)} (v{report.current.number})"
-            f" · median {report.minimize}: {_fmt(report.initial.llm_calls_median, 0)}"
+            f" · median LLM calls: {_fmt(report.initial.llm_calls_median, 0)}"
             f" → {_fmt(report.current.llm_calls_median, 0)}"
         )
     table = Table(title="harness versions", box=None, padding=(0, 1))
@@ -1688,13 +1735,30 @@ def grow_run(
 
 
 @grow_app.command("resume")
-def grow_resume(ctx: typer.Context, session_id: Annotated[str, typer.Argument()]) -> None:
+def grow_resume(
+    ctx: typer.Context,
+    session_id: Annotated[str, typer.Argument()],
+    pricing: Annotated[
+        Path | None, typer.Option("--pricing", help="pricing.yaml for cost estimates.")
+    ] = None,
+    plugin: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--plugin",
+            help="Python module registering custom runners or optimizers (the session's own "
+            "plugins and its suite's are loaded too).",
+        ),
+    ] = None,
+) -> None:
     """Continue an interrupted or failed grow session from its saved state."""
     settings = _settings(ctx)
     db = _open_db(settings)
-    service = GrowService(settings, db)
+    # Same cost estimates as `grow run`, so budgets also count runners that report no cost.
+    service = GrowService(settings, db, pricing=_load_pricing(settings, pricing))
     try:
-        outcome = asyncio.run(service.resume(session_id, progress=_grow_progress))
+        outcome = asyncio.run(
+            service.resume(session_id, progress=_grow_progress, plugins=list(plugin or []))
+        )
         report = report_for_session(service.repo, service.repo.get_grow_session(outcome.session_id))
     except GrowError as exc:
         err_console.print(f"[red]{exc}[/]")
@@ -1840,6 +1904,7 @@ def ablate_run(
 ) -> None:
     """Run the full bundle, an empty (minimal) bundle and one leave-one-out bundle per component."""
     settings = _settings(ctx)
+    _note_bundled_fallback(suite)
     try:
         suite_path = resolve_suite_target(suite)
         suite_spec, all_tasks = load_suite(suite_path)

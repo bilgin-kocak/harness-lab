@@ -126,6 +126,13 @@ async def test_grow_resume_after_interruption(settings, db, monkeypatch):
     assert listing["status"] == "interrupted"
     interrupted = service.repo.get_grow_session(listing["id"])
     assert interrupted.state_json["runs_started"] == 6  # 1 gate + 2 train + 2 window + 1 gate
+    # Plugins are imported again on resume; one that cannot be imported stops it before anything
+    # changes, and the session can still be resumed.
+    from harnesslab.grow.service import GrowError
+
+    with pytest.raises(GrowError, match="could not import plugin module"):
+        await GrowService(settings, db).resume(listing["id"], plugins=["harnesslab_no_such_plugin"])
+    assert service.repo.get_grow_session(listing["id"]).status == "interrupted"
     resumed = await GrowService(settings, db).resume(listing["id"])
     assert resumed.status == "completed" and resumed.versions_accepted == 1
     row = service.repo.get_grow_session(listing["id"])

@@ -21,7 +21,7 @@ import asyncio
 import json
 import statistics
 import traceback
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import Any
 
@@ -34,11 +34,12 @@ from harnesslab.experiments.aggregate import RunSample, samples_from_rows
 from harnesslab.experiments.service import ExperimentService, RunOutcome
 from harnesslab.experiments.spec import load_suite, select_tasks
 from harnesslab.experiments.stats import paired_comparison
-from harnesslab.grow.optimizers.base import Proposal, create_optimizer
+from harnesslab.grow.optimizers.base import Proposal, create_optimizer, load_optimizer_plugins
 from harnesslab.grow.spec import GrowBudget, GrowSpec, ResolvedSplit
 from harnesslab.grow.view import build_context, build_failure_case
 from harnesslab.harness.bundle import BundleError, HarnessBundle
 from harnesslab.harness.lint import EditConstraints, SuiteSecrets, lint_candidate
+from harnesslab.runners.base import PluginError, load_plugins
 from harnesslab.storage.database import Database
 from harnesslab.storage.repository import Repository, utcnow
 
@@ -162,8 +163,14 @@ class GrowService:
         return await self._drive(session_id, spec, suite, tasks, split, state, progress)
 
     async def resume(
-        self, session_ref: str, *, progress: ProgressCallback | None = None
+        self,
+        session_ref: str,
+        *,
+        progress: ProgressCallback | None = None,
+        plugins: Sequence[str] = (),
     ) -> GrowOutcome:
+        """Continue a session from its saved state.  The session's and its suite's plugin
+        modules are imported again (with ``plugins``), so custom runners and optimizers resume."""
         row = self.repo.find_grow_session(session_ref)
         if row is None:
             raise GrowError(f"grow session not found: {session_ref}")
@@ -178,6 +185,12 @@ class GrowService:
         if not row.suite_path:
             raise GrowError(f"session {row.id} has no suite path recorded")
         suite, all_tasks = load_suite(Path(row.suite_path))
+        modules = [*plugins, *suite.plugins, *spec.plugins]
+        try:
+            load_plugins(modules)
+            load_optimizer_plugins(modules)
+        except PluginError as exc:
+            raise GrowError(str(exc)) from exc
         state = GrowState(**(row.state_json or {}))
         split = ResolvedSplit(**state.split)
         tasks = select_tasks(all_tasks, split.train + split.gate + split.final)

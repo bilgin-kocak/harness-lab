@@ -22,7 +22,7 @@ $ harnesslab [OPTIONS] COMMAND [ARGS]...
 **Commands**:
 
 * `version`: Print the Harness Lab version.
-* `init`: Scaffold a lab directory with the demo...
+* `init`: Scaffold a lab directory: copies of the...
 * `doctor`: Check python, git, codex, claude and the...
 * `run`: Run every task of a suite against one or...
 * `serve`: Start the local dashboard.
@@ -49,7 +49,8 @@ $ harnesslab version [OPTIONS]
 
 ## `harnesslab init`
 
-Scaffold a lab directory with the demo suite, sweep templates and a pricing example.
+Scaffold a lab directory: copies of the bundled suites, sweep and grow templates, the
+baseline and sentinel harness bundles, and a pricing example.
 
 **Usage**:
 
@@ -468,6 +469,8 @@ $ harnesslab grow resume [OPTIONS] {session_id}
 
 **Options**:
 
+* `--pricing <path>`: pricing.yaml for cost estimates.
+* `--plugin <str>`: Python module registering custom runners or optimizers (the session&#x27;s own plugins and its suite&#x27;s are loaded too).
 * `--help`: Show this message and exit.
 
 ### `harnesslab grow show`

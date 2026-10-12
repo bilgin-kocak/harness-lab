@@ -186,7 +186,7 @@ def build_round_prompt(
     if history:
         lines += ["", "Previous rounds:"]
         for record in history:
-            lines.append(f"- Round {record.round}: {_describe(record, unit, spec.keep_best)}")
+            lines.append(f"- Round {record.round}: {_describe(record, unit)}")
     lines.append("")
     if budget > 0:
         lines.append(_evaluator_text(budget))
@@ -233,7 +233,7 @@ def build_resume_prompt(
     if unseen:
         lines.append("Previous round:" if len(unseen) == 1 else "Rounds since your last prompt:")
         for record in unseen:
-            lines.append(f"- Round {record.round}: {_describe(record, unit, spec.keep_best)}")
+            lines.append(f"- Round {record.round}: {_describe(record, unit)}")
         lines.append("")
     lines += [*_standing(task, baseline=baseline, best=best, best_round=best_round), ""]
     if unseen and unseen[-1].reverted:
@@ -278,7 +278,7 @@ def _evaluator_text(budget: int) -> str:
     )
 
 
-def _describe(record: RoundRecord, unit: str, keep_best: bool) -> str:
+def _describe(record: RoundRecord, unit: str) -> str:
     tail = "reverted to the best version." if record.reverted else "changes kept."
     if record.status == RunStatus.UNAVAILABLE.value:
         return "the agent did not run (the harness was unavailable)."

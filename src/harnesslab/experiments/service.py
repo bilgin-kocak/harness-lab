@@ -157,6 +157,9 @@ class ExperimentService:
             raise ValueError("experiment has no tasks")
         if not variants:
             raise ValueError("experiment has no variants")
+        # Suite defaults (e.g. a safe tool allowlist) apply to every variant, whatever defined it;
+        # they are recorded in the variant's configuration like its own options.
+        variants = [v.with_defaults(suite.defaults_for(v.runner)) for v in variants]
         self.settings.ensure_dirs()
         environment = EnvironmentSpec.detect(sandbox=self.sandbox.kind, git_version=git_version())
 

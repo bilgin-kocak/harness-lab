@@ -537,11 +537,11 @@ def test_round_history_describes_every_kind_of_round():
     from harnesslab.improve.protocol import _describe
 
     unevaluated = RoundRecord(round=1, status="completed", gate_passed=None, reverted=True)
-    assert "could not be evaluated" in _describe(unevaluated, "", True)
+    assert "could not be evaluated" in _describe(unevaluated, "")
     unavailable = RoundRecord(round=1, status="unavailable")
-    assert "did not run" in _describe(unavailable, "", True)
+    assert "did not run" in _describe(unavailable, "")
     equal = RoundRecord(round=1, status="completed", value=5, gate_passed=True, reverted=True)
-    assert "reverted" in _describe(equal, "", True)
+    assert "reverted" in _describe(equal, "")
 
 
 async def test_equal_rounds_are_reported_as_reverted(settings: Settings, db: Database):

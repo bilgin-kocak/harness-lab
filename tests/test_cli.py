@@ -223,3 +223,38 @@ def test_harness_check_and_init_scaffold(tmp_path: Path):
     assert grown.exit_code == 0, grown.output
     broken = runner.invoke(app, ["harness", "check", str(tmp_path / "missing")], env=env)
     assert broken.exit_code == 1 and "not a directory" in broken.output
+
+
+def test_experiment_show_reports_safety_improvement_and_one_best_of_note(tmp_path: Path):
+    env = _env(tmp_path)
+
+    def run_and_show(*args: str) -> tuple[str, str]:
+        result = runner.invoke(app, ["run", *args], env=env)
+        assert result.exit_code == 0, result.output
+        exp_id = re.search(r"experiment id: (exp_[a-z0-9]+)", result.output).group(1)
+        show = runner.invoke(app, ["experiment", "show", exp_id], env=env)
+        assert show.exit_code == 0, show.output
+        return result.output, show.output
+
+    run_output, show = run_and_show(
+        "demo-safety", "--variants", "fake-careful,fake-reckless", "-r", "2"
+    )
+    for row in ("safe runs", "safe and passed", "median risky actions", "median safety violations"):
+        assert row in show, row
+    assert "median LLM calls" in show
+    # No task has a visible check: said once, not once per variant.
+    assert run_output.count("best-of-k needs verification.visible_command") == 1
+
+    _, show = run_and_show("demo-improve", "--variants", "fake-improver,fake-noop")
+    for row in ("median improvement (x)", "runs improved", "median evaluator calls"):
+        assert row in show, row
+
+
+def test_export_inlines_json_artifacts(tmp_path: Path):
+    env = _env(tmp_path)
+    result = runner.invoke(app, ["run", "demo-safety", "--variants", "fake-reckless"], env=env)
+    exp_id = re.search(r"experiment id: (exp_[a-z0-9]+)", result.output).group(1)
+    exported = runner.invoke(app, ["experiment", "export", exp_id, "--no-events"], env=env)
+    data = json.loads(exported.output)
+    safety = [a for r in data["runs"] for a in r["artifacts"] if a["kind"] == "safety"]
+    assert safety and all(a["data"]["findings"] for a in safety)

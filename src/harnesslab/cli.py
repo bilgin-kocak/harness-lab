@@ -199,10 +199,17 @@ def _print_paired(p: PairedComparison, title: str | None = None) -> None:
 
 
 def _print_attempts(reports: list[VariantAttempts]) -> None:
-    """One line per variant that made several attempts per task: pass@k and best-of-k."""
-    for report in reports:
-        if report.k_max >= 2:
-            console.print(f"attempts: {report.variant_key} {escape(report.summary())}")
+    """One line per variant that made several attempts per task: pass@k and best-of-k.  When no
+    variant has best-of-k for the same reason (no visible check), the reason is said once."""
+    shown = [r for r in reports if r.k_max >= 2]
+    missing = {r.note for r in shown if not r.has_best_of_k}
+    shared = len(missing) == 1 and all(not r.has_best_of_k for r in shown) and len(shown) > 1
+    for report in shown:
+        summary = report.summary(best_of_note=not shared)
+        console.print(f"attempts: {report.variant_key} {escape(summary)}")
+    if shared:
+        note = next(iter(missing)) or "best-of-k needs a visible check"
+        console.print(f"[dim]attempts: {escape(note)}[/]")
 
 
 def _print_recovery(reports: list[VariantRecovery]) -> None:
@@ -1180,12 +1187,32 @@ def experiment_show(ctx: typer.Context, experiment_id: Annotated[str, typer.Argu
     stat_row("median input tokens", lambda a: a.input_tokens.median, 0)
     stat_row("median output tokens", lambda a: a.output_tokens.median, 0)
     stat_row("median tool calls", lambda a: a.tool_calls.median, 0)
+    stat_row("median LLM calls", lambda a: a.llm_calls.median, 0)
     stat_row("median files changed", lambda a: a.files_changed.median, 0)
     stat_row("median reported cost (USD)", lambda a: a.reported_cost_usd.median, 4)
     stat_row("median estimated cost (USD)", lambda a: a.estimated_cost_usd.median, 4)
-    if any(aggs[vk].improve_anytime.n for vk in variant_keys):
+    if any(
+        aggs[vk].improve_ratio.n or aggs[vk].improve_anytime.n or aggs[vk].n_improved
+        for vk in variant_keys
+    ):
+        stat_row("median improvement (x)", lambda a: a.improve_ratio.median, 1)
+        at.add_row("runs improved", *[str(aggs[vk].n_improved) for vk in variant_keys])
+        stat_row("median evaluator calls", lambda a: a.evaluator_calls.median, 0)
         stat_row("median anytime score", lambda a: a.improve_anytime.median, 3)
         stat_row("median objective evaluations", lambda a: a.improve_evaluations.median, 0)
+    if any(aggs[vk].safe_rate is not None for vk in variant_keys):
+        at.add_row(
+            "safe runs",
+            *[
+                f"{_fmt_rate(aggs[vk].safe_rate)} ({aggs[vk].n_safe})"
+                if aggs[vk].safe_rate is not None
+                else "—"
+                for vk in variant_keys
+            ],
+        )
+        at.add_row("safe and passed", *[_fmt_rate(aggs[vk].safe_pass_rate) for vk in variant_keys])
+        stat_row("median risky actions", lambda a: a.risky_actions.median, 0)
+        stat_row("median safety violations", lambda a: a.safety_violations.median, 0)
     at.add_row("infra failures", *[str(aggs[vk].n_infra_failures) for vk in variant_keys])
     for name in sorted({name for vk in variant_keys for name in aggs[vk].task_metrics}):
         stat_row(

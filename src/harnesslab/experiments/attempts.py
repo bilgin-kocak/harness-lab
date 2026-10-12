@@ -88,15 +88,24 @@ class VariantAttempts(BaseModel):
     def row(self, k: int) -> AttemptsRow | None:
         return next((r for r in self.rows if r.k == k), None)
 
-    def summary(self) -> str:
-        """One plain-text line, e.g. for ``harnesslab run`` and ``experiment show``."""
+    @property
+    def has_best_of_k(self) -> bool:
+        last = self.row(self.k_max)
+        return last is not None and last.best_of_k is not None and self.selector_gain is not None
+
+    def summary(self, *, best_of_note: bool = True) -> str:
+        """One plain-text line, e.g. for ``harnesslab run`` and ``experiment show``.
+
+        ``best_of_note=False`` leaves out why best-of-k is missing, for callers that say it once
+        for every variant."""
         if self.k_max < 2:
             return self.note or "needs at least 2 attempts per task"
         first, last = self.row(1), self.row(self.k_max)
         assert first is not None and last is not None
         k = self.k_max
         line = f"pass@1 {first.pass_at_k:.0%} · pass@{k} {last.pass_at_k:.0%}"
-        if last.best_of_k is not None and self.selector_gain is not None:
+        if self.has_best_of_k:
+            assert last.best_of_k is not None and self.selector_gain is not None
             gain = self.selector_gain
             part = self.n_best_tasks < self.n_tasks
             line += (
@@ -106,7 +115,7 @@ class VariantAttempts(BaseModel):
                 + (" on those tasks" if part else "")
                 + f", {self.verdict})"
             )
-        else:
+        elif best_of_note:
             line += f" · best-of-{k}: {self.note or 'needs a visible check'}"
         if self.n_short_tasks:
             plural = "s" if self.n_short_tasks != 1 else ""

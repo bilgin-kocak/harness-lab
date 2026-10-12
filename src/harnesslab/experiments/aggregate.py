@@ -372,6 +372,13 @@ def compare_variants(
             True,
         ),
         delta(
+            "llm_calls",
+            "Median LLM calls",
+            agg_a.llm_calls.median,
+            agg_b.llm_calls.median,
+            True,
+        ),
+        delta(
             "files_changed",
             "Median files changed",
             agg_a.files_changed.median,

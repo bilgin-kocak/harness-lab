@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from datetime import datetime
 from typing import Any
 
@@ -14,6 +15,8 @@ from harnesslab.experiments.sweep import report_for_experiment
 from harnesslab.storage.repository import Repository
 
 EXPORT_SCHEMA_VERSION = "1"
+# JSON artifacts (safety findings, improvement rounds) up to this size are inlined as `data`.
+JSON_INLINE_CAP_BYTES = 1_000_000
 
 
 def _dt(value: datetime | None) -> str | None:
@@ -118,6 +121,15 @@ def export_experiment(
             }
             if include_artifacts and art.media_type.startswith("text/"):
                 entry["content"] = repo.read_artifact(art, cap=artifact_cap)
+            elif (
+                include_artifacts
+                and art.media_type == "application/json"
+                and (art.size_bytes or 0) <= JSON_INLINE_CAP_BYTES
+            ):
+                try:
+                    entry["data"] = json.loads(repo.read_artifact(art))
+                except (OSError, ValueError):
+                    pass  # an unreadable artifact is still listed with its path and hash
             record["artifacts"].append(entry)
         if include_events:
             record["events"] = [

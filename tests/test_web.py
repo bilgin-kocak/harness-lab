@@ -106,6 +106,7 @@ def test_dashboard_pages(settings: Settings, db: Database, populated):
             and "<form" in cmp_full.text
             and "both failed" in cmp_full.text
         )
+        assert "Median LLM calls" in cmp_full.text
         cmp_partial = client.get(
             f"/experiments/{populated.experiment_id}/compare?a=fake-reference&b=fake-noop",
             headers={"HX-Request": "true"},

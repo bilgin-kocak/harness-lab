@@ -2,7 +2,8 @@
 
 ## Start here
 
-* [Harness Lab](index.md)
+* [Overview](start/overview.md)
+* [Tour](start/tour.md)
 * [Install](start/install.md)
 * [Quickstart](start/quickstart.md)
 * [Concepts](start/concepts.md)

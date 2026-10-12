@@ -21,9 +21,9 @@ jobs:
       - name: Sync dependencies
         run: uv sync --python ${{ matrix.python }}
       - name: Lint
-        run: uv run ruff check src tests
+        run: uv run ruff check src tests scripts
       - name: Format
-        run: uv run ruff format --check src tests
+        run: uv run ruff format --check src tests scripts
       - name: Test
         run: uv run pytest -q
       - name: Build distributions
@@ -45,7 +45,7 @@ jobs:
       - name: Build docs (strict)
         run: uv run mkdocs build --strict
         env:
-          DISABLE_MKDOCS_2_WARNING: "true"
+          NO_MKDOCS_2_WARNING: "true"
 
   docs-deploy:
     needs: [docs, test]
@@ -68,4 +68,4 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           uv run mkdocs gh-deploy --force --no-history
         env:
-          DISABLE_MKDOCS_2_WARNING: "true"
+          NO_MKDOCS_2_WARNING: "true"

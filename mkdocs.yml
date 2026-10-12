@@ -1,6 +1,9 @@
 site_name: Harness Lab
-site_description: Local-first experimentation platform for evaluating AI coding-agent harnesses.
+site_description: >-
+  Controlled experiments for AI coding-agent harnesses: the same task from the same commit,
+  a hidden-test verifier, cost and paired statistics.
 site_url: https://bilgin-kocak.github.io/harness-lab/
+site_author: Bilgin Kocak
 repo_url: https://github.com/bilgin-kocak/harness-lab
 repo_name: bilgin-kocak/harness-lab
 edit_uri: edit/main/docs/
@@ -12,7 +15,12 @@ exclude_docs: |
 
 theme:
   name: material
+  custom_dir: overrides  # main.html: link previews (Open Graph), nothing else
+  favicon: assets/brand/favicon.png
+  icon:
+    logo: material/flask-outline
   features:
+    - navigation.tabs
     - navigation.sections
     - navigation.expand
     - navigation.top
@@ -41,22 +49,44 @@ theme:
 plugins:
   - search
 
+extra_css:
+  - stylesheets/harnesslab.css
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/bilgin-kocak/harness-lab
+      name: Source on GitHub
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/harnesslab/
+      name: harnesslab on PyPI
+
+copyright: Copyright &copy; 2026 Bilgin Kocak · MIT License
+
 markdown_extensions:
   - admonition
   - attr_list
+  - md_in_html
   - tables
   - toc:
       permalink: true
   - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+      strict: true  # a misspelt icon fails the build instead of printing :material-x:
   - pymdownx.superfences
   - pymdownx.highlight:
       anchor_linenums: true
   - pymdownx.inlinehilite
 
-# GitBook reads docs/SUMMARY.md; tests/test_docs.py keeps this nav and SUMMARY.md in sync.
+# GitBook reads docs/SUMMARY.md and opens on start/overview.md; tests/test_docs.py keeps this nav
+# and SUMMARY.md in sync, except the MkDocs-only landing page (index.md).
 nav:
+  - Home: index.md
   - Start here:
-      - Harness Lab: index.md
+      - Overview: start/overview.md
+      - Tour: start/tour.md
       - Install: start/install.md
       - Quickstart: start/quickstart.md
       - Concepts: start/concepts.md

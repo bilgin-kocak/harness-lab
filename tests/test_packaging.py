@@ -225,9 +225,13 @@ def test_distributions_contain_everything(tmp_path: Path):
         names = {name.split("/", 1)[1] for name in archive.getnames() if "/" in name}
     for needed in (
         "docs/index.md",
+        "docs/start/overview.md",
         "docs/reference/cli.md",
+        "docs/assets/screenshots/experiment-matrix.png",
         "mkdocs.yml",
+        "overrides/main.html",
         "scripts/gen_cli_reference.py",
+        "scripts/site_assets.py",
         "tests/test_docs.py",
         "src/harnesslab/__init__.py",
     ):

@@ -1,84 +1,228 @@
+---
+title: Harness Lab
+description: >-
+  Open-source controlled experiments for AI coding-agent harnesses: the same task, from the same
+  commit, through Claude Code, Codex or your own agent, judged by hidden tests and compared with
+  paired statistics.
+hide:
+  - navigation
+  - toc
+  - footer
+search:
+  exclude: true
+---
+
+<!-- The landing page uses Material-only syntax, so it is the one page GitBook does not show;
+GitBook opens on start/overview.md. tests/test_docs.py keeps it that way. -->
+
+<div class="hl-home" markdown>
+
+<div class="hl-hero" markdown>
+
 # Harness Lab
 
-**A local-first experimentation platform for evaluating AI coding-agent harnesses.**
+Controlled experiments for AI coding-agent harnesses.
+{ .hl-tagline }
 
-Given the same software task and the same starting repository state, how do different agent
-harnesses and configurations compare in *verified* success, token usage, tool usage, latency,
-cost and behaviour? Harness Lab answers that question reproducibly:
+Run the same task, from the same commit, through Claude Code, Codex or your own agent. Hidden
+tests decide what passed; cost, tokens, LLM calls and behaviour sit side by side.
+{ .hl-lede }
 
-```text
-                 TASK SUITE
-                     │
-            identical starting repo (one git commit)
-                     │
-          ┌──────────┼──────────┐
-          ▼          ▼          ▼
-       Harness A  Harness B  Harness C        codex · claude · fake · generic · yours
-          │          │          │
-      isolated    isolated    isolated        one git worktree per run
-      worktree    worktree    worktree
-          │          │          │
-          └──────────┼──────────┘
-                     ▼
-              independent verifier            hidden tests + exit code / partial score
-                     │
-                     ▼
-            normalized experiment             provider-neutral trace + metrics + diff
-                     │
-                     ▼
-              Harness Lab UI                   matrix · run detail · compare · grow
+```bash
+pip install harnesslab
+harnesslab run demo --variants fake-reference,fake-noop
+harnesslab serve
 ```
 
-Harness Lab is **not** an observability product. It is a scientific instrument for controlled
-comparisons: the agent never decides whether it succeeded, every run starts from the same commit,
-and every trace is stored in one provider-neutral schema.
+The demo runs offline fake agents: no API key, done in seconds.
+{ .hl-note }
 
-## What it does
+[Get started](start/quickstart.md){ .md-button .md-button--primary }
+[Take the tour](start/tour.md){ .md-button }
+[:fontawesome-brands-github: GitHub](https://github.com/bilgin-kocak/harness-lab){ .md-button }
 
-- **Runs the same task through different harnesses.** Claude Code, the OpenAI Codex CLI, a
-  deterministic fake agent, any CLI you wrap, or a Python adapter you write.
-- **Decides success independently.** Hidden tests are injected after the agent exits and a
-  verifier command produces the verdict.
-- **Normalizes every trace.** Tool calls, commands, file changes, tokens, cost and LLM calls are
-  stored the same way for every harness. Hidden reasoning is never persisted.
-- **Records what reproduction needs.** Base commit, task hash, harness bundle hash, config hash,
-  CLI version, model and environment on every run.
-- **Compares configurations.** Sweeps search model × effort × toolset × compaction × action policy
-  × harness bundle for the cheapest configuration that still passes.
-- **Grows a harness from its failures.** The `grow` loop edits a harness bundle with an optimizer,
-  keeps only edits that fix failures without regressing a held-out gate, and records the lineage.
-- **Proves each component earns its place.** `ablate` tests every part of a harness bundle against
-  its own absence; every comparison carries paired, task-level intervals and a verdict only from
-  enough tasks.
-- **Measures more than pass/fail.** Improvement tasks (rounds against a measured objective),
-  safety as an axis (risky actions, canaries, a sentinel hook to A/B test), find-everything tasks
-  graded with an answer key, recovery from injected faults, and pass@k / best-of-k over attempts.
-- **Builds benchmarks from your code.** `suite mine` turns commits that changed code and tests
-  into verifier-backed tasks.
+</div>
 
-## Where to go
+[![The dashboard's task × variant matrix for the bundled demo: four offline fake agents, three tasks, three attempts each](assets/screenshots/experiment-matrix.png){ .hl-shot width="1100" height="1010" }](start/tour.md)
 
-| You want to | Read |
-| --- | --- |
-| Install and see it work in five minutes without any API key | [Install](start/install.md), then [Quickstart](start/quickstart.md) |
-| Understand runs, experiments, sweeps and grow sessions | [Concepts](start/concepts.md) |
-| Benchmark Claude Code or Codex | [Run Claude Code](guides/claude-code.md), [Run Codex](guides/codex.md) |
-| Plug in your own agent | [Test your own harness](guides/your-own-harness.md) |
-| Build a benchmark of your own tasks | [Write a task suite](guides/task-suites.md), [Mine tasks from git history](guides/task-corpus.md) |
-| Find the cheapest configuration that still passes | [Configuration sweeps](guides/sweeps.md) |
-| Improve a harness automatically with a regression gate | [Grow the harness](guides/growing.md) |
-| Test whether each part of a harness helps | [Ablate a harness](guides/ablation.md) |
-| Measure optimization, safety, discovery or recovery | [Improvement tasks](guides/improvement.md), [Safety](guides/safety.md), [Find-everything tasks](guides/discovery.md), [Recovery tasks](guides/recovery.md) |
-| Read the results and their statistics | [Read and export results](guides/results.md), [The dashboard](guides/dashboard.md) |
-| Look up a flag, a YAML field or a metric | [Reference](reference/cli.md) |
-| Know what is deliberately not solved | [Honest limits](explanations/limits.md) |
+## Why Harness Lab
 
-## Requirements
+<div class="grid cards" markdown>
 
-Python 3.12 or 3.13 (the versions CI tests), git 2.20 or newer, Linux or macOS (Windows through
-WSL). Nothing else is
-needed for the demo: the fake runner needs no API keys. The Claude Code and Codex adapters need
-their CLIs on `PATH` and their credentials.
+-   :material-gavel:{ .lg .middle } __The agent never grades itself__
 
-Source and issues: [github.com/bilgin-kocak/harness-lab](https://github.com/bilgin-kocak/harness-lab).
-Package: [pypi.org/project/harnesslab](https://pypi.org/project/harnesslab/). License: MIT.
+    ---
+
+    Hidden tests are injected after the agent exits, and an independent verifier decides. The
+    demo's no-op agent claims success on every task and fails every one.
+
+-   :material-source-commit:{ .lg .middle } __Same commit, every run__
+
+    ---
+
+    Each run gets its own git worktree of the task's base commit. Task, prompt, bundle and
+    configuration hashes, CLI version and model are recorded with every run.
+
+-   :material-scale-balance:{ .lg .middle } __Cost next to success__
+
+    ---
+
+    Tokens, cost, LLM calls, tool calls and wall time sit beside verified success, with no
+    composite score. Comparisons are paired by task, with bootstrap intervals and a sign test.
+
+</div>
+
+## How it works
+
+<div class="hl-steps" markdown>
+
+1. **Task suite**<br>a prompt, a repository commit and hidden tests
+2. **Isolated runs**<br>one git worktree of that commit per run, for every harness
+3. **Independent verifier**<br>hidden tests injected after the agent exits
+4. **Normalized trace**<br>events, diff, tokens, cost and LLM calls in one schema
+5. **Evidence**<br>the matrix, paired statistics, sweeps, grow, ablation, export
+
+</div>
+
+## What you can do
+
+<div class="grid cards" markdown>
+
+-   :material-source-branch:{ .lg .middle } __Build benchmarks from your code__
+
+    ---
+
+    Write tasks in YAML, or mine them from git history: commits that changed code together with
+    its tests become tasks whose tests stay hidden.
+
+    [:octicons-arrow-right-24: Write a task suite](guides/task-suites.md) ·
+    [Mine git history](guides/task-corpus.md)
+
+-   :material-tune-variant:{ .lg .middle } __Find the cheapest setup that passes__
+
+    ---
+
+    Sweep model × reasoning effort × tools × compaction × action granularity × bundle and get
+    the cheapest configuration that still passes, with its Pareto front.
+
+    [:octicons-arrow-right-24: Configuration sweeps](guides/sweeps.md)
+
+-   :material-sprout-outline:{ .lg .middle } __Grow a harness from its failures__
+
+    ---
+
+    An optimizer edits a bundle's prompt, skills and hooks; an edit stays only when it fixes
+    failures and a held-out gate does not regress.
+
+    [:octicons-arrow-right-24: Grow the harness](guides/growing.md)
+
+-   :material-puzzle-check-outline:{ .lg .middle } __Prove each component helps__
+
+    ---
+
+    An ablation tests every part of a bundle against its own absence, and gives a verdict only
+    from enough tasks.
+
+    [:octicons-arrow-right-24: Ablate a harness](guides/ablation.md)
+
+-   :material-shield-check-outline:{ .lg .middle } __Measure more than pass/fail__
+
+    ---
+
+    Risky actions and a sentinel hook to A/B test, rounds against a measured objective,
+    find-everything tasks, recovery from injected faults, pass@k and best-of-k.
+
+    [:octicons-arrow-right-24: Safety](guides/safety.md) · [Improvement](guides/improvement.md) ·
+    [Find-everything](guides/discovery.md) · [Recovery](guides/recovery.md)
+
+-   :material-view-dashboard-outline:{ .lg .middle } __Read the evidence__
+
+    ---
+
+    A local dashboard with the task × variant matrix, run timelines, diffs and verifier output,
+    and a JSON export of everything.
+
+    [:octicons-arrow-right-24: The dashboard](guides/dashboard.md) ·
+    [Results and statistics](guides/results.md)
+
+</div>
+
+## When to use it
+
+<div class="hl-uses" markdown>
+
+- **Before upgrading a model or a CLI.** Run your tasks on both, side by side: a variant's
+  `executable` can point at the old binary and another at the new one.
+- **Before merging a prompt, skill or hook change.** Keep a change only when the paired evidence
+  says it helps, and drop the parts an ablation shows do nothing.
+- **When choosing an agent for your codebase.** Compare harnesses on tasks mined from your own
+  history, not on someone else's benchmark.
+- **When agent costs climb.** A sweep finds the cheapest configuration that still passes your
+  tasks.
+- **Before trusting a safety policy.** See which risky actions each setup takes, and whether a
+  hook blocks them without costing success.
+- **For research on harnesses.** Model and harness are independent variables, raw evidence is
+  kept, and every experiment exports to JSON.
+
+</div>
+
+## Supported harnesses
+
+| Harness | `runner` | What Harness Lab records |
+| --- | --- | --- |
+| Claude Code CLI | `claude` | Full trace, reported cost, LLM calls; bundles load as a plugin (prompt, skills, hooks, agents) |
+| OpenAI Codex CLI | `codex` | Full trace; cost from your [pricing table](reference/pricing.md); a bundle's prompt and skills become instructions |
+| Any command-line agent | `generic` | Diff and verdict for any command; a full trace with the [JSONL event protocol](guides/your-own-harness.md#the-jsonl-event-protocol) |
+| Your Python adapter | your own | Whatever your [`HarnessRunner`](guides/your-own-harness.md#2-a-python-module-a-real-adapter) emits, registered directly or as an entry point |
+| Fake agent | `fake` | Deterministic and offline: demos, tests and CI without an API key |
+
+## Research principles
+
+<div class="hl-uses" markdown>
+
+- **Model and harness are independent variables**, recorded separately on every run.
+- **Component ablations over framework-versus-framework comparisons.**
+- **Verification is external**: the agent's "done" is a message, never a result.
+- **Raw evidence is preserved**: traces, diffs and verifier output, per run.
+- **Pareto frontiers, not one score.**
+- **Reproducibility**: hashes, base commit, CLI version and environment with every run.
+
+</div>
+
+[Why these principles](explanations/research-principles.md){ .md-button }
+{ .hl-center }
+
+!!! warning "Agents run on your machine"
+
+    Runs are isolated with git worktrees, not containers: an agent has your user's access. Use
+    repositories you trust and credentials you can revoke. Read the
+    [security model](explanations/security-model.md) and the [honest limits](explanations/limits.md).
+
+## Cite Harness Lab
+
+```bibtex
+@software{kocak_harness_lab,
+  author  = {Kocak, Bilgin},
+  title   = {Harness Lab: controlled experiments for AI coding-agent harnesses},
+  version = {0.3.0},
+  year    = {2026},
+  url     = {https://github.com/bilgin-kocak/harness-lab},
+  license = {MIT}
+}
+```
+
+GitHub's *Cite this repository* reads the same data from
+[CITATION.cff](https://github.com/bilgin-kocak/harness-lab/blob/main/CITATION.cff).
+
+<div class="hl-links" markdown>
+
+[Install](start/install.md) · [Quickstart](start/quickstart.md) · [Tour](start/tour.md) ·
+[Changelog](project/changelog.md) · [Roadmap](project/roadmap.md) ·
+[Contributing](project/contributing.md) · [PyPI](https://pypi.org/project/harnesslab/) ·
+MIT License
+
+Harness Lab is an independent open-source project, not affiliated with Anthropic or OpenAI.
+
+</div>
+
+</div>

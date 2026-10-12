@@ -272,9 +272,10 @@ class CodexRunner(HarnessRunner):
             )
         finally:
             stream.close()
-        if artifacts:
-            redact_file_in_place(artifacts / "agent.stderr.log", emit.redactor)
-            redact_file_in_place(last_message_path, emit.redactor)
+            # Also when the run is cancelled: an interrupted run's files are redacted too.
+            if artifacts:
+                redact_file_in_place(artifacts / "agent.stderr.log", emit.redactor)
+                redact_file_in_place(last_message_path, emit.redactor)
         refusal = (
             refusal_message("codex", availability.version, proc.stderr_tail)
             if proc.exit_code and not parser.thread_id and not proc.timed_out

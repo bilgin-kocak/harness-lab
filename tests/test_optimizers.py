@@ -173,6 +173,25 @@ async def test_claude_cli_optimizer_retries_then_fails(fake_cli, tmp_path, monke
     assert (tmp_path / "optimizer_attempt_2.json").exists()
 
 
+async def test_claude_cli_optimizer_reports_a_cli_that_stops_before_answering(
+    fake_cli, tmp_path, monkeypatch
+):
+    """A CLI that refuses its arguments fails the same way twice: report its error at once."""
+    import pytest
+
+    from harnesslab.grow.optimizers.base import OptimizerError
+
+    monkeypatch.setenv("FAKE_CLI_REJECT", "--json-schema")
+    opt = create_optimizer(
+        "claude-cli",
+        {"executable": str(fake_cli), "env_passthrough": ["FAKE_CLI_REJECT"]},
+        artifacts_dir=tmp_path,
+    )
+    with pytest.raises(OptimizerError, match="before answering: .*rejected --json-schema"):
+        await opt.propose(_ctx({"fake.yaml": ""}, "b"))
+    assert not (tmp_path / "optimizer_attempt_2.json").exists()  # no second attempt
+
+
 async def test_claude_cli_optimizer_missing_executable():
     import pytest
 

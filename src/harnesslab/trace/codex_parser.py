@@ -40,6 +40,16 @@ def usage_from_codex(raw: dict[str, Any]) -> UsageTotals:
     )
 
 
+# The only fields of a reasoning item or message that are kept.  Everything else is dropped, so
+# a field a future Codex version adds (``content``, ``encrypted_content``, ...) is never stored.
+REASONING_KEPT_FIELDS = ("id", "type")
+
+
+def _redacted_reasoning(record: dict[str, Any]) -> dict[str, Any]:
+    kept = {key: record[key] for key in REASONING_KEPT_FIELDS if key in record}
+    return {**kept, "text": REDACTED_REASONING, "redacted": True}
+
+
 def sanitize_record(obj: Any, raw_line: str) -> Any:
     """Return a copy of a Codex record that is safe to persist (no reasoning text)."""
     if not isinstance(obj, dict):
@@ -47,18 +57,10 @@ def sanitize_record(obj: Any, raw_line: str) -> Any:
     rec = json.loads(json.dumps(obj, default=str))  # deep copy
     item = rec.get("item")
     if isinstance(item, dict) and item.get("type") == "reasoning":
-        item["text"] = REDACTED_REASONING
-        item["redacted"] = True
-        if "summary" in item:
-            item["summary"] = REDACTED_REASONING
+        rec["item"] = _redacted_reasoning(item)
     msg = rec.get("msg")
-    if isinstance(msg, dict):
-        mtype = str(msg.get("type", ""))
-        if "reasoning" in mtype:
-            for key in ("text", "delta", "summary", "content"):
-                if key in msg:
-                    msg[key] = REDACTED_REASONING
-            msg["redacted"] = True
+    if isinstance(msg, dict) and "reasoning" in str(msg.get("type", "")):
+        rec["msg"] = _redacted_reasoning(msg)
     if rec.get("type") not in KNOWN_TOP_LEVEL and "msg" not in rec:
         return safe_unknown_summary(obj, raw_line)
     return rec

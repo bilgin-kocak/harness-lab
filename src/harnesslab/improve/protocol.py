@@ -592,7 +592,7 @@ async def run_improvement(
                 )
             round_dir = artifacts_dir / f"round-{round_no}"
             round_dir.mkdir(parents=True, exist_ok=True)
-            (round_dir / "prompt.txt").write_text(prompt, encoding="utf-8")
+            (round_dir / "prompt.txt").write_text(redact(prompt), encoding="utf-8")
             emitter.emit(
                 EventKind.SYSTEM,
                 name="improve_round_started",

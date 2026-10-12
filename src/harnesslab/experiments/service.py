@@ -62,6 +62,15 @@ from harnesslab.verification.command import CommandVerifier
 
 AGENT_TIMEOUT_GRACE_SECONDS = 60
 
+# Files runners write next to the run's other artifacts: (file name, artifact kind, media type).
+# The stream is JSONL, so exports list it without inlining it.
+AGENT_ARTIFACTS: tuple[tuple[str, str, str], ...] = (
+    ("agent_stream.sanitized.jsonl", "agent_stream", "application/x-ndjson"),
+    ("agent.stderr.log", "agent_stderr", "text/plain"),
+    ("codex_last_message.txt", "agent_last_message", "text/plain"),
+    ("system_prompt.txt", "system_prompt", "text/plain"),
+)
+
 
 class SetupError(RuntimeError):
     pass
@@ -417,7 +426,9 @@ class ExperimentService:
                     run_id, base_commit=ctx.base_commit, worktree_path=str(ctx.workdir)
                 )
                 await self._run_setup(task, ctx, emitter)
-                (artifacts_dir / "prompt.txt").write_text(task.prompt, encoding="utf-8")
+                (artifacts_dir / "prompt.txt").write_text(
+                    run_redactor.redact_text(task.prompt), encoding="utf-8"
+                )
                 self.repo.add_artifact(run_id, "prompt", artifacts_dir / "prompt.txt")
                 emitter.emit(
                     EventKind.RUN_STARTED,
@@ -543,6 +554,7 @@ class ExperimentService:
                 },
             )
             emitter.flush()
+            self._register_agent_artifacts(run_id, artifacts_dir)
             metrics = compute_metrics(
                 emitter.events,
                 runner_result,
@@ -672,6 +684,34 @@ class ExperimentService:
                 "setup commands left the worktree dirty (add generated files to .gitignore): "
                 + paths
             )
+
+    def _register_agent_artifacts(self, run_id: str, artifacts_dir: Path) -> None:
+        """Register the files a runner wrote, so the dashboard and exports can reach them.
+
+        One invocation writes into the run's artifact directory; an improvement task writes one
+        ``round-<n>/`` directory per round (kinds ``round_<n>_<kind>``).  Runners redact these
+        files before they return, also when the run is cancelled.
+        """
+        found: list[tuple[str, Path, str]] = [
+            (kind, artifacts_dir / filename, media) for filename, kind, media in AGENT_ARTIFACTS
+        ]
+        rounds = sorted(
+            (p for p in artifacts_dir.glob("round-*") if p.is_dir() and p.name[6:].isdigit()),
+            key=lambda p: int(p.name[6:]),
+        )
+        for round_dir in rounds:
+            n = round_dir.name[6:]
+            found.append((f"round_{n}_prompt", round_dir / "prompt.txt", "text/plain"))
+            found.extend(
+                (f"round_{n}_{kind}", round_dir / filename, media)
+                for filename, kind, media in AGENT_ARTIFACTS
+            )
+        for kind, path, media in found:
+            if path.is_file():
+                try:
+                    self.repo.add_artifact(run_id, kind, path, media)
+                except OSError:  # unreadable evidence must not hide how the run ended
+                    pass
 
     def _write_change_artifacts(
         self, run_id: str, artifacts_dir: Path, changes: DiffSummary, redactor: Redactor

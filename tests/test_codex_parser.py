@@ -104,3 +104,38 @@ def test_usage_and_sanitize_helpers():
     )
     assert rec["item"]["text"] != "secret" and rec["item"]["redacted"]
     assert sanitize_record("garbage", "garbage") == {"byte_len": 7}
+
+
+def test_reasoning_fields_are_kept_by_allowlist():
+    """Fields a future Codex version might add to reasoning records are dropped, not kept."""
+    from harnesslab.trace.codex_parser import REDACTED_REASONING
+
+    rec = sanitize_record(
+        {
+            "type": "item.completed",
+            "item": {
+                "id": "r1",
+                "type": "reasoning",
+                "text": "SECRET_A",
+                "summary": ["SECRET_B"],
+                "content": [{"type": "reasoning_text", "text": "SECRET_C"}],
+                "encrypted_content": "SECRET_D",
+            },
+        },
+        "",
+    )
+    assert rec["item"] == {
+        "id": "r1",
+        "type": "reasoning",
+        "text": REDACTED_REASONING,
+        "redacted": True,
+    }
+    legacy = sanitize_record(
+        {"id": "0", "msg": {"type": "agent_reasoning_raw_content", "raw": "SECRET_E", "x": 1}}, ""
+    )
+    assert legacy["msg"] == {
+        "type": "agent_reasoning_raw_content",
+        "text": REDACTED_REASONING,
+        "redacted": True,
+    }
+    assert "SECRET" not in json.dumps([rec, legacy])

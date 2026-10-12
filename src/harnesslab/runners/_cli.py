@@ -69,6 +69,17 @@ _FORCE_COLOR = ("CLICOLOR_FORCE", "FORCE_COLOR")
 _ARGV_FLAG = re.compile(r"--?[A-Za-z][A-Za-z0-9_-]*(?:=.*)?")
 # How a CLI refuses a flag it does not know: commander (Claude Code) and clap (Codex).
 _REJECTED = re.compile(r"(?:unknown option|unexpected argument) '(--?[A-Za-z][A-Za-z0-9_-]*)'")
+# How a CLI refuses a value of a flag it knows.  Commander: "option '--permission-mode <mode>'
+# argument 'x' is invalid. Allowed choices are a, b."  Clap: "invalid value 'x' for
+# '--sandbox <SANDBOX_MODE>'" followed by "[possible values: a, b]".  Values are not checked
+# against --help beforehand: CLIs accept unlisted aliases (Claude Code takes
+# --permission-mode default although its help lists only manual).
+_REJECTED_COMMANDER_VALUE = re.compile(
+    r"option '([^']*)' argument '([^']*)' is invalid\.?(?:\s*Allowed choices are ([^\n]*?)\.?\s*$)?",
+    re.M,
+)
+_REJECTED_CLAP_VALUE = re.compile(r"invalid value '([^']*)' for '([^']*)'")
+_CLAP_POSSIBLE = re.compile(r"\[possible values: ([^\]]*)\]")
 
 _HELP_CACHE: dict[tuple[str, int, tuple[str, ...]], frozenset[str] | None] = {}
 _HELP_READS: dict[tuple[str, int, tuple[str, ...]], asyncio.Future[frozenset[str] | None]] = {}
@@ -106,15 +117,44 @@ def rejected_flag(stderr: str) -> str | None:
     return match.group(1) if match else None
 
 
+def _option_name(spec: str) -> str:
+    """``--sandbox`` from an option spec such as ``-s, --sandbox <SANDBOX_MODE>``."""
+    names = _HELP_FLAG.findall(spec)
+    return names[-1] if names else spec.strip()
+
+
+def rejected_value(stderr: str) -> tuple[str, str, str | None] | None:
+    """(flag, value, allowed values) of a flag value a CLI refused at startup, or None."""
+    text = _ANSI.sub("", stderr or "")
+    match = _REJECTED_COMMANDER_VALUE.search(text)
+    if match:
+        allowed = match.group(3).strip() if match.group(3) else None
+        return _option_name(match.group(1)), match.group(2), allowed
+    match = _REJECTED_CLAP_VALUE.search(text)
+    if match:
+        possible = _CLAP_POSSIBLE.search(text, match.end())
+        allowed = possible.group(1).strip() if possible else None
+        return _option_name(match.group(2)), match.group(1), allowed
+    return None
+
+
 def refusal_message(cli: str, version: str | None, stderr: str) -> str | None:
-    """The error for a run the CLI refused at startup because of a flag, or None."""
+    """The error for a run the CLI refused at startup because of a flag or its value, or None."""
     flag = rejected_flag(stderr)
-    if flag is None:
-        return None
-    return (
-        f"{version or cli} rejected {flag}: the installed {cli} CLI does not accept a flag "
-        "Harness Lab passes; update the CLI or Harness Lab, or change the variant's options"
-    )
+    if flag is not None:
+        return (
+            f"{version or cli} rejected {flag}: the installed {cli} CLI does not accept a flag "
+            "Harness Lab passes; update the CLI or Harness Lab, or change the variant's options"
+        )
+    value = rejected_value(stderr)
+    if value is not None:
+        name, given, allowed = value
+        return (
+            f"{version or cli} rejected {name} {given!r}"
+            + (f" (it accepts: {allowed})" if allowed else "")
+            + "; change the variant's options"
+        )
+    return None
 
 
 def clear_help_cache() -> None:

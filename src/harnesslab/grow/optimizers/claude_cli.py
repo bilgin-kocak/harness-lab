@@ -30,8 +30,9 @@ from harnesslab.grow.optimizers.base import (
     Proposal,
     register_optimizer,
 )
-from harnesslab.runners._cli import option_list
+from harnesslab.runners._cli import option_list, refusal_message
 from harnesslab.trace.claude_parser import usage_from_claude
+from harnesslab.trace.redaction import default_redactor
 
 PROPOSAL_SCHEMA: dict[str, Any] = {
     "type": "object",
@@ -182,6 +183,17 @@ class ClaudeCliOptimizer(Optimizer):
                     )
                 record = _last_json_object(proc.stdout)
                 if record is None:
+                    if proc.exit_code and not proc.stdout.strip() and not proc.timed_out:
+                        # The CLI stopped before answering (a refused flag or value, missing
+                        # credentials, ...): a second attempt would fail the same way.
+                        detail = refusal_message("claude", None, proc.stderr_tail) or (
+                            default_redactor().redact_text(proc.stderr_tail.strip()[-500:])
+                            or "no error output"
+                        )
+                        raise OptimizerError(
+                            f"claude exited with code {proc.exit_code} before answering: {detail}",
+                            cost_usd=spent,
+                        )
                     last_error = f"unparseable optimizer output (exit code {proc.exit_code})"
                     continue
                 cost = record.get("total_cost_usd")

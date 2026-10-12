@@ -376,8 +376,9 @@ class ClaudeCodeRunner(HarnessRunner):
             )
         finally:
             stream.close()
-        if artifacts:
-            redact_file_in_place(artifacts / "agent.stderr.log", emit.redactor)
+            # Also when the run is cancelled: an interrupted run's stderr is redacted too.
+            if artifacts:
+                redact_file_in_place(artifacts / "agent.stderr.log", emit.redactor)
         # Only a CLI that refused before printing anything: a session that ran and then failed
         # is a failed attempt, whatever its error output says.
         refusal = (

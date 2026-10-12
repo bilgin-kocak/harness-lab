@@ -195,6 +195,57 @@ async def test_a_run_the_cli_rejects_is_unavailable_not_a_failure(
     assert flag in (result.error or "") and "rejected" in (result.error or "")
 
 
+def test_rejected_values_are_recognised():
+    from harnesslab.runners._cli import refusal_message, rejected_value
+
+    commander = (
+        "Error: option '--permission-mode <mode>' argument 'bogusmode' is invalid. Allowed "
+        "choices are acceptEdits, auto, bypassPermissions, manual, dontAsk, plan.\n"
+    )
+    assert rejected_value(commander) == (
+        "--permission-mode",
+        "bogusmode",
+        "acceptEdits, auto, bypassPermissions, manual, dontAsk, plan",
+    )
+    clap = (
+        "error: invalid value 'nope' for '-s, --sandbox <SANDBOX_MODE>'\n"
+        "  [possible values: read-only, workspace-write, danger-full-access]\n\n"
+        "For more information, try '--help'.\n"
+    )
+    assert rejected_value(clap) == (
+        "--sandbox",
+        "nope",
+        "read-only, workspace-write, danger-full-access",
+    )
+    assert rejected_value("Error: rate limited") is None
+    message = refusal_message("claude", "2.1.296 (Claude Code)", commander)
+    assert message is not None and "--permission-mode 'bogusmode'" in message
+    assert "acceptEdits" in message
+    assert refusal_message("claude", None, "Error: rate limited") is None
+
+
+@pytest.mark.parametrize("runner_cls", [ClaudeCodeRunner, CodexRunner])
+async def test_a_value_the_cli_rejects_makes_the_run_unavailable(
+    runner_cls, fake_cli: Path, tmp_path: Path, monkeypatch
+):
+    worktree, artifacts = tmp_path / "wt", tmp_path / "artifacts"
+    worktree.mkdir()
+    artifacts.mkdir()
+    flag = "--permission-mode" if runner_cls is ClaudeCodeRunner else "--sandbox"
+    monkeypatch.setenv("FAKE_CLI_REJECT_VALUE", flag)
+    result = await runner_cls(artifacts_dir=artifacts).run(
+        _task(worktree),
+        worktree,
+        RunnerConfig(
+            runner="x",
+            options={"executable": str(fake_cli), "env_passthrough": ["FAKE_CLI_REJECT_VALUE"]},
+        ),
+        EventEmitter("r", redactor=Redactor(include_process_env=False)),
+    )
+    assert result.status == RunStatus.UNAVAILABLE, result
+    assert f"rejected {flag}" in (result.error or "") and "one, two" in (result.error or "")
+
+
 class _UnavailableRunner(HarnessRunner):
     name = "gone"
 

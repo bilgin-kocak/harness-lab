@@ -156,6 +156,28 @@ def test_run_page_without_metrics_or_with_old_metrics(settings: Settings, db: Da
         assert "running" in client.get(f"/runs/{in_progress}").text
 
 
+def test_raw_agent_files_are_registered_artifacts(settings: Settings, db: Database, populated):
+    from harnesslab.experiments.export import export_experiment
+    from harnesslab.storage.repository import Repository
+
+    repo = Repository(db, settings.home)
+    replay = next(r for r in populated.runs if r.variant_key == "claude-replay")
+    kinds = {a.kind: a for a in repo.get_run(replay.run_id).artifacts}
+    assert {"prompt", "agent_stream", "agent_stderr"} <= set(kinds)
+    assert kinds["agent_stream"].media_type == "application/x-ndjson"
+    with TestClient(create_app(settings, db)) as client:
+        stream = client.get(f"/runs/{replay.run_id}/artifacts/agent_stream")
+        assert stream.status_code == 200 and '"redacted": true' in stream.text
+        assert (
+            f"/runs/{replay.run_id}/artifacts/agent_stream"
+            in client.get(f"/runs/{replay.run_id}").text
+        )
+    exported = export_experiment(repo, populated.experiment_id)
+    record = next(r for r in exported["runs"] if r["id"] == replay.run_id)
+    entry = next(a for a in record["artifacts"] if a["kind"] == "agent_stream")
+    assert "content" not in entry  # the JSONL stream is listed, not inlined
+
+
 def test_nothing_persisted_contains_hidden_reasoning(settings: Settings, db: Database, populated):
     """Scan the whole database and every artifact for the fixture's secret markers."""
     import sqlite3

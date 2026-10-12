@@ -252,6 +252,8 @@ async def test_demo_improve_end_to_end(settings: Settings, db: Database):
     row = service.repo.get_run(improver.run_id)
     kinds = {a.kind for a in row.artifacts}
     assert "improve" in kinds
+    # Each round's prompt is registered, so the dashboard and exports can show it.
+    assert {"round_1_prompt", "round_2_prompt", "round_3_prompt"} <= kinds
     improve_doc = json.loads(
         service.repo.read_artifact(next(a for a in row.artifacts if a.kind == "improve"))
     )

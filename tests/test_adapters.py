@@ -517,3 +517,35 @@ async def test_generic_runner_sees_bundle(tmp_path: Path):
     assert result.final_message.startswith(f"dir={bundle} env={bundle}")
     assert "Always run the tests." in result.final_message
     assert result.final_message.rstrip().endswith("Fix the bug please")
+
+
+async def test_stderr_of_a_cancelled_run_is_redacted(tmp_path: Path):
+    """A run cancelled mid-flight (Ctrl-C, a stopped sweep) must not leave raw secrets on disk."""
+    import asyncio
+
+    worktree, artifacts = tmp_path / "wt", tmp_path / "artifacts"
+    worktree.mkdir()
+    artifacts.mkdir()
+    secret = "ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ab"
+    started = tmp_path / "started"
+    runner = GenericCommandRunner(artifacts_dir=artifacts)
+    run = asyncio.create_task(
+        runner.run(
+            _task(worktree),
+            worktree,
+            RunnerConfig(
+                runner="generic",
+                options={"command": f"echo {secret} 1>&2; touch {started}; sleep 30"},
+            ),
+            _emitter(),
+        )
+    )
+    for _ in range(100):
+        if started.exists():
+            break
+        await asyncio.sleep(0.05)
+    run.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await run
+    stderr = (artifacts / "agent.stderr.log").read_text()
+    assert secret not in stderr and "[REDACTED" in stderr

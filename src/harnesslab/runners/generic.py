@@ -166,24 +166,29 @@ class GenericCommandRunner(HarnessRunner):
             call_id="generic-main",
             payload={"command": command, "launcher": True},
         )
-        proc = await run_process(
-            shell_argv(command),
-            cwd=worktree,
-            env=build_child_env(
-                include_auth=True,
-                passthrough=config.get("env_passthrough", []) or [],
-                overrides={"HARNESSLAB_HARNESS_DIR": str(config.harness_dir)}
-                if config.harness_dir
+        try:
+            proc = await run_process(
+                shell_argv(command),
+                cwd=worktree,
+                env=build_child_env(
+                    include_auth=True,
+                    passthrough=config.get("env_passthrough", []) or [],
+                    overrides={"HARNESSLAB_HARNESS_DIR": str(config.harness_dir)}
+                    if config.harness_dir
+                    else None,
+                ),
+                timeout=task.limits.agent_timeout_seconds,
+                stdin_text=stdin_text,
+                on_stdout_line=on_line,
+                stderr_path=(self.artifacts_dir / "agent.stderr.log")
+                if self.artifacts_dir
                 else None,
-            ),
-            timeout=task.limits.agent_timeout_seconds,
-            stdin_text=stdin_text,
-            on_stdout_line=on_line,
-            stderr_path=(self.artifacts_dir / "agent.stderr.log") if self.artifacts_dir else None,
-        )
-        prompt_file.unlink(missing_ok=True)
-        if self.artifacts_dir:
-            redact_file_in_place(self.artifacts_dir / "agent.stderr.log", emit.redactor)
+            )
+        finally:
+            # Also when the run is cancelled: an interrupted run's stderr is redacted too.
+            prompt_file.unlink(missing_ok=True)
+            if self.artifacts_dir:
+                redact_file_in_place(self.artifacts_dir / "agent.stderr.log", emit.redactor)
         emit.emit(
             EventKind.COMMAND_FINISHED,
             name="harness",

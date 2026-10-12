@@ -10,6 +10,7 @@ Behaviour is controlled by environment variables (set by the tests):
     FAKE_CLI_HELP     path to a help text printed for --help (nothing is printed when unset)
     FAKE_CLI_HELP_RESUME  help text for ``exec resume --help`` (falls back to FAKE_CLI_HELP)
     FAKE_CLI_REJECT   a flag the CLI rejects at startup, the way a CLI that dropped it would
+    FAKE_CLI_REJECT_VALUE  a flag whose value the CLI rejects at startup (invalid choice)
     FAKE_CLI_HELP_LOG path of a file that gets one line per --help call
     FAKE_CLI_STDERR_TEXT  text written to stderr at the end of a normal run
 
@@ -46,6 +47,21 @@ def main() -> int:
             sys.stderr.write(f"error: unexpected argument '{reject}' found\n")
             return 2
         sys.stderr.write(f"error: unknown option '{reject}'\n")  # claude (commander) wording
+        return 1
+    reject_value = os.environ.get("FAKE_CLI_REJECT_VALUE")
+    if reject_value and reject_value in argv:
+        position = argv.index(reject_value) + 1
+        given = argv[position] if position < len(argv) else ""
+        if "exec" in argv:  # codex (clap) wording
+            sys.stderr.write(
+                f"error: invalid value '{given}' for '{reject_value} <VALUE>'\n"
+                "  [possible values: one, two]\n\nFor more information, try '--help'.\n"
+            )
+            return 2
+        sys.stderr.write(  # claude (commander) wording
+            f"error: option '{reject_value} <value>' argument '{given}' is invalid. "
+            "Allowed choices are one, two.\n"
+        )
         return 1
     mode = os.environ.get("FAKE_CLI_MODE", "replay")
     prompt = sys.stdin.read() if not sys.stdin.isatty() else ""

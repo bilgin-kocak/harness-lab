@@ -1,10 +1,11 @@
 """Opt-in tests against the real harness CLIs: Codex, Claude Code, pi, OpenCode, Hermes Agent.
 
 Enable with ``HARNESSLAB_INTEGRATION=1``; each test is skipped when its CLI is
-not installed.  They assert that a run completes with a result record, not
-that the agent solves the task.  The models of the multi-provider harnesses come
-from ``HARNESSLAB_PI_MODEL``, ``HARNESSLAB_OPENCODE_MODEL`` (default
-``anthropic/claude-sonnet-4-5``), ``HARNESSLAB_HERMES_MODEL`` and
+not installed, and ``HARNESSLAB_INTEGRATION_RUNNERS`` (e.g. ``pi,hermes``) runs
+only the runners it names.  They assert that a run completes with a result
+record, not that the agent solves the task.  The models of the multi-provider
+harnesses come from ``HARNESSLAB_PI_MODEL``, ``HARNESSLAB_OPENCODE_MODEL``
+(default ``anthropic/claude-sonnet-4-5``), ``HARNESSLAB_HERMES_MODEL`` and
 ``HARNESSLAB_HERMES_PROVIDER``; their provider keys from the environment.
 """
 
@@ -23,6 +24,11 @@ from tests.conftest import DEMO_SUITE
 pytestmark = pytest.mark.integration
 
 ENABLED = os.environ.get("HARNESSLAB_INTEGRATION") == "1"
+SELECTED = {
+    name.strip()
+    for name in os.environ.get("HARNESSLAB_INTEGRATION_RUNNERS", "").split(",")
+    if name.strip()
+}
 
 
 def _env_options(**names: str | None) -> dict[str, str]:
@@ -50,8 +56,10 @@ CASES = [
 
 
 @pytest.mark.skipif(not ENABLED, reason="set HARNESSLAB_INTEGRATION=1 to run real CLI tests")
-@pytest.mark.parametrize("runner_name,options", CASES)
+@pytest.mark.parametrize("runner_name,options", CASES, ids=[name for name, _ in CASES])
 async def test_real_cli_run(settings: Settings, db: Database, runner_name: str, options: dict):
+    if SELECTED and runner_name not in SELECTED:
+        pytest.skip(f"{runner_name} is not in HARNESSLAB_INTEGRATION_RUNNERS")
     if shutil.which(runner_name) is None:
         pytest.skip(f"{runner_name} is not installed")
     suite, tasks = load_suite(DEMO_SUITE)

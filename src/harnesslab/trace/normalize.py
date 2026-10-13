@@ -113,6 +113,13 @@ def summarize_tool_input(tool_input: Any, *, path: Any = None) -> dict[str, Any]
     return summary
 
 
+def keep_head_tail(lines: list[str], line: str, head: int = 2, tail: int = 5) -> list[str]:
+    """``lines`` with ``line`` added, keeping the first ``head`` and the last ``tail``: a CLI that
+    cannot start tends to say why first and what to do last."""
+    lines = [*lines, line]
+    return lines if len(lines) <= head + tail else lines[:head] + lines[-tail:]
+
+
 def strip_think(text: str) -> str:
     """``text`` without inline ``<think>`` reasoning spans."""
     return _THINK.sub("", text) if "<think" in text.lower() else text

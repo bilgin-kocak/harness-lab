@@ -30,6 +30,7 @@ from harnesslab.core.models import UsageTotals
 from harnesslab.trace.normalize import (
     CallIds,
     cap_strings,
+    keep_head_tail,
     preview,
     safe_unknown_summary,
     strip_think,
@@ -262,7 +263,7 @@ class PiStreamParser:
             obj = json.loads(stripped)
         except json.JSONDecodeError:
             self.malformed_lines += 1
-            self.non_json = (self.non_json + [preview(stripped, 300)])[-5:]
+            self.non_json = keep_head_tail(self.non_json, preview(stripped, 300))
             self.emit.emit(
                 EventKind.SYSTEM,
                 name="non_json_output",

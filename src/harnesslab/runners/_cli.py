@@ -500,7 +500,11 @@ def startup_failure(
     """
     if not exit_code or timed_out or llm_calls or tool_events:
         return None
-    detail = " ".join(part.strip() for part in (stderr[-600:], stdout_text[-300:]) if part.strip())
-    return f"{version or cli} stopped before calling a model (exit {exit_code})" + (
+    stdout_text = stdout_text.strip()
+    if len(stdout_text) > 400:  # the first line tends to say why, the last ones what to do
+        stdout_text = f"{stdout_text[:160].rstrip()} … {stdout_text[-240:].lstrip()}"
+    detail = " ".join(part.strip() for part in (stderr[-600:], stdout_text) if part.strip())
+    name = version if version and cli.lower() in version.lower() else f"{cli} {version or ''}"
+    return f"{name.strip()} stopped before calling a model (exit {exit_code})" + (
         f": {detail}" if detail else ""
     )

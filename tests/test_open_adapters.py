@@ -774,6 +774,23 @@ async def test_hermes_runs_end_to_end(fake_cli: Path, tmp_path: Path, monkeypatc
     assert report.safe and report.blocked == 1
 
 
+async def test_hermes_without_credentials_is_unavailable(
+    fake_cli: Path, tmp_path: Path, monkeypatch
+):
+    # Recorded: Hermes v0.21.5 without any key prints setup advice, no stream-json, and exits 1.
+    worktree, _ = _dirs(tmp_path)
+    monkeypatch.setenv("FAKE_CLI_STREAM", str(FIXTURES / "hermes" / "recorded_no_key.jsonl"))
+    monkeypatch.setenv("FAKE_CLI_EXIT", "1")
+    monkeypatch.setenv("FAKE_CLI_VERSION", "Hermes Agent v0.21.5 (2026.9.24)")
+    result = await hermes.HermesRunner().run(
+        _task(worktree), worktree, _hermes(fake_cli, provider="anthropic"), _emitter()
+    )
+    assert result.status == RunStatus.UNAVAILABLE
+    error = result.error or ""
+    assert error.startswith("Hermes Agent v0.21.5 (2026.9.24) stopped before calling a model")
+    assert "no API keys or providers found" in error and "hermes setup" in error
+
+
 async def test_hermes_that_cannot_start_is_unavailable(fake_cli: Path, tmp_path: Path, monkeypatch):
     worktree, _ = _dirs(tmp_path)
     monkeypatch.setenv("FAKE_CLI_STREAM", str(FIXTURES / "hermes" / "chat_failed_start.jsonl"))

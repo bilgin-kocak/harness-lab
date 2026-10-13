@@ -473,6 +473,27 @@ def test_guards_and_startup_failures():
     common = {"exit_code": 1, "timed_out": False, "stderr": "no API key for anthropic"}
     failed = startup_failure("pi", "pi 1.1.0", llm_calls=0, tool_events=0, **common)
     assert failed and "stopped before calling a model (exit 1): no API key" in failed
+    # The CLI is named when its version alone does not say which one it is.
+    bare = startup_failure("pi", "1.1.0", llm_calls=0, tool_events=0, **common) or ""
+    assert bare.startswith("pi 1.1.0 stopped before calling a model (exit 1)")
+    hermes = startup_failure(
+        "hermes", "Hermes Agent v0.21.5 (2026.9.24)", llm_calls=0, tool_events=0, **common
+    )
+    assert (hermes or "").startswith("Hermes Agent v0.21.5 (2026.9.24) stopped")
+    # A long explanation on stdout keeps its first line (the cause) and its end.
+    advice = "Hermes isn't configured yet.\n" + "hermes config set x y\n" * 40 + "Run setup."
+    told = startup_failure(
+        "hermes",
+        None,
+        exit_code=1,
+        timed_out=False,
+        llm_calls=0,
+        tool_events=0,
+        stderr="",
+        stdout_text=advice,
+    )
+    assert told and "Hermes isn't configured yet." in told and told.endswith("Run setup.")
+    assert len(told) < 600
     assert startup_failure("pi", None, llm_calls=1, tool_events=0, **common) is None
     assert startup_failure("pi", None, llm_calls=0, tool_events=2, **common) is None
     assert (

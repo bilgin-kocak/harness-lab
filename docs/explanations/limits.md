@@ -38,9 +38,8 @@ projects. See [Read and export results](../guides/results.md#statistics).
 > **Unreleased.** On main; ships in the next release.
 
 - The three adapters were built from each CLI's source and documented output (pi 1.1.0, OpenCode
-  1.19.0 and 2.0.27, Hermes Agent v2026.9.24) and are tested with constructed streams, not yet
-  with a real run. Hermes could not be installed where they were written, so even its `--help`
-  in the tests is reconstructed from its source. Expect differences; report them.
+  1.19.0 and 2.0.27, Hermes Agent v0.21.5) and are tested with constructed streams, not yet with
+  a real run. Expect differences; report them.
 - None of them resumes a session across improvement rounds (`improve_session: resume` is refused).
 - OpenCode reports a tool call only when it finishes: one still running at a timeout leaves no
   trace. The model calls of OpenCode subagents do not appear in its stream, which is why the

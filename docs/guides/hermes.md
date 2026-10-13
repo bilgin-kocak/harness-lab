@@ -12,10 +12,9 @@ a `/` whatever the provider.
 harnesslab doctor          # shows "hermes cli ok Hermes Agent v<version>"
 ```
 
-The adapter was built against Hermes Agent v2026.9.24 from its source, and is tested with
-constructed streams and a help text reconstructed from its argument parser: Hermes could not be
-installed where the adapter was written. It has not yet been checked on a real run: please report
-what differs.
+The adapter was built against Hermes Agent v0.21.5 (the 2026.9.24 release) from its source, and
+is tested with constructed streams and the `hermes chat --help` of that release. It has not yet
+been checked on a real run: please report what differs.
 
 ## What the adapter runs
 
@@ -56,6 +55,7 @@ auxiliary:
 curator: {enabled: false}
 updates: {check: false}
 approvals: {mode: manual, single_query_mode: deny}
+auth: {adopt_external_logins: false}
 ```
 
 Memory, the user profile, session titles, the background review and the skill curator are off:
@@ -68,8 +68,10 @@ refusal and carries on, and the safety report counts the action as blocked.
 (`--yolo`, every dangerous command runs) needs `allow_dangerous_permissions: true`.
 
 Only provider API keys are forwarded, never Claude Code or Codex credentials or a subscription
-sign-in; forward more with `env_passthrough`. Hermes reads the repository's `AGENTS.md` as it
-would anywhere.
+sign-in; forward more with `env_passthrough`. Hermes would otherwise borrow a Claude Code or Codex
+CLI sign-in it finds (`~/.claude/.credentials.json`, `~/.codex/auth.json`) and refresh it:
+`adopt_external_logins: false` turns that off, and `CLAUDE_CONFIG_DIR` and `CODEX_HOME` point at
+empty directories of the run. Hermes reads the repository's `AGENTS.md` as it would anywhere.
 
 ## The flag check
 
@@ -96,7 +98,7 @@ options, or set `flag_check: false`.
 | `allow_dangerous_permissions` | `false` | needed for `yolo` |
 | `extra_args` | `[]` | appended verbatim; `--yolo`, `--accept-hooks`, `--worktree`, `--in`, `--format`, the query, session, profile and configuration flags are refused |
 | `flag_check` | `true` | compare the flags Harness Lab passes with `hermes chat --help`; see [the flag check](#the-flag-check) |
-| `env_passthrough` | `[]` | extra environment variables forwarded; `HERMES_HOME`, `HERMES_YOLO_MODE`, `HERMES_ACCEPT_HOOKS`, `HERMES_WRITE_SAFE_ROOT` and `HERMES_EPHEMERAL_SYSTEM_PROMPT` are refused |
+| `env_passthrough` | `[]` | extra environment variables forwarded; `HERMES_HOME`, `HERMES_YOLO_MODE`, `HERMES_ACCEPT_HOOKS`, `HERMES_WRITE_SAFE_ROOT`, `HERMES_EPHEMERAL_SYSTEM_PROMPT`, `CLAUDE_CONFIG_DIR` and `CODEX_HOME` are refused |
 | `executable` | `hermes` | the binary to run |
 
 ## With a harness bundle
@@ -119,6 +121,6 @@ variants:
 
 Not supported yet: resuming one session across improvement rounds (`improve_session: resume`).
 
-To exercise a real Hermes: `HARNESSLAB_INTEGRATION=1 uv run pytest
-tests/test_integration_real.py -k hermes` from a clone (`HARNESSLAB_HERMES_MODEL` and
+To exercise a real Hermes: `HARNESSLAB_INTEGRATION=1 HARNESSLAB_INTEGRATION_RUNNERS=hermes uv run
+pytest tests/test_integration_real.py` from a clone (`HARNESSLAB_HERMES_MODEL` and
 `HARNESSLAB_HERMES_PROVIDER` pick the model).

@@ -50,7 +50,8 @@ docs/                    this site (GitBook and MkDocs read the same files; the 
   assets/                images drawn by scripts/site_assets.py
   stylesheets/           the site's CSS
 overrides/main.html      the site's one template block: link previews (Open Graph)
-scripts/                 gen_cli_reference.py (CLI reference), site_assets.py (site images)
+scripts/                 gen_cli_reference.py (CLI reference), site_assets.py (site images),
+                         record_stream.py (real pi and Hermes Agent runs as test fixtures)
 ```
 
 ## Conventions
@@ -108,3 +109,31 @@ changes: every regeneration adds about 1.5 MB to the repository's history. Keep
 cached link previews point at them. `tests/test_docs.py` fails when an image is unused or over the
 budget (300 kB each, 2 MB in total). Set `NO_MKDOCS_2_WARNING=1` to silence Material's notice
 about MkDocs 2.
+
+### Real runs
+
+The test suite runs every adapter on recorded or constructed streams, through a stand-in
+executable. To check a real harness end to end (it uses your keys, and costs money):
+
+```bash
+HARNESSLAB_INTEGRATION=1 HARNESSLAB_INTEGRATION_RUNNERS=pi,hermes uv run pytest tests/test_integration_real.py
+```
+
+Without `HARNESSLAB_INTEGRATION_RUNNERS` every installed harness runs, Claude Code and Codex
+included.
+
+`scripts/record_stream.py` turns real pi and Hermes Agent runs into test fixtures. It runs demo
+tasks with one variant from a YAML file and stops before a run once `--budget-usd` is spent:
+
+```bash
+uv run python scripts/record_stream.py run --spec verify.yaml --variant pi-haiku \
+    --task fix-month-boundary --pricing pricing.yaml --budget-usd 1 --out recordings
+uv run python scripts/record_stream.py verify recordings/*.jsonl
+uv run python scripts/record_stream.py shapes recordings/*.jsonl
+```
+
+A run's raw stream stays in memory. Thinking text, signatures and `<think>` spans become
+`SECRET_RECORDED_*` markers, and local paths become placeholders. Nothing is written if any of them
+is left, if the scrubbed lines replay to different numbers than the live run, or if reasoning
+turned up in the run's database, artifacts or logs. `verify` checks a recorded file again;
+`shapes` lists the keys of each kind of record, to compare a real stream with a constructed one.

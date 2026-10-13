@@ -64,6 +64,7 @@ Large blobs (diffs, raw streams, verifier logs) are stored as files and referenc
 | `HARNESSLAB_HOME` | Data directory. |
 | `HARNESSLAB_DB_URL` | Database URL. |
 | `HARNESSLAB_INTEGRATION=1` | Enables the opt-in real-CLI tests. |
+| `HARNESSLAB_INTEGRATION_RUNNERS` | Limits those tests to the runners it names, e.g. `pi,hermes`; unset, every installed harness runs. |
 
 Variables forwarded to every child process: `PATH`, `HOME`, `USER`, `LOGNAME`, `SHELL`, `LANG`,
 `LANGUAGE`, `TERM`, `TZ`, `TMPDIR`, `TMP`, `TEMP`, CA and proxy settings, `LC_*`, `XDG_*`.

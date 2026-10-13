@@ -131,5 +131,5 @@ variants:
     harness: ../harnesses/baseline
 ```
 
-Real-CLI integration tests are opt-in: `HARNESSLAB_INTEGRATION=1 uv run pytest tests/test_integration_real.py`
-from a clone.
+Real-CLI integration tests are opt-in: `HARNESSLAB_INTEGRATION=1 HARNESSLAB_INTEGRATION_RUNNERS=claude
+uv run pytest tests/test_integration_real.py` from a clone.

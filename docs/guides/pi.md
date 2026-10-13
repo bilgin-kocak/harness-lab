@@ -114,5 +114,5 @@ variants:
 
 Not supported yet: resuming one session across improvement rounds (`improve_session: resume`).
 
-To exercise a real pi: `HARNESSLAB_INTEGRATION=1 uv run pytest tests/test_integration_real.py -k pi`
-from a clone, with `HARNESSLAB_PI_MODEL` naming the model.
+To exercise a real pi: `HARNESSLAB_INTEGRATION=1 HARNESSLAB_INTEGRATION_RUNNERS=pi uv run pytest
+tests/test_integration_real.py` from a clone, with `HARNESSLAB_PI_MODEL` naming the model.

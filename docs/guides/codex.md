@@ -85,4 +85,5 @@ variants:
 
 The adapter is verified against recorded JSONL fixtures and a stand-in executable that replays
 them through the real adapter code. To exercise the real CLI:
-`HARNESSLAB_INTEGRATION=1 uv run pytest tests/test_integration_real.py` from a clone.
+`HARNESSLAB_INTEGRATION=1 HARNESSLAB_INTEGRATION_RUNNERS=codex uv run pytest
+tests/test_integration_real.py` from a clone.

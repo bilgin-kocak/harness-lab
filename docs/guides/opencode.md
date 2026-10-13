@@ -131,6 +131,6 @@ variants:
 
 Not supported yet: resuming one session across improvement rounds (`improve_session: resume`).
 
-To exercise a real OpenCode: `HARNESSLAB_INTEGRATION=1 uv run pytest
-tests/test_integration_real.py -k opencode` from a clone (`HARNESSLAB_OPENCODE_MODEL` picks the
+To exercise a real OpenCode: `HARNESSLAB_INTEGRATION=1 HARNESSLAB_INTEGRATION_RUNNERS=opencode
+uv run pytest tests/test_integration_real.py` from a clone (`HARNESSLAB_OPENCODE_MODEL` picks the
 model).

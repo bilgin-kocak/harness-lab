@@ -12,9 +12,11 @@
   for Hermes Agent; pi, which has no permission system, runs only with
   `allow_dangerous_permissions: true`. A bundle's prompt and skills go where each harness takes
   them. A run the harness refused, or that stopped before any model call, is unavailable rather
-  than a failed attempt. The adapters were built from each CLI's source and are tested with
-  constructed streams: not yet verified on a real run. See the Run pi, Run OpenCode and Run Hermes
-  Agent guides.
+  than a failed attempt, and its error names the harness and the cause. Hermes Agent never
+  borrows a Claude Code or Codex CLI sign-in (`auth.adopt_external_logins: false`, and empty
+  `CLAUDE_CONFIG_DIR` and `CODEX_HOME`). The adapters were built from each CLI's source and are
+  tested with constructed streams: not yet verified on a real run. See the Run pi, Run OpenCode
+  and Run Hermes Agent guides.
 - `harnesslab doctor` checks all five harness CLIs, in parallel.
 - A pricing table matches a provider-prefixed model id (`openrouter/anthropic/claude-x`) by its
   last segment, and the safety rules know the tool names of pi, OpenCode and Hermes Agent.
@@ -27,6 +29,9 @@
   diffs are no longer double-spaced, a difference that rounds to zero no longer shows as "-0.0",
   and experiment dates stay on one line.
 - `scripts/site_assets.py` redraws the site's images from the demos, offline.
+- `HARNESSLAB_INTEGRATION_RUNNERS` limits the real-CLI tests to the runners it names, and
+  `scripts/record_stream.py` records real pi and Hermes Agent runs as test fixtures, with every
+  trace of reasoning removed.
 
 ## 0.3.0 (2026-10-12)
 

@@ -1,5 +1,5 @@
-"""Hermes Agent adapter (``hermes chat --format stream-json``), built against Hermes Agent
-v2026.9.24.
+"""Hermes Agent adapter (``hermes chat --format stream-json``), built against Hermes Agent v0.21.5
+(the 2026.9.24 release).
 
 Invocation (defaults)::
 
@@ -13,9 +13,11 @@ switched for the user's active profile. Its ``config.yaml`` turns off memory, th
 session titles, background review, the skill curator and update checks (no hidden model calls,
 and nothing learnt carries over to the next run), and sets approvals to ``manual`` with
 ``single_query_mode: deny``: a dangerous command is refused with "BLOCKED: ..." and the model
-carries on. ``HERMES_WRITE_SAFE_ROOT`` keeps file writes inside the worktree. The session's
-cost, model calls and reasoning tokens are read from its ``state.db`` before the directory goes;
-the stream reports neither.
+carries on. ``auth.adopt_external_logins: false`` keeps Hermes from borrowing (and refreshing) a
+Claude Code or Codex CLI sign-in, and ``CLAUDE_CONFIG_DIR`` and ``CODEX_HOME`` point at empty
+directories of the home. ``HERMES_WRITE_SAFE_ROOT`` keeps file writes inside the worktree. The
+session's cost, model calls and reasoning tokens are read from its ``state.db`` before the
+directory goes; the stream reports neither.
 
 A bundle's system prompt and skills, with ``append_system_prompt`` and the action policy, become
 the session's ``agent.system_prompt``; ``hooks.json`` and ``agents/`` are ignored.
@@ -119,6 +121,9 @@ FORBIDDEN_EXTRA_ARGS = frozenset(
         "-p",
     }
 )
+# Where Claude Code and Codex keep their sign-ins and sessions, which Hermes reads unless told
+# otherwise; each run points them at an empty directory of its own home.
+EXTERNAL_DIRS = {"CLAUDE_CONFIG_DIR": "claude", "CODEX_HOME": "codex"}
 FORBIDDEN_ENV = frozenset(
     {
         "HERMES_HOME",
@@ -127,6 +132,7 @@ FORBIDDEN_ENV = frozenset(
         "HERMES_WRITE_SAFE_ROOT",
         "HERMES_EPHEMERAL_SYSTEM_PROMPT",
         "PWD",
+        *EXTERNAL_DIRS,
     }
 )
 
@@ -203,6 +209,8 @@ def hermes_config(system_prompt: str = "") -> dict[str, Any]:
         "curator": {"enabled": False},
         "updates": {"check": False},
         "approvals": {"mode": "manual", "single_query_mode": "deny"},
+        # Never borrow (and refresh) a Claude Code or Codex CLI sign-in.
+        "auth": {"adopt_external_logins": False},
     }
     if system_prompt:
         config["agent"] = {"system_prompt": system_prompt}
@@ -220,6 +228,8 @@ def prepare_home(state: Path, system_prompt: str = "") -> Path:
         yaml.safe_dump(hermes_config(system_prompt), sort_keys=False, allow_unicode=True),
         encoding="utf-8",
     )
+    for name in EXTERNAL_DIRS.values():
+        (home / "external" / name).mkdir(parents=True, exist_ok=True)
     return home
 
 
@@ -231,6 +241,7 @@ def hermes_env(
     credentials: bool = True,
 ) -> dict[str, str]:
     overrides = {"HERMES_HOME": str(home), "OTEL_SDK_DISABLED": "true"}
+    overrides.update({var: str(home / "external" / name) for var, name in EXTERNAL_DIRS.items()})
     if worktree is not None:
         overrides["HERMES_WRITE_SAFE_ROOT"] = str(worktree)
         overrides["PWD"] = str(worktree)

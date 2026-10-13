@@ -29,7 +29,7 @@ from tests.conftest import FIXTURES
 PI_HELP = FIXTURES / "cli_help" / "pi-1.1.0.txt"
 OC1_HELP = FIXTURES / "cli_help" / "opencode-1.19.0-run.txt"
 OC2_HELP = FIXTURES / "cli_help" / "opencode-2.0.27-run.txt"
-HERMES_HELP = FIXTURES / "cli_help" / "hermes-v2026.9.24-chat.reconstructed.txt"
+HERMES_HELP = FIXTURES / "cli_help" / "hermes-0.21.5-chat.txt"
 FAKE_VARS = [
     "FAKE_CLI_STREAM",
     "FAKE_CLI_EXIT",
@@ -663,8 +663,9 @@ def test_hermes_command_and_guards():
     for extra in (["-w"], ["--yolo"], ["--resume", "latest"], ["--profile", "work"]):
         problem = hermes.config_error(plain.model_copy(update={"options": {"extra_args": extra}}))
         assert problem and extra[0] in problem, extra
-    env = plain.model_copy(update={"options": {"env_passthrough": ["HERMES_YOLO_MODE"]}})
-    assert "HERMES_YOLO_MODE" in (hermes.config_error(env) or "")
+    for name in ("HERMES_YOLO_MODE", "CLAUDE_CONFIG_DIR", "CODEX_HOME"):
+        env = plain.model_copy(update={"options": {"env_passthrough": [name]}})
+        assert name in (hermes.config_error(env) or ""), name
     assert hermes.config_error(plain.model_copy(update={"options": {"max_turns": "many"}}))
 
 
@@ -677,7 +678,11 @@ def test_hermes_home_is_a_profile_directory_with_safe_settings(tmp_path: Path):
     assert config["auxiliary"]["title_generation"]["enabled"] is False
     assert config["auxiliary"]["background_review"]["enabled"] is False
     assert config["curator"]["enabled"] is False and config["updates"]["check"] is False
+    assert config["auth"] == {"adopt_external_logins": False}
     assert config["agent"]["system_prompt"] == "Be careful."
+    for name in ("claude", "codex"):
+        assert (home / "external" / name).is_dir()
+        assert not any((home / "external" / name).iterdir())
     bare = hermes.prepare_home(tmp_path / "bare")
     assert "agent" not in yaml.safe_load((bare / "config.yaml").read_text())
 
@@ -706,14 +711,18 @@ async def test_hermes_runs_end_to_end(fake_cli: Path, tmp_path: Path, monkeypatc
     monkeypatch.setenv("FAKE_CLI_STREAM", str(FIXTURES / "hermes" / "chat_success.jsonl"))
     monkeypatch.setenv("FAKE_CLI_PROMPT_OUT", str(tmp_path / "prompt.txt"))
     monkeypatch.setenv("FAKE_CLI_ENV_OUT", str(env_out))
-    monkeypatch.setenv("FAKE_CLI_VERSION", "Hermes Agent v2026.9.24 (2026-09-24)")
+    monkeypatch.setenv("FAKE_CLI_VERSION", "Hermes Agent v0.21.5 (2026.9.24)")
     monkeypatch.setenv("FAKE_CLI_HELP", str(HERMES_HELP))
     monkeypatch.setenv(
         "FAKE_CLI_COPY",
         f"$HERMES_HOME/config.yaml=>{copied}/config.yaml;{db}=>$HERMES_HOME/state.db",
     )
     monkeypatch.setenv("OPENROUTER_API_KEY", "sk-or-test")
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-api03-test")
+    # Claude Code's and Codex's own locations: Hermes would read their sign-ins there.
     monkeypatch.setenv("CODEX_HOME", "/somewhere/codex")
+    monkeypatch.setenv("CLAUDE_CONFIG_DIR", "/somewhere/claude")
+    monkeypatch.setenv("ANTHROPIC_BASE_URL", "http://127.0.0.1:9/claude-code-gateway")
     config = _hermes(fake_cli, provider="openrouter", action_policy="fine")
     config.harness_dir = _bundle(tmp_path)
     emit = _emitter()
@@ -729,7 +738,7 @@ async def test_hermes_runs_end_to_end(fake_cli: Path, tmp_path: Path, monkeypatc
     assert set(result.usage_by_model) == {"claude-sonnet-4.6", "claude-haiku-4.5"}
     assert result.model_resolved == "claude-sonnet-4.6"
     assert result.provider_session_id == HERMES_SESSION
-    assert result.cli_version == "Hermes Agent v2026.9.24 (2026-09-24)"
+    assert result.cli_version == "Hermes Agent v0.21.5 (2026.9.24)"
     assert result.metadata["blocked_actions"] == 1 and result.metadata["cost_kind"] == "estimated"
     assert (tmp_path / "prompt.txt").read_text() == "Fix the bug please"
 
@@ -739,9 +748,13 @@ async def test_hermes_runs_end_to_end(fake_cli: Path, tmp_path: Path, monkeypatc
     assert home.parent.parent.name.startswith("harnesslab-hermes-")
     assert not home.parent.parent.exists()
     assert env["HERMES_WRITE_SAFE_ROOT"] == str(worktree) and env["OTEL_SDK_DISABLED"] == "true"
-    assert env["OPENROUTER_API_KEY"] == "sk-or-test" and "CODEX_HOME" not in env
+    assert env["OPENROUTER_API_KEY"] == "sk-or-test"
+    assert env["ANTHROPIC_API_KEY"] == "sk-ant-api03-test" and "ANTHROPIC_BASE_URL" not in env
+    assert env["CLAUDE_CONFIG_DIR"] == str(home / "external" / "claude")
+    assert env["CODEX_HOME"] == str(home / "external" / "codex")
     settings = yaml.safe_load((copied / "config.yaml").read_text())
     assert settings["approvals"]["mode"] == "manual"
+    assert settings["auth"]["adopt_external_logins"] is False
     prompt = settings["agent"]["system_prompt"]
     assert prompt.startswith("Always run the tests.") and "## Skill: tests-first" in prompt
     assert "small, incremental steps" in prompt

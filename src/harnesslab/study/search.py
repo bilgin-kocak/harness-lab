@@ -1,0 +1,140 @@
+"""Turn search stages into lists of configurations.
+
+Stages are declared in the study spec (see :class:`harnesslab.study.spec.StageSpec`). Expansion is
+deterministic: the same records and the same spec always give the same configurations, and the
+evaluation order of a stage is a seeded shuffle, so a stage stopped by the budget has evaluated a
+random subsample of its configurations rather than a biased prefix.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import itertools
+import random
+from collections.abc import Sequence
+from typing import Any
+
+from harnesslab.study.contract import Config, SearchSpace, canonical_json
+from harnesslab.study.objective import Ranking, primary_score
+from harnesslab.study.spec import ObjectiveSpec, StageSpec, StudySpecError
+
+
+def _short(value: Any) -> str:
+    text = canonical_json(value)
+    return text.strip('"') if text.startswith('"') else text
+
+
+def resolve_label(label: str, known: dict[str, Config]) -> Config:
+    if label not in known:
+        raise StudySpecError(f"unknown configuration label {label!r} (known: {', '.join(known)})")
+    return known[label]
+
+
+def explicit_configs(
+    stage: StageSpec, space: SearchSpace, known: dict[str, Config]
+) -> list[Config]:
+    out = []
+    for c in stage.configs:
+        base = resolve_label(c.base, known)
+        cfg = base.replace(label=c.label, **c.set)
+        space.validate_config(cfg)
+        known[c.label] = cfg
+        out.append(cfg)
+    return out
+
+
+def grid_configs(stage: StageSpec, space: SearchSpace, base: Config) -> list[Config]:
+    levels = [space.knob(k).levels for k in stage.knobs]
+    out = []
+    for combo in itertools.product(*levels):
+        changes = dict(zip(stage.knobs, combo, strict=True))
+        label = stage.name + ":" + ",".join(f"{k}={_short(v)}" for k, v in changes.items())
+        cfg = base.replace(label=label, **changes)
+        space.validate_config(cfg)
+        out.append(cfg)
+    return out
+
+
+def top_configs(ranking: Ranking, k: int) -> list[Config]:
+    return [
+        Config(values=s.values, label=s.label) for s in ranking.scores if s.feasible and s.rank
+    ][:k]
+
+
+def refine_configs(stage: StageSpec, space: SearchSpace, ranking: Ranking) -> list[Config]:
+    out = []
+    levels = [space.knob(k).levels for k in stage.knobs]
+    for parent in top_configs(ranking, stage.top_k):
+        for combo in itertools.product(*levels):
+            changes = dict(zip(stage.knobs, combo, strict=True))
+            suffix = ",".join(f"{k}={_short(v)}" for k, v in changes.items())
+            cfg = parent.replace(
+                label=f"{parent.label or parent.config_hash[:12]}+{suffix}", **changes
+            )
+            space.validate_config(cfg)
+            out.append(cfg)
+    return out
+
+
+def combine_config(
+    stage: StageSpec,
+    space: SearchSpace,
+    known: dict[str, Config],
+    ranking: Ranking,
+    obj: ObjectiveSpec,
+) -> tuple[Config | None, str]:
+    """``reference`` plus every single-knob change that beat it by ``min_gain``; or why not."""
+    ref = resolve_label(stage.reference or "", known)
+    ref_score = ranking.get(ref.config_hash)
+    if ref_score is None or not ref_score.feasible:
+        return None, f"reference {stage.reference!r} has no feasible dev result"
+    ref_primary = primary_score(ref_score, obj)
+    winners: dict[str, tuple[float, Any]] = {}
+    for s in ranking.scores:
+        if not s.feasible or s.config_hash == ref.config_hash:
+            continue
+        diff = [k for k in ref.values if s.values.get(k) != ref.values[k]]
+        if len(diff) != 1:
+            continue
+        p = primary_score(s, obj)
+        if p is None or ref_primary is None or p - ref_primary < stage.min_gain - 1e-12:
+            continue
+        knob = diff[0]
+        if knob not in winners or p > winners[knob][0]:
+            winners[knob] = (p, s.values[knob])
+    if len(winners) < stage.min_winners:
+        return None, (
+            f"{len(winners)} single-knob change(s) beat {stage.reference!r} by at least "
+            f"{stage.min_gain:g}; {stage.min_winners} needed"
+        )
+    changes = {k: v for k, (_, v) in sorted(winners.items())}
+    cfg = ref.replace(
+        label=f"{stage.name}:{stage.reference}+" + "+".join(sorted(changes)), **changes
+    )
+    space.validate_config(cfg)
+    return cfg, f"combined {', '.join(sorted(changes))}"
+
+
+def confirm_configs(stage: StageSpec, ranking: Ranking, baseline: Config) -> list[Config]:
+    out = top_configs(ranking, stage.top_k)
+    if stage.include_baseline and all(c.config_hash != baseline.config_hash for c in out):
+        out.append(baseline)
+    return out
+
+
+def dedupe(configs: Sequence[Config]) -> list[Config]:
+    seen: set[str] = set()
+    out = []
+    for c in configs:
+        if c.config_hash not in seen:
+            seen.add(c.config_hash)
+            out.append(c)
+    return out
+
+
+def shuffled(configs: Sequence[Config], seed: int, stage_name: str) -> list[Config]:
+    """A seeded order that depends on the stage but not on Python's hash randomisation."""
+    salt = int(hashlib.sha256(f"{seed}:{stage_name}".encode()).hexdigest()[:16], 16)
+    order = sorted(configs, key=lambda c: c.config_hash)
+    random.Random(salt).shuffle(order)
+    return order

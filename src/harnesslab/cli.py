@@ -29,6 +29,7 @@ from harnesslab.bundled import (
     list_bundled_suites,
     list_bundled_sweeps,
 )
+from harnesslab.cli_study import study_app
 from harnesslab.config import Settings
 from harnesslab.core.models import ExperimentSpec, RunStatus, TaskSpec, VariantSpec
 from harnesslab.core.pricing import PricingTable, find_pricing_table
@@ -114,6 +115,7 @@ app.add_typer(sweep_app, name="sweep")
 app.add_typer(grow_app, name="grow")
 app.add_typer(harness_app, name="harness")
 app.add_typer(ablate_app, name="ablate")
+app.add_typer(study_app, name="study")
 
 console = Console()
 err_console = Console(stderr=True)

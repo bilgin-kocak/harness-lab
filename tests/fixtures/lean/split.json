@@ -1,0 +1,26 @@
+{
+  "study": "fixture-lean",
+  "dataset": {
+    "repo": "synthetic fixture",
+    "commit": "fixture"
+  },
+  "dev": [
+    {
+      "id": "fixture_dev_one",
+      "file": "MiniF2F/Valid/fixture_dev_one.lean",
+      "sha256": "6b2fee773aefab7ba0a73ea05a854921e82d8fdd21fe3ad8e4f12055c6937f29"
+    },
+    {
+      "id": "fixture_dev_two",
+      "file": "MiniF2F/Valid/fixture_dev_two.lean",
+      "sha256": "74d6b0802e237df85f9e46ac20bea6b62ebca24bc8b7dd33917075719801b8df"
+    }
+  ],
+  "held_out": [
+    {
+      "id": "fixture_held_one",
+      "file": "MiniF2F/Test/fixture_held_one.lean",
+      "sha256": "642af503bf45bd3374cf9b7b71547d9adc34840c5ba1d4d2340a5b383b8867f5"
+    }
+  ]
+}

@@ -159,13 +159,18 @@ def test_interrupted_cells_are_charged_in_full(tmp_path: Path):
     fresh = _reopen(study)
     assert fresh.budget(for_held_out=False).spent_usd == pytest.approx(0.5 * len(dangling))
     assert fresh.status()["dev"]["started_without_record"] == len(dangling)
-    with pytest.raises(ProtocolError, match="never finished"):
-        fresh.freeze()
+    assert len(fresh.interrupted("dev")["without_record"]) == len(dangling)
     fresh.adapter.delay = 0.0
     asyncio.run(fresh.run_stage("grid"))
     # the re-run cells have records, the interrupted attempts stay charged
     assert len(fresh.store.records("dev")) == 36
     assert len(fresh.store.dangling_reservations("dev")) == len(dangling)
+    assert fresh.budget(for_held_out=False).spent_usd == pytest.approx(
+        0.5 * len(dangling) + sum(r["charged_usd"] for r in fresh.store.records("dev"))
+    )
+    freeze = fresh.freeze()  # interrupted cells that ran again do not block the freeze
+    assert freeze["dev"]["interrupted"]["cells"] == len(dangling)
+    assert freeze["dev"]["interrupted"]["without_record"] == []
 
 
 def test_a_verifier_crash_is_no_outcome_and_the_cell_runs_again_once_fixed(tmp_path: Path):

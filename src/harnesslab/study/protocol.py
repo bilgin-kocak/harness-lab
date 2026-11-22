@@ -499,10 +499,6 @@ class Study:
                 f"{len(broken)} dev cell(s) have only a harness-error record (fix the harness and "
                 f"run the stage again): {[f'{k[0]}/{k[1][:8]}/{k[2]}' for k in broken[:5]]}"
             )
-        if self.store.dangling_reservations("dev"):
-            problems.append(
-                "some dev cells started and never finished (interrupted): resume the search first"
-            )
         ident = self._record_identity()
         for key in ("options_sha256", "provenance_sha256"):
             seen = {r.get(key) for r in self.store.effective("dev") if r.get(key) is not None}
@@ -512,6 +508,20 @@ class Study:
                     "current ones: the search mixed setups"
                 )
         return problems
+
+    def interrupted(self, phase: str) -> dict[str, Any]:
+        """Cells of ``phase`` that started and never wrote a record (charged in full), and which
+        of them still have no valid record (they were not run again)."""
+        done = {cell_key(r) for r in self.store.effective(phase)}
+        dangling = self.store.dangling_reservations(phase)
+        open_cells = sorted(
+            {(e["task_id"], e["config_hash"], int(e["repetition"])) for e in dangling} - done
+        )
+        return {
+            "cells": len(dangling),
+            "charged_usd": sum(float(e["usd"]) for e in dangling),
+            "without_record": [f"{t}/{h[:12]}/{r}" for t, h, r in open_cells],
+        }
 
     def freeze(self) -> dict[str, Any]:
         with self.store.locked():
@@ -570,6 +580,7 @@ class Study:
                     "records_per_stage": dict(stage_counts),
                     "cost_usd": sum(_charged(r) for r in self.store.records("dev")),
                     "eligible": sorted(eligible) if eligible is not None else None,
+                    "interrupted": self.interrupted("dev"),
                     "dropped_tasks": ranking.dropped_tasks,
                     "considered_tasks": ranking.task_ids,
                     "ranking_top": [s.model_dump(mode="json") for s in ranking.scores[:25]],
@@ -718,7 +729,7 @@ class Study:
                 audit[phase] = {
                     "records": len(recs),
                     "harness_error_records": sum(1 for r in recs if r.get("harness_error")),
-                    "interrupted_cells": len(self.store.dangling_reservations(phase)),
+                    "interrupted": self.interrupted(phase),
                     "charged_usd": sum(_charged(r) for r in recs)
                     + sum(float(e["usd"]) for e in self.store.dangling_reservations(phase)),
                 }

@@ -178,6 +178,12 @@ def _freeze(study: Any, *, yes: bool) -> None:
     console.print(table)
     if ranking.dropped_tasks:
         console.print(f"dev tasks left out: {ranking.dropped_tasks}")
+    open_cells = study.interrupted("dev")["without_record"]
+    if open_cells:
+        console.print(
+            f"[yellow]{len(open_cells)} interrupted dev cell(s) never ran again (resume the search "
+            f"to complete them): {escape(', '.join(open_cells[:5]))}[/]"
+        )
     best = ranking.best
     if best is None:
         err_console.print("[red]no feasible configuration: nothing to freeze[/]")

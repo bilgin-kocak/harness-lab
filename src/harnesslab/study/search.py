@@ -33,18 +33,49 @@ def resolve_label(label: str, known: dict[str, Config]) -> Config:
 def explicit_configs(
     stage: StageSpec, space: SearchSpace, known: dict[str, Config]
 ) -> list[Config]:
+    """The stage's configurations; each label is added to ``known``.
+
+    A label may be declared again (the baseline in a smoke stage and in stage 1) only with the
+    same settings: two different configurations under one name are a spec error.
+    """
     out = []
     for c in stage.configs:
         base = resolve_label(c.base, known)
         cfg = base.replace(label=c.label, **c.set)
         space.validate_config(cfg)
+        if c.label in known and known[c.label].config_hash != cfg.config_hash:
+            raise StudySpecError(
+                f"stage {stage.name!r}: label {c.label!r} is already defined with other settings"
+            )
         known[c.label] = cfg
         out.append(cfg)
     return out
 
 
+def stage_levels(stage: StageSpec, space: SearchSpace) -> list[list[Any]]:
+    """The levels a grid or refine stage varies: the knob's, or the stage's subset of them."""
+    out = []
+    for k in stage.knobs:
+        knob = space.knob(k)
+        if k in stage.levels:
+            wanted = stage.levels[k]
+            unknown = [v for v in wanted if not knob.has_level(v)]
+            if unknown:
+                raise StudySpecError(
+                    f"stage {stage.name!r}: {k} levels {unknown} are not in the search space"
+                )
+            out.append([v for v in knob.levels if any(_same(v, w) for w in wanted)])
+        else:
+            out.append(list(knob.levels))
+    return out
+
+
+def _same(a: Any, b: Any) -> bool:
+    return canonical_json(a) == canonical_json(b)
+
+
 def grid_configs(stage: StageSpec, space: SearchSpace, base: Config) -> list[Config]:
-    levels = [space.knob(k).levels for k in stage.knobs]
+    levels = stage_levels(stage, space)
     out = []
     for combo in itertools.product(*levels):
         changes = dict(zip(stage.knobs, combo, strict=True))
@@ -63,7 +94,7 @@ def top_configs(ranking: Ranking, k: int) -> list[Config]:
 
 def refine_configs(stage: StageSpec, space: SearchSpace, ranking: Ranking) -> list[Config]:
     out = []
-    levels = [space.knob(k).levels for k in stage.knobs]
+    levels = stage_levels(stage, space)
     for parent in top_configs(ranking, stage.top_k):
         for combo in itertools.product(*levels):
             changes = dict(zip(stage.knobs, combo, strict=True))

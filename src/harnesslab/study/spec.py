@@ -11,10 +11,13 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
+
+# Amounts of money and time: never negative, never NaN or infinite.
+Amount = Annotated[float, Field(ge=0.0, allow_inf_nan=False)]
 
 
 class StudySpecError(ValueError):
@@ -56,6 +59,7 @@ class StageSpec(_Strict):
       ``grid``: every combination of the levels of ``knobs``, the other knobs from ``base``.
       ``refine``: the ``top_k`` best configurations so far, each crossed with every combination of
       the levels of ``knobs``.
+      For both, ``levels`` may restrict a knob to some of its levels (a subset of the adapter's).
       ``combine``: ``reference`` plus every single-knob change that beat it by at least
       ``min_gain`` (objective score), when at least ``min_winners`` such changes exist.
       ``confirm``: the ``top_k`` best configurations so far (and the baseline), with
@@ -70,6 +74,7 @@ class StageSpec(_Strict):
     repetitions: int = Field(default=1, ge=1)
     configs: list[ConfigSpec] = Field(default_factory=list)
     knobs: list[str] = Field(default_factory=list)
+    levels: dict[str, list[Any]] = Field(default_factory=dict)
     base: str = "baseline"
     top_k: int = Field(default=0, ge=0)
     reference: str | None = None
@@ -89,6 +94,14 @@ class StageSpec(_Strict):
             raise ValueError(f"stage {self.name!r}: explicit stages need configs")
         if self.kind in ("grid", "refine") and not self.knobs:
             raise ValueError(f"stage {self.name!r}: {self.kind} stages need knobs")
+        if set(self.levels) - set(self.knobs):
+            raise ValueError(f"stage {self.name!r}: levels given for knobs the stage does not vary")
+        if any(not v for v in self.levels.values()):
+            raise ValueError(f"stage {self.name!r}: a knob restricted to no level")
+        if self.kind not in ("explicit",) and self.configs:
+            raise ValueError(f"stage {self.name!r}: only explicit stages take configs")
+        if self.kind != "combine" and self.reference is not None:
+            raise ValueError(f"stage {self.name!r}: only combine stages take a reference")
         if self.kind in ("refine", "confirm") and self.top_k < 1:
             raise ValueError(f"stage {self.name!r}: {self.kind} stages need top_k >= 1")
         if self.kind == "combine" and not self.reference:
@@ -125,10 +138,10 @@ class ObjectiveSpec(_Strict):
     """
 
     kind: Literal["pass_rate", "baseline_ratio"]
-    cost_cap_multiple: float | None = None
-    tie_tolerance: float = 0.0
+    cost_cap_multiple: Amount | None = None
+    tie_tolerance: Amount = 0.0
     metrics: list[str] = Field(default_factory=list)
-    offset: float = 1.0
+    offset: Amount = 1.0
     then: list[str] = Field(default_factory=list)
     drop_tasks_where_baseline_unverified: bool = True
 
@@ -136,6 +149,10 @@ class ObjectiveSpec(_Strict):
     def _fields(self) -> ObjectiveSpec:
         if self.kind == "baseline_ratio" and not self.metrics:
             raise ValueError("a baseline_ratio objective needs metrics")
+        if self.kind == "pass_rate" and (self.metrics or self.then):
+            raise ValueError("a pass_rate objective takes no metrics")
+        if self.kind == "baseline_ratio" and self.cost_cap_multiple is not None:
+            raise ValueError("cost_cap_multiple applies to pass_rate objectives only")
         return self
 
 
@@ -143,15 +160,18 @@ class BudgetSpec(_Strict):
     """Limits for the whole study (smoke, dev and held-out phases together).
 
     ``cost_limit_per_attempt_usd`` is reserved before each cell starts and passed to the adapter
-    as a hard cap, so cells in flight can never take the study over ``max_cost_usd``.
-    ``held_out_reserve_usd`` is never spent by the search.
+    as a hard cap, so cells in flight can never take the study over ``max_cost_usd`` (an adapter
+    may state a lower worst case per configuration, which is then reserved instead).
+    ``held_out_reserve_usd`` is never spent by the search. ``max_attempts`` and
+    ``max_cell_seconds`` bound the search (smoke and dev phases); the held-out phase is bounded by
+    money only, since the freeze fixes its size.
     """
 
-    max_cost_usd: float | None = None
-    max_attempts: int | None = None
-    max_cell_seconds: float | None = None
-    cost_limit_per_attempt_usd: float | None = None
-    held_out_reserve_usd: float = 0.0
+    max_cost_usd: Amount | None = None
+    max_attempts: int | None = Field(default=None, ge=0)
+    max_cell_seconds: Amount | None = None
+    cost_limit_per_attempt_usd: Amount | None = None
+    held_out_reserve_usd: Amount = 0.0
 
     @model_validator(mode="after")
     def _cost(self) -> BudgetSpec:
@@ -159,12 +179,14 @@ class BudgetSpec(_Strict):
             raise ValueError(
                 "max_cost_usd needs cost_limit_per_attempt_usd (the per-cell reservation)"
             )
+        if self.max_cost_usd is not None and self.held_out_reserve_usd > self.max_cost_usd:
+            raise ValueError("held_out_reserve_usd is larger than max_cost_usd")
         return self
 
 
 class ComparatorSpec(_Strict):
     label: str
-    base: str = "baseline"  # "baseline" or "frozen"
+    base: Literal["baseline", "frozen"] = "baseline"
     set: dict[str, Any] = Field(default_factory=dict)
 
 
@@ -172,8 +194,10 @@ class RobustnessSpec(_Strict):
     """Re-run ``configs`` with ``knob`` replaced by each of ``levels`` (levels may be off-grid)."""
 
     knob: str
-    levels: list[Any]
-    configs: list[str] = Field(default_factory=lambda: ["baseline", "frozen"])
+    levels: list[Any] = Field(min_length=1)
+    configs: list[Literal["baseline", "frozen"]] = Field(
+        default_factory=lambda: ["baseline", "frozen"]
+    )
 
 
 class HeldOutSpec(_Strict):
@@ -192,6 +216,8 @@ class StatsSpec(_Strict):
         default_factory=list
     )  # compared in the report, lower is better
     higher_is_better: list[str] = Field(default_factory=list)
+    # Held-out comparisons are also reported per task tag listed here (e.g. a pool).
+    tag_groups: list[str] = Field(default_factory=list)
 
 
 class StudySpec(_Strict):
@@ -212,6 +238,16 @@ class StudySpec(_Strict):
     def study_dir(self) -> Path:
         return self.source_path.parent if self.source_path else Path.cwd()
 
+    @model_validator(mode="after")
+    def _consistent(self) -> StudySpec:
+        for stage in self.search.stages:
+            if stage.tasks_from == "baseline_verified" and self.objective.kind != "baseline_ratio":
+                raise ValueError(
+                    f"stage {stage.name!r}: tasks_from baseline_verified needs a baseline_ratio "
+                    "objective"
+                )
+        return self
+
     def stage(self, name: str) -> StageSpec:
         for s in self.search.stages:
             if s.name == name:
@@ -219,10 +255,33 @@ class StudySpec(_Strict):
         raise StudySpecError(f"no stage named {name!r} in study {self.name!r}")
 
 
+class _UniqueKeyLoader(yaml.SafeLoader):
+    """A safe loader that rejects a key repeated in one mapping (YAML would keep the last)."""
+
+
+def _unique_mapping(loader: _UniqueKeyLoader, node: yaml.MappingNode, deep: bool = False) -> Any:
+    loader.flatten_mapping(node)
+    seen: set[Any] = set()
+    for key_node, _ in node.value:
+        key = loader.construct_object(key_node, deep=deep)
+        if key in seen:
+            raise yaml.constructor.ConstructorError(
+                None, None, f"duplicate key {key!r}", key_node.start_mark
+            )
+        seen.add(key)
+    return loader.construct_mapping(node, deep=deep)
+
+
+_UniqueKeyLoader.add_constructor(
+    yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
+    _unique_mapping,  # type: ignore[arg-type]
+)
+
+
 def load_study_spec(path: Path) -> StudySpec:
     path = Path(path).resolve()
     try:
-        data = yaml.safe_load(path.read_text(encoding="utf-8"))
+        data = yaml.load(path.read_text(encoding="utf-8"), Loader=_UniqueKeyLoader)  # noqa: S506
     except FileNotFoundError as exc:
         raise StudySpecError(f"file not found: {path}") from exc
     except yaml.YAMLError as exc:

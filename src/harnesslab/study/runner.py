@@ -2,28 +2,40 @@
 
 Rules the runner enforces for every adapter:
 
-* A cell that already has a record in its phase is never run again.
-* Before a cell starts, its cost cap is reserved in the budget; when the budget refuses, no
-  further cell starts and the refusal is reported.
-* ``run`` failing is part of the system under test: the cell is recorded as an ``error`` attempt
-  with a ``fail`` verdict from the core (there is no output to verify), it is charged its whole
-  reservation (it may have spent money it could not report), and the phase goes on. ``verify`` or ``metrics`` failing, or an attempt spending more than its
-  cap, is a broken harness: the cell is recorded and the phase stops with an exception.
+* A cell that already has a valid record in its phase is never run again.
+* Before a cell starts, what it may spend is reserved in the budget and a reservation line is
+  written to disk; a reservation that never gets a record (the process died) is charged in full.
+  The reservation is the spec's per-attempt cap, or less when the adapter states a lower worst
+  case for the configuration (``max_attempt_cost_usd``). When the budget refuses only because
+  other cells still hold reservations, the cell waits for them; any other refusal stops further
+  starts, and the refusal is reported.
+* ``run`` raising an ordinary exception is part of the system under test: the cell is recorded as
+  an ``error`` attempt with a ``fail`` verdict from the core (there is no output to verify), it is
+  charged its whole reservation (it may have spent money it could not report), and the phase goes
+  on.
+* A broken harness stops the phase: ``run`` raising :class:`HarnessError` or returning something
+  other than an :class:`Attempt`, an attempt for another cell, ``verify`` or ``metrics`` raising,
+  an invalid or over-the-cap cost, or a record that cannot be stored. The cell is recorded with a
+  ``harness_error`` (it has no valid outcome and may run again once the harness is fixed), the
+  cells already running finish and are recorded, and the first problem is raised.
 """
 
 from __future__ import annotations
 
 import asyncio
 import hashlib
+import json
+import math
 import shutil
 import time
 import traceback
+import uuid
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any
 
-from harnesslab.study.budget import Budget
+from harnesslab.study.budget import Budget, Reservation
 from harnesslab.study.contract import (
     Attempt,
     AttemptStatus,
@@ -63,6 +75,7 @@ class RunSummary:
     not_started: int = 0
     budget_stop: str | None = None
     errors: int = 0
+    harness_errors: int = 0
     cost_usd: float = 0.0
     seconds: float = 0.0
     verdicts: dict[str, int] = field(default_factory=dict)
@@ -75,6 +88,24 @@ def _now() -> str:
 def cell_seed(study: str, phase: str, cell: Cell) -> int:
     text = f"{study}:{phase}:{cell.task.id}:{cell.config.config_hash}:{cell.repetition}"
     return int(hashlib.sha256(text.encode()).hexdigest()[:8], 16)
+
+
+def _storable(record: dict[str, Any]) -> tuple[dict[str, Any], str | None]:
+    """The record if it is strict JSON, else a reduced record and the reason."""
+    try:
+        json.dumps(record, sort_keys=True, ensure_ascii=False, allow_nan=False)
+        return record, None
+    except (TypeError, ValueError) as exc:
+        reason = f"record is not storable as JSON: {type(exc).__name__}: {exc}"
+        reduced = {
+            k: v
+            for k, v in record.items()
+            if k not in ("attempt", "verdict", "metrics", "harness_traceback")
+        }
+        reduced["attempt"] = {"unstorable": repr(record.get("attempt"))[:4000]}
+        reduced["verdict"] = None
+        reduced["metrics"] = {}
+        return reduced, reason
 
 
 async def run_cells(
@@ -96,25 +127,63 @@ async def run_cells(
     summary.already_done = len(cells) - len(todo)
     stop = asyncio.Event()
     lock = asyncio.Lock()
+    settled = asyncio.Condition()
     sem = asyncio.Semaphore(max(1, parallelism))
-    failure: list[BaseException] = []
+    failure: list[HarnessError] = []
+    worst_case = getattr(adapter, "max_attempt_cost_usd", None)
+
+    async def halt(problem: HarnessError | None) -> None:
+        if problem is not None:
+            failure.append(problem)
+        stop.set()
+        async with settled:
+            settled.notify_all()
+
+    async def reserve(cell: Cell) -> Reservation | None:
+        need = budget.need_for(worst_case(cell.config) if worst_case is not None else None)
+        async with settled:
+            while True:
+                if stop.is_set():
+                    return None
+                res = budget.try_reserve(need)
+                if isinstance(res, Reservation):
+                    return res
+                if res.retryable:
+                    await settled.wait()
+                    continue
+                summary.budget_stop = summary.budget_stop or res.reason
+                stop.set()
+                settled.notify_all()
+                return None
 
     async def one(cell: Cell) -> None:
         async with sem:
             if stop.is_set():
                 summary.not_started += 1
                 return
-            reservation = budget.try_reserve()
-            if isinstance(reservation, str):
-                summary.budget_stop = summary.budget_stop or reservation
+            reservation = await reserve(cell)
+            if reservation is None:
                 summary.not_started += 1
-                stop.set()
                 return
+            reservation_id = uuid.uuid4().hex
+            started = _now()
             attempt_dir = store.artifacts_dir(
                 phase, cell.task.id, cell.config.config_hash, cell.repetition
             )
+            async with lock:
+                store.reserve(
+                    phase,
+                    {
+                        "id": reservation_id,
+                        "stage": cell.stage,
+                        "task_id": cell.task.id,
+                        "config_hash": cell.config.config_hash,
+                        "repetition": cell.repetition,
+                        "usd": reservation.usd,
+                        "started_at": started,
+                    },
+                )
             attempt_dir.mkdir(parents=True, exist_ok=True)
-            started = _now()
             t0 = time.monotonic()
             ctx = RunContext(
                 study=study,
@@ -122,16 +191,38 @@ async def run_cells(
                 repetition=cell.repetition,
                 attempt_dir=attempt_dir,
                 keep_artifacts=keep_artifacts,
-                cost_limit_usd=budget.per_attempt_usd,
+                cost_limit_usd=reservation.usd if budget.per_attempt_usd is not None else None,
                 seed=cell_seed(study, phase, cell),
             )
             raised = False
+            problem: str | None = None
+            record: dict[str, Any] = {
+                "phase": phase,
+                "stage": cell.stage,
+                "task_id": cell.task.id,
+                "task_hash": cell.task.content_hash,
+                "task_tags": list(cell.task.tags),
+                "config_hash": cell.config.config_hash,
+                "config_label": cell.config.label,
+                "config": cell.config.values,
+                "repetition": cell.repetition,
+                "seed": ctx.seed,
+                "started_at": started,
+                "adapter": {"name": adapter.name, "version": adapter.version},
+                "reservation_id": reservation_id,
+                "reserved_usd": reservation.usd,
+                **(extra or {}),
+            }
+            attempt: Attempt | None = None
             try:
-                attempt = await adapter.run(cell.task, cell.config, ctx)
-                if not isinstance(attempt, Attempt):
-                    raise HarnessError(f"run() returned {type(attempt).__name__}, not an Attempt")
-            except HarnessError:
-                raise
+                result = await adapter.run(cell.task, cell.config, ctx)
+                if isinstance(result, Attempt):
+                    attempt = result
+                else:
+                    problem = f"run() returned {type(result).__name__}, not an Attempt"
+            except HarnessError as exc:
+                problem = f"run() reported a harness error: {exc}"
+                record["harness_traceback"] = traceback.format_exc()[-4000:]
             except Exception as exc:  # the system under test failed: a recorded result
                 raised = True
                 attempt = Attempt(
@@ -142,26 +233,27 @@ async def run_cells(
                     error=f"{type(exc).__name__}: {exc}",
                     details={"traceback": traceback.format_exc()[-4000:]},
                 )
+            if attempt is None:  # a harness problem inside run(): no attempt to keep
+                raised = True  # nothing reported: charge the whole reservation
+                attempt = Attempt(
+                    task_id=cell.task.id,
+                    config_hash=cell.config.config_hash,
+                    repetition=cell.repetition,
+                    status=AttemptStatus.ERROR,
+                    error=problem,
+                )
             run_seconds = time.monotonic() - t0
             if attempt.wall_time_s is None:
                 attempt.wall_time_s = run_seconds
-            record: dict[str, Any] = {
-                "phase": phase,
-                "stage": cell.stage,
-                "task_id": cell.task.id,
-                "task_hash": cell.task.content_hash,
-                "config_hash": cell.config.config_hash,
-                "config_label": cell.config.label,
-                "config": cell.config.values,
-                "repetition": cell.repetition,
-                "seed": ctx.seed,
-                "started_at": started,
-                "adapter": {"name": adapter.name, "version": adapter.version},
-                "reserved_usd": reservation.usd,
-                **(extra or {}),
-            }
-            problem: str | None = None
-            if (attempt.task_id, attempt.config_hash, attempt.repetition) != cell.key:
+            if (
+                problem is None
+                and (
+                    attempt.task_id,
+                    attempt.config_hash,
+                    attempt.repetition,
+                )
+                != cell.key
+            ):
                 problem = f"adapter returned an attempt for {attempt.task_id}/{attempt.repetition}"
             verdict: Verdict | None = None
             metrics: dict[str, Any] = {}
@@ -190,30 +282,41 @@ async def run_cells(
                             f"verify() returned {type(verdict).__name__}, not a Verdict"
                         )
                     metrics = dict(adapter.metrics(cell.task, attempt, verdict))
+                    bad = [
+                        k
+                        for k, v in metrics.items()
+                        if isinstance(v, float) and not math.isfinite(v)
+                    ]
+                    if bad:
+                        raise ValueError(f"non-finite metric value(s): {', '.join(sorted(bad))}")
                 except Exception as exc:
                     problem = f"verify/metrics failed: {type(exc).__name__}: {exc}"
                     record["harness_traceback"] = traceback.format_exc()[-4000:]
             cost = attempt.usage.cost_usd
-            if (
-                problem is None
-                and ctx.cost_limit_usd is not None
-                and cost > ctx.cost_limit_usd + 1e-9
-            ):
-                problem = f"attempt spent ${cost:.6f}, above its cap ${ctx.cost_limit_usd:.6f}"
+            cost_ok = isinstance(cost, int | float) and math.isfinite(cost) and cost >= 0
+            if problem is None and not raised:
+                if not cost_ok:
+                    problem = f"attempt reported an invalid cost {cost!r}"
+                elif ctx.cost_limit_usd is not None and cost > ctx.cost_limit_usd + 1e-9:
+                    problem = f"attempt spent ${cost:.6f}, above its cap ${ctx.cost_limit_usd:.6f}"
             elapsed = time.monotonic() - t0
             # A run that raised may have spent money it could not report: charge its whole
             # reservation (the most it was allowed to spend), so the budget never undercounts.
-            charged = reservation.usd if raised else cost
+            charged = reservation.usd if raised or not cost_ok else float(cost)
             budget.settle(reservation, charged, elapsed)
             record.update(
                 finished_at=_now(),
                 cell_seconds=round(elapsed, 6),
                 charged_usd=charged,
                 attempt=attempt.model_dump(mode="json"),
-                verdict=verdict.model_dump(mode="json") if verdict else None,
-                metrics=metrics,
+                verdict=verdict.model_dump(mode="json") if verdict and problem is None else None,
+                metrics=metrics if problem is None else {},
                 harness_error=problem,
             )
+            record, unstorable = _storable(record)
+            if unstorable is not None:
+                problem = problem or unstorable
+                record["harness_error"] = problem
             async with lock:
                 store.append(phase, record)
                 summary.ran += 1
@@ -221,18 +324,36 @@ async def run_cells(
                 summary.seconds += elapsed
                 if attempt.status == AttemptStatus.ERROR:
                     summary.errors += 1
-                key = verdict.status.value if verdict else "none"
+                if problem is not None:
+                    summary.harness_errors += 1
+                key = (
+                    "harness_error"
+                    if problem is not None
+                    else (verdict.status.value if verdict else "none")
+                )
                 summary.verdicts[key] = summary.verdicts.get(key, 0) + 1
+            async with settled:
+                settled.notify_all()
             if not keep_artifacts and attempt_dir.exists() and not any(attempt_dir.iterdir()):
                 shutil.rmtree(attempt_dir, ignore_errors=True)
             if problem is not None:
-                stop.set()
-                failure.append(HarnessError(f"{cell.task.id} / {cell.config.label}: {problem}"))
+                await halt(HarnessError(f"{cell.task.id} / {cell.config.label}: {problem}"))
                 return
             if summary.ran % 25 == 0:
                 log(f"{phase}: {summary.ran + summary.already_done}/{summary.planned} cells")
 
-    tasks = [asyncio.create_task(one(c)) for c in todo]
+    async def guarded(cell: Cell) -> None:
+        try:
+            await one(cell)
+        except Exception as exc:  # the harness itself failed (e.g. the disk): stop, keep the rest
+            await halt(
+                HarnessError(
+                    f"{cell.task.id} / {cell.config.label}: harness failure: "
+                    f"{type(exc).__name__}: {exc}"
+                )
+            )
+
+    tasks = [asyncio.create_task(guarded(c)) for c in todo]
     try:
         await asyncio.gather(*tasks)
     except BaseException:

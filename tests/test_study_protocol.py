@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from harnesslab.study.budget import Budget
+from harnesslab.study.budget import Budget, Refusal
 from harnesslab.study.contract import (
     Attempt,
     AttemptStatus,
@@ -284,8 +284,8 @@ def test_search_cannot_spend_the_held_out_reserve(tmp_path: Path):
     spent = sum(r["attempt"]["usage"]["cost_usd"] for r in study.store.records("dev"))
     assert spent <= 0.1 + 1e-12
     b = Budget(max_cost_usd=1.0, per_attempt_usd=0.3, reserve_usd=0.6)  # 0.4 left for search
-    assert not isinstance(b.try_reserve(), str)
-    assert isinstance(b.try_reserve(), str)
+    assert not isinstance(b.try_reserve(), Refusal)
+    assert isinstance(b.try_reserve(), Refusal)
 
 
 def test_conditional_stage_is_skipped_when_its_projection_does_not_fit(tmp_path: Path):

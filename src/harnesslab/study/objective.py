@@ -57,6 +57,10 @@ def _passed(record: dict[str, Any]) -> bool:
 
 
 def _cost(record: dict[str, Any]) -> float:
+    """What the attempt cost the study: its charge (a run that raised is charged its whole
+    reservation), else the cost it reported."""
+    if record.get("charged_usd") is not None:
+        return float(record["charged_usd"])
     return float(((record.get("attempt") or {}).get("usage") or {}).get("cost_usd") or 0.0)
 
 
@@ -85,10 +89,22 @@ def rank_configs(
     objective: ObjectiveSpec,
     baseline_hash: str,
     task_ids: list[str],
+    *,
+    eligible: set[str] | None = None,
 ) -> Ranking:
+    """Rank the configurations of ``records`` (valid dev records only).
+
+    ``eligible``: when given, only these configuration hashes can be feasible (the others are
+    listed with the reason); the baseline still anchors cost caps and ratios.
+    """
+    if any(r.get("harness_error") for r in records):
+        raise ValueError("rank_configs takes valid records only (no harness errors)")
     if objective.kind == "pass_rate":
-        return _rank_pass_rate(records, objective, baseline_hash, task_ids)
-    return _rank_baseline_ratio(records, objective, baseline_hash, task_ids)
+        return _rank_pass_rate(records, objective, baseline_hash, task_ids, eligible)
+    return _rank_baseline_ratio(records, objective, baseline_hash, task_ids, eligible)
+
+
+INELIGIBLE = "not eligible: the freeze considers the confirmed configurations only"
 
 
 # ---------------------------------------------------------------------------
@@ -97,7 +113,11 @@ def rank_configs(
 
 
 def _rank_pass_rate(
-    records: list[dict[str, Any]], obj: ObjectiveSpec, baseline_hash: str, task_ids: list[str]
+    records: list[dict[str, Any]],
+    obj: ObjectiveSpec,
+    baseline_hash: str,
+    task_ids: list[str],
+    eligible: set[str] | None = None,
 ) -> Ranking:
     wanted = set(task_ids)
     scores: list[ConfigScore] = []
@@ -128,6 +148,9 @@ def _rank_pass_rate(
                 s.feasible = True
         else:
             s.feasible = True
+        if s.feasible and eligible is not None and s.config_hash not in eligible:
+            s.feasible = False
+            s.reason = INELIGIBLE
 
     feasible = [s for s in scores if s.feasible]
     best = max((s.pass_rate or 0.0 for s in feasible), default=0.0)
@@ -165,7 +188,11 @@ def _metric(records: list[dict[str, Any]], name: str) -> float | None:
 
 
 def _rank_baseline_ratio(
-    records: list[dict[str, Any]], obj: ObjectiveSpec, baseline_hash: str, task_ids: list[str]
+    records: list[dict[str, Any]],
+    obj: ObjectiveSpec,
+    baseline_hash: str,
+    task_ids: list[str],
+    eligible: set[str] | None = None,
 ) -> Ranking:
     by_cfg_task: dict[str, dict[str, list[dict[str, Any]]]] = defaultdict(lambda: defaultdict(list))
     for r in records:
@@ -221,6 +248,9 @@ def _rank_baseline_ratio(
                 vals = [_metric(tasks[t], m) for t in considered]
                 if all(v is not None for v in vals):
                     s.medians[m] = statistics.median(vals)  # type: ignore[type-var]
+        if s.feasible and eligible is not None and h not in eligible:
+            s.feasible = False
+            s.reason = INELIGIBLE
         scores.append(s)
 
     tol = obj.tie_tolerance

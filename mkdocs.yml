@@ -11,6 +11,9 @@ docs_dir: docs
 strict: true
 exclude_docs: |
   superpowers/
+  adr/
+  plans/
+  results/
   SUMMARY.md
 
 theme:

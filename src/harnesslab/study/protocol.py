@@ -238,6 +238,16 @@ class Study:
         tasks = self.dev_tasks()
         if stage.tasks is not None:
             tasks = [t for t in tasks if t.id in set(stage.tasks)]
+        if stage.tasks_from == "baseline_verified":
+            ranking = self.rank()
+            missing = [t for t, why in ranking.dropped_tasks.items() if "no record" in why]
+            if missing:
+                raise ProtocolError(
+                    f"stage {stage.name}: the baseline must run on every dev task first "
+                    f"(missing: {', '.join(missing[:5])})"
+                )
+            keep = set(ranking.task_ids)
+            tasks = [t for t in tasks if t.id in keep]
         cells = []
         if stage.kind == "confirm":
             existing = Counter((r["config_hash"], r["task_id"]) for r in self.store.records("dev"))

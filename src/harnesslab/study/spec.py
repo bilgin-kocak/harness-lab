@@ -78,6 +78,9 @@ class StageSpec(_Strict):
     include_baseline: bool = True
     if_budget_allows: bool = False
     tasks: list[str] | None = None  # a subset of the dev IDs (for a smoke test)
+    # "baseline_verified": only the dev tasks the objective keeps after dropping those where the
+    # baseline did not verify (the baseline must already have a record on every dev task).
+    tasks_from: Literal["all", "baseline_verified"] = "all"
     phase: Literal["dev", "smoke"] = "dev"
 
     @model_validator(mode="after")

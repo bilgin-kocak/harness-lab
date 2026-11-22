@@ -556,3 +556,23 @@ def test_study_cli_end_to_end_and_irreversible_steps_need_yes(tmp_path: Path):
     assert res.exit_code == 0 and "frozen vs baseline" in res.output
     res = runner.invoke(app, ["study", "status", str(spec)])
     assert res.exit_code == 0 and '"held_out"' in res.output
+
+
+def test_stages_can_skip_tasks_where_the_baseline_did_not_verify(tmp_path: Path):
+    stages = [
+        {"name": "base", "kind": "explicit", "configs": [{"label": "baseline", "set": {}}]},
+        {"name": "rest", "kind": "grid", "knobs": ["power"], "tasks_from": "baseline_verified"},
+    ]
+    study = _study(
+        tmp_path,
+        options={"unverifiable_base": ["d0"]},
+        search={"seed": 1, "stages": stages},
+        objective={"kind": "baseline_ratio", "metrics": ["gates"]},
+    )
+    with pytest.raises(ProtocolError, match="baseline must run on every dev task first"):
+        asyncio.run(study.run_stage("rest"))
+    asyncio.run(study.run_stage("base"))
+    asyncio.run(study.run_stage("rest"))
+    kept = study.rank().task_ids
+    rest = {r["task_id"] for r in study.store.records("dev") if r["stage"] == "rest"}
+    assert rest == set(kept) and "d0" not in rest and kept

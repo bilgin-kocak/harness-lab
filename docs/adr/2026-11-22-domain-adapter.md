@@ -64,8 +64,10 @@ class DomainAdapter(Protocol):
     def metrics(self, task: Task, attempt: Attempt, verdict: Verdict) -> dict[str, float | None]: ...
 
     # optional
-    def provenance(self) -> dict[str, str]: ...      # dataset commit, toolchain and model pins
+    def provenance(self) -> dict[str, Any]: ...      # dataset commit, toolchain and model pins
     def audit_split(self, dev: list[Task], held_out_ids: Sequence[str]) -> list[str]: ...
+    def max_attempt_cost_usd(self, config: Config) -> float | None: ...  # worst case, reserved
+    async def close(self) -> None: ...
 ```
 
 The types belong to the core and are plain data (`pydantic`, JSON-serializable):
@@ -90,6 +92,18 @@ Rules each method must follow:
    settles it after).
 4. `verify()` is the independent check. It does not read the system's own claims as evidence.
 5. `metrics()` is pure: the same attempt and verdict always give the same numbers.
+6. `provenance()` holds pins only (versions, commits, hashes), never paths, timings or machine
+   state: the held-out phase refuses to start if it differs from the value recorded at the freeze.
+7. `max_attempt_cost_usd(config)`, when given, is a true upper bound on what one attempt with
+   `config` can spend. The core reserves the lower of it and the spec's per-attempt cap, and
+   passes that as the attempt's hard limit. So a cheap configuration does not hold a large
+   reservation, and the limit never cuts an attempt short before its own caps.
+8. Failures split in two:
+   - `run()` raising an ordinary exception is a result of the system under test: a failed cell,
+     charged its whole reservation.
+   - `run()` raising `HarnessError`, `verify()` or `metrics()` raising, or an invalid cost is a
+     broken harness. The cell is recorded with no outcome and can run again once the harness is
+     fixed, and the phase stops.
 
 ### The study protocol (core)
 
@@ -114,6 +128,24 @@ Rules each method must follow:
 
 Storage for this sprint is append-only JSONL plus JSON files in the study directory, not the
 SQLite database: the records are what the reports cite, and they can be committed.
+
+Hardening added after an adversarial review of the first version (2026-11-22):
+
+- Every step that writes holds an exclusive lock on the study directory.
+- Each cell writes a reservation line before it starts, and an interrupted cell is charged in
+  full.
+- A torn last record is repaired before the next append.
+- Each search stage fixes its configurations and cells (`plans/`) the first time it runs, so
+  resuming adds and changes nothing.
+- After a confirm stage, the freeze chooses among the confirmed configurations only.
+- An overlapping split runs nothing.
+- Before the held-out phase, the core checks that these still match the freeze, and re-ranks the
+  dev records to confirm the frozen choice:
+  - the split file;
+  - the adapter's name, version, options and provenance;
+  - the objective, statistics and held-out sections of the spec;
+  - the dev records.
+- Reports mark an incomplete held-out phase and never count an unrun cell as a loss.
 
 ### How the coding adapter maps onto the contract
 

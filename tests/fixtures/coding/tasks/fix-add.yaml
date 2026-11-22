@@ -1,0 +1,34 @@
+id: fix-add
+name: Fix calc.add
+version: 1
+description: calc.add subtracts instead of adding; a hidden test checks the fix.
+
+repo:
+  path: ../repo
+  base_ref: HEAD
+
+prompt: |
+  `calc.add(a, b)` in `calc.py` returns the wrong result. Fix it.
+  Do not modify anything under `tests/`. Run `python -m unittest discover -s tests -p 'check_*.py'`
+  to check your work.
+
+verification:
+  # The checks are named check_*.py so that pytest never collects these fixture files.
+  command: python -m unittest discover -s tests -p 'check_*.py' -v
+  timeout_seconds: 60
+  inject:
+    - source: fix-add/verify/hidden_add.py
+      dest: tests/check_hidden_add.py
+  protected_paths:
+    - tests/
+
+limits:
+  agent_timeout_seconds: 120
+
+tags:
+  - python
+  - bugfix
+
+reference_solution:
+  overlay: fix-add/solution
+  description: Return a + b.

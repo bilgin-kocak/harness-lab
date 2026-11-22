@@ -1,0 +1,12 @@
+# A one-task suite for tests/test_domain_coding.py. It defines no variants (so the built-in
+# variants are used) and a suite default for the fake runner, which the fake runner reports back
+# as its number of LLM calls (so a test can see that suite defaults were applied).
+name: coding-fixture
+description: One bug fix in a tiny repository, checked by a hidden test.
+
+tasks:
+  - tasks/fix-add.yaml
+
+defaults:
+  fake:
+    llm_calls: 7

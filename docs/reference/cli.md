@@ -741,6 +741,7 @@ $ harnesslab study report [OPTIONS] {spec}
 **Options**:
 
 * `--json`: Print results.json to stdout.
+* `--markdown <path>`: Also write results.json&#x27;s tables as Markdown here.
 * `--help`: Show this message and exit.
 
 ### `harnesslab study status`

@@ -560,3 +560,24 @@ def test_split_spec_written_by_helper_is_still_yaml(tmp_path: Path):
     # guards the helper used above: a spec the tests write must load without duplicate keys
     spec = yaml.safe_load(_write_study(tmp_path).read_text())
     assert spec["name"] == "toy-study" and _hash("d0")
+
+
+def test_results_render_as_markdown_tables(tmp_path: Path):
+    from harnesslab.study.markdown import render_markdown
+
+    study = _study2(
+        tmp_path,
+        objective={"kind": "baseline_ratio", "metrics": ["gates"]},
+        stats={"resamples": 200, "seed": 1, "tag_groups": ["even"]},
+    )
+    asyncio.run(study.run_stage("grid"))
+    study.freeze()
+    asyncio.run(study.held_out())
+    text = render_markdown(study.results())
+    assert "| frozen vs baseline: gates |" in text and "Tasks tagged `even`" in text
+    (tmp_path / "rate").mkdir()
+    rate = _study2(tmp_path / "rate")
+    asyncio.run(rate.run_stage("grid"))
+    rate.freeze()
+    asyncio.run(rate.held_out())
+    assert "| frozen vs baseline |" in render_markdown(rate.results())

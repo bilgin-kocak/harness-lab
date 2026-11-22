@@ -212,11 +212,19 @@ def study_heldout(spec: SpecArg, yes: YesOpt = False) -> None:
 def study_report(
     spec: SpecArg,
     as_json: Annotated[bool, typer.Option("--json", help="Print results.json to stdout.")] = False,
+    markdown: Annotated[
+        Path | None,
+        typer.Option("--markdown", help="Also write results.json's tables as Markdown here."),
+    ] = None,
 ) -> None:
     """Compute results.json from the records (paired statistics on held-out tasks)."""
+    from harnesslab.study.markdown import render_markdown
+
     with _study(spec) as study:
         data = study.results()
         path = study.store.results_path
+    if markdown is not None:
+        markdown.write_text(render_markdown(data), encoding="utf-8")
     if as_json:
         sys.stdout.write(json.dumps(data, indent=2, sort_keys=True) + "\n")
         return

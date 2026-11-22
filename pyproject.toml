@@ -45,6 +45,15 @@ Changelog = "https://github.com/bilgin-kocak/harness-lab/blob/main/CHANGELOG.md"
 harnesslab = "harnesslab.cli:app"
 
 [project.optional-dependencies]
+# Domain adapters (harnesslab.domains). Exact pins: these are the versions the studies record.
+quantum = [
+    "qiskit==2.6.2",
+    "mqt.qcec==3.12.0",
+    "numpy==2.5.5",
+]
+lean = [
+    "anthropic==2.12.0",
+]
 dev = [
     "pytest>=8.0",
     "pytest-asyncio>=0.24",  # asyncio_default_fixture_loop_scope
@@ -59,6 +68,11 @@ dev = [
     "httpx>=0.27",
     "ruff>=0.5",
     "twine>=5.0",
+    # the domain adapters' dependencies, so their tests run everywhere (same pins as the extras)
+    "qiskit==2.6.2",
+    "mqt.qcec==3.12.0",
+    "numpy==2.5.5",
+    "anthropic==2.12.0",
 ]
 docs = [
     "mkdocs-material>=9.7.7,<10",  # 9.x pins mkdocs<2, which keeps overrides/ working

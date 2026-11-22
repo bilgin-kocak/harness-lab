@@ -426,6 +426,51 @@ Split `20261122`; transpiler seeds `0`–`4` (search), `0` (baseline and compara
 - 16 held-out circuits (option A) give little statistical power; option B raises it to 26.
 - Choosing a transpiler seed on dev mostly selects luck; the robustness analysis exposes that.
 
+
+### B14. Amendments before the search (2026-11-22, before any search cell ran)
+
+Each amendment was decided on dev circuits only, before the first search cell. Each was checked
+with the adapter and again with `studies/2026-11-quantum-qasmbench/amendment_checks.py`.
+
+1. **Lookahead routing is not searched.** Stage 1 varies `routing_method` over default, basic and
+   sabre: 4 × 4 × 3 × 3 × 5 = **720 configurations**, not 960.
+   - **Evidence.** Lookahead did not finish within 30 s on bv_n19, qec9xz_n17 or sat_n7 (level 2,
+     default layout). The adapter's probe found the same on 9 of 9 pool-B dev circuits with dense
+     layout at level 1, and on 8 of 9 with the default layout. It also timed out on sat_n7 and on
+     qpe_n9 or adder_n10 in pool A, depending on the layout. On sat_n11 it ran for more than 20
+     minutes. Basic routing compiled each of these circuits in under 0.3 s.
+   - **Why it is dropped.** 240 lookahead configurations × 22 circuits would exceed the 8 CPU-hour
+     budget of B10 many times over. With a time limit they would be infeasible on most circuits
+     anyway.
+2. **`hls_config` for `mcx` is not searched in Stage 2.** No dev circuit contains an MCX gate.
+   Seven contain Toffoli gates, which this setting does not affect. Compiling every dev circuit
+   except vqe_n24 at the baseline with `noaux_v24` and with `gray_code` gave outputs identical to
+   the default. Searching it would add 2 × 10 configurations whose outputs are identical. The
+   tie-break would then pick its level by compile-time noise. Stage 2 is now 10 × 2 × 2 = 40
+   configurations, of which **30 are new**.
+3. **Compile time limit.** All repetitions of one attempt together get 1,200 s. Past that, the
+   worker is killed and the attempt is a `timeout`, which fails its circuit like an unverified
+   output. The plan set no limit. The slowest baseline, medium/vqe_n24, needs about 440–490 s for
+   its 3 compilations.
+4. **Verifier details** (adapter `qiskit-qasmbench` 1; B8 otherwise unchanged):
+   - **ZX only without ancillas.** The decision-diagram check uses the ZX checker only when no
+     ancilla qubit is active. Otherwise it uses the alternating checker alone. The reason: mqt.qcec
+     3.12.0's ZX checker accepted all 53 outputs of adder_n4 with an X gate deliberately left on an
+     idle ancilla, while the alternating checker rejects them. The case is in the adapter's tests.
+   - **Memory limit.** A QCEC job may use at most its current size plus min(half of RAM, 3/4 of
+     available memory). Running out is `unverifiable`. On medium/vqe_n24 an unlimited job was
+     killed by the kernel twice.
+   - **Canonical QPY.** The compiled circuit is stored as QPY version 16, with ancilla labels in
+     physical order, because plain QPY bytes vary between identical compilations.
+   - **Baseline call.** It passes `optimization_level=2`, `approximation_degree=1.0` and
+     `qubits_initially_zero=True` explicitly, besides the seed. On all 24 dev circuits checked
+     (vqe_n24 skipped for time), its outputs were identical to `generate_preset_pass_manager(
+     target=TARGET, seed_transpiler=0)`.
+5. **Budget.** The search space is 2 + 720 + 30 = **752 configurations** (B10: at most 1,100). The
+   CPU-time cap of 8 hours stays.
+6. **Report groups.** B11's per-pool results come from task tags. The adapter tags each circuit
+   with its pool, and the study spec sets `stats.tag_groups: [A, B]`.
+
 ---
 
 ## Decisions needed before any code

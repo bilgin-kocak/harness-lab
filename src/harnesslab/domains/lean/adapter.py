@@ -570,7 +570,6 @@ class LeanAdapter(DomainAdapterBase):
             "lean_toolchain": self.project.lean_toolchain if self.project else LEAN_TOOLCHAIN,
             "lean_version": LEAN_VERSION,
             "mathlib_rev": self.project.mathlib_rev if self.project else MATHLIB_REV,
-            "lean_project": str(self.project_dir) if self.project_dir else None,
             "lean_runner": self.runner_kind,
             "minif2f_repo": MINIF2F_REPO,
             "minif2f_commit": self.minif2f_head or "unchecked",
@@ -604,17 +603,36 @@ class LeanAdapter(DomainAdapterBase):
             },
             "index": (
                 {
-                    "path": str(self.index_path),
                     "sha256": meta.get("sha256"),
                     "entries": meta.get("entries"),
                     "mathlib_rev": meta.get("mathlib_rev"),
-                    "built_at": meta.get("built_at"),
                 }
                 if meta
                 else None
             ),
-            "selfcheck": self.selfcheck,
         }
+
+    def max_attempt_cost_usd(self, config: Config) -> float:
+        """An upper bound on what one attempt with ``config`` can spend (the core reserves it).
+
+        Calls: per try, an optional planning call plus ``1 + feedback_rounds`` rounds, each round
+        up to ``1 + max_tool_calls_per_round`` calls when a tool is enabled; at most
+        ``max_calls_per_attempt`` in all. Each call is bounded as in the prover, with a generous
+        input bound: the context limit at 4 characters per token and up to 3 UTF-8 bytes per
+        character, plus a whole previous output (echoed in a tool loop) and a fixed allowance.
+        Paths, timings and the self-check stay out of :meth:`provenance`, which must not change
+        between the freeze and the held-out phase.
+        """
+        c = ProverConfig.from_values(config.values)
+        tools = c.retrieval != "none" or c.tactic_tools != "none"
+        per_round = 1 + (self.limits.max_tool_calls_per_round if tools else 0)
+        calls = c.retries * ((1 if c.planning else 0) + (1 + c.feedback_rounds) * per_round)
+        calls = min(calls, self.limits.max_calls_per_attempt)
+        input_bound = 12 * c.context_limit_tokens + self.max_tokens + 16_384
+        per_call = pricing.worst_case_cost(
+            self.model, input_tokens=input_bound, max_tokens=self.max_tokens
+        )
+        return calls * per_call
 
     async def close(self) -> None:
         close = getattr(self.client, "close", None)

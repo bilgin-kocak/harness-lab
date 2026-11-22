@@ -1169,7 +1169,8 @@ async def test_the_selfcheck_runs_once_and_a_failing_one_aborts_verify(tmp_path)
         assert (await adapter.verify(task, attempt, verify_ctx(tmp_path))).passed
     assert "harnesslab_selfcheck" in runner.sources[0] and len(runner.sources) == 3
     assert runner.timeouts[0] == 1800.0
-    assert adapter.provenance()["selfcheck"]["status"] == "pass"
+    assert adapter.selfcheck is not None and adapter.selfcheck["status"] == "pass"
+    assert "selfcheck" not in adapter.provenance()  # provenance holds no timings or paths
     broken = FakeLeanRunner(
         [ScriptedLean(lean_message(1, 0, "error", "unknown module prefix 'Mathlib'"), returncode=1)]
     )
@@ -1393,7 +1394,7 @@ def test_project_inspection_and_registry_construction(tmp_path):
         tmp_path,
     )
     assert isinstance(adapter, LeanAdapter) and isinstance(adapter.runner, LakeLeanRunner)
-    assert adapter.runner.workers == 3 and adapter.provenance()["lean_project"] == str(project)
+    assert adapter.runner.workers == 3 and Path(adapter.project_dir) == Path(project)
     assert adapter.client._client is None  # the SDK client is created on the first call only
 
 
@@ -1449,3 +1450,33 @@ async def test_the_lake_runner_limits_concurrent_lean_processes(tmp_path):
         peak = max(peak, running)
     assert peak == 2
     assert max(r.wait_s for r in runs) > 0.2  # the later runs waited for a free slot
+
+
+def test_the_worst_case_cost_of_an_attempt_follows_its_configuration(tmp_path):
+    from harnesslab.domains.lean import pricing
+
+    adapter, _, _ = make_adapter(tmp_path)
+    base = adapter.baseline_config()
+
+    def per_call(context: int) -> float:
+        return pricing.worst_case_cost(
+            adapter.model,
+            input_tokens=12 * context + adapter.max_tokens + 16_384,
+            max_tokens=adapter.max_tokens,
+        )
+
+    one = adapter.max_attempt_cost_usd(base)
+    assert one == pytest.approx(per_call(base.values["context_limit_tokens"]))
+    assert adapter.max_attempt_cost_usd(base.replace(feedback_rounds=3)) == pytest.approx(4 * one)
+    assert adapter.max_attempt_cost_usd(base.replace(planning=True, retries=2)) == pytest.approx(
+        4 * one
+    )
+    every = base.replace(
+        planning=True,
+        retrieval="mathlib_names",
+        tactic_tools="probe",
+        feedback_rounds=3,
+        retries=2,
+        context_limit_tokens=48000,
+    )
+    assert adapter.max_attempt_cost_usd(every) == pytest.approx(12 * per_call(48000))

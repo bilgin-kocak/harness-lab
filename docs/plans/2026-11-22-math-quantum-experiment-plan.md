@@ -471,6 +471,76 @@ with the adapter and again with `studies/2026-11-quantum-qasmbench/amendment_che
 6. **Report groups.** B11's per-pool results come from task tags. The adapter tags each circuit
    with its pool, and the study spec sets `stats.tag_groups: [A, B]`.
 
+### B15. Amendments after the red team (2026-11-23, before any search cell ran)
+
+An adversarial review attacked the verifier with the real checkers and hand-built payloads. It
+used dev circuits and synthetic circuits only; no held-out circuit was opened. It found payloads
+that get a false pass on pool B, and verdicts that crash or change from run to run. The study's
+own compiler produces none of these payloads. The fixes make the verifier sound against them
+anyway. They come with adapter `qiskit-qasmbench` 2, `target-validity/2` and `exact-isometry/2`.
+No search cell had run when they were made.
+
+1. **Strict target validity.** Each rule below closes a hole the red team reproduced:
+   - **Basis gates.** A basis gate must be that standard gate: the base class matches, and a CZ is
+     controlled on |1⟩.
+   - **rz angles.** An rz angle must be a finite real number: an int, a float, or a parameter
+     expression with no free parameter.
+     - *Hole:* QCEC's importer re-parses any angle that is not a float, and drops the sign of a
+       constant term. With rz(−3) stored as an int, or rz(p·0 − 0.3), a wrong output passed on
+       pool B and raised a disagreement on pool A.
+   - **Barriers and delays.** An instruction counts as a barrier or delay only if it really is
+     one. A gate merely *named* `barrier` is outside the basis.
+     - *Hole:* such a gate with an X inside passed on both pools.
+   - **Global phase.** The global phase must be a finite real number.
+     - *Hole:* a NaN or unbound phase raised on pool A and passed on pool B.
+   - **Qubit registers.** The qubits must form exactly one register, in the circuit's own order.
+     - *Hole:* QCEC numbers qubits by register; Qiskit and the exact check number them by
+       `circuit.qubits`. A register listing the qubits in reverse, with every gate moved by a
+       reflection of the heavy-hex lattice, passed on pool B (qec9xz_n17, bv_n19).
+2. **One canonical circuit for every checker.** The exact check and QCEC both read a rebuilt
+   copy of the output. It keeps the same qubits, registers and layout. Every gate is a fresh
+   standard gate with a float angle. Barriers and delays, which are identities, are dropped. The
+   global phase is a float. QCEC can now check an output that contains a delay; before, it could
+   not import one.
+3. **QCEC runs the alternating checker alone (no ZX).**
+   - **The problem.** The ZX checker ran in parallel with the alternating checker, and the first
+     answer won. On one payload with an rz error of 2e-8, the race passed it in 32 of 40 runs and
+     failed it in 8.
+   - **The evidence for dropping ZX.** On every pool-B dev baseline output, the alternating
+     checker alone gives the same verdict as the race:
+     - qec9xz_n17 passes in 0.3 s instead of 0.007 s;
+     - bv_n19, sat_n11, multiplier_n15, bigadder_n18 and ising_n26 are unchanged, at most 1 s;
+     - qft_n18 and knn_n25 are unverifiable either way (both have active ancillas, so ZX was
+       already off for them).
+4. **Disagreements inside the tolerance gap are unverifiable, not a stop.**
+   - **Why they happen.** The two checkers measure error differently:
+     - the exact check bounds every amplitude (1e-7);
+     - QCEC bounds a normalized Frobenius distance (1e-8).
+
+     An output whose error falls between the two can therefore pass one checker and fail the
+     other.
+   - **The new rule.** On pool A, if the exact check's largest deviation for such a pass/fail
+     disagreement is between 1e-11 and 1e-5, the verdict is `unverifiable`. The output does not
+     count as verified, and the report lists it.
+   - **Unchanged.** Any other disagreement still stops the study (B8).
+5. **Counts come from the payload.** Two-qubit gates, depth, size and physical qubits are
+   counted from the verified payload, not from the attempt's own record. An attempt whose record
+   misreports its payload fails.
+6. **Bounded analysis and unreadable payloads.** The analysis step (target validity, counts and
+   the exact check) is killed after 1,200 s, and the verdict is `unverifiable`. A payload that QPY
+   cannot read back is `unverifiable` too. Before, both raised or could hang.
+7. **Ancilla register name.** The canonical layout's ancilla register now takes a name that no
+   input register uses. QPY writes two registers with the same name but cannot read them back. No
+   dev circuit has such a register; held-out circuits were not opened to check.
+8. **Protocol fixes in the core** (ADR, hardening list): these change how stages run, not what
+   is compared.
+   - A stage's decision to run nothing is kept.
+   - A ranking stage (here: stage 2) needs every earlier stage complete.
+   - The baseline's cells run first in any stage that contains it.
+   - An `unavailable` attempt is a harness error.
+
+B8's "the alternating and ZX checkers" is replaced by item 3.
+
 ---
 
 ## Decisions needed before any code

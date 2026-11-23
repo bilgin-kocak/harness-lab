@@ -546,6 +546,27 @@ No search cell had run when they were made.
    - **Why.** A dev-only timing probe of stage-1 configurations showed such outputs spending up
      to the 90 s QCEC kill each, for nothing.
 
+10. **Search compute budget: 48 cell-hours instead of 8** (`max_cell_seconds` 172,800). Cell
+    time is each cell's wall time, summed.
+    - **The probe.** A timing probe ran on dev circuits only, with verifier v2 before item 9. It
+      used 8 stage-1 configurations drawn with seed 7 from the grid, on the 22 dev circuits stage
+      1 uses: 176 cells, 1,432 cell-seconds, 8.1 s per cell. The script and raw rows are in
+      `studies/2026-11-quantum-qasmbench/probes/`. Only the timings informed this amendment.
+    - **Where the time goes.**
+      - **Pool-B outputs QCEC cannot finish.** These cost 60–90 s each: the 60 s timeout, or the
+        90 s kill. They come mostly from the trivial and dense layouts, whose outputs spread over
+        20–56 active qubits.
+      - **Pool-B outputs that do verify.** These took up to 32 s, so a shorter QCEC timeout would
+        change verdicts. The verifier's limits stay as they are.
+    - **Why 48.** B10 estimated 1–3 hours, assuming outputs verify in under a second. By the
+      probe, all of stage 1 needs about 20–30 cell-hours, depending on how many outputs the
+      verdict cache shares. The probe's machine was shared with other jobs, so these times
+      overstate the search's. 8 cell-hours would cover about a third of stage 1, and the search
+      would then stop before stage 2 (core fix, item 8). 48 cell-hours covers the whole search
+      with margin.
+    - **Unchanged.** The order and the stop rule stay the same: configurations run in a seeded
+      random order, and if the budget still runs out, the evaluated ones are a random subsample.
+
 B8's "the alternating and ZX checkers" is replaced by item 3.
 
 ---

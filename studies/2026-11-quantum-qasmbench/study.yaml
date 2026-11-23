@@ -65,7 +65,9 @@ objective:
 budget:
   # B10: at most 1,100 configurations (752 after B14) and 8 CPU-hours including verification.
   max_attempts: 30000
-  max_cell_seconds: 28800
+  # B15.10: 48 cell-hours (B10 had 8; a dev-only timing probe showed it covers about a third
+  # of stage 1). Cell time is wall time per cell, summed over cells.
+  max_cell_seconds: 172800
 
 held_out:
   repetitions: 1

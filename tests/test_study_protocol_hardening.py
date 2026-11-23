@@ -18,6 +18,7 @@ import pytest
 import yaml
 
 from harnesslab.study.budget import Budget, Refusal
+from harnesslab.study.contract import Verdict, VerdictStatus
 from harnesslab.study.protocol import ProtocolError, Study
 from harnesslab.study.runner import HarnessError
 from harnesslab.study.spec import StudySpecError, load_study_spec
@@ -33,6 +34,8 @@ class Toy2(Toy):
         self.worst_case = options.get("worst_case")
         self.negative_cost_on = set(options.get("negative_cost_on", []))
         self.harness_error_on = set(options.get("harness_error_on", []))
+        # configurations with these powers fail every repetition after the first
+        self.fails_after_first_rep = set(options.get("fails_after_first_rep", []))
         self.prov = options.get("prov", "1")
         self.seen_limits: list[float | None] = []
 
@@ -55,7 +58,14 @@ class Toy2(Toy):
         attempt = await super().run(task, config, ctx)
         if task.id in self.negative_cost_on:
             attempt.usage.cost_usd = -1.0
+        if config.values["power"] in self.fails_after_first_rep and ctx.repetition >= 1:
+            attempt.output["degraded"] = True
         return attempt
+
+    async def verify(self, task, attempt, ctx):
+        if attempt.output.get("degraded"):
+            return Verdict(status=VerdictStatus.FAIL, checker="toy/1", reason="degraded")
+        return await super().verify(task, attempt, ctx)
 
     def provenance(self):
         return {"toy": self.prov}
@@ -311,6 +321,103 @@ def test_a_stage_edited_after_it_started_is_refused(tmp_path: Path):
     study.spec.stage("refine").top_k = 1
     with pytest.raises(ProtocolError, match="changed after it started"):
         asyncio.run(study.run_stage("refine"))
+
+
+DECIDE = [
+    {
+        "name": "single",
+        "kind": "explicit",
+        "configs": [
+            {"label": "baseline", "set": {}},
+            {"label": "p2", "set": {"power": 2}},
+            {"label": "sb", "set": {"style": "b"}},
+        ],
+    },
+    # single: baseline 2/6, p2 4/6 (+0.33), sb 3/6 (+0.17): one winner, two needed
+    {"name": "combo", "kind": "combine", "reference": "baseline", "min_gain": 0.25},
+    {"name": "confirm", "kind": "confirm", "top_k": 1, "repetitions": 2},
+]
+
+
+def test_a_stage_with_nothing_to_run_keeps_that_decision(tmp_path: Path):
+    # The baseline's confirm repetitions fail: decided again after confirm, combine would see
+    # the baseline at 1/9 and find two winners (core#2).
+    study = _study2(
+        tmp_path,
+        options={"fails_after_first_rep": [1]},
+        search={"seed": 2, "stages": DECIDE},
+        objective={"kind": "pass_rate"},
+    )
+    first = asyncio.run(study.search())
+    assert isinstance(first["combo"], str) and "2 needed" in first["combo"]
+    decision = study.store.read_plan("dev", "combo")
+    assert decision is not None and decision["decision"] == "nothing_to_run"
+    assert decision["reason"] == first["combo"] and decision["configs"] == []
+    n = len(study.store.records("dev"))
+    again = asyncio.run(_reopen(study).search())
+    assert again["combo"] == first["combo"]
+    assert all(isinstance(v, str) or v.ran == 0 for v in again.values())
+    assert len(study.store.records("dev")) == n
+    assert not any(r["stage"] == "combo" for r in study.store.records("dev"))
+    assert study.freeze()["frozen"]["label"] == "p2"
+    # the decision is part of the plan: editing the stage after it is refused
+    other = tmp_path / "edit"
+    other.mkdir()
+    edited = _study2(other, search={"seed": 2, "stages": DECIDE}, objective={"kind": "pass_rate"})
+    asyncio.run(edited.search(["single", "combo"]))
+    edited.spec.stage("combo").min_gain = 0.1
+    with pytest.raises(ProtocolError, match="changed after it started"):
+        asyncio.run(edited.run_stage("combo"))
+
+
+def test_a_skipped_stage_stays_skipped(tmp_path: Path):
+    stages = [
+        {
+            "name": "first",
+            "kind": "explicit",
+            "configs": [{"label": "baseline", "set": {}}, {"label": "p2", "set": {"power": 2}}],
+        },
+        {"name": "more", "kind": "confirm", "top_k": 1, "repetitions": 5, "if_budget_allows": True},
+    ]
+    study = _study2(
+        tmp_path,
+        search={"seed": 1, "stages": stages},
+        budget={
+            "max_cost_usd": 0.5,
+            "cost_limit_per_attempt_usd": 0.03,
+            "held_out_reserve_usd": 0.2,
+        },
+    )
+    asyncio.run(study.run_stage("first"))
+    skipped = asyncio.run(study.run_stage("more"))
+    assert isinstance(skipped, str) and skipped.startswith("skipped: projected")
+    decision = study.store.read_plan("dev", "more")
+    assert decision["decision"] == "skipped" and decision["reason"] == skipped
+    study.spec.budget.max_cost_usd = 50.0  # more money later does not decide the stage again
+    assert asyncio.run(_reopen(study).run_stage("more")) == skipped
+    assert not any(r["stage"] == "more" for r in study.store.records("dev"))
+    freeze = study.freeze()  # a skipped confirm stage does not restrict the freeze
+    assert freeze["dev"]["eligible"] is None and freeze["frozen"]["label"] == "p2"
+
+
+def test_search_stops_at_a_stage_cut_short_and_decides_nothing_after_it(tmp_path: Path):
+    study = _study2(
+        tmp_path,
+        search={"seed": 2, "stages": DECIDE},
+        objective={"kind": "pass_rate"},
+        budget={"max_attempts": 10},
+    )
+    out = asyncio.run(study.search())
+    assert out["single"].budget_stop and out["single"].ran == 10
+    for name in ("combo", "confirm"):
+        assert isinstance(out[name], str) and out[name].startswith("not reached")
+        assert "single" in out[name]
+        assert study.store.read_plan("dev", name) is None
+    study.spec.budget.max_attempts = None
+    out = asyncio.run(_reopen(study).search())
+    assert out["single"].ran == 8 and out["single"].budget_stop is None
+    assert study.store.read_plan("dev", "combo")["decision"] == "nothing_to_run"
+    assert study.store.read_plan("dev", "confirm")["configs"]
 
 
 def test_grid_levels_can_be_restricted_to_a_subset(tmp_path: Path):

@@ -1,6 +1,6 @@
 # Pre-registered study: Qiskit compilation of QASMBench circuits.
 # Plan: docs/plans/2026-11-22-math-quantum-experiment-plan.md, part B (option B: pools A and B),
-# with the amendments of B14 (made before any search cell ran).
+# with the amendments of B14 and B15 (made before any search cell ran).
 # Run: harnesslab study check|search|freeze|heldout|report studies/2026-11-quantum-qasmbench/study.yaml
 name: 2026-11-quantum-qasmbench
 adapter: qiskit-qasmbench
@@ -15,6 +15,8 @@ adapter_options:
   compile_repeats: 3
   # B14.3: all repetitions of one attempt together; past it the attempt is a timeout (infeasible).
   compile_timeout_s: 1200
+  # B15.6: target validity, counts and the exact check of one output; past it: unverifiable.
+  analyze_timeout_s: 1200
   workers: 3
 
 split:

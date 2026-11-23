@@ -1176,6 +1176,40 @@ async def test_the_client_needs_the_key_and_pins_the_endpoint(monkeypatch):
     assert built["api_key"] == "sk-test-preferred"
 
 
+def test_closing_after_the_run_loop_ended_does_not_raise(monkeypatch):
+    """The CLI runs a phase with asyncio.run and closes the adapter with another asyncio.run:
+    the client's own loop is gone by then ("Event loop is closed" made `study search` exit 1)."""
+    import asyncio
+
+    anthropic = pytest.importorskip("anthropic")
+    closed = []
+
+    class Client:
+        def __init__(self, **kwargs):
+            pass
+
+        async def close(self):
+            closed.append(asyncio.get_running_loop())
+
+    monkeypatch.setattr(anthropic, "AsyncAnthropic", Client)
+    monkeypatch.setenv("HARNESSLAB_ANTHROPIC_API_KEY", "sk-test-not-a-real-key")
+    client = AnthropicMessagesClient(model=MODEL, effort="medium", max_tokens=32000)
+
+    async def use():
+        client._sdk_client()
+
+    asyncio.run(use())
+    asyncio.run(client.close())  # another loop: dropped, not awaited there
+    assert closed == [] and client._client is None
+
+    async def use_and_close():
+        client._sdk_client()
+        await client.close()  # the same loop: closed properly
+
+    asyncio.run(use_and_close())
+    assert len(closed) == 1 and client._client is None
+
+
 async def test_metrics_are_complete_and_pure(tmp_path):
     adapter, _, _ = make_adapter(tmp_path, script=[proof_reply("linarith")])
     task = adapter.load_tasks(["fixture_dev_one"])[0]

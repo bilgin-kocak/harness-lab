@@ -186,6 +186,7 @@ class AnthropicMessagesClient:
         self.max_tokens = max_tokens
         self.max_retries = max_retries
         self._client: Any = None
+        self._client_loop: Any = None  # the event loop the SDK client's connections belong to
 
     def _sdk_client(self) -> Any:
         if self._client is None:
@@ -204,6 +205,7 @@ class AnthropicMessagesClient:
             self._client = anthropic.AsyncAnthropic(
                 api_key=key, base_url=API_BASE_URL, max_retries=self.max_retries
             )
+            self._client_loop = _running_loop()
         return self._client
 
     async def complete(
@@ -236,9 +238,28 @@ class AnthropicMessagesClient:
         return normalize_message(message, request_id=request_id, latency_s=time.monotonic() - start)
 
     async def close(self) -> None:
-        if self._client is not None:
-            await self._client.close()
-            self._client = None
+        """Close the SDK client, on the event loop it was used on.
+
+        The CLI runs a phase with ``asyncio.run`` and closes the adapter with another one. A client
+        whose loop has ended has no connections left to close (they went with the loop), and
+        awaiting its ``close`` there raises "Event loop is closed": it is dropped instead.
+        """
+        client, loop = self._client, self._client_loop
+        self._client = self._client_loop = None
+        if client is None:
+            return
+        if loop is not None and loop is not _running_loop():
+            return
+        await client.close()
+
+
+def _running_loop() -> Any:
+    import asyncio
+
+    try:
+        return asyncio.get_running_loop()
+    except RuntimeError:
+        return None
 
 
 # --------------------------------------------------------------------------- fakes for tests

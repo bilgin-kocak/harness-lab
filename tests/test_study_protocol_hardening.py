@@ -1031,6 +1031,35 @@ def test_grid_levels_can_be_restricted_to_a_subset(tmp_path: Path):
     assert any("not in the search space" in p for p in bad.check())
 
 
+def test_a_stage_naming_an_unknown_knob_is_a_spec_error(tmp_path: Path):
+    # F11: a grid or refine stage naming a knob the adapter does not have ended `study search` in
+    # a KeyError traceback (exit 1), while `study check` reported the same problem cleanly.
+    from typer.testing import CliRunner
+
+    from harnesslab.cli import app
+    from harnesslab.study.registry import register_domain
+
+    stages = [
+        {"name": "one", "kind": "explicit", "configs": [{"label": "p2", "set": {"power": 2}}]},
+        {"name": "r", "kind": "refine", "top_k": 1, "knobs": ["nope"]},
+        {"name": "g", "kind": "grid", "knobs": ["power", "nope"]},
+    ]
+    study = _study2(tmp_path, search={"seed": 1, "stages": stages})
+    problems = study.check()
+    assert "stage r: unknown knob 'nope'" in problems and "stage g: unknown knob 'nope'" in problems
+    asyncio.run(study.run_stage("one"))
+    for name in ("r", "g"):
+        with pytest.raises(StudySpecError, match=f"^stage {name}: unknown knob 'nope'$"):
+            asyncio.run(study.run_stage(name))
+        assert study.store.read_plan("dev", name) is None
+
+    register_domain("toy", lambda options, study_dir: Toy2(options, study_dir))
+    spec = str(tmp_path / "study.yaml")
+    res = CliRunner().invoke(app, ["study", "search", spec, "--stage", "g"])
+    assert res.exit_code == 2 and "stage g: unknown knob 'nope'" in res.output
+    assert isinstance(res.exception, SystemExit) and "Traceback" not in res.output
+
+
 def test_unknown_stage_names_are_refused(tmp_path: Path):
     study = _study2(tmp_path)
     with pytest.raises(ProtocolError, match="unknown stage"):

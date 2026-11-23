@@ -58,6 +58,8 @@ def stage_levels(stage: StageSpec, space: SearchSpace) -> list[list[Any]]:
     """The levels a grid or refine stage varies: the knob's, or the stage's subset of them."""
     out = []
     for k in stage.knobs:
+        if k not in space.names:  # a spec error, worded as `study check` reports it
+            raise StudySpecError(f"stage {stage.name}: unknown knob {k!r}")
         knob = space.knob(k)
         if k in stage.levels:
             wanted = stage.levels[k]

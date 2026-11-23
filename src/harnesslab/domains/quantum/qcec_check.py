@@ -1,24 +1,28 @@
 """Decision-diagram equivalence check with MQT QCEC: the decider for pool B, a cross-check on A.
 
 The check is ``mqt.qcec.verify(original, compiled, run_alternating_checker=True,
-run_construction_checker=False, run_simulation_checker=False, run_zx_checker=..., timeout=...)``
-on the input circuit and the compiled circuit with its layout. It runs as a job in a worker
-process (:class:`~harnesslab.domains.quantum.compile.WorkerPool`) whose process group is
-killed after ``kill_after_s``: QCEC's own timeout is cooperative, and on medium/dnn_n16 it ran
-for more than ten minutes past a 60 s timeout.
+run_construction_checker=False, run_simulation_checker=False, run_zx_checker=False,
+timeout=...)`` on the input circuit and the compiled circuit with its layout. It runs as a job
+in a worker process (:class:`~harnesslab.domains.quantum.compile.WorkerPool`) whose process
+group is killed after ``kill_after_s``: QCEC's own timeout is cooperative, and on
+medium/dnn_n16 it ran for more than ten minutes past a 60 s timeout.
 
 The hand-over, checked with deliberately broken circuits in ``tests/test_domain_quantum.py``:
 
+* QCEC reads :func:`~.equivalence.canonical_circuit` of the compiled circuit, never the raw
+  QPY circuit (plan amendment B15): mqt.core's importer numbers qubits by register, re-parses
+  any rz angle that is not a float (dropping the sign of a constant term), replaces a symbolic
+  global phase with 0, imports a gate named ``barrier`` as a barrier and cannot import a delay.
 * mqt.core reads the compiled circuit's initial layout and output permutation from its
   ``TranspileLayout``. It recognises ancillas by the layout's register names, which QPY does
   not keep, so the job marks every logical qubit from the input's qubit count upwards as
   ancillary itself: it starts in |0> and, not being garbage, must end in |0>.
-* QCEC 3.12.0's ZX checker does not notice an ancilla left out of |0>: it reports a compiled
-  circuit with an extra X on an ancilla as ``equivalent_up_to_global_phase``, and when it
-  finishes before the alternating checker (which says ``not_equivalent``) its answer is the
-  result. Seen on small/adder_n4 on the study's target and on the test circuits. The ZX checker
-  therefore runs only when no ancilla is active, that is, when every operation acts on physical
-  qubits that start with an input qubit; otherwise the alternating checker decides alone.
+* Only the alternating checker runs (B15). QCEC 3.12.0's ZX checker does not notice an ancilla
+  left out of |0> (it reports a compiled circuit with an extra X on an ancilla as
+  ``equivalent_up_to_global_phase``), and when it ran in parallel with the alternating checker
+  the first answer won, so an output whose error lies between the two checkers' tolerances got
+  either verdict from run to run. On every pool-B dev baseline output the alternating checker
+  alone finishes in under a second.
 
 While QCEC runs, the worker's address space may grow by at most half of the machine's memory
 and three quarters of what is available when the job starts (:func:`default_memory_budget`):
@@ -56,16 +60,16 @@ def qcec_version() -> str:
     return metadata.version("mqt.qcec")
 
 
-def checker_name(zx: bool) -> str:
-    return f"mqt.qcec {qcec_version()} " + ("alternating+zx" if zx else "alternating")
+def checker_name() -> str:
+    return f"mqt.qcec {qcec_version()} alternating"
 
 
-def checker_options(zx: bool, timeout_s: float) -> dict[str, Any]:
+def checker_options(timeout_s: float) -> dict[str, Any]:
     return {
         "run_alternating_checker": True,
         "run_construction_checker": False,
         "run_simulation_checker": False,
-        "run_zx_checker": zx,
+        "run_zx_checker": False,
         "timeout": timeout_s,
     }
 
@@ -135,23 +139,30 @@ def qcec_job(
     name: str,
     compiled_path: str,
     compiled_sha256: str,
-    zx: bool,
     timeout_s: float,
     memory_budget: int | None,
 ) -> dict[str, Any]:
     """Run QCEC on the input circuit and a compiled circuit (runs in a worker).
 
-    Returns the equivalence criterion's name with QCEC's timings and per-checker results, or
-    ``error`` when QCEC itself raises on this pair or needs more than ``memory_budget`` bytes
-    (default: :func:`default_memory_budget`, taken when the job starts) beyond what the
-    worker already holds. Loading the inputs is not guarded: a missing file or a hash
-    mismatch raises.
+    QCEC reads :func:`~.equivalence.canonical_circuit` of the compiled circuit. Returns the
+    equivalence criterion's name with QCEC's timings and per-checker results, or ``error`` when
+    the compiled circuit has no canonical form, QCEC itself raises on this pair, or it needs
+    more than ``memory_budget`` bytes (default: :func:`default_memory_budget`, taken when the
+    job starts) beyond what the worker already holds. Loading the inputs is not guarded: a
+    missing file or a hash mismatch raises.
     """
     from mqt import qcec
     from mqt.core import load as load_computation
 
+    from harnesslab.domains.quantum.equivalence import canonical_circuit
+
     original = cached_input(source, sha256, name)
     compiled = load_compiled(Path(compiled_path), compiled_sha256)
+    try:
+        canonical = canonical_circuit(compiled)
+    except ValueError as exc:  # verify() runs QCEC only after target validity: never expected
+        return {"error": f"no canonical form: {exc}", "qcec_duration_s": 0.0}
+    del compiled
     budget = default_memory_budget() if memory_budget is None else memory_budget
     started = time.perf_counter()
     first = second = results = None
@@ -159,10 +170,10 @@ def qcec_job(
     restore = _cap_address_space(budget)
     try:
         first = load_computation(original)
-        second = load_computation(compiled)
+        second = load_computation(canonical)
         for logical in range(original.num_qubits, second.num_qubits):
             second.set_circuit_qubit_ancillary(logical)
-        results = qcec.verify(first, second, **checker_options(zx, timeout_s))
+        results = qcec.verify(first, second, **checker_options(timeout_s))
     except MemoryError:
         error = "MemoryError"
     except Exception as exc:  # QCEC could not handle this pair: recorded, never a pass
@@ -215,7 +226,6 @@ async def run_qcec(
     name: str,
     compiled_path: str,
     compiled_sha256: str,
-    zx: bool,
     timeout_s: float,
     kill_after_s: float,
     memory_budget: int | None = None,
@@ -225,11 +235,11 @@ async def run_qcec(
     ``memory_budget`` bounds how far the worker's address space may grow while QCEC runs
     (default: :func:`default_memory_budget`; QCEC on medium/vqe_n24's ten million gates
     exhausted the machine).
-    Returns ``status``, ``reason``, ``checker``, ``zx``, ``killed``, the wall time including
-    loading (``duration_s``) and whatever QCEC reported.
+    Returns ``status``, ``reason``, ``checker``, ``killed``, the wall time including loading
+    (``duration_s``) and whatever QCEC reported.
     """
     started = time.perf_counter()
-    base: dict[str, Any] = {"checker": checker_name(zx), "zx": zx, "killed": False}
+    base: dict[str, Any] = {"checker": checker_name(), "killed": False}
     try:
         outcome = await pool.call(
             "qcec",
@@ -238,7 +248,6 @@ async def run_qcec(
             name,
             compiled_path,
             compiled_sha256,
-            zx,
             timeout_s,
             memory_budget,
             timeout_s=kill_after_s,

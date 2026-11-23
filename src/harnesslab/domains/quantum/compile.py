@@ -333,17 +333,25 @@ def canonicalize_ancillas(circuit: Any) -> None:
         return
     mapping = dict(zip(data, physical, strict=True))
     inputs = {bit: i for i, bit in enumerate(data)}
-    ancillas = QuantumRegister(len(free), "ancilla") if free else None
-    if ancillas is not None:
-        for i, p in enumerate(free):
-            mapping[ancillas[i]] = p
-            inputs[ancillas[i]] = num_inputs + i
-    initial = Layout(mapping)
     registers: list[Any] = []
     for bit in data:
         register = getattr(bit, "_register", None)
         if register is not None and register not in registers:
             registers.append(register)
+    # The input's own registers keep their names; the ancilla register takes one they do not
+    # use (QPY writes two registers of one name but cannot read them back).
+    taken = {register.name for register in registers}
+    name = "ancilla"
+    suffix = 0
+    while name in taken:
+        suffix += 1
+        name = f"ancilla_{suffix}"
+    ancillas = QuantumRegister(len(free), name) if free else None
+    if ancillas is not None:
+        for i, p in enumerate(free):
+            mapping[ancillas[i]] = p
+            inputs[ancillas[i]] = num_inputs + i
+    initial = Layout(mapping)
     for register in registers:
         initial.add_register(register)
     if ancillas is not None:

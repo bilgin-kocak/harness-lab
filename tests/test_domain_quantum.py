@@ -734,7 +734,7 @@ async def test_the_exact_check_decides_pool_a_and_qcec_agrees(
     verdict = await adapter.verify(task, attempt, verify_ctx(tmp_path))
     assert verdict.status.value == expected, verdict.reason
     assert verdict.details["decided_by"] == "exact"
-    assert verdict.checker == f"exact-isometry/1 numpy {np.__version__}"
+    assert verdict.checker == f"exact-isometry/2 numpy {np.__version__}"
     exact, qcec = verdict.details["exact"], verdict.details["qcec"]
     assert exact["status"] == expected and qcec["status"] == expected  # no disagreement
     assert verdict.details["target_problems"] == []
@@ -744,8 +744,8 @@ async def test_the_exact_check_decides_pool_a_and_qcec_agrees(
         assert exact["fidelity"] < 1 - 1e-9 or exact["max_deviation"] > 1e-7
         assert qcec["equivalence"] == "not_equivalent"
     if variant == "X left on an ancilla":
-        assert verdict.details["active_ancillas"] >= 1 and qcec["zx"] is False
-        assert qcec["checker"].endswith("alternating")
+        assert verdict.details["active_ancillas"] >= 1
+    assert qcec["checker"] == "mqt.qcec 3.12.0 alternating"  # never the ZX checker (B15)
 
 
 @pytest.mark.parametrize("variant", VARIANTS)
@@ -755,14 +755,12 @@ async def test_qcec_decides_pool_b(adapter: QiskitQasmBenchAdapter, tmp_path: Pa
     verdict = await adapter.verify(task, attempt, verify_ctx(tmp_path))
     assert verdict.status.value == expected, verdict.reason
     assert verdict.details["decided_by"] == "qcec" and "exact" not in verdict.details
-    assert verdict.checker.startswith("mqt.qcec 3.12.0 alternating")
+    assert verdict.checker == "mqt.qcec 3.12.0 alternating"
     assert verdict.details["qcec"]["equivalence"] in (
         ("equivalent", "equivalent_up_to_global_phase")
         if expected == "pass"
         else ("not_equivalent",)
     )
-    if variant == "X left on an ancilla":
-        assert verdict.checker == "mqt.qcec 3.12.0 alternating"
 
 
 @pytest.mark.parametrize("variant", OFF_TARGET)
@@ -880,7 +878,6 @@ async def test_qcec_runs_under_the_default_cap_and_out_of_memory_is_unverifiable
         name=record.name,
         compiled_path=str(compiled_path),
         compiled_sha256=attempt.output["qpy_sha256"],
-        zx=True,
         timeout_s=30.0,
         kill_after_s=60.0,
     )
@@ -943,7 +940,6 @@ async def test_a_checker_disagreement_stops_the_study(
             "status": forced,
             "reason": f"QCEC: forced {forced}",
             "checker": "forced",
-            "zx": kwargs["zx"],
             "killed": False,
         }
 
@@ -1003,7 +999,7 @@ async def test_verdicts_are_cached_and_payloads_checked(
 def test_the_zx_checker_alone_misses_an_x_left_on_an_ancilla(
     adapter: QiskitQasmBenchAdapter, tmp_path: Path
 ):
-    """Why the hand-over runs ZX only when no ancilla is active (see qcec_check)."""
+    """One reason the hand-over never runs the ZX checker (see qcec_check)."""
     from mqt import qcec
     from mqt.core import load
 
@@ -1029,6 +1025,269 @@ def test_the_zx_checker_alone_misses_an_x_left_on_an_ancilla(
 
     assert check(zx=True) == "equivalent_up_to_global_phase"  # wrong: the ancilla ends in |1>
     assert check(zx=False) == "not_equivalent"
+
+
+# --- verify: the red-team payloads (plan amendment B15) -----------------------------------------
+
+
+def with_angle_pair(circuit: QuantumCircuit, first: Any, second: Any) -> QuantumCircuit:
+    """Two rz gates on input qubit 0's final position, angles kept exactly as given."""
+    from qiskit.circuit.library import RZGate
+
+    qubit = positions(circuit)[1][0]
+    changed = circuit.copy()
+    changed.append(RZGate(first), [qubit])
+    changed.append(RZGate(second), [qubit])
+    return changed
+
+
+def mirrored_register(circuit: QuantumCircuit) -> QuantumCircuit:
+    """The same gates on loose bits that one register lists in reverse order."""
+    from qiskit.circuit import QuantumRegister, Qubit
+
+    bits = [Qubit() for _ in circuit.qubits]
+    mirrored = QuantumCircuit(bits, global_phase=circuit.global_phase)
+    mirrored.add_register(QuantumRegister(name="q", bits=bits[::-1]))
+    mapping = dict(zip(circuit.qubits, bits, strict=True))
+    for inst in circuit.data:
+        mirrored.append(inst.operation, [mapping[q] for q in inst.qubits])
+    layout = circuit.layout
+    final = layout.final_layout
+    mirrored._layout = TranspileLayout(
+        initial_layout=layout.initial_layout,
+        input_qubit_mapping=layout.input_qubit_mapping,
+        final_layout=None
+        if final is None
+        else Layout({mapping[b]: p for b, p in final.get_virtual_bits().items()}),
+        _input_qubit_count=layout._input_qubit_count,
+        _output_qubit_list=list(bits),
+    )
+    return mirrored
+
+
+def impostor_barrier(circuit: QuantumCircuit) -> QuantumCircuit:
+    """A plain gate named ``barrier`` whose definition is X, on input qubit 0's final position."""
+    from qiskit.circuit import Gate
+
+    definition = QuantumCircuit(1)
+    definition.x(0)
+    gate = Gate("barrier", 1, [])
+    gate.definition = definition
+    changed = circuit.copy()
+    changed.append(gate, [positions(circuit)[1][0]])
+    return changed
+
+
+def real_identities(circuit: QuantumCircuit) -> QuantumCircuit:
+    """An equivalent output with a real barrier and a real delay."""
+    changed = circuit.copy()
+    changed.barrier()
+    changed.delay(100, positions(circuit)[1][0])
+    return changed
+
+
+def zero_controlled_cz(circuit: QuantumCircuit) -> QuantumCircuit:
+    """A CZ controlled on |0>, on an edge of the line."""
+    from qiskit.circuit.library import CZGate
+
+    changed = circuit.copy()
+    changed.append(CZGate(ctrl_state=0), [0, 1])
+    return changed
+
+
+def with_phase(circuit: QuantumCircuit, phase: Any) -> QuantumCircuit:
+    changed = circuit.copy()
+    changed.global_phase = phase
+    return changed
+
+
+def _parameter() -> Any:
+    from qiskit.circuit import Parameter
+
+    return Parameter("p")
+
+
+def _bound(value: float) -> Any:
+    """A parameter expression with no free parameter left: 2 * p with p = value / 2."""
+    p = _parameter()
+    return (p * 2).bind({p: value / 2})
+
+
+# (variant name, how to build it, expected status, what the reason must contain)
+PAYLOADS: dict[str, tuple[Any, str, str]] = {
+    "int angle then float: really rz(-6)": (
+        lambda c: with_angle_pair(c, -3, -3.0),
+        "fail",
+        "",
+    ),
+    "int angle then its inverse": (lambda c: with_angle_pair(c, -3, 3.0), "pass", ""),
+    "bound expression then its inverse": (
+        lambda c: with_angle_pair(c, _bound(-0.3), 0.3),
+        "pass",
+        "",
+    ),
+    "expression with a free parameter": (
+        lambda c: with_angle_pair(c, _parameter() * 0 - 0.3, 0.3),
+        "fail",
+        "rz gates without a finite numeric angle",
+    ),
+    "register order differs from qubit order": (
+        mirrored_register,
+        "fail",
+        "not exactly one register in circuit order",
+    ),
+    "gate named barrier with an X inside": (
+        impostor_barrier,
+        "fail",
+        "outside the basis {cz, rz, sx, x}: barrier x1",
+    ),
+    "real barrier and delay": (real_identities, "pass", ""),
+    "cz controlled on |0>": (zero_controlled_cz, "fail", "cz_o0 x1"),
+    "NaN global phase": (lambda c: with_phase(c, float("nan")), "fail", "global phase"),
+    "free-parameter global phase": (lambda c: with_phase(c, _parameter()), "fail", "global phase"),
+}
+
+
+@pytest.mark.parametrize("task_id", ["small/ghz_n3", "medium/wide_n5"])
+@pytest.mark.parametrize("variant", PAYLOADS)
+async def test_red_team_payloads_get_the_verdict_qiskit_semantics_give(
+    study: Path, dataset: tuple[Path, str], tmp_path: Path, task_id: str, variant: str
+):
+    """Each payload is judged as the circuit Qiskit defines, on both pools, without raising,
+    and the same bytes get the same verdict from a fresh adapter (no cache)."""
+    build, expected, reason = PAYLOADS[variant]
+    statuses = []
+    for _ in range(2):
+        fresh = make_adapter(study, dataset, workers=1)
+        try:
+            task, base = await baseline_attempt(fresh, task_id, tmp_path)
+            attempt = attempt_with(task, build(compiled(base)))
+            verdict = await fresh.verify(task, attempt, verify_ctx(tmp_path))
+        finally:
+            await fresh.close()
+        assert verdict.status.value == expected, verdict.reason
+        assert reason in verdict.reason
+        if variant == "real barrier and delay":  # QCEC really ran on it (no import error)
+            assert verdict.details["qcec"]["status"] == "pass", verdict.details["qcec"]
+        statuses.append((verdict.status, verdict.reason))
+    assert statuses[0] == statuses[1]
+
+
+def test_register_problem_and_canonical_circuit():
+    from qiskit.circuit import QuantumRegister, Qubit
+    from qiskit.circuit.library import RZGate
+
+    from harnesslab.domains.quantum.equivalence import canonical_circuit, register_problem
+
+    plain = QuantumCircuit(2)
+    plain.append(RZGate(-3), [0])
+    plain.barrier()
+    plain.delay(10, 1)
+    plain.global_phase = 1
+    assert register_problem(plain) is None
+    canonical = canonical_circuit(plain)
+    assert [inst.operation.name for inst in canonical.data] == ["rz"]
+    assert type(canonical.data[0].operation.params[0]) is float
+    assert canonical.data[0].operation.params[0] == -3.0
+    assert type(canonical.global_phase) is float and canonical.global_phase == 1.0
+    bits = [Qubit(), Qubit()]
+    loose = QuantumCircuit(bits)
+    assert "not exactly one register" in (register_problem(loose) or "")
+    loose.add_register(QuantumRegister(name="q", bits=bits[::-1]))
+    assert "not exactly one register" in (register_problem(loose) or "")
+    with pytest.raises(ValueError, match="one register"):
+        canonical_circuit(loose)
+
+
+def test_an_input_register_named_ancilla_survives_qpy(adapter: QiskitQasmBenchAdapter):
+    """The ancilla register of the canonical layout never takes an input register's name."""
+    from qiskit.circuit import QuantumRegister
+
+    from harnesslab.domains.quantum.compile import layout_positions
+
+    circuit = QuantumCircuit(QuantumRegister(2, "ancilla"), QuantumRegister(1, "data"))
+    circuit.h(0)
+    circuit.cx(0, 2)
+    circuit.cx(2, 1)
+    manager = generate_preset_pass_manager(
+        target=adapter.target, **materialize_kwargs(pass_manager_kwargs(BASELINE))
+    )
+    out = manager.run(circuit)
+    expected = layout_positions(out, 3)
+    data = serialize_compiled(out)  # relabels out's ancillas in place, then writes QPY
+    names = {r.name for r in out.layout.initial_layout.get_registers()}
+    assert names == {"ancilla", "data", "ancilla_1"}
+    loaded = qpy.load(io.BytesIO(data))[0]  # two registers named "ancilla" would not load
+    assert layout_positions(loaded, 3) == expected
+
+
+async def test_an_output_that_misreports_its_circuit_fails(
+    adapter: QiskitQasmBenchAdapter, tmp_path: Path
+):
+    task, attempt = await baseline_attempt(adapter, "small/ghz_n3", tmp_path)
+    honest = await adapter.verify(task, attempt, verify_ctx(tmp_path))
+    assert honest.passed and honest.details["counts"]["two_qubit_gates"] > 0
+    lying = attempt.model_copy(update={"output": {**attempt.output, "two_qubit_gates": 0}})
+    verdict = await adapter.verify(task, lying, verify_ctx(tmp_path))  # same payload: cached
+    assert verdict.status == VerdictStatus.FAIL and verdict.details["cached"] is True
+    assert verdict.details["decided_by"] == "output-record"
+    assert "two_qubit_gates 0" in verdict.reason
+    metrics = adapter.metrics(task, lying, verdict)
+    assert metrics["two_qubit_gates"] == honest.details["counts"]["two_qubit_gates"]
+    assert (await adapter.verify(task, attempt, verify_ctx(tmp_path))).passed  # cache intact
+
+
+async def test_unreadable_payloads_and_slow_analyses_are_unverifiable(
+    study: Path, dataset: tuple[Path, str], tmp_path: Path
+):
+    slow = make_adapter(study, dataset, workers=1, analyze_timeout_s=0.001)
+    try:
+        task, attempt = await baseline_attempt(slow, "small/ghz_n3", tmp_path)
+        verdict = await slow.verify(task, attempt, verify_ctx(tmp_path))
+        assert verdict.status == VerdictStatus.UNVERIFIABLE
+        assert verdict.details["decided_by"] == "analysis-timeout"
+        assert "analyze_timeout_s = 0.001 s" in verdict.reason
+        again = await slow.run(task, slow.baseline_config(), run_ctx(tmp_path, 1))
+        assert again.status == AttemptStatus.COMPLETED  # a fresh worker took over
+    finally:
+        await slow.close()
+    fresh = make_adapter(study, dataset, workers=1)
+    try:
+        task = fresh.load_tasks(["small/ghz_n3"])[0]
+        garbage = b"not a QPY file"
+        attempt = Attempt(
+            task_id=task.id,
+            config_hash="garbage",
+            repetition=0,
+            status=AttemptStatus.COMPLETED,
+            output={"qpy_sha256": hashlib.sha256(garbage).hexdigest()},
+            payload=garbage,
+        )
+        verdict = await fresh.verify(task, attempt, verify_ctx(tmp_path))
+        assert verdict.status == VerdictStatus.UNVERIFIABLE
+        assert verdict.details["decided_by"] == "load"
+        assert "QPY cannot read the compiled circuit back" in verdict.reason
+    finally:
+        await fresh.close()
+
+
+async def test_a_disagreement_inside_the_tolerance_gap_is_unverifiable(
+    adapter: QiskitQasmBenchAdapter, tmp_path: Path
+):
+    """An rz error of 1e-7: the exact check passes it (amplitudes within 1e-7), QCEC does not
+    (normalized distance above 1e-8). Unverifiable on pool A, a plain fail on pool B."""
+    task, base = await baseline_attempt(adapter, "small/ghz_n3", tmp_path)
+    attempt = attempt_with(task, with_angle_pair(compiled(base), 1e-7, 0.0))
+    verdict = await adapter.verify(task, attempt, verify_ctx(tmp_path))
+    assert verdict.status == VerdictStatus.UNVERIFIABLE, verdict.reason
+    assert verdict.details["decided_by"] == "disagreement"
+    assert verdict.details["exact"]["status"] == "pass"
+    assert verdict.details["qcec"]["status"] == "fail"
+    assert "tolerance gap" in verdict.reason
+    task_b, base_b = await baseline_attempt(adapter, "medium/wide_n5", tmp_path)
+    attempt_b = attempt_with(task_b, with_angle_pair(compiled(base_b), 1e-7, 0.0))
+    verdict_b = await adapter.verify(task_b, attempt_b, verify_ctx(tmp_path))
+    assert verdict_b.status == VerdictStatus.FAIL and verdict_b.details["decided_by"] == "qcec"
 
 
 # --- the exact check on its own ---------------------------------------------------------------
@@ -1173,7 +1432,7 @@ async def test_every_dev_circuit_compiles_and_verifies_at_the_baseline(tmp_path:
             "verify_s": round(done - ran, 2),
             "exact_s": details.get("exact", {}).get("duration_s"),
             "qcec": details.get("qcec", {}).get("equivalence"),
-            "qcec_zx": details.get("qcec", {}).get("zx"),
+            "qcec_checker": details.get("qcec", {}).get("checker"),
             "qcec_s": details.get("qcec", {}).get("duration_s"),
         }
 

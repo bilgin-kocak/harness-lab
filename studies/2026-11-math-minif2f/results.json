@@ -1,0 +1,1537 @@
+{
+  "adapter": {
+    "name": "lean-minif2f",
+    "provenance_at_freeze": {
+      "adapter": "lean-minif2f",
+      "adapter_version": "1",
+      "anthropic_sdk": "2.12.0",
+      "api_base_url": "https://api.anthropic.com",
+      "api_unavailable_statuses": [
+        401,
+        403,
+        404,
+        408,
+        409,
+        429,
+        "5xx",
+        "no status"
+      ],
+      "effort": "medium",
+      "index": {
+        "entries": 233022,
+        "mathlib_rev": "f897ebcf72cd16f89ab4577d0c826cd14afaafc7",
+        "sha256": "a2c6e6704bc51dc0f3e4365b1db663a0f5f75ceea0c328b84c9918ff29960680"
+      },
+      "lean_runner": "lake env lean --json",
+      "lean_toolchain": "leanprover/lean4:v4.24.0",
+      "lean_version": "4.24.0",
+      "limits": {
+        "inloop_timeout_s": 120.0,
+        "lean_workers": 3,
+        "max_attempt_seconds": 1200.0,
+        "max_calls_per_attempt": 12,
+        "max_tool_calls_per_round": 4,
+        "tool_timeout_s": 60.0
+      },
+      "llm_client": "AnthropicMessagesClient",
+      "mathlib_rev": "f897ebcf72cd16f89ab4577d0c826cd14afaafc7",
+      "max_tokens": 32000,
+      "minif2f_commit": "5746b7d6c47855ce1294bed87329618ff7f1bc31",
+      "minif2f_repo": "https://github.com/yangky11/miniF2F-lean4",
+      "model": "claude-opus-5-5",
+      "prices": {
+        "as_of": "2026-11-03",
+        "model": "claude-opus-5-5",
+        "note": "Re-check against the live pricing page before the first paid run.",
+        "source": "Claude API skill, cached model table of 2026-11-03",
+        "usd_per_million_tokens": {
+          "cache_read": 0.2,
+          "cache_write_5m": 5.0,
+          "input": 4.0,
+          "output": 20.0
+        }
+      },
+      "prompt_caching": "automatic (top-level cache_control ephemeral)",
+      "prompts_sha256": "d32a2516f0b136b96b7ee7d8ccb1823261ecf2771d69da66cf652bc03f5e2453",
+      "split_sha256": "52af3cad57fff625f1fffda84f88e1937e31503616361239a13d1645107df9aa",
+      "thinking": "adaptive",
+      "verifier": {
+        "allowed_axioms": [
+          "propext",
+          "Classical.choice",
+          "Quot.sound"
+        ],
+        "checker": "lean 4.24.0 kernel, mathlib f897ebc, axioms<= {propext, Classical.choice, Quot.sound}",
+        "denied_commands": [
+          "#eval",
+          "#exit",
+          "#print",
+          "#guard_msgs"
+        ],
+        "denied_words": [
+          "sorry",
+          "sorryAx",
+          "admit",
+          "axiom",
+          "run_tac",
+          "run_cmd",
+          "run_elab",
+          "run_meta",
+          "by_elab",
+          "elab",
+          "elab_rules",
+          "macro",
+          "macro_rules",
+          "syntax",
+          "declare_syntax_cat",
+          "initialize",
+          "builtin_initialize",
+          "simproc",
+          "dsimproc",
+          "simproc_decl",
+          "dsimproc_decl",
+          "unsafe",
+          "implemented_by",
+          "extern",
+          "addDecl",
+          "addAndCompile",
+          "modifyEnv",
+          "setEnv",
+          "include_str"
+        ],
+        "set_option_allowed": [
+          "maxHeartbeats",
+          "maxRecDepth",
+          "synthInstance.maxHeartbeats",
+          "synthInstance.maxSize",
+          "exponentiation.threshold"
+        ],
+        "timeout_s": 300.0
+      }
+    },
+    "provenance_now": {
+      "adapter": "lean-minif2f",
+      "adapter_version": "1",
+      "anthropic_sdk": "2.12.0",
+      "api_base_url": "https://api.anthropic.com",
+      "api_unavailable_statuses": [
+        401,
+        403,
+        404,
+        408,
+        409,
+        429,
+        "5xx",
+        "no status"
+      ],
+      "effort": "medium",
+      "index": {
+        "entries": 233022,
+        "mathlib_rev": "f897ebcf72cd16f89ab4577d0c826cd14afaafc7",
+        "sha256": "a2c6e6704bc51dc0f3e4365b1db663a0f5f75ceea0c328b84c9918ff29960680"
+      },
+      "lean_runner": "lake env lean --json",
+      "lean_toolchain": "leanprover/lean4:v4.24.0",
+      "lean_version": "4.24.0",
+      "limits": {
+        "inloop_timeout_s": 120.0,
+        "lean_workers": 3,
+        "max_attempt_seconds": 1200.0,
+        "max_calls_per_attempt": 12,
+        "max_tool_calls_per_round": 4,
+        "tool_timeout_s": 60.0
+      },
+      "llm_client": "AnthropicMessagesClient",
+      "mathlib_rev": "f897ebcf72cd16f89ab4577d0c826cd14afaafc7",
+      "max_tokens": 32000,
+      "minif2f_commit": "5746b7d6c47855ce1294bed87329618ff7f1bc31",
+      "minif2f_repo": "https://github.com/yangky11/miniF2F-lean4",
+      "model": "claude-opus-5-5",
+      "prices": {
+        "as_of": "2026-11-03",
+        "model": "claude-opus-5-5",
+        "note": "Re-check against the live pricing page before the first paid run.",
+        "source": "Claude API skill, cached model table of 2026-11-03",
+        "usd_per_million_tokens": {
+          "cache_read": 0.2,
+          "cache_write_5m": 5.0,
+          "input": 4.0,
+          "output": 20.0
+        }
+      },
+      "prompt_caching": "automatic (top-level cache_control ephemeral)",
+      "prompts_sha256": "d32a2516f0b136b96b7ee7d8ccb1823261ecf2771d69da66cf652bc03f5e2453",
+      "split_sha256": "52af3cad57fff625f1fffda84f88e1937e31503616361239a13d1645107df9aa",
+      "thinking": "adaptive",
+      "verifier": {
+        "allowed_axioms": [
+          "propext",
+          "Classical.choice",
+          "Quot.sound"
+        ],
+        "checker": "lean 4.24.0 kernel, mathlib f897ebc, axioms<= {propext, Classical.choice, Quot.sound}",
+        "denied_commands": [
+          "#eval",
+          "#exit",
+          "#print",
+          "#guard_msgs"
+        ],
+        "denied_words": [
+          "sorry",
+          "sorryAx",
+          "admit",
+          "axiom",
+          "run_tac",
+          "run_cmd",
+          "run_elab",
+          "run_meta",
+          "by_elab",
+          "elab",
+          "elab_rules",
+          "macro",
+          "macro_rules",
+          "syntax",
+          "declare_syntax_cat",
+          "initialize",
+          "builtin_initialize",
+          "simproc",
+          "dsimproc",
+          "simproc_decl",
+          "dsimproc_decl",
+          "unsafe",
+          "implemented_by",
+          "extern",
+          "addDecl",
+          "addAndCompile",
+          "modifyEnv",
+          "setEnv",
+          "include_str"
+        ],
+        "set_option_allowed": [
+          "maxHeartbeats",
+          "maxRecDepth",
+          "synthInstance.maxHeartbeats",
+          "synthInstance.maxSize",
+          "exponentiation.threshold"
+        ],
+        "timeout_s": 300.0
+      }
+    }
+  },
+  "audit": {
+    "dev": {
+      "charged_usd": 13.9314584,
+      "harness_error_records": 0,
+      "interrupted": {
+        "cells": 0,
+        "charged_usd": 0,
+        "without_record": []
+      },
+      "records": 330
+    },
+    "freeze_problems": [],
+    "held_out": {
+      "charged_usd": 19.727732,
+      "harness_error_records": 0,
+      "interrupted": {
+        "cells": 0,
+        "charged_usd": 0,
+        "without_record": []
+      },
+      "records": 240
+    },
+    "smoke": {
+      "charged_usd": 0.35064039999999996,
+      "harness_error_records": 0,
+      "interrupted": {
+        "cells": 0,
+        "charged_usd": 0,
+        "without_record": []
+      },
+      "records": 6
+    }
+  },
+  "dev": {
+    "baseline": {
+      "complete": true,
+      "config_hash": "980e935d0d7eae91f170b863a9f56f57870bcc2fe908bd200d22c7980d952382",
+      "cost_per_pass_usd": 0.035366653012048194,
+      "feasible": true,
+      "label": "baseline",
+      "mean_cost_usd": 0.032615913333333336,
+      "medians": {},
+      "n_records": 90,
+      "pass_rate": 0.9222222222222223,
+      "passes": 83,
+      "rank": 2,
+      "ratios": {},
+      "reason": "",
+      "tasks_covered": 30,
+      "values": {
+        "context_limit_tokens": 12000,
+        "feedback_rounds": 0,
+        "planning": false,
+        "retries": 1,
+        "retrieval": "none",
+        "tactic_tools": "none"
+      }
+    },
+    "by_config_label": {
+      "baseline": {
+        "attempt_status": {
+          "completed": 90
+        },
+        "cache_read_tokens": 22186,
+        "cache_write_tokens": 60995,
+        "charged_usd": 2.9354322,
+        "cost_per_pass_usd": 0.035366653012048194,
+        "cost_usd": 2.9354322,
+        "input_tokens": 360,
+        "llm_calls": 90,
+        "metrics": {
+          "cost_usd": {
+            "mean": 0.02961726265060241,
+            "median": 0.014919,
+            "n_verified": 83,
+            "total": 2.4582328
+          },
+          "llm_calls": {
+            "mean": 1.0,
+            "median": 1.0,
+            "n_verified": 83,
+            "total": 83.0
+          },
+          "wall_time_s": {
+            "mean": 11.81558210692774,
+            "median": 5.734310075999929,
+            "n_verified": 83,
+            "total": 980.6933148750024
+          }
+        },
+        "output_tokens": 131229,
+        "passes": 83,
+        "records": 90,
+        "tasks": 30,
+        "verdicts": {
+          "fail": 7,
+          "pass": 83
+        },
+        "wall_time_s": {
+          "mean": 13.168054397855588,
+          "median": 6.5583000830001765,
+          "total": 1185.124895807003
+        }
+      }
+    },
+    "cell_seconds": 12091.933975,
+    "charged_usd": 13.9314584,
+    "configurations": 7,
+    "considered_tasks": [
+      "aimeII_2020_p6",
+      "mathd_numbertheory_30",
+      "imo_1964_p1_2",
+      "mathd_algebra_405",
+      "amc12b_2002_p3",
+      "induction_ineq_nsqlefactn",
+      "induction_sum_1oktkp1",
+      "mathd_algebra_73",
+      "algebra_sqineq_2at2pclta2c2p41pc",
+      "aime_1987_p8",
+      "mathd_algebra_493",
+      "mathd_numbertheory_92",
+      "aime_1996_p5",
+      "mathd_numbertheory_284",
+      "amc12a_2019_p21",
+      "mathd_algebra_327",
+      "mathd_numbertheory_32",
+      "mathd_algebra_126",
+      "imo_1961_p1",
+      "mathd_algebra_109",
+      "mathd_algebra_185",
+      "mathd_numbertheory_43",
+      "mathd_numbertheory_252",
+      "amc12a_2008_p15",
+      "mathd_numbertheory_461",
+      "mathd_algebra_31",
+      "algebra_manipexpr_apbeq2cceqiacpbceqm2",
+      "mathd_algebra_455",
+      "imo_2006_p3",
+      "mathd_numbertheory_709"
+    ],
+    "cost_usd": 13.9314584,
+    "dropped_tasks": {},
+    "feasible_configurations": 2,
+    "ranking_top": [
+      {
+        "complete": true,
+        "config_hash": "37f78cb9d35ff2de8e0d84da8a2f995d04ff0dbede6e595a2332d8ed1fc43afd",
+        "cost_per_pass_usd": 0.038646887640449434,
+        "feasible": true,
+        "label": "F",
+        "mean_cost_usd": 0.03821747777777777,
+        "medians": {},
+        "n_records": 90,
+        "pass_rate": 0.9888888888888889,
+        "passes": 89,
+        "rank": 1,
+        "ratios": {},
+        "reason": "",
+        "tasks_covered": 30,
+        "values": {
+          "context_limit_tokens": 12000,
+          "feedback_rounds": 3,
+          "planning": false,
+          "retries": 1,
+          "retrieval": "none",
+          "tactic_tools": "none"
+        }
+      },
+      {
+        "complete": true,
+        "config_hash": "980e935d0d7eae91f170b863a9f56f57870bcc2fe908bd200d22c7980d952382",
+        "cost_per_pass_usd": 0.035366653012048194,
+        "feasible": true,
+        "label": "baseline",
+        "mean_cost_usd": 0.032615913333333336,
+        "medians": {},
+        "n_records": 90,
+        "pass_rate": 0.9222222222222223,
+        "passes": 83,
+        "rank": 2,
+        "ratios": {},
+        "reason": "",
+        "tasks_covered": 30,
+        "values": {
+          "context_limit_tokens": 12000,
+          "feedback_rounds": 0,
+          "planning": false,
+          "retries": 1,
+          "retrieval": "none",
+          "tactic_tools": "none"
+        }
+      },
+      {
+        "complete": true,
+        "config_hash": "44894b956b0abc2b81e3a942c7f95aff1f028d66e46ff431c6880ae7ed9e326a",
+        "cost_per_pass_usd": 0.06999019999999999,
+        "feasible": false,
+        "label": "F+planning",
+        "mean_cost_usd": 0.06999019999999999,
+        "medians": {},
+        "n_records": 30,
+        "pass_rate": 1.0,
+        "passes": 30,
+        "rank": null,
+        "ratios": {},
+        "reason": "not eligible: the freeze considers the confirmed configurations only",
+        "tasks_covered": 30,
+        "values": {
+          "context_limit_tokens": 12000,
+          "feedback_rounds": 3,
+          "planning": true,
+          "retries": 1,
+          "retrieval": "none",
+          "tactic_tools": "none"
+        }
+      },
+      {
+        "complete": true,
+        "config_hash": "a27611937c6fba48d3a49744ac0545a9388a1848d1e4cd4fa694dcc8d5e334ce",
+        "cost_per_pass_usd": 0.04129419333333333,
+        "feasible": false,
+        "label": "F+retrieval",
+        "mean_cost_usd": 0.04129419333333333,
+        "medians": {},
+        "n_records": 30,
+        "pass_rate": 1.0,
+        "passes": 30,
+        "rank": null,
+        "ratios": {},
+        "reason": "not eligible: the freeze considers the confirmed configurations only",
+        "tasks_covered": 30,
+        "values": {
+          "context_limit_tokens": 12000,
+          "feedback_rounds": 3,
+          "planning": false,
+          "retries": 1,
+          "retrieval": "mathlib_names",
+          "tactic_tools": "none"
+        }
+      },
+      {
+        "complete": true,
+        "config_hash": "acb96dab9e5f94c984b9d7041e0ff9bede34fdf8a06885797d59cfbc50fea8d0",
+        "cost_per_pass_usd": 0.04875284,
+        "feasible": false,
+        "label": "F+retries2",
+        "mean_cost_usd": 0.04875284,
+        "medians": {},
+        "n_records": 30,
+        "pass_rate": 1.0,
+        "passes": 30,
+        "rank": null,
+        "ratios": {},
+        "reason": "not eligible: the freeze considers the confirmed configurations only",
+        "tasks_covered": 30,
+        "values": {
+          "context_limit_tokens": 12000,
+          "feedback_rounds": 3,
+          "planning": false,
+          "retries": 2,
+          "retrieval": "none",
+          "tactic_tools": "none"
+        }
+      },
+      {
+        "complete": true,
+        "config_hash": "c64a4b3fd9d0b88d110043bb227a98a4183758f1c7d736c0076025e7927245d2",
+        "cost_per_pass_usd": 0.047823406666666665,
+        "feasible": false,
+        "label": "F+tactics",
+        "mean_cost_usd": 0.047823406666666665,
+        "medians": {},
+        "n_records": 30,
+        "pass_rate": 1.0,
+        "passes": 30,
+        "rank": null,
+        "ratios": {},
+        "reason": "not eligible: the freeze considers the confirmed configurations only",
+        "tasks_covered": 30,
+        "values": {
+          "context_limit_tokens": 12000,
+          "feedback_rounds": 3,
+          "planning": false,
+          "retries": 1,
+          "retrieval": "none",
+          "tactic_tools": "probe"
+        }
+      },
+      {
+        "complete": true,
+        "config_hash": "370f4767efe754fb84b7a1622b75d7a582d75512d35c6f19bcb9d4e0af984638",
+        "cost_per_pass_usd": 0.045539103448275865,
+        "feasible": false,
+        "label": "F+context48k",
+        "mean_cost_usd": 0.04402113333333334,
+        "medians": {},
+        "n_records": 30,
+        "pass_rate": 0.9666666666666667,
+        "passes": 29,
+        "rank": null,
+        "ratios": {},
+        "reason": "not eligible: the freeze considers the confirmed configurations only",
+        "tasks_covered": 30,
+        "values": {
+          "context_limit_tokens": 48000,
+          "feedback_rounds": 3,
+          "planning": false,
+          "retries": 1,
+          "retrieval": "none",
+          "tactic_tools": "none"
+        }
+      }
+    ],
+    "records": 330,
+    "records_per_stage": {
+      "confirm": 120,
+      "stage1": 210
+    },
+    "verdicts": {
+      "fail": 9,
+      "pass": 321
+    }
+  },
+  "freeze": {
+    "baseline": {
+      "config": {
+        "context_limit_tokens": 12000,
+        "feedback_rounds": 0,
+        "planning": false,
+        "retries": 1,
+        "retrieval": "none",
+        "tactic_tools": "none"
+      },
+      "config_hash": "980e935d0d7eae91f170b863a9f56f57870bcc2fe908bd200d22c7980d952382",
+      "label": "baseline"
+    },
+    "comparators": [],
+    "freeze_sha256": "ad17dec0891d68d992d56595ce4e0ee9196c26933c7b59b03543f6747df8a879",
+    "frozen": {
+      "config": {
+        "context_limit_tokens": 12000,
+        "feedback_rounds": 3,
+        "planning": false,
+        "retries": 1,
+        "retrieval": "none",
+        "tactic_tools": "none"
+      },
+      "config_hash": "37f78cb9d35ff2de8e0d84da8a2f995d04ff0dbede6e595a2332d8ed1fc43afd",
+      "label": "F",
+      "same_as_baseline": false
+    },
+    "frozen_at": "2026-11-23T14:30:39+00:00",
+    "git_head": "2a1b60f473ec7676faba067752b05d99671fae4b",
+    "spec_sha256": "bcf30d2aa6087d3a3f80c02068f6e8e277db94c4ef7b97f7c4d27e93b779a9ce"
+  },
+  "generated_at": "2026-11-23T15:30:22+00:00",
+  "harnesslab_version": "0.3.0",
+  "held_out": {
+    "by_config": {
+      "37f78cb9d35ff2de8e0d84da8a2f995d04ff0dbede6e595a2332d8ed1fc43afd": {
+        "attempt_status": {
+          "completed": 120
+        },
+        "cache_read_tokens": 61893,
+        "cache_write_tokens": 88511,
+        "charged_usd": 13.202645599999999,
+        "cost_per_pass_usd": 0.11284312478632477,
+        "cost_usd": 13.202645599999999,
+        "input_tokens": 588,
+        "label": "F",
+        "llm_calls": 147,
+        "metrics": {
+          "cost_usd": {
+            "mean": 0.046724878632478636,
+            "median": 0.0204628,
+            "n_verified": 117,
+            "total": 5.4668108
+          },
+          "llm_calls": {
+            "mean": 1.1538461538461537,
+            "median": 1.0,
+            "n_verified": 117,
+            "total": 135.0
+          },
+          "wall_time_s": {
+            "mean": 28.625111794726518,
+            "median": 15.29560768400006,
+            "n_verified": 117,
+            "total": 3349.1380799830026
+          }
+        },
+        "output_tokens": 637268,
+        "passes": 117,
+        "records": 120,
+        "tasks": 40,
+        "verdicts": {
+          "fail": 3,
+          "pass": 117
+        },
+        "wall_time_s": {
+          "mean": 55.21661433528335,
+          "median": 15.388667501500095,
+          "total": 6625.9937202340025
+        }
+      },
+      "980e935d0d7eae91f170b863a9f56f57870bcc2fe908bd200d22c7980d952382": {
+        "attempt_status": {
+          "completed": 120
+        },
+        "cache_read_tokens": 41482,
+        "cache_write_tokens": 69146,
+        "charged_usd": 6.5250864,
+        "cost_per_pass_usd": 0.06397143529411765,
+        "cost_usd": 6.5250864,
+        "input_tokens": 480,
+        "label": "baseline",
+        "llm_calls": 120,
+        "metrics": {
+          "cost_usd": {
+            "mean": 0.032889352941176474,
+            "median": 0.0190219,
+            "n_verified": 102,
+            "total": 3.354714
+          },
+          "llm_calls": {
+            "mean": 1.0,
+            "median": 1.0,
+            "n_verified": 102,
+            "total": 102.0
+          },
+          "wall_time_s": {
+            "mean": 13.227287566519626,
+            "median": 7.464324476500224,
+            "n_verified": 102,
+            "total": 1349.1833317850019
+          }
+        },
+        "output_tokens": 308457,
+        "passes": 102,
+        "records": 120,
+        "tasks": 40,
+        "verdicts": {
+          "fail": 18,
+          "pass": 102
+        },
+        "wall_time_s": {
+          "mean": 22.401772141833355,
+          "median": 8.22909325400019,
+          "total": 2688.2126570200026
+        }
+      }
+    },
+    "comparisons": [
+      {
+        "a": {
+          "attempt_status": {
+            "completed": 120
+          },
+          "attempts": 120,
+          "charged_usd": 6.5250864,
+          "cost_per_pass_usd": 0.06397143529411765,
+          "pass_at_1": 0.85,
+          "pass_at_3": 0.9,
+          "passes": 102,
+          "refusals": 0,
+          "tasks_all_pass": 31,
+          "tasks_mixed": 5,
+          "tasks_none_pass": 4,
+          "verdicts": {
+            "fail": 18,
+            "pass": 102
+          }
+        },
+        "b": {
+          "attempt_status": {
+            "completed": 120
+          },
+          "attempts": 120,
+          "charged_usd": 13.202645599999999,
+          "cost_per_pass_usd": 0.11284312478632477,
+          "pass_at_1": 0.975,
+          "pass_at_3": 0.975,
+          "passes": 117,
+          "refusals": 0,
+          "tasks_all_pass": 39,
+          "tasks_mixed": 0,
+          "tasks_none_pass": 1,
+          "verdicts": {
+            "fail": 3,
+            "pass": 117
+          }
+        },
+        "cost_usd": {
+          "losses": 24,
+          "lower_is_better": true,
+          "mean_a": 0.05437572,
+          "mean_b": 0.11002204666666666,
+          "mean_diff": {
+            "estimate": 0.05564632666666667,
+            "high": 0.1568454,
+            "level": 0.95,
+            "low": 0.002492111666666667,
+            "n": 40,
+            "p_positive": 0.9998
+          },
+          "median_diff": 0.0013525333333333344,
+          "metric": "cost_usd",
+          "n": 40,
+          "ratio": {
+            "estimate": 1.1053742686075503,
+            "high": 1.278544025335386,
+            "level": 0.95,
+            "low": 0.9628122237541222,
+            "n": 40,
+            "p_positive": 0.9215
+          },
+          "ratio_offset": 0.0,
+          "sign_test_p": 0.19959086691960692,
+          "tasks": [
+            "aime_1991_p9",
+            "algebra_abpbcpcageq3_sumaonsqrtapbgeq3onsqrt2",
+            "algebra_absapbon1pabsapbleqsumabsaon1pabsa",
+            "algebra_sqineq_unitcircatbpabsamblt1",
+            "amc12_2000_p1",
+            "amc12_2000_p6",
+            "amc12a_2013_p4",
+            "amc12a_2020_p15",
+            "amc12a_2021_p18",
+            "amc12b_2021_p18",
+            "amc12b_2021_p3",
+            "imo_1962_p2",
+            "imo_1997_p5",
+            "imosl_2007_algebra_p6",
+            "mathd_algebra_137",
+            "mathd_algebra_142",
+            "mathd_algebra_170",
+            "mathd_algebra_176",
+            "mathd_algebra_188",
+            "mathd_algebra_289",
+            "mathd_algebra_293",
+            "mathd_algebra_320",
+            "mathd_algebra_332",
+            "mathd_algebra_359",
+            "mathd_algebra_440",
+            "mathd_algebra_484",
+            "mathd_algebra_598",
+            "mathd_numbertheory_12",
+            "mathd_numbertheory_135",
+            "mathd_numbertheory_150",
+            "mathd_numbertheory_222",
+            "mathd_numbertheory_233",
+            "mathd_numbertheory_314",
+            "mathd_numbertheory_320",
+            "mathd_numbertheory_328",
+            "mathd_numbertheory_341",
+            "mathd_numbertheory_551",
+            "mathd_numbertheory_582",
+            "mathd_numbertheory_618",
+            "numbertheory_2pownm1prime_nprime"
+          ],
+          "ties": 1,
+          "wins": 15
+        },
+        "diff": {
+          "estimate": 0.125,
+          "high": 0.225,
+          "level": 0.95,
+          "low": 0.04166666666666667,
+          "n": 40,
+          "p_positive": 0.9999
+        },
+        "llm_calls": {
+          "losses": 12,
+          "lower_is_better": true,
+          "mean_a": 1.0,
+          "mean_b": 1.225,
+          "mean_diff": {
+            "estimate": 0.225,
+            "high": 0.4083333333333333,
+            "level": 0.95,
+            "low": 0.09166666666666665,
+            "n": 40,
+            "p_positive": 1.0
+          },
+          "median_diff": 0.0,
+          "metric": "llm_calls",
+          "n": 40,
+          "ratio": {
+            "estimate": 1.1627396069034097,
+            "high": 1.278432796392812,
+            "level": 0.95,
+            "low": 1.0728375509091705,
+            "n": 40,
+            "p_positive": 1.0
+          },
+          "ratio_offset": 0.0,
+          "sign_test_p": 0.00048828125,
+          "tasks": [
+            "aime_1991_p9",
+            "algebra_abpbcpcageq3_sumaonsqrtapbgeq3onsqrt2",
+            "algebra_absapbon1pabsapbleqsumabsaon1pabsa",
+            "algebra_sqineq_unitcircatbpabsamblt1",
+            "amc12_2000_p1",
+            "amc12_2000_p6",
+            "amc12a_2013_p4",
+            "amc12a_2020_p15",
+            "amc12a_2021_p18",
+            "amc12b_2021_p18",
+            "amc12b_2021_p3",
+            "imo_1962_p2",
+            "imo_1997_p5",
+            "imosl_2007_algebra_p6",
+            "mathd_algebra_137",
+            "mathd_algebra_142",
+            "mathd_algebra_170",
+            "mathd_algebra_176",
+            "mathd_algebra_188",
+            "mathd_algebra_289",
+            "mathd_algebra_293",
+            "mathd_algebra_320",
+            "mathd_algebra_332",
+            "mathd_algebra_359",
+            "mathd_algebra_440",
+            "mathd_algebra_484",
+            "mathd_algebra_598",
+            "mathd_numbertheory_12",
+            "mathd_numbertheory_135",
+            "mathd_numbertheory_150",
+            "mathd_numbertheory_222",
+            "mathd_numbertheory_233",
+            "mathd_numbertheory_314",
+            "mathd_numbertheory_320",
+            "mathd_numbertheory_328",
+            "mathd_numbertheory_341",
+            "mathd_numbertheory_551",
+            "mathd_numbertheory_582",
+            "mathd_numbertheory_618",
+            "numbertheory_2pownm1prime_nprime"
+          ],
+          "ties": 28,
+          "wins": 0
+        },
+        "losses": 0,
+        "majority_only_a": 0,
+        "majority_only_b": 4,
+        "mcnemar_majority_p": 0.125,
+        "n": 40,
+        "name": "frozen vs baseline",
+        "not_run": [],
+        "per_task": [
+          {
+            "a": "0/3",
+            "b": "3/3",
+            "task": "aime_1991_p9"
+          },
+          {
+            "a": "2/3",
+            "b": "3/3",
+            "task": "algebra_abpbcpcageq3_sumaonsqrtapbgeq3onsqrt2"
+          },
+          {
+            "a": "3/3",
+            "b": "3/3",
+            "task": "algebra_absapbon1pabsapbleqsumabsaon1pabsa"
+          },
+          {
+            "a": "3/3",
+            "b": "3/3",
+            "task": "algebra_sqineq_unitcircatbpabsamblt1"
+          },
+          {
+            "a": "0/3",
+            "b": "3/3",
+            "task": "amc12_2000_p1"
+          },
+          {
+            "a": "1/3",
+            "b": "3/3",
+            "task": "amc12_2000_p6"
+          },
+          {
+            "a": "0/3",
+            "b": "3/3",
+            "task": "amc12a_2013_p4"
+          },
+          {
+            "a": "3/3",
+            "b": "3/3",
+            "task": "amc12a_2020_p15"
+          },
+          {
+            "a": "3/3",
+            "b": "3/3",
+            "task": "amc12a_2021_p18"
+          },
+          {
+            "a": "2/3",
+            "b": "3/3",
+            "task": "amc12b_2021_p18"
+          },
+          {
+            "a": "3/3",
+            "b": "3/3",
+            "task": "amc12b_2021_p3"
+          },
+          {
+            "a": "3/3",
+            "b": "3/3",
+            "task": "imo_1962_p2"
+          },
+          {
+            "a": "2/3",
+            "b": "3/3",
+            "task": "imo_1997_p5"
+          },
+          {
+            "a": "0/3",
+            "b": "0/3",
+            "task": "imosl_2007_algebra_p6"
+          },
+          {
+            "a": "3/3",
+            "b": "3/3",
+            "task": "mathd_algebra_137"
+          },
+          {
+            "a": "3/3",
+            "b": "3/3",
+            "task": "mathd_algebra_142"
+          },
+          {
+            "a": "3/3",
+            "b": "3/3",
+            "task": "mathd_algebra_170"
+          },
+          {
+            "a": "3/3",
+            "b": "3/3",
+            "task": "mathd_algebra_176"
+          },
+          {
+            "a": "3/3",
+            "b": "3/3",
+            "task": "mathd_algebra_188"
+          },
+          {
+            "a": "3/3",
+            "b": "3/3",
+            "task": "mathd_algebra_289"
+          },
+          {
+            "a": "3/3",
+            "b": "3/3",
+            "task": "mathd_algebra_293"
+          },
+          {
+            "a": "3/3",
+            "b": "3/3",
+            "task": "mathd_algebra_320"
+          },
+          {
+            "a": "3/3",
+            "b": "3/3",
+            "task": "mathd_algebra_332"
+          },
+          {
+            "a": "3/3",
+            "b": "3/3",
+            "task": "mathd_algebra_359"
+          },
+          {
+            "a": "3/3",
+            "b": "3/3",
+            "task": "mathd_algebra_440"
+          },
+          {
+            "a": "3/3",
+            "b": "3/3",
+            "task": "mathd_algebra_484"
+          },
+          {
+            "a": "3/3",
+            "b": "3/3",
+            "task": "mathd_algebra_598"
+          },
+          {
+            "a": "3/3",
+            "b": "3/3",
+            "task": "mathd_numbertheory_12"
+          },
+          {
+            "a": "2/3",
+            "b": "3/3",
+            "task": "mathd_numbertheory_135"
+          },
+          {
+            "a": "3/3",
+            "b": "3/3",
+            "task": "mathd_numbertheory_150"
+          },
+          {
+            "a": "3/3",
+            "b": "3/3",
+            "task": "mathd_numbertheory_222"
+          },
+          {
+            "a": "3/3",
+            "b": "3/3",
+            "task": "mathd_numbertheory_233"
+          },
+          {
+            "a": "3/3",
+            "b": "3/3",
+            "task": "mathd_numbertheory_314"
+          },
+          {
+            "a": "3/3",
+            "b": "3/3",
+            "task": "mathd_numbertheory_320"
+          },
+          {
+            "a": "3/3",
+            "b": "3/3",
+            "task": "mathd_numbertheory_328"
+          },
+          {
+            "a": "3/3",
+            "b": "3/3",
+            "task": "mathd_numbertheory_341"
+          },
+          {
+            "a": "3/3",
+            "b": "3/3",
+            "task": "mathd_numbertheory_551"
+          },
+          {
+            "a": "3/3",
+            "b": "3/3",
+            "task": "mathd_numbertheory_582"
+          },
+          {
+            "a": "3/3",
+            "b": "3/3",
+            "task": "mathd_numbertheory_618"
+          },
+          {
+            "a": "3/3",
+            "b": "3/3",
+            "task": "numbertheory_2pownm1prime_nprime"
+          }
+        ],
+        "rate_a": 0.85,
+        "rate_b": 0.975,
+        "sign_test_p": 0.0078125,
+        "tasks": [
+          "aime_1991_p9",
+          "algebra_abpbcpcageq3_sumaonsqrtapbgeq3onsqrt2",
+          "algebra_absapbon1pabsapbleqsumabsaon1pabsa",
+          "algebra_sqineq_unitcircatbpabsamblt1",
+          "amc12_2000_p1",
+          "amc12_2000_p6",
+          "amc12a_2013_p4",
+          "amc12a_2020_p15",
+          "amc12a_2021_p18",
+          "amc12b_2021_p18",
+          "amc12b_2021_p3",
+          "imo_1962_p2",
+          "imo_1997_p5",
+          "imosl_2007_algebra_p6",
+          "mathd_algebra_137",
+          "mathd_algebra_142",
+          "mathd_algebra_170",
+          "mathd_algebra_176",
+          "mathd_algebra_188",
+          "mathd_algebra_289",
+          "mathd_algebra_293",
+          "mathd_algebra_320",
+          "mathd_algebra_332",
+          "mathd_algebra_359",
+          "mathd_algebra_440",
+          "mathd_algebra_484",
+          "mathd_algebra_598",
+          "mathd_numbertheory_12",
+          "mathd_numbertheory_135",
+          "mathd_numbertheory_150",
+          "mathd_numbertheory_222",
+          "mathd_numbertheory_233",
+          "mathd_numbertheory_314",
+          "mathd_numbertheory_320",
+          "mathd_numbertheory_328",
+          "mathd_numbertheory_341",
+          "mathd_numbertheory_551",
+          "mathd_numbertheory_582",
+          "mathd_numbertheory_618",
+          "numbertheory_2pownm1prime_nprime"
+        ],
+        "ties": 32,
+        "wall_time_s": {
+          "losses": 40,
+          "lower_is_better": true,
+          "mean_a": 22.401772141833355,
+          "mean_b": 55.21661433528336,
+          "mean_diff": {
+            "estimate": 32.814842193450005,
+            "high": 76.10918457428332,
+            "level": 0.95,
+            "low": 9.252953954341633,
+            "n": 40,
+            "p_positive": 1.0
+          },
+          "median_diff": 7.164153844166473,
+          "metric": "wall_time_s",
+          "n": 40,
+          "ratio": {
+            "estimate": 2.386135994542039,
+            "high": 2.7766763426639467,
+            "level": 0.95,
+            "low": 2.0721978605100473,
+            "n": 40,
+            "p_positive": 1.0
+          },
+          "ratio_offset": 0.0,
+          "sign_test_p": 1.8189894035458565e-12,
+          "tasks": [
+            "aime_1991_p9",
+            "algebra_abpbcpcageq3_sumaonsqrtapbgeq3onsqrt2",
+            "algebra_absapbon1pabsapbleqsumabsaon1pabsa",
+            "algebra_sqineq_unitcircatbpabsamblt1",
+            "amc12_2000_p1",
+            "amc12_2000_p6",
+            "amc12a_2013_p4",
+            "amc12a_2020_p15",
+            "amc12a_2021_p18",
+            "amc12b_2021_p18",
+            "amc12b_2021_p3",
+            "imo_1962_p2",
+            "imo_1997_p5",
+            "imosl_2007_algebra_p6",
+            "mathd_algebra_137",
+            "mathd_algebra_142",
+            "mathd_algebra_170",
+            "mathd_algebra_176",
+            "mathd_algebra_188",
+            "mathd_algebra_289",
+            "mathd_algebra_293",
+            "mathd_algebra_320",
+            "mathd_algebra_332",
+            "mathd_algebra_359",
+            "mathd_algebra_440",
+            "mathd_algebra_484",
+            "mathd_algebra_598",
+            "mathd_numbertheory_12",
+            "mathd_numbertheory_135",
+            "mathd_numbertheory_150",
+            "mathd_numbertheory_222",
+            "mathd_numbertheory_233",
+            "mathd_numbertheory_314",
+            "mathd_numbertheory_320",
+            "mathd_numbertheory_328",
+            "mathd_numbertheory_341",
+            "mathd_numbertheory_551",
+            "mathd_numbertheory_582",
+            "mathd_numbertheory_618",
+            "numbertheory_2pownm1prime_nprime"
+          ],
+          "ties": 0,
+          "wins": 0
+        },
+        "wins": 8
+      }
+    ],
+    "complete": true,
+    "expected_cells": 240,
+    "failures": [
+      {
+        "config": "baseline",
+        "reason": "Lean error at line 18, column 65: maximum recursion depth has been reached\nuse `set_option maxRecDepth <num>` to increase limit\nuse `set_option diagnostics true` to get diagnostic information",
+        "status": "completed",
+        "task": "amc12_2000_p1",
+        "verdict": "fail"
+      },
+      {
+        "config": "baseline",
+        "reason": "Lean error at line 21, column 65: maximum recursion depth has been reached\nuse `set_option maxRecDepth <num>` to increase limit\nuse `set_option diagnostics true` to get diagnostic information",
+        "status": "completed",
+        "task": "amc12_2000_p1",
+        "verdict": "fail"
+      },
+      {
+        "config": "baseline",
+        "reason": "Lean error at line 33, column 31: mod_cast has type\n  ↑m = 29 / 15\nbut is expected to have type\n  m = 29 / 15",
+        "status": "completed",
+        "task": "aime_1991_p9",
+        "verdict": "fail"
+      },
+      {
+        "config": "baseline",
+        "reason": "Lean error at line 8, column 55: unsolved goals\n⊢ (2 ^ 2014 + 2 ^ 2012) / (2 ^ 2014 - 2 ^ 2012) = 5 / 3",
+        "status": "completed",
+        "task": "amc12a_2013_p4",
+        "verdict": "fail"
+      },
+      {
+        "config": "baseline",
+        "reason": "Lean error at line 8, column 55: unsolved goals\n⊢ (2 ^ 2014 + 2 ^ 2012) / (2 ^ 2014 - 2 ^ 2012) = 5 / 3",
+        "status": "completed",
+        "task": "amc12a_2013_p4",
+        "verdict": "fail"
+      },
+      {
+        "config": "F",
+        "reason": "no proof produced",
+        "status": "completed",
+        "task": "imosl_2007_algebra_p6",
+        "verdict": "fail"
+      },
+      {
+        "config": "baseline",
+        "reason": "Lean error at line 16, column 72: maximum recursion depth has been reached\nuse `set_option maxRecDepth <num>` to increase limit\nuse `set_option diagnostics true` to get diagnostic information",
+        "status": "completed",
+        "task": "amc12_2000_p1",
+        "verdict": "fail"
+      },
+      {
+        "config": "baseline",
+        "reason": "no proof produced",
+        "status": "completed",
+        "task": "imosl_2007_algebra_p6",
+        "verdict": "fail"
+      },
+      {
+        "config": "baseline",
+        "reason": "Lean error at line 47, column 53: Tactic `rewrite` failed: Did not find an occurrence of the pattern\n  ?m.1413 / √2 ≤ ?m.1415 / (2 * √2 * u ^ 3)\nin the target expression\n  3 / √2 ≤ ((a + b + c) ^ 2 + (a * b + b * c + c * a)) / (2 * (2 * √2 * u ^ 3))\n\na b c : ℝ\nh₁ : 3 ≤ a * b + b * c + c * a\nha : 0 < a\nhb : 0 < b\nhc : 0 < c\nhr : 0 < ... [778 more chars]",
+        "status": "completed",
+        "task": "algebra_abpbcpcageq3_sumaonsqrtapbgeq3onsqrt2",
+        "verdict": "fail"
+      },
+      {
+        "config": "baseline",
+        "reason": "no proof produced",
+        "status": "completed",
+        "task": "imo_1997_p5",
+        "verdict": "fail"
+      },
+      {
+        "config": "F",
+        "reason": "no proof produced",
+        "status": "completed",
+        "task": "imosl_2007_algebra_p6",
+        "verdict": "fail"
+      },
+      {
+        "config": "baseline",
+        "reason": "Lean error at line 24, column 4: No goals to be solved",
+        "status": "completed",
+        "task": "amc12b_2021_p18",
+        "verdict": "fail"
+      },
+      {
+        "config": "baseline",
+        "reason": "Lean error at line 33, column 29: mod_cast has type\n  ↑m = 29 / 15\nbut is expected to have type\n  m = 29 / 15",
+        "status": "completed",
+        "task": "aime_1991_p9",
+        "verdict": "fail"
+      },
+      {
+        "config": "baseline",
+        "reason": "Lean error at line 9, column 38: unsolved goals\n⊢ 2 ^ 2014 = 4 * 2 ^ 2012",
+        "status": "completed",
+        "task": "amc12a_2013_p4",
+        "verdict": "fail"
+      },
+      {
+        "config": "baseline",
+        "reason": "no proof produced",
+        "status": "completed",
+        "task": "imosl_2007_algebra_p6",
+        "verdict": "fail"
+      },
+      {
+        "config": "baseline",
+        "reason": "Lean error at line 16, column 61: No goals to be solved",
+        "status": "completed",
+        "task": "amc12_2000_p6",
+        "verdict": "fail"
+      },
+      {
+        "config": "baseline",
+        "reason": "Lean error at line 38, column 30: mod_cast has type\n  ↑m = 29 / 15\nbut is expected to have type\n  m = 29 / 15",
+        "status": "completed",
+        "task": "aime_1991_p9",
+        "verdict": "fail"
+      },
+      {
+        "config": "baseline",
+        "reason": "Lean error at line 16, column 44: No goals to be solved",
+        "status": "completed",
+        "task": "amc12_2000_p6",
+        "verdict": "fail"
+      },
+      {
+        "config": "baseline",
+        "reason": "Lean error at line 18, column 65: unsolved goals\nA B C : ℕ\nh₂ : List.Pairwise (fun x1 x2 => x1 ≠ x2) [A, B, C]\nh₃ : {A, B, C} ⊂ Finset.Icc 0 9\nh₄ : Odd A ∧ Odd C\nh₅ : ¬3 ∣ B\nh₁ : 11 ∣ 3 ^ 17 + 3 ^ 10 + 1\nh₆ : Nat.digits 10 (3 ^ 17 + 3 ^ 10) = [B, A, B, C, C, A, C, B, A]\n⊢ False",
+        "status": "completed",
+        "task": "mathd_numbertheory_135",
+        "verdict": "fail"
+      },
+      {
+        "config": "baseline",
+        "reason": "no proof produced",
+        "status": "completed",
+        "task": "imosl_2007_algebra_p6",
+        "verdict": "fail"
+      },
+      {
+        "config": "F",
+        "reason": "no proof produced",
+        "status": "completed",
+        "task": "imosl_2007_algebra_p6",
+        "verdict": "fail"
+      }
+    ],
+    "groups": {},
+    "missing_cells": 0,
+    "missing_examples": [],
+    "recorded_cells": 240,
+    "records": 240,
+    "robustness": null,
+    "unexpected_cells": 0
+  },
+  "objective": {
+    "cost_cap_multiple": 4.0,
+    "drop_tasks_where_baseline_unverified": true,
+    "kind": "pass_rate",
+    "metrics": [],
+    "offset": 1.0,
+    "then": [],
+    "tie_tolerance": 0.0334
+  },
+  "smoke": {
+    "by_config": {
+      "05f574b46231af7b210f202b40f7142eb6ff4569d0f167a830952b9971447542": {
+        "attempt_status": {
+          "completed": 3
+        },
+        "cache_read_tokens": 23777,
+        "cache_write_tokens": 11896,
+        "charged_usd": 0.2536874,
+        "cost_per_pass_usd": 0.08456246666666667,
+        "cost_usd": 0.2536874,
+        "input_tokens": 908,
+        "label": "all-on",
+        "llm_calls": 12,
+        "metrics": {
+          "cost_usd": {
+            "mean": 0.08456246666666667,
+            "median": 0.06505520000000001,
+            "n_verified": 3,
+            "total": 0.2536874
+          },
+          "llm_calls": {
+            "mean": 4.0,
+            "median": 3.0,
+            "n_verified": 3,
+            "total": 12.0
+          },
+          "wall_time_s": {
+            "mean": 45.18974555799999,
+            "median": 32.21626529100001,
+            "n_verified": 3,
+            "total": 135.56923667399997
+          }
+        },
+        "output_tokens": 9291,
+        "passes": 3,
+        "records": 3,
+        "tasks": 3,
+        "verdicts": {
+          "pass": 3
+        },
+        "wall_time_s": {
+          "mean": 45.18974555799999,
+          "median": 32.21626529100001,
+          "total": 135.56923667399997
+        }
+      },
+      "980e935d0d7eae91f170b863a9f56f57870bcc2fe908bd200d22c7980d952382": {
+        "attempt_status": {
+          "completed": 3
+        },
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 2741,
+        "charged_usd": 0.096953,
+        "cost_per_pass_usd": 0.03231766666666667,
+        "cost_usd": 0.096953,
+        "input_tokens": 12,
+        "label": "baseline",
+        "llm_calls": 3,
+        "metrics": {
+          "cost_usd": {
+            "mean": 0.03231766666666667,
+            "median": 0.025376,
+            "n_verified": 3,
+            "total": 0.096953
+          },
+          "llm_calls": {
+            "mean": 1.0,
+            "median": 1.0,
+            "n_verified": 3,
+            "total": 3.0
+          },
+          "wall_time_s": {
+            "mean": 12.086229148666652,
+            "median": 8.756429647999994,
+            "n_verified": 3,
+            "total": 36.25868744599995
+          }
+        },
+        "output_tokens": 4160,
+        "passes": 3,
+        "records": 3,
+        "tasks": 3,
+        "verdicts": {
+          "pass": 3
+        },
+        "wall_time_s": {
+          "mean": 12.086229148666652,
+          "median": 8.756429647999994,
+          "total": 36.25868744599995
+        }
+      }
+    }
+  },
+  "split": {
+    "dev": [
+      "aimeII_2020_p6",
+      "mathd_numbertheory_30",
+      "imo_1964_p1_2",
+      "mathd_algebra_405",
+      "amc12b_2002_p3",
+      "induction_ineq_nsqlefactn",
+      "induction_sum_1oktkp1",
+      "mathd_algebra_73",
+      "algebra_sqineq_2at2pclta2c2p41pc",
+      "aime_1987_p8",
+      "mathd_algebra_493",
+      "mathd_numbertheory_92",
+      "aime_1996_p5",
+      "mathd_numbertheory_284",
+      "amc12a_2019_p21",
+      "mathd_algebra_327",
+      "mathd_numbertheory_32",
+      "mathd_algebra_126",
+      "imo_1961_p1",
+      "mathd_algebra_109",
+      "mathd_algebra_185",
+      "mathd_numbertheory_43",
+      "mathd_numbertheory_252",
+      "amc12a_2008_p15",
+      "mathd_numbertheory_461",
+      "mathd_algebra_31",
+      "algebra_manipexpr_apbeq2cceqiacpbceqm2",
+      "mathd_algebra_455",
+      "imo_2006_p3",
+      "mathd_numbertheory_709"
+    ],
+    "file_sha256": "52af3cad57fff625f1fffda84f88e1937e31503616361239a13d1645107df9aa",
+    "held_out": [
+      "mathd_numbertheory_222",
+      "mathd_algebra_598",
+      "aime_1991_p9",
+      "mathd_algebra_176",
+      "imo_1962_p2",
+      "mathd_algebra_484",
+      "mathd_numbertheory_150",
+      "mathd_algebra_359",
+      "mathd_algebra_320",
+      "mathd_numbertheory_233",
+      "algebra_absapbon1pabsapbleqsumabsaon1pabsa",
+      "algebra_sqineq_unitcircatbpabsamblt1",
+      "mathd_numbertheory_135",
+      "imo_1997_p5",
+      "amc12b_2021_p18",
+      "amc12a_2013_p4",
+      "mathd_numbertheory_618",
+      "mathd_algebra_137",
+      "numbertheory_2pownm1prime_nprime",
+      "algebra_abpbcpcageq3_sumaonsqrtapbgeq3onsqrt2",
+      "amc12_2000_p6",
+      "mathd_numbertheory_551",
+      "mathd_algebra_142",
+      "amc12_2000_p1",
+      "mathd_numbertheory_341",
+      "amc12a_2021_p18",
+      "amc12a_2020_p15",
+      "mathd_numbertheory_582",
+      "imosl_2007_algebra_p6",
+      "mathd_numbertheory_320",
+      "mathd_algebra_289",
+      "mathd_algebra_332",
+      "amc12b_2021_p3",
+      "mathd_algebra_440",
+      "mathd_algebra_188",
+      "mathd_algebra_170",
+      "mathd_algebra_293",
+      "mathd_numbertheory_12",
+      "mathd_numbertheory_314",
+      "mathd_numbertheory_328"
+    ]
+  },
+  "stats": {
+    "level": 0.95,
+    "resamples": 10000,
+    "seed": 20261122
+  },
+  "study": "2026-11-math-minif2f"
+}

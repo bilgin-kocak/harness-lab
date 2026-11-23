@@ -539,6 +539,13 @@ No search cell had run when they were made.
    - The baseline's cells run first in any stage that contains it.
    - An `unavailable` attempt is a harness error.
 
+9. **No QCEC cross-check that cannot matter.** On pool A, QCEC runs only when the exact check
+   decides (pass or fail). When the exact check is `unverifiable` (more than 14 active qubits),
+   the verdict is `unverifiable` whatever QCEC says, and no disagreement is possible, so QCEC
+   does not run. No verdict and no stop changes.
+   - **Why.** A dev-only timing probe of stage-1 configurations showed such outputs spending up
+     to the 90 s QCEC kill each, for nothing.
+
 B8's "the alternating and ZX checkers" is replaced by item 3.
 
 ---

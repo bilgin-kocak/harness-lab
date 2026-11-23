@@ -18,7 +18,8 @@ Part B of ``docs/plans/2026-11-22-math-quantum-experiment-plan.md`` on the contr
 ``verify``
     Target validity, then the exact check (pool A, :mod:`.equivalence`) or QCEC (pool B,
     :mod:`.qcec_check`), both on the payload's canonical form. On pool A QCEC also runs as a
-    cross-check; a pass/fail disagreement inside the checkers' tolerance gap is unverifiable,
+    cross-check whenever the exact check decides (pass or fail); a pass/fail disagreement inside
+    the checkers' tolerance gap is unverifiable,
     any other raises :class:`CheckerDisagreement`. A payload QPY cannot read back, or whose
     analysis passes ``analyze_timeout_s``, is unverifiable. Verdicts are cached in memory by
     task, output hash and checker versions; an attempt whose ``output`` misreports the
@@ -764,7 +765,15 @@ class QiskitQasmBenchAdapter(DomainAdapterBase):
             if exact is not None:
                 details["exact"] = exact
             qcec = None
-            if record.pool == "B" or self.options.qcec_on_pool_a:
+            # On pool A QCEC only cross-checks a decision: when the exact check is unverifiable
+            # (too many active qubits) the verdict is unverifiable whatever QCEC says, and no
+            # disagreement is possible, so it does not run (B15.9).
+            cross_check = (
+                self.options.qcec_on_pool_a
+                and exact is not None
+                and exact["status"] != "unverifiable"
+            )
+            if record.pool == "B" or cross_check:
                 qcec = await qcec_check.run_qcec(
                     self._pool(),
                     source=str(record.path),

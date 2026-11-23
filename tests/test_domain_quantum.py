@@ -796,7 +796,7 @@ async def test_active_qubit_cap_is_unverifiable(
         assert verdict.status == VerdictStatus.UNVERIFIABLE and not verdict.passed
         assert verdict.details["exact"]["status"] == "unverifiable"
         assert "more than the limit of 2" in verdict.reason
-        assert verdict.details["qcec"]["status"] == "pass"  # unverifiable vs pass: no disagreement
+        assert "qcec" not in verdict.details  # it could not change the verdict: not run
     finally:
         await capped.close()
 

@@ -1,0 +1,43 @@
+{
+  "configs": [
+    {
+      "config_hash": "980e935d0d7eae91f170b863a9f56f57870bcc2fe908bd200d22c7980d952382",
+      "label": "baseline",
+      "values": {
+        "context_limit_tokens": 12000,
+        "feedback_rounds": 0,
+        "planning": false,
+        "retries": 1,
+        "retrieval": "none",
+        "tactic_tools": "none"
+      }
+    },
+    {
+      "config_hash": "05f574b46231af7b210f202b40f7142eb6ff4569d0f167a830952b9971447542",
+      "label": "all-on",
+      "values": {
+        "context_limit_tokens": 48000,
+        "feedback_rounds": 3,
+        "planning": true,
+        "retries": 2,
+        "retrieval": "mathlib_names",
+        "tactic_tools": "probe"
+      }
+    }
+  ],
+  "created_at": "2026-11-23T09:48:03+00:00",
+  "decision": "run",
+  "kind": "explicit",
+  "note": "",
+  "phase": "smoke",
+  "repetition_starts": {},
+  "repetitions": 1,
+  "stage": "smoke",
+  "stage_sha256": "a8da3cbc704e039ec72bd8d0961ce674e956f91ddd0dda379a7d7082a1c4a27e",
+  "stage_sha256_of": "written",
+  "tasks": [
+    "aimeII_2020_p6",
+    "mathd_numbertheory_30",
+    "imo_1964_p1_2"
+  ]
+}

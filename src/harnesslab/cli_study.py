@@ -240,6 +240,9 @@ def study_report(
             f"[yellow]INCOMPLETE: {ho['missing_cells']} of {ho['expected_cells']} held-out cells "
             "have no record; tasks missing a cell are left out of each comparison[/]"
         )
+    rob = ho.get("robustness")
+    if rob and not rob.get("computed"):
+        console.print(f"[yellow]robustness: not computed ({escape(str(rob.get('reason')))})[/]")
     _print_comparisons(ho["comparisons"])
     for tag, group in (ho.get("groups") or {}).items():
         console.print(f"[bold]tag {escape(tag)}[/] ({len(group['tasks'])} tasks)")

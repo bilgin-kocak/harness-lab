@@ -36,7 +36,7 @@ from typing import Any
 from harnesslab.study.budget import Budget
 from harnesslab.study.contract import Config, DomainAdapter, Task, canonical_json, sha256_json
 from harnesslab.study.objective import Ranking, rank_configs
-from harnesslab.study.report import build_results
+from harnesslab.study.report import build_results, robustness_not_computed
 from harnesslab.study.runner import Cell, RunSummary, run_cells
 from harnesslab.study.search import (
     baseline_first,
@@ -243,6 +243,9 @@ class Study:
         rob = self.spec.held_out.robustness
         if rob is not None and rob.knob not in self.space.names:
             problems.append(f"robustness: unknown knob {rob.knob!r}")
+        not_compared = robustness_not_computed(self.spec)
+        if not_compared is not None:
+            problems.append(f"robustness: {not_compared}")
         try:
             dev_tasks = self.dev_tasks()
         except Exception as exc:

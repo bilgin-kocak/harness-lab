@@ -18,7 +18,8 @@ Held-out comparisons follow the objective's kind:
 
 Comparisons are repeated for each task tag listed in ``stats.tag_groups`` (for example a pool).
 Robustness configurations (one knob replaced by several levels) are compared on per-task means
-over those levels.
+over those levels, for ``baseline_ratio`` objectives with both ``baseline`` and ``frozen`` listed;
+otherwise the held-out section says that the comparison was not computed, and why.
 """
 
 from __future__ import annotations
@@ -222,6 +223,29 @@ def _rate_comparison(
     return out
 
 
+def robustness_not_computed(spec: StudySpec) -> str | None:
+    """Why the spec's robustness configurations would run on the held-out tasks without being
+    compared, or None (no robustness section, or a comparison the report computes)."""
+    rob = spec.held_out.robustness
+    if rob is None:
+        return None
+    if spec.objective.kind != "baseline_ratio":
+        return (
+            "the robustness comparison is computed for baseline_ratio objectives only (this one "
+            f"is {spec.objective.kind}): the robustness configurations run on every held-out task "
+            "but are not compared"
+        )
+    missing = [n for n in ("baseline", "frozen") if n not in rob.configs]
+    if missing:
+        listed = " and ".join(rob.configs) or "nothing"
+        return (
+            "the robustness comparison pairs baseline with frozen, and robustness.configs lists "
+            f"{listed} only: the robustness configurations run on every held-out task but are not "
+            "compared"
+        )
+    return None
+
+
 def _comparisons(
     spec: StudySpec,
     by: dict[str, ByTask],
@@ -396,6 +420,7 @@ def _held_out_section(
         (f"{label} vs baseline", base_h, h) for label, h in comps.items() if label not in rob_labels
     ]
     robustness: dict[str, ByTask] | None = None
+    robustness_note: dict[str, Any] | None = None
     if rob is not None:
         groups = {
             n: [
@@ -409,6 +434,16 @@ def _held_out_section(
             robustness = {
                 n: _merge_levels([by.get(h, {}) for h in groups[n]]) for n in ("baseline", "frozen")
             }
+        why = robustness_not_computed(spec)
+        if why is None and robustness is None:
+            why = "the freeze holds no robustness configuration of the baseline and the frozen one"
+        robustness_note = {
+            "computed": why is None,
+            "reason": why,
+            "knob": rob.knob,
+            "levels": list(rob.levels),
+            "configs": list(rob.configs),
+        }
     all_tasks = sorted({t for t, _, _ in expected} or {r["task_id"] for r in held_out})
     ho: dict[str, Any] = {
         "complete": not missing,
@@ -439,6 +474,8 @@ def _held_out_section(
             if not _passed(r)
         ],
         "comparisons": _comparisons(spec, by, pairs, all_tasks, metric_names, stats, robustness),
+        # whether the robustness configurations were compared (None: the spec declares none)
+        "robustness": robustness_note,
         "groups": {},
     }
     tags: dict[str, set[str]] = defaultdict(set)

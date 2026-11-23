@@ -1046,3 +1046,55 @@ def test_results_render_as_markdown_tables(tmp_path: Path):
     rate.freeze()
     asyncio.run(rate.held_out())
     assert "| frozen vs baseline |" in render_markdown(rate.results())
+
+
+ROBUST = {"knob": "style", "levels": ["a", "b"]}
+
+
+def _robust_results(tmp: Path, objective: dict, configs: list[str] | None) -> tuple[Study, dict]:
+    rob = ROBUST if configs is None else {**ROBUST, "configs": configs}
+    study = _study2(
+        tmp,
+        objective=objective,
+        held_out={"repetitions": 1, "require_committed_freeze": False, "robustness": rob},
+        stats={"resamples": 200, "seed": 1},
+    )
+    asyncio.run(study.run_stage("grid"))
+    study.freeze()
+    asyncio.run(study.held_out())
+    return study, study.results()
+
+
+@pytest.mark.parametrize(
+    "objective, configs, why",
+    [
+        ({"kind": "pass_rate"}, None, "baseline_ratio objectives only"),
+        ({"kind": "baseline_ratio", "metrics": ["gates"]}, ["frozen"], "lists frozen only"),
+    ],
+)
+def test_robustness_that_is_not_compared_says_so(tmp_path: Path, objective, configs, why):
+    # core#10: the robustness configurations ran on every held-out task (and were paid for),
+    # but results.json silently had no robustness analysis.
+    from harnesslab.study.markdown import render_markdown
+
+    study, data = _robust_results(tmp_path, objective, configs)
+    assert [p for p in study.check() if p.startswith("robustness:") and why in p]
+    note = data["held_out"]["robustness"]
+    assert note["computed"] is False and why in note["reason"]
+    assert not any(c["name"].startswith("robustness") for c in data["held_out"]["comparisons"])
+    assert f"- robustness: not computed ({note['reason']})" in render_markdown(data)
+
+
+def test_robustness_that_is_compared_is_unchanged(tmp_path: Path):
+    from harnesslab.study.markdown import render_markdown
+
+    objective = {"kind": "baseline_ratio", "metrics": ["gates"]}
+    study, data = _robust_results(tmp_path, objective, None)
+    assert study.check() == []
+    assert data["held_out"]["robustness"]["computed"] is True
+    names = [c["name"] for c in data["held_out"]["comparisons"]]
+    assert names == [
+        "frozen vs baseline: gates",
+        "robustness (style averaged over 2 levels): gates",
+    ]
+    assert "not computed" not in render_markdown(data)

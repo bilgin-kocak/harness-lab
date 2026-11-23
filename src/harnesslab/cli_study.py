@@ -63,6 +63,7 @@ def _open(path: Path) -> Any:
 @contextlib.contextmanager
 def _study(path: Path) -> Iterator[Any]:
     """Open a study, turn protocol errors into messages, and always close the adapter."""
+    from harnesslab.study.contract import ConfigError
     from harnesslab.study.protocol import ProtocolError
     from harnesslab.study.runner import HarnessError
     from harnesslab.study.spec import StudySpecError
@@ -72,7 +73,9 @@ def _study(path: Path) -> Iterator[Any]:
     try:
         study = _open(path)
         yield study
-    except (StudySpecError, ProtocolError, StudyLockedError, FreezeExistsError) as exc:
+    # ConfigError: a configuration named in the spec is not a point of the search space (other
+    # errors are unexpected and keep their traceback)
+    except (StudySpecError, ConfigError, ProtocolError, StudyLockedError, FreezeExistsError) as exc:
         err_console.print(f"[red]{escape(str(exc))}[/]")
         raise typer.Exit(code=2) from exc
     except (HarnessError, DuplicateRecordError) as exc:
@@ -240,6 +243,9 @@ def study_report(
             f"[yellow]INCOMPLETE: {ho['missing_cells']} of {ho['expected_cells']} held-out cells "
             "have no record; tasks missing a cell are left out of each comparison[/]"
         )
+    rob = ho.get("robustness")
+    if rob and not rob.get("computed"):
+        console.print(f"[yellow]robustness: not computed ({escape(str(rob.get('reason')))})[/]")
     _print_comparisons(ho["comparisons"])
     for tag, group in (ho.get("groups") or {}).items():
         console.print(f"[bold]tag {escape(tag)}[/] ({len(group['tasks'])} tasks)")

@@ -132,6 +132,16 @@ def render_markdown(results: dict[str, Any]) -> str:
             "",
             f"- complete: {_fmt(ho['complete'])} ({ho['recorded_cells']} of "
             f"{ho['expected_cells']} planned cells recorded)",
+        ]
+        rob = ho.get("robustness")
+        if rob and rob.get("computed"):
+            out.append(
+                f"- robustness: {rob['knob']} over {len(rob['levels'])} levels, compared in the "
+                "rows named `robustness (...)`"
+            )
+        elif rob:
+            out.append(f"- robustness: not computed ({rob.get('reason')})")
+        out += [
             "",
             "| Configuration | Records | Passes | Verdicts | Attempt status | Cost $ | "
             "Wall time median s |",

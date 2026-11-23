@@ -89,6 +89,11 @@ class Knob(BaseModel):
         return any(canonical_json(level) == key for level in self.levels)
 
 
+class ConfigError(ValueError):
+    """A configuration is not a point of the search space: a knob missing or unknown, or a value
+    that is not one of its knob's levels."""
+
+
 class SearchSpace(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
@@ -116,11 +121,12 @@ class SearchSpace(BaseModel):
         return math.prod(len(k.levels) for k in self.knobs)
 
     def validate_config(self, config: Config, *, off_grid: Sequence[str] = ()) -> None:
-        """Every knob set, no unknown knob, every value a level (except knobs in ``off_grid``)."""
+        """Every knob set, no unknown knob, every value a level (except knobs in ``off_grid``);
+        raises :class:`ConfigError` otherwise."""
         missing = [n for n in self.names if n not in config.values]
         unknown = [n for n in config.values if n not in self.names]
         if missing or unknown:
-            raise ValueError(
+            raise ConfigError(
                 f"config {config.label or config.config_hash[:12]}: missing knobs "
                 f"{missing}, unknown knobs {unknown}"
             )
@@ -128,7 +134,7 @@ class SearchSpace(BaseModel):
             if name in off_grid:
                 continue
             if not self.knob(name).has_level(value):
-                raise ValueError(
+                raise ConfigError(
                     f"config {config.label or config.config_hash[:12]}: {value!r} "
                     f"is not a level of knob {name!r}"
                 )
@@ -169,7 +175,9 @@ class AttemptStatus(StrEnum):
     TIMEOUT = "timeout"
     REFUSED = "refused"  # a model declined; counted, never retried on another model
     ERROR = "error"
-    UNAVAILABLE = "unavailable"  # the system could not start at all
+    # The system could not start at all: the core records no outcome (a harness error) and runs
+    # the cell again later; it is never verified or counted as a failure.
+    UNAVAILABLE = "unavailable"
 
 
 class Attempt(BaseModel):

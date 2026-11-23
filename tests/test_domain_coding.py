@@ -30,9 +30,11 @@ from harnesslab.experiments.spec import (
 )
 from harnesslab.experiments.sweep import expand_sweep
 from harnesslab.runners import base as runners_base
+from harnesslab.runners.fake import FakeRunner
 from harnesslab.storage.database import Database
 from harnesslab.storage.models import RunRow
 from harnesslab.storage.repository import Repository
+from harnesslab.study.budget import Budget
 from harnesslab.study.contract import (
     Attempt,
     AttemptStatus,
@@ -45,6 +47,9 @@ from harnesslab.study.contract import (
     VerifyContext,
 )
 from harnesslab.study.registry import create_domain
+from harnesslab.study.runner import Cell as StudyCell
+from harnesslab.study.runner import HarnessError, run_cells
+from harnesslab.study.store import StudyStore
 from tests.conftest import FIXTURES
 
 DEMO_VARIANTS = ["fake-reference", "fake-noop", "fake-flaky", "fake-partial"]
@@ -57,7 +62,7 @@ FIXTURE_SUITE_DIR = FIXTURES / "coding"
 EXPECTED_STATUS = {
     RunStatus.COMPLETED: AttemptStatus.COMPLETED,
     RunStatus.TIMEOUT: AttemptStatus.TIMEOUT,
-    RunStatus.UNAVAILABLE: AttemptStatus.UNAVAILABLE,
+    RunStatus.UNAVAILABLE: AttemptStatus.UNAVAILABLE,  # when the harness never ran
 }
 EXPECTED_VERDICT = {
     Outcome.PASS: VerdictStatus.PASS,
@@ -422,6 +427,72 @@ async def test_timeout_and_other_run_statuses(tmp_path: Path, monkeypatch: pytes
         assert verdict.status == VerdictStatus.FAIL and attempt.output["outcome"] == "fail"
     timed_out = results[(task.id, configs["timeout"].config_hash, 0)][1]
     assert "run timeout: stub runner ended timeout" in timed_out.reason
+
+
+class _UnavailableFromRound(FakeRunner):
+    """The fake improver, whose CLI cannot launch from the round its ``unavailable_from`` option
+    names (from round 1: it never runs)."""
+
+    name = "test-coding-unavailable-from"
+
+    async def run(self, task, worktree, config, emit) -> RunnerResult:
+        if (config.improve_round or 1) >= int(config.get("unavailable_from")):
+            return RunnerResult(status=RunStatus.UNAVAILABLE, error="claude: command not found")
+        return await super().run(task, worktree, config, emit)
+
+
+async def test_an_improvement_run_unavailable_after_it_worked_keeps_its_verdict(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    # Review of the core fixes (F7): an improvement run whose harness worked in round 1 and could
+    # not launch in round 2 is reported unavailable by the pipeline, which verified it (Harness
+    # Lab counts it). As an unavailable attempt, the study core threw that verdict away, stopped
+    # the phase and ran the cell (here a held-out cell) again.
+    monkeypatch.setitem(runners_base._REGISTRY, _UnavailableFromRound.name, _UnavailableFromRound)
+    adapter = create_adapter(
+        {
+            "suite": "demo-improve",
+            "home": str(tmp_path / "home"),
+            "base_variant": {"runner": _UnavailableFromRound.name, "behavior": "solve"},
+            "knobs": {"unavailable_from": [2, 1]},
+            "baseline": {"unavailable_from": 2},
+        },
+        tmp_path / "study",
+    )
+    [task] = adapter.load_tasks(["fewer-key-operations"])
+    later, never = (Config(values={"unavailable_from": n}) for n in (2, 1))
+    store = StudyStore(tmp_path / "study")
+
+    async def run_cell(config: Config):
+        return await run_cells(
+            adapter,
+            store,
+            study="st",
+            phase="held_out",
+            cells=[StudyCell(task=task, config=config, repetition=0, stage="held_out")],
+            budget=Budget(),
+            parallelism=1,
+            keep_artifacts=False,
+        )
+
+    try:
+        with store.locked():
+            summary = await run_cell(later)
+            with pytest.raises(HarnessError, match="unavailable"):
+                await run_cell(never)
+    finally:
+        await adapter.close()
+    assert summary.ran == 1 and summary.harness_errors == 0 and summary.verdicts == {"pass": 1}
+    worked, never_ran = store.records("held_out")
+    assert worked["attempt"]["status"] == "error"
+    assert worked["attempt"]["details"]["run_status"] == "unavailable"
+    assert worked["harness_error"] is None and worked["verdict"]["status"] == "pass"
+    assert worked["verdict"]["checker"] == CHECKER
+    assert worked["attempt"]["output"]["outcome"] == "pass"
+    # a harness that never ran stays no outcome: the cell runs again
+    assert never_ran["attempt"]["status"] == "unavailable" and never_ran["verdict"] is None
+    assert never_ran["harness_error"].startswith("unavailable: ")
+    assert store.completed("held_out") == {(task.id, later.config_hash, 0)}
 
 
 def test_one_adapter_serves_several_event_loops(tmp_path: Path):

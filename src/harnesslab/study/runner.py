@@ -12,19 +12,22 @@ Rules the runner enforces for every adapter:
 * ``run`` raising an ordinary exception is part of the system under test: the cell is recorded as
   an ``error`` attempt with a ``fail`` verdict from the core (there is no output to verify), it is
   charged its whole reservation (it may have spent money it could not report), and the phase goes
-  on.
+  on. The core writes that attempt itself (the exception's text and traceback, made storable), so
+  it is always recorded.
 * A broken harness stops the phase: ``run`` raising :class:`HarnessError` or returning something
   other than an :class:`Attempt`, an attempt for another cell, ``verify`` or ``metrics`` raising,
   an invalid or over-the-cap cost, or a record that cannot be stored. The cell is recorded with a
   ``harness_error`` (it has no valid outcome and may run again once the harness is fixed), the
   cells already running finish and are recorded, and the first problem is raised.
+* So does an attempt with status ``unavailable`` (the system could not start at all): it is not
+  verified, it is recorded with ``harness_error`` "unavailable: <reason>" and the cost it
+  reported, and the cell runs again once the system is available; it is never a loss.
 """
 
 from __future__ import annotations
 
 import asyncio
 import hashlib
-import json
 import math
 import shutil
 import time
@@ -47,7 +50,7 @@ from harnesslab.study.contract import (
     VerdictStatus,
     VerifyContext,
 )
-from harnesslab.study.store import StudyStore
+from harnesslab.study.store import StudyStore, encode_line
 
 
 class HarnessError(RuntimeError):
@@ -90,22 +93,105 @@ def cell_seed(study: str, phase: str, cell: Cell) -> int:
     return int(hashlib.sha256(text.encode()).hexdigest()[:8], 16)
 
 
-def _storable(record: dict[str, Any]) -> tuple[dict[str, Any], str | None]:
-    """The record if it is strict JSON, else a reduced record and the reason."""
+def _clean(value: Any) -> Any:
+    """``value`` with every string made encodable as UTF-8 (a lone surrogate becomes ``\\ud83d``
+    text) and non-finite floats as text: what a reduced record may still contain."""
+    if isinstance(value, str):
+        return value.encode("utf-8", "backslashreplace").decode("utf-8")
+    if isinstance(value, float) and not math.isfinite(value):
+        return repr(value)
+    if isinstance(value, dict):
+        return {_clean(str(k)): _clean(v) for k, v in value.items()}
+    if isinstance(value, list | tuple):
+        return [_clean(v) for v in value]
+    return value
+
+
+def _message(exc: BaseException) -> str:
+    """An exception's text as the store can always write it: the text may quote a lone surrogate
+    (a broken escape from a model reply), and ``str()`` itself may fail."""
     try:
-        json.dumps(record, sort_keys=True, ensure_ascii=False, allow_nan=False)
-        return record, None
-    except (TypeError, ValueError) as exc:
-        reason = f"record is not storable as JSON: {type(exc).__name__}: {exc}"
-        reduced = {
-            k: v
-            for k, v in record.items()
-            if k not in ("attempt", "verdict", "metrics", "harness_traceback")
+        text = str(exc)
+    except Exception:
+        text = "<the message cannot be shown>"
+    return _clean(text)
+
+
+def _traceback(limit: int = 4000) -> str:
+    """The traceback of the exception being handled, as the store can always write it."""
+    return _clean(traceback.format_exc()[-limit:])
+
+
+def _attempt_text(attempt: Attempt, limit: int = 4000) -> str:
+    """The attempt as text, for a record that cannot hold it as JSON (without the payload, which
+    is never stored)."""
+    try:
+        text = repr(attempt.model_dump(mode="python"))
+    except Exception as exc:  # an object whose repr itself breaks
+        text = f"<{attempt.status} attempt: not representable: {type(exc).__name__}>"
+    return _clean(text[:limit])
+
+
+# Fields of a record that the core writes itself (a reduced record keeps them).
+_CORE_FIELDS = (
+    "phase",
+    "stage",
+    "task_id",
+    "config_hash",
+    "repetition",
+    "started_at",
+    "finished_at",
+    "reservation_id",
+    "reserved_usd",
+    "charged_usd",
+    "cell_seconds",
+)
+
+
+def _storable(
+    record: dict[str, Any],
+    attempt: Attempt,
+    verdict: Verdict | None,
+    metrics: dict[str, Any],
+    problem: str | None,
+) -> tuple[dict[str, Any], str | None]:
+    """The complete record and ``problem``, if the store can write it; else a reduced record (the
+    core's fields, the attempt as text, no verdict, no metrics) and a harness problem naming the
+    serialisation failure.
+
+    Dumping the attempt and the verdict happens here too: output that pydantic cannot serialise
+    (bytes that are not UTF-8, arbitrary objects) or that JSON allows but UTF-8 does not (a lone
+    surrogate) must still leave a record, with its reservation id and charge, rather than none.
+    """
+    try:
+        full = {
+            **record,
+            "attempt": attempt.model_dump(mode="json"),
+            "verdict": verdict.model_dump(mode="json") if verdict is not None else None,
+            "metrics": metrics,
+            "harness_error": problem,
         }
-        reduced["attempt"] = {"unstorable": repr(record.get("attempt"))[:4000]}
-        reduced["verdict"] = None
-        reduced["metrics"] = {}
-        return reduced, reason
+        encode_line(full)  # exactly what the store will write
+        return full, problem
+    except Exception as exc:
+        reason = _clean(
+            f"the record cannot be stored (serialisation failed): {type(exc).__name__}: {exc}"
+        )
+    problem = _clean(problem) if problem is not None else reason
+    reduced = {k: _clean(v) for k, v in record.items() if k not in ("harness_traceback", "attempt")}
+    reduced.update(
+        attempt={"unstorable": _attempt_text(attempt), "reason": reason},
+        verdict=None,
+        metrics={},
+        harness_error=problem,
+    )
+    try:
+        encode_line(reduced)
+    except Exception:  # a core field the store cannot write either: keep only the essentials
+        reduced = {k: _clean(record.get(k)) for k in _CORE_FIELDS}
+        reduced.update(attempt={"unstorable": reason}, verdict=None, metrics={})
+        reduced["harness_error"] = problem
+    return reduced, problem
 
 
 async def run_cells(
@@ -221,17 +307,18 @@ async def run_cells(
                 else:
                     problem = f"run() returned {type(result).__name__}, not an Attempt"
             except HarnessError as exc:
-                problem = f"run() reported a harness error: {exc}"
-                record["harness_traceback"] = traceback.format_exc()[-4000:]
+                problem = f"run() reported a harness error: {_message(exc)}"
+                record["harness_traceback"] = _traceback()
             except Exception as exc:  # the system under test failed: a recorded result
+                # (the core writes this attempt itself, so it is always storable)
                 raised = True
                 attempt = Attempt(
                     task_id=cell.task.id,
                     config_hash=cell.config.config_hash,
                     repetition=cell.repetition,
                     status=AttemptStatus.ERROR,
-                    error=f"{type(exc).__name__}: {exc}",
-                    details={"traceback": traceback.format_exc()[-4000:]},
+                    error=f"{type(exc).__name__}: {_message(exc)}",
+                    details={"traceback": _traceback()},
                 )
             if attempt is None:  # a harness problem inside run(): no attempt to keep
                 raised = True  # nothing reported: charge the whole reservation
@@ -255,6 +342,11 @@ async def run_cells(
                 != cell.key
             ):
                 problem = f"adapter returned an attempt for {attempt.task_id}/{attempt.repetition}"
+            if problem is None and not raised and attempt.status == AttemptStatus.UNAVAILABLE:
+                # The system could not start at all (a missing CLI, an outage): there is nothing
+                # to verify and no outcome to count, so the cell is left without one (it runs
+                # again) and the phase stops like for any other harness problem.
+                problem = f"unavailable: {attempt.error or 'the system could not start'}"
             verdict: Verdict | None = None
             metrics: dict[str, Any] = {}
             if problem is None and raised:
@@ -290,8 +382,8 @@ async def run_cells(
                     if bad:
                         raise ValueError(f"non-finite metric value(s): {', '.join(sorted(bad))}")
                 except Exception as exc:
-                    problem = f"verify/metrics failed: {type(exc).__name__}: {exc}"
-                    record["harness_traceback"] = traceback.format_exc()[-4000:]
+                    problem = f"verify/metrics failed: {type(exc).__name__}: {_message(exc)}"
+                    record["harness_traceback"] = _traceback()
             cost = attempt.usage.cost_usd
             cost_ok = isinstance(cost, int | float) and math.isfinite(cost) and cost >= 0
             if problem is None and not raised:
@@ -304,19 +396,14 @@ async def run_cells(
             # reservation (the most it was allowed to spend), so the budget never undercounts.
             charged = reservation.usd if raised or not cost_ok else float(cost)
             budget.settle(reservation, charged, elapsed)
-            record.update(
-                finished_at=_now(),
-                cell_seconds=round(elapsed, 6),
-                charged_usd=charged,
-                attempt=attempt.model_dump(mode="json"),
-                verdict=verdict.model_dump(mode="json") if verdict and problem is None else None,
-                metrics=metrics if problem is None else {},
-                harness_error=problem,
+            record.update(finished_at=_now(), cell_seconds=round(elapsed, 6), charged_usd=charged)
+            record, problem = _storable(
+                record,
+                attempt,
+                verdict if problem is None else None,
+                metrics if problem is None else {},
+                problem,
             )
-            record, unstorable = _storable(record)
-            if unstorable is not None:
-                problem = problem or unstorable
-                record["harness_error"] = problem
             async with lock:
                 store.append(phase, record)
                 summary.ran += 1

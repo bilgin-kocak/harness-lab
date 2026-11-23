@@ -6,12 +6,16 @@ The protocol is what makes a result trustworthy, so it is strict:
 * the search loads and runs dev tasks only; held-out tasks are loaded only after ``freeze.json``
   exists (and, by default, is committed to git and unmodified);
 * every step that writes holds the study's lock, so one study never runs in two processes;
-* each search stage fixes its configurations and cells the first time it runs (``plans/``), so
-  resuming a stage, or re-running ``search``, adds nothing and changes nothing;
+* each search stage fixes its configurations and cells the first time it runs (``plans/``), or
+  its decision to run nothing (no configuration qualified, or skipped by ``if_budget_allows``),
+  so resuming a stage, or re-running ``search``, adds nothing and changes nothing; ``search``
+  stops at a stage left with planned cells unrecorded (the budget stopped it) rather than decide
+  the stages after it from incomplete results; a stage edited after it ran or decided is
+  refused, and a plan whose stage was renamed or removed since stops the search and the freeze;
 * ``freeze.json`` is written once. Before the held-out phase it must still match the split file,
   the adapter (name, version, options, provenance), the objective, statistics and held-out
-  sections of the spec and the dev records, and re-ranking the dev records must give the same
-  choice;
+  sections of the spec (as written, and their values in effect, so a changed default counts) and
+  the dev records, and re-ranking the dev records must give the same choice;
 * every held-out cell runs once (see :mod:`harnesslab.study.store`);
 * the budget covers every phase together, counts interrupted cells in full, and the search may not
   spend the held-out reserve.
@@ -22,6 +26,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import importlib.metadata
+import json
 import random
 import subprocess
 from collections import Counter
@@ -30,12 +35,22 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from pydantic import BaseModel
+
 from harnesslab.study.budget import Budget
-from harnesslab.study.contract import Config, DomainAdapter, Task, canonical_json, sha256_json
+from harnesslab.study.contract import (
+    Config,
+    ConfigError,
+    DomainAdapter,
+    Task,
+    canonical_json,
+    sha256_json,
+)
 from harnesslab.study.objective import Ranking, rank_configs
-from harnesslab.study.report import build_results
+from harnesslab.study.report import build_results, robustness_not_computed
 from harnesslab.study.runner import Cell, RunSummary, run_cells
 from harnesslab.study.search import (
+    baseline_first,
     combine_config,
     confirm_configs,
     dedupe,
@@ -46,11 +61,39 @@ from harnesslab.study.search import (
     shuffled,
     stage_levels,
 )
-from harnesslab.study.spec import Split, StageSpec, StudySpec, load_split, spec_sha256
+from harnesslab.study.spec import (
+    ComparatorSpec,
+    Split,
+    StageSpec,
+    StudySpec,
+    load_split,
+    spec_sha256,
+)
 from harnesslab.study.store import PHASES, StudyStore, cell_key
 
 # Spec sections the freeze seals: changing any of them after the freeze invalidates the study.
 SEALED_SECTIONS = ("objective", "stats", "held_out")
+
+# Plans and freezes hash and seal what the author wrote ("written": the fields set in the spec,
+# pydantic defaults left out), so a code update that only adds an optional field invalidates
+# nothing. Plans and freezes without this marker were made with the full dump, defaults included,
+# and are still checked that way.
+WRITTEN = "written"
+
+
+def _written(section: BaseModel) -> Any:
+    """A spec section or stage as its author wrote it: the fields set, defaults left out."""
+    return section.model_dump(mode="json", exclude_unset=True)
+
+
+# What a stage's plan file records when the stage runs no cell: no configuration qualified
+# ("nothing to run"), or ``if_budget_allows`` found the stage too expensive ("skipped").
+NOTHING_TO_RUN = "nothing_to_run"
+SKIPPED = "skipped"
+DECISIONS = (NOTHING_TO_RUN, SKIPPED)
+
+# Stage kinds decided from the ranking of the dev records made so far.
+RANKING_KINDS = ("refine", "combine", "confirm")
 
 
 class ProtocolError(RuntimeError):
@@ -100,6 +143,25 @@ def _diff_keys(a: Any, b: Any, prefix: str = "") -> list[str]:
     return [] if canonical_json(a) == canonical_json(b) else [prefix.rstrip(".") or "(value)"]
 
 
+def _no_longer(frozen: Any, now: Any, prefix: str = "") -> list[str]:
+    """Dotted paths of ``frozen`` whose value ``now`` no longer has. Only what ``frozen`` has
+    counts: a key only ``now`` has (an optional field added since) is no change."""
+    if isinstance(frozen, dict) and isinstance(now, dict):
+        out = []
+        for k in sorted(frozen, key=str):
+            path = f"{prefix}{k}"
+            out += _no_longer(frozen[k], now[k], f"{path}.") if k in now else [path]
+        return out
+    if isinstance(frozen, list) and isinstance(now, list) and len(frozen) == len(now):
+        out = []
+        for i, (a, b) in enumerate(zip(frozen, now, strict=True)):
+            out += _no_longer(a, b, f"{prefix}{i}.")
+        return out
+    return (
+        [] if canonical_json(frozen) == canonical_json(now) else [prefix.rstrip(".") or "(value)"]
+    )
+
+
 class Study:
     def __init__(
         self, spec: StudySpec, adapter: DomainAdapter, *, log: Callable[[str], None] = print
@@ -145,8 +207,14 @@ class Study:
             "provenance_sha256": sha256_json(self._provenance()),
         }
 
-    def _sections(self) -> dict[str, Any]:
-        return {name: getattr(self.spec, name).model_dump(mode="json") for name in SEALED_SECTIONS}
+    def _sections(self, *, written: bool = True) -> dict[str, Any]:
+        """The sealed sections as written (or, for a freeze made before, as fully dumped)."""
+        return {
+            name: _written(getattr(self.spec, name))
+            if written
+            else getattr(self.spec, name).model_dump(mode="json")
+            for name in SEALED_SECTIONS
+        }
 
     # -- checks ----------------------------------------------------------------
     def _check_hashes(self, tasks: list[Task]) -> list[str]:
@@ -223,13 +291,29 @@ class Study:
                 problems.append(f"stage {stage.name}: unknown base {stage.base!r}")
             if stage.kind == "combine" and stage.reference not in known:
                 problems.append(f"stage {stage.name}: unknown reference {stage.reference!r}")
+        problems += self.orphaned_plans()
+        # The held-out configurations, built as the freeze builds them (the baseline stands in
+        # for the frozen configuration, which is some point of the search space).
         for comp in self.spec.held_out.comparators:
-            for k in comp.set:
-                if k not in self.space.names:
-                    problems.append(f"comparator {comp.label}: unknown knob {k!r}")
+            unknown = [k for k in comp.set if k not in self.space.names]
+            for k in unknown:
+                problems.append(f"comparator {comp.label}: unknown knob {k!r}")
+            if not unknown:
+                try:
+                    self._comparator(comp, self.baseline)
+                except ConfigError as exc:
+                    problems.append(f"comparator {comp.label}: {exc}")
         rob = self.spec.held_out.robustness
         if rob is not None and rob.knob not in self.space.names:
             problems.append(f"robustness: unknown knob {rob.knob!r}")
+        elif rob is not None:
+            try:
+                self._robustness_configs(self.baseline)
+            except ConfigError as exc:
+                problems.append(f"robustness: {exc}")
+        not_compared = robustness_not_computed(self.spec)
+        if not_compared is not None:
+            problems.append(f"robustness: {not_compared}")
         try:
             dev_tasks = self.dev_tasks()
         except Exception as exc:
@@ -289,7 +373,7 @@ class Study:
 
     def stage_configs(self, stage: StageSpec) -> tuple[list[Config], str]:
         known = self._known_labels()
-        ranking = self.rank() if stage.kind in ("refine", "combine", "confirm") else None
+        ranking = self.rank() if stage.kind in RANKING_KINDS else None
         note = ""
         if stage.kind == "explicit":
             # this stage's own definitions (a label repeated across stages has the same settings)
@@ -303,7 +387,10 @@ class Study:
             configs = [cfg] if cfg else []
         else:
             configs = confirm_configs(stage, ranking, self.baseline)  # type: ignore[arg-type]
-        return shuffled(dedupe(configs), self.spec.search.seed, stage.name), note
+        # A seeded shuffle, except that the baseline's cells run first: a stage the budget stops
+        # still has the baseline every comparison needs.
+        order = shuffled(dedupe(configs), self.spec.search.seed, stage.name)
+        return baseline_first(order, self.baseline.config_hash), note
 
     def _stage_tasks(self, stage: StageSpec) -> list[Task]:
         tasks = self.dev_tasks()
@@ -320,6 +407,16 @@ class Study:
             keep = set(ranking.task_ids)
             tasks = [t for t in tasks if t.id in keep]
         return tasks
+
+    def _plan_header(self, stage: StageSpec) -> dict[str, Any]:
+        return {
+            "stage": stage.name,
+            "stage_sha256": sha256_json(_written(stage)),
+            "stage_sha256_of": WRITTEN,
+            "phase": stage.phase,
+            "kind": stage.kind,
+            "created_at": datetime.now(UTC).isoformat(timespec="seconds"),
+        }
 
     def _new_plan(self, stage: StageSpec) -> dict[str, Any] | str:
         """The configurations and cells of a stage that has not run yet, or why it has none."""
@@ -339,11 +436,8 @@ class Study:
                 if existing[(c.config_hash, t.id)]
             }
         return {
-            "stage": stage.name,
-            "stage_sha256": sha256_json(stage.model_dump(mode="json")),
-            "phase": stage.phase,
-            "kind": stage.kind,
-            "created_at": datetime.now(UTC).isoformat(timespec="seconds"),
+            **self._plan_header(stage),
+            "decision": "run",
             "note": note,
             "configs": [
                 {"label": c.label, "values": c.values, "config_hash": c.config_hash}
@@ -352,6 +446,19 @@ class Study:
             "tasks": [t.id for t in tasks],
             "repetitions": stage.repetitions,
             "repetition_starts": starts,
+        }
+
+    def _decision(self, stage: StageSpec, decision: str, reason: str) -> dict[str, Any]:
+        """The plan of a stage that runs no cell: what was decided, and why (an empty plan)."""
+        return {
+            **self._plan_header(stage),
+            "decision": decision,
+            "reason": reason,
+            "note": reason,
+            "configs": [],
+            "tasks": [],
+            "repetitions": stage.repetitions,
+            "repetition_starts": {},
         }
 
     def _plan_cells(self, stage: StageSpec, plan: dict[str, Any]) -> list[Cell]:
@@ -368,10 +475,77 @@ class Study:
                     cells.append(Cell(task=t, config=cfg, repetition=rep, stage=stage.name))
         return cells
 
+    def _unrecorded(
+        self, stage: StageSpec, plan: dict[str, Any], done: set[Any] | None = None
+    ) -> list[Cell]:
+        """The planned cells of ``stage`` without a valid record (a harness error is none)."""
+        if done is None:
+            done = self.store.completed(stage.phase)
+        return [c for c in self._plan_cells(stage, plan) if c.key not in done]
+
+    def _require_earlier_stages(self, stage: StageSpec) -> None:
+        """A stage decided from the ranking (refine, combine, confirm) runs only once every stage
+        before it in the spec (in its phase) has fixed its plan or its decision and has a valid
+        record for every planned cell: otherwise it would be decided from missing results."""
+        unfinished: list[str] = []
+        done: set[Any] | None = None
+        for earlier in self.spec.search.stages:
+            if earlier.name == stage.name:
+                break
+            if earlier.phase != stage.phase:
+                continue
+            plan = self.stage_plan(earlier)
+            if plan is None:
+                unfinished.append(f"{earlier.name} (has not run)")
+                continue
+            if done is None:
+                done = self.store.completed(stage.phase)
+            n = len(self._unrecorded(earlier, plan, done))
+            if n:
+                unfinished.append(f"{earlier.name} ({n} planned cell(s) without a valid record)")
+        if unfinished:
+            raise ProtocolError(
+                f"stage {stage.name}: a {stage.kind} stage is decided from the results of the "
+                f"stages before it, which must finish first: {', '.join(unfinished)}"
+            )
+
+    def orphaned_plans(self) -> list[str]:
+        """Plans that no stage of the spec reads: the stage that ran or decided under that name
+        was renamed or removed since. Plans are kept by stage name, so its plan would be ignored
+        and the stage decided again, from records made after it (by the stages after it)."""
+        problems = []
+        for phase in ("smoke", "dev"):
+            expected = {
+                self.store.plan_path(phase, s.name): s.name
+                for s in self.spec.search.stages
+                if s.phase == phase
+            }
+            for path in self.store.plan_files(phase):
+                where = f"{phase}/plans/{path.name}"
+                try:
+                    stage = json.loads(path.read_text(encoding="utf-8")).get("stage")
+                except (OSError, ValueError, AttributeError) as exc:
+                    problems.append(f"{where}: unreadable plan ({type(exc).__name__}: {exc})")
+                    continue
+                if expected.get(path) != stage:
+                    problems.append(
+                        f"{where}: stage {stage!r} ran or decided under that name and the spec "
+                        f"has no {phase} stage of that name now (renamed, removed or moved); a "
+                        "pre-registered stage cannot be renamed or removed mid-study"
+                    )
+        return problems
+
     def stage_plan(self, stage: StageSpec) -> dict[str, Any] | None:
-        """The plan a stage fixed when it first ran, or None if it has not run."""
+        """The plan a stage fixed when it first ran (its cells, or its decision to run none), or
+        None if it has not run."""
         plan = self.store.read_plan(stage.phase, stage.name)
-        if plan is not None and plan["stage_sha256"] != sha256_json(stage.model_dump(mode="json")):
+        if plan is None:
+            return None
+        if plan.get("stage_sha256_of") == WRITTEN:
+            now = sha256_json(_written(stage))
+        else:  # a plan made before the hash left defaults out
+            now = sha256_json(stage.model_dump(mode="json"))
+        if plan["stage_sha256"] != now:
             raise ProtocolError(
                 f"stage {stage.name}: its definition in the spec changed after it started; a "
                 "pre-registered stage cannot be edited mid-study"
@@ -397,17 +571,40 @@ class Study:
         return max(needs, default=0.0)
 
     async def run_stage(self, name: str) -> RunSummary | str:
-        """Run one search stage (or resume it); returns its summary or why it was skipped."""
+        """Run one search stage (or resume it); returns its summary, or why it runs no cell.
+
+        The first run fixes the stage's plan, or its decision to run nothing (no configuration
+        qualified, or ``if_budget_allows`` skipped it), in ``plans/``; later runs reuse that
+        decision and return its reason, so records made later (by later stages, or with more
+        budget) never decide the stage again.
+        """
         with self.store.locked():
             self._require_sound_split()
             if self.store.read_freeze() is not None:
                 raise ProtocolError("the study is frozen: no more search")
+            orphaned = self.orphaned_plans()
+            if orphaned:
+                raise ProtocolError(
+                    "the stage plans do not match the spec:\n- " + "\n- ".join(orphaned)
+                )
             stage = self.spec.stage(name)
+            if stage.kind in RANKING_KINDS:
+                self._require_earlier_stages(stage)
             plan = self.stage_plan(stage)
+            if plan is not None and plan.get("decision") in DECISIONS:
+                what = "nothing to run" if plan["decision"] == NOTHING_TO_RUN else "skipped"
+                self.log(
+                    f"stage {name}: {what}, as decided when it first ran ({plan['created_at']}): "
+                    f"{plan['reason']}"
+                )
+                return str(plan["reason"])
             budget = self.budget(for_held_out=False)
             if plan is None:
                 new = self._new_plan(stage)
                 if isinstance(new, str):
+                    self.store.write_plan(
+                        stage.phase, stage.name, self._decision(stage, NOTHING_TO_RUN, new)
+                    )
                     self.log(f"stage {name}: nothing to run ({new})")
                     return new
                 cells = self._plan_cells(stage, new)
@@ -422,6 +619,9 @@ class Study:
                         msg = (
                             f"skipped: projected ${projected:.2f} plus a ${margin:.2f} reservation "
                             f"> ${remaining:.2f} left before the held-out reserve"
+                        )
+                        self.store.write_plan(
+                            stage.phase, stage.name, self._decision(stage, SKIPPED, msg)
                         )
                         self.log(f"stage {name}: {msg}")
                         return msg
@@ -448,24 +648,52 @@ class Study:
             )
 
     async def search(self, stages: list[str] | None = None) -> dict[str, RunSummary | str]:
+        """Run the stages (all, or the named ones) in spec order.
+
+        The search stops at the first stage that ends with planned cells still unrecorded (the
+        budget stopped it, or cells were interrupted): the stages after it are reported as not
+        reached, since deciding them now would rank incomplete results.
+        """
         names = [s.name for s in self.spec.search.stages]
         unknown = [s for s in stages or [] if s not in names]
         if unknown:
             raise ProtocolError(f"unknown stage(s) {unknown}; the spec has {names}")
         out: dict[str, RunSummary | str] = {}
+        stopped: str | None = None
         for stage in self.spec.search.stages:
-            if stages is None or stage.name in stages:
-                out[stage.name] = await self.run_stage(stage.name)
+            if stages is not None and stage.name not in stages:
+                continue
+            if stopped is not None:
+                out[stage.name] = f"not reached: {stopped}"
+                self.log(f"stage {stage.name}: {out[stage.name]}")
+                continue
+            result = await self.run_stage(stage.name)
+            out[stage.name] = result
+            stopped = self._unfinished(stage, result)
         return out
 
+    def _unfinished(self, stage: StageSpec, result: RunSummary | str) -> str | None:
+        """Why the search cannot go past ``stage`` now, or None when every planned cell of it has
+        a valid record."""
+        if isinstance(result, RunSummary) and result.budget_stop:
+            return f"stage {stage.name} stopped on the budget ({result.budget_stop})"
+        plan = self.stage_plan(stage)
+        open_cells = self._unrecorded(stage, plan) if plan is not None else []
+        if open_cells:
+            return (
+                f"stage {stage.name} has {len(open_cells)} planned cell(s) without a valid record"
+            )
+        return None
+
     # -- freeze ----------------------------------------------------------------
-    def _comparators(self, frozen: Config) -> list[Config]:
+    def _comparator(self, comp: ComparatorSpec, frozen: Config) -> Config:
+        base = frozen if comp.base == "frozen" else self.baseline
+        cfg = base.replace(label=comp.label, **comp.set)
+        self.space.validate_config(cfg)
+        return cfg
+
+    def _robustness_configs(self, frozen: Config) -> list[Config]:
         out = []
-        for comp in self.spec.held_out.comparators:
-            base = frozen if comp.base == "frozen" else self.baseline
-            cfg = base.replace(label=comp.label, **comp.set)
-            self.space.validate_config(cfg)
-            out.append(cfg)
         rob = self.spec.held_out.robustness
         if rob is not None:
             for name in rob.configs:
@@ -476,21 +704,29 @@ class Study:
                     out.append(cfg)
         return out
 
+    def _comparators(self, frozen: Config) -> list[Config]:
+        """The held-out comparators and robustness configurations (:class:`ConfigError` if one is
+        not a configuration of the search space)."""
+        out = [self._comparator(comp, frozen) for comp in self.spec.held_out.comparators]
+        return out + self._robustness_configs(frozen)
+
     def freeze_eligible(self) -> set[str] | None:
         """Configurations the freeze may choose: after a confirm stage ran, only its configurations
-        (the winner is decided on the confirmed repetitions); otherwise any."""
+        (the winner is decided on the confirmed repetitions); otherwise (also when the confirm
+        stage decided to run nothing) any."""
         eligible: set[str] | None = None
         for stage in self.spec.search.stages:
             if stage.kind != "confirm" or stage.phase != "dev":
                 continue
             plan = self.stage_plan(stage)
-            if plan is not None:
+            if plan is not None and plan.get("decision") not in DECISIONS:
                 eligible = {c["config_hash"] for c in plan["configs"]}
         return eligible
 
     def _search_problems(self) -> list[str]:
         """Reasons the dev records cannot be frozen as they are."""
-        problems = []
+        # a renamed confirm stage would no longer restrict the choice to its configurations
+        problems = self.orphaned_plans()
         dev_all = self.store.records("dev")
         valid = {cell_key(r) for r in self.store.effective("dev")}
         broken = sorted({cell_key(r) for r in dev_all if r.get("harness_error")} - valid)
@@ -539,6 +775,13 @@ class Study:
             if best is None:
                 raise ProtocolError("no configuration is feasible on dev: nothing to freeze")
             frozen = Config(values=best.values, label=best.label or "frozen")
+            try:
+                comparators = self._comparators(frozen)
+            except ConfigError as exc:
+                raise ProtocolError(
+                    f"cannot freeze: a held-out comparator is not a configuration of the search "
+                    f"space ({exc}); `harnesslab study check` reports this before the search"
+                ) from exc
             dev_records = self.store.effective("dev")
             stage_counts = Counter(r["stage"] for r in dev_records)
             data: dict[str, Any] = {
@@ -555,9 +798,14 @@ class Study:
                     "n_dev": len(self.dev_ids),
                     "n_held_out": len(self.held_out_ids),
                 },
+                # the sealed sections as in effect, defaults included: the held-out phase checks
+                # that they still have these values (a key added to the code since is no change)
                 "objective": self.spec.objective.model_dump(mode="json"),
+                "stats": self.spec.stats.model_dump(mode="json"),
                 "held_out_spec": self.spec.held_out.model_dump(mode="json"),
+                # ... and that the author still writes the same: the sections as written
                 "sealed_sections": self._sections(),
+                "sealed_sections_of": WRITTEN,
                 "baseline": {
                     "label": "baseline",
                     "config": self.baseline.values,
@@ -571,7 +819,7 @@ class Study:
                 },
                 "comparators": [
                     {"label": c.label, "config": c.values, "config_hash": c.config_hash}
-                    for c in self._comparators(frozen)
+                    for c in comparators
                 ],
                 "dev": {
                     "records": len(dev_records),
@@ -616,15 +864,37 @@ class Study:
         changed = _diff_keys(adapter.get("provenance"), self._provenance())
         if changed:
             problems.append(f"the adapter's provenance changed since the freeze: {changed[:8]}")
-        if canonical_json(freeze.get("held_out_spec")) != canonical_json(
+        # A freeze made before sections were sealed as written compares full dumps (defaults
+        # included), as it was made; its held_out_spec was checked too.
+        written = freeze.get("sealed_sections_of") == WRITTEN
+        if not written and canonical_json(freeze.get("held_out_spec")) != canonical_json(
             self.spec.held_out.model_dump(mode="json")
         ):
             problems.append("the held_out section of the spec changed since the freeze")
         sealed = freeze.get("sealed_sections")
-        if sealed is not None:
-            for name, value in self._sections().items():
-                if canonical_json(sealed.get(name)) != canonical_json(value):
-                    problems.append(f"the {name} section of the spec changed since the freeze")
+        # A freeze sealed as written also has the sections in effect: a value they have that the
+        # sections no longer have, with the same spec, is a default the code changed since.
+        in_effect = (
+            {
+                "objective": freeze.get("objective"),
+                "stats": freeze.get("stats"),
+                "held_out": freeze.get("held_out_spec"),
+            }
+            if written
+            else {}
+        )
+        for name, value in self._sections(written=written).items():
+            if sealed is not None and canonical_json(sealed.get(name)) != canonical_json(value):
+                problems.append(f"the {name} section of the spec changed since the freeze")
+            elif in_effect.get(name) is not None:
+                now = getattr(self.spec, name).model_dump(mode="json")
+                changed = _no_longer(in_effect[name], now)
+                if changed:
+                    problems.append(
+                        f"the {name} section of the spec changed since the freeze: "
+                        f"{', '.join(changed[:8])} (in effect, not as written: the code changed "
+                        "a default the spec relies on)"
+                    )
         dev = freeze.get("dev", {})
         if dev.get("records_sha256") is not None and dev[
             "records_sha256"

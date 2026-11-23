@@ -26,11 +26,14 @@ reported.
 
 from __future__ import annotations
 
+import asyncio
 import contextlib
+import contextvars
 import gzip
 import json
 import os
 import re
+import threading
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
@@ -38,6 +41,25 @@ from typing import Any
 from harnesslab.study.contract import sha256_json
 
 PHASES = ("smoke", "dev", "held_out")
+
+# The study locks held by the current context (one token per lock), which decides who may write.
+# A thread has its own context, and an asyncio task starts with a copy of its creator's: the tasks
+# a step starts (its cells) write under the step's lock, while a step running concurrently in
+# another task does not. Entering the lock again is decided by who took it (see
+# :meth:`StudyStore.locked`), not by the context, since a task inherits it.
+_HELD_LOCKS: contextvars.ContextVar[tuple[object, ...]] = contextvars.ContextVar(
+    "harnesslab_study_locks", default=()
+)
+
+
+def _running_step() -> object:
+    """What runs the calling code: its asyncio task, or its thread outside any task."""
+    try:
+        task = asyncio.current_task()
+    except RuntimeError:  # no event loop runs in this thread
+        task = None
+    return task if task is not None else threading.current_thread()
+
 
 CellKey = tuple[str, str, int]  # task id, config hash, repetition
 
@@ -60,6 +82,16 @@ def _safe(name: str) -> str:
 
 def cell_key(record: dict[str, Any]) -> CellKey:
     return (record["task_id"], record["config_hash"], int(record["repetition"]))
+
+
+def encode_line(record: dict[str, Any]) -> bytes:
+    """A record as one line of the JSONL files: strict JSON (no NaN), encoded as UTF-8.
+
+    Raises (``TypeError``, ``ValueError``, ``UnicodeEncodeError``) for a record that cannot be
+    stored, before anything is written.
+    """
+    line = json.dumps(record, sort_keys=True, ensure_ascii=False, allow_nan=False)
+    return (line + "\n").encode("utf-8")
 
 
 def effective_records(records: list[dict[str, Any]], *, where: str = "") -> list[dict[str, Any]]:
@@ -87,21 +119,43 @@ class StudyStore:
     def __init__(self, root: Path) -> None:
         self.root = Path(root)
         self._lock_fh: Any = None
+        self._owner: object | None = None  # the token of the context holding the lock
+        self._holder: object | None = None  # the task (or thread) that took it
+        self._depth = 0
 
     # -- the lock ----------------------------------------------------------
     @property
     def lock_path(self) -> Path:
         return self.root / ".lock"
 
+    def _owned(self) -> bool:
+        """Whether the current context (or the one that started it) holds the lock."""
+        return self._owner is not None and self._owner in _HELD_LOCKS.get()
+
     @contextlib.contextmanager
     def locked(self) -> Iterator[None]:
-        """Hold the study's exclusive lock (re-entrant within one store object).
+        """Hold the study's exclusive lock.
 
         Every step that writes records, plans, the freeze or the results holds it, so two
-        processes can never run the same cells or spend the same budget twice.
+        processes can never run the same cells or spend the same budget twice. Only the asyncio
+        task (or, outside one, the thread) that took it may enter it again; its blocks nest, and
+        the OS lock is released when its outermost block ends. Any other task or thread of the
+        process is refused like another process: a step running concurrently, and also a step
+        that the holder started as a task of its own (two of them would share the lock, each
+        with its own budget). The tasks a step starts for its cells do not enter the lock; they
+        write under it while the step holds it.
         """
         if self._lock_fh is not None:
-            yield
+            if _running_step() is not self._holder:
+                raise StudyLockedError(
+                    f"another step of the study in {self.root} is running in this process; "
+                    "wait for it to finish"
+                )
+            self._depth += 1
+            try:
+                yield
+            finally:
+                self._leave()
             return
         self.root.mkdir(parents=True, exist_ok=True)
         fh = open(self.lock_path, "a+")  # noqa: SIM115 - held for the duration of the block
@@ -120,15 +174,26 @@ class StudyStore:
                 f"another process is running a step of the study in {self.root} "
                 f"(lock {self.lock_path}); wait for it to finish"
             ) from exc
-        self._lock_fh = fh
+        token = object()
+        self._lock_fh, self._owner, self._holder, self._depth = fh, token, _running_step(), 1
+        reset = _HELD_LOCKS.set((*_HELD_LOCKS.get(), token))
         try:
             yield
         finally:
-            self._lock_fh = None
+            try:
+                _HELD_LOCKS.reset(reset)
+            except ValueError:  # exited in another context than it was entered
+                _HELD_LOCKS.set(tuple(t for t in _HELD_LOCKS.get() if t is not token))
+            self._leave()
+
+    def _leave(self) -> None:
+        self._depth -= 1
+        if self._depth == 0:
+            fh, self._lock_fh, self._owner, self._holder = self._lock_fh, None, None, None
             fh.close()  # closing the file releases the lock
 
     def _require_lock(self) -> None:
-        if self._lock_fh is None:
+        if self._lock_fh is None or not self._owned():
             raise RuntimeError("write to a study without holding its lock (StudyStore.locked())")
 
     # -- paths -------------------------------------------------------------
@@ -216,11 +281,11 @@ class StudyStore:
 
     def _append_line(self, path: Path, record: dict[str, Any]) -> None:
         self._require_lock()
+        data = encode_line(record)  # a record that cannot be encoded fails before any write
         path.parent.mkdir(parents=True, exist_ok=True)
         self._repair_tail(path)
-        line = json.dumps(record, sort_keys=True, ensure_ascii=False, allow_nan=False)
-        with path.open("a", encoding="utf-8") as fh:
-            fh.write(line + "\n")
+        with path.open("ab") as fh:
+            fh.write(data)
             fh.flush()
             os.fsync(fh.fileno())
 
@@ -307,6 +372,11 @@ class StudyStore:
         if not path.exists():
             return None
         return json.loads(path.read_text(encoding="utf-8"))
+
+    def plan_files(self, phase: str) -> list[Path]:
+        """Every plan file of a phase, whichever stage wrote it."""
+        plans = self.phase_dir(phase) / "plans"
+        return sorted(plans.glob("*.json")) if plans.is_dir() else []
 
     # -- freeze ------------------------------------------------------------
     def write_freeze(self, data: dict[str, Any]) -> None:

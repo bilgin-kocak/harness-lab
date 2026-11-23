@@ -1,0 +1,427 @@
+{
+  "adapter": {
+    "name": "lean-minif2f",
+    "options_sha256": "268abb5799fbb953e18452e64ffe950605d66c128653a2c3a3f6c70f7a5a1f4e",
+    "provenance": {
+      "adapter": "lean-minif2f",
+      "adapter_version": "1",
+      "anthropic_sdk": "2.12.0",
+      "api_base_url": "https://api.anthropic.com",
+      "api_unavailable_statuses": [
+        401,
+        403,
+        404,
+        408,
+        409,
+        429,
+        "5xx",
+        "no status"
+      ],
+      "effort": "medium",
+      "index": {
+        "entries": 233022,
+        "mathlib_rev": "f897ebcf72cd16f89ab4577d0c826cd14afaafc7",
+        "sha256": "a2c6e6704bc51dc0f3e4365b1db663a0f5f75ceea0c328b84c9918ff29960680"
+      },
+      "lean_runner": "lake env lean --json",
+      "lean_toolchain": "leanprover/lean4:v4.24.0",
+      "lean_version": "4.24.0",
+      "limits": {
+        "inloop_timeout_s": 120.0,
+        "lean_workers": 3,
+        "max_attempt_seconds": 1200.0,
+        "max_calls_per_attempt": 12,
+        "max_tool_calls_per_round": 4,
+        "tool_timeout_s": 60.0
+      },
+      "llm_client": "AnthropicMessagesClient",
+      "mathlib_rev": "f897ebcf72cd16f89ab4577d0c826cd14afaafc7",
+      "max_tokens": 32000,
+      "minif2f_commit": "5746b7d6c47855ce1294bed87329618ff7f1bc31",
+      "minif2f_repo": "https://github.com/yangky11/miniF2F-lean4",
+      "model": "claude-opus-5-5",
+      "prices": {
+        "as_of": "2026-11-03",
+        "model": "claude-opus-5-5",
+        "note": "Re-check against the live pricing page before the first paid run.",
+        "source": "Claude API skill, cached model table of 2026-11-03",
+        "usd_per_million_tokens": {
+          "cache_read": 0.2,
+          "cache_write_5m": 5.0,
+          "input": 4.0,
+          "output": 20.0
+        }
+      },
+      "prompt_caching": "automatic (top-level cache_control ephemeral)",
+      "prompts_sha256": "d32a2516f0b136b96b7ee7d8ccb1823261ecf2771d69da66cf652bc03f5e2453",
+      "split_sha256": "52af3cad57fff625f1fffda84f88e1937e31503616361239a13d1645107df9aa",
+      "thinking": "adaptive",
+      "verifier": {
+        "allowed_axioms": [
+          "propext",
+          "Classical.choice",
+          "Quot.sound"
+        ],
+        "checker": "lean 4.24.0 kernel, mathlib f897ebc, axioms<= {propext, Classical.choice, Quot.sound}",
+        "denied_commands": [
+          "#eval",
+          "#exit",
+          "#print",
+          "#guard_msgs"
+        ],
+        "denied_words": [
+          "sorry",
+          "sorryAx",
+          "admit",
+          "axiom",
+          "run_tac",
+          "run_cmd",
+          "run_elab",
+          "run_meta",
+          "by_elab",
+          "elab",
+          "elab_rules",
+          "macro",
+          "macro_rules",
+          "syntax",
+          "declare_syntax_cat",
+          "initialize",
+          "builtin_initialize",
+          "simproc",
+          "dsimproc",
+          "simproc_decl",
+          "dsimproc_decl",
+          "unsafe",
+          "implemented_by",
+          "extern",
+          "addDecl",
+          "addAndCompile",
+          "modifyEnv",
+          "setEnv",
+          "include_str"
+        ],
+        "set_option_allowed": [
+          "maxHeartbeats",
+          "maxRecDepth",
+          "synthInstance.maxHeartbeats",
+          "synthInstance.maxSize",
+          "exponentiation.threshold"
+        ],
+        "timeout_s": 300.0
+      }
+    },
+    "version": "1"
+  },
+  "baseline": {
+    "config": {
+      "context_limit_tokens": 12000,
+      "feedback_rounds": 0,
+      "planning": false,
+      "retries": 1,
+      "retrieval": "none",
+      "tactic_tools": "none"
+    },
+    "config_hash": "980e935d0d7eae91f170b863a9f56f57870bcc2fe908bd200d22c7980d952382",
+    "label": "baseline"
+  },
+  "comparators": [],
+  "dev": {
+    "configurations": 7,
+    "considered_tasks": [
+      "aimeII_2020_p6",
+      "mathd_numbertheory_30",
+      "imo_1964_p1_2",
+      "mathd_algebra_405",
+      "amc12b_2002_p3",
+      "induction_ineq_nsqlefactn",
+      "induction_sum_1oktkp1",
+      "mathd_algebra_73",
+      "algebra_sqineq_2at2pclta2c2p41pc",
+      "aime_1987_p8",
+      "mathd_algebra_493",
+      "mathd_numbertheory_92",
+      "aime_1996_p5",
+      "mathd_numbertheory_284",
+      "amc12a_2019_p21",
+      "mathd_algebra_327",
+      "mathd_numbertheory_32",
+      "mathd_algebra_126",
+      "imo_1961_p1",
+      "mathd_algebra_109",
+      "mathd_algebra_185",
+      "mathd_numbertheory_43",
+      "mathd_numbertheory_252",
+      "amc12a_2008_p15",
+      "mathd_numbertheory_461",
+      "mathd_algebra_31",
+      "algebra_manipexpr_apbeq2cceqiacpbceqm2",
+      "mathd_algebra_455",
+      "imo_2006_p3",
+      "mathd_numbertheory_709"
+    ],
+    "cost_usd": 13.9314584,
+    "dropped_tasks": {},
+    "eligible": [
+      "37f78cb9d35ff2de8e0d84da8a2f995d04ff0dbede6e595a2332d8ed1fc43afd",
+      "980e935d0d7eae91f170b863a9f56f57870bcc2fe908bd200d22c7980d952382"
+    ],
+    "interrupted": {
+      "cells": 0,
+      "charged_usd": 0,
+      "without_record": []
+    },
+    "ranking_top": [
+      {
+        "complete": true,
+        "config_hash": "37f78cb9d35ff2de8e0d84da8a2f995d04ff0dbede6e595a2332d8ed1fc43afd",
+        "cost_per_pass_usd": 0.038646887640449434,
+        "feasible": true,
+        "label": "F",
+        "mean_cost_usd": 0.03821747777777777,
+        "medians": {},
+        "n_records": 90,
+        "pass_rate": 0.9888888888888889,
+        "passes": 89,
+        "rank": 1,
+        "ratios": {},
+        "reason": "",
+        "tasks_covered": 30,
+        "values": {
+          "context_limit_tokens": 12000,
+          "feedback_rounds": 3,
+          "planning": false,
+          "retries": 1,
+          "retrieval": "none",
+          "tactic_tools": "none"
+        }
+      },
+      {
+        "complete": true,
+        "config_hash": "980e935d0d7eae91f170b863a9f56f57870bcc2fe908bd200d22c7980d952382",
+        "cost_per_pass_usd": 0.035366653012048194,
+        "feasible": true,
+        "label": "baseline",
+        "mean_cost_usd": 0.032615913333333336,
+        "medians": {},
+        "n_records": 90,
+        "pass_rate": 0.9222222222222223,
+        "passes": 83,
+        "rank": 2,
+        "ratios": {},
+        "reason": "",
+        "tasks_covered": 30,
+        "values": {
+          "context_limit_tokens": 12000,
+          "feedback_rounds": 0,
+          "planning": false,
+          "retries": 1,
+          "retrieval": "none",
+          "tactic_tools": "none"
+        }
+      },
+      {
+        "complete": true,
+        "config_hash": "44894b956b0abc2b81e3a942c7f95aff1f028d66e46ff431c6880ae7ed9e326a",
+        "cost_per_pass_usd": 0.06999019999999999,
+        "feasible": false,
+        "label": "F+planning",
+        "mean_cost_usd": 0.06999019999999999,
+        "medians": {},
+        "n_records": 30,
+        "pass_rate": 1.0,
+        "passes": 30,
+        "rank": null,
+        "ratios": {},
+        "reason": "not eligible: the freeze considers the confirmed configurations only",
+        "tasks_covered": 30,
+        "values": {
+          "context_limit_tokens": 12000,
+          "feedback_rounds": 3,
+          "planning": true,
+          "retries": 1,
+          "retrieval": "none",
+          "tactic_tools": "none"
+        }
+      },
+      {
+        "complete": true,
+        "config_hash": "a27611937c6fba48d3a49744ac0545a9388a1848d1e4cd4fa694dcc8d5e334ce",
+        "cost_per_pass_usd": 0.04129419333333333,
+        "feasible": false,
+        "label": "F+retrieval",
+        "mean_cost_usd": 0.04129419333333333,
+        "medians": {},
+        "n_records": 30,
+        "pass_rate": 1.0,
+        "passes": 30,
+        "rank": null,
+        "ratios": {},
+        "reason": "not eligible: the freeze considers the confirmed configurations only",
+        "tasks_covered": 30,
+        "values": {
+          "context_limit_tokens": 12000,
+          "feedback_rounds": 3,
+          "planning": false,
+          "retries": 1,
+          "retrieval": "mathlib_names",
+          "tactic_tools": "none"
+        }
+      },
+      {
+        "complete": true,
+        "config_hash": "acb96dab9e5f94c984b9d7041e0ff9bede34fdf8a06885797d59cfbc50fea8d0",
+        "cost_per_pass_usd": 0.04875284,
+        "feasible": false,
+        "label": "F+retries2",
+        "mean_cost_usd": 0.04875284,
+        "medians": {},
+        "n_records": 30,
+        "pass_rate": 1.0,
+        "passes": 30,
+        "rank": null,
+        "ratios": {},
+        "reason": "not eligible: the freeze considers the confirmed configurations only",
+        "tasks_covered": 30,
+        "values": {
+          "context_limit_tokens": 12000,
+          "feedback_rounds": 3,
+          "planning": false,
+          "retries": 2,
+          "retrieval": "none",
+          "tactic_tools": "none"
+        }
+      },
+      {
+        "complete": true,
+        "config_hash": "c64a4b3fd9d0b88d110043bb227a98a4183758f1c7d736c0076025e7927245d2",
+        "cost_per_pass_usd": 0.047823406666666665,
+        "feasible": false,
+        "label": "F+tactics",
+        "mean_cost_usd": 0.047823406666666665,
+        "medians": {},
+        "n_records": 30,
+        "pass_rate": 1.0,
+        "passes": 30,
+        "rank": null,
+        "ratios": {},
+        "reason": "not eligible: the freeze considers the confirmed configurations only",
+        "tasks_covered": 30,
+        "values": {
+          "context_limit_tokens": 12000,
+          "feedback_rounds": 3,
+          "planning": false,
+          "retries": 1,
+          "retrieval": "none",
+          "tactic_tools": "probe"
+        }
+      },
+      {
+        "complete": true,
+        "config_hash": "370f4767efe754fb84b7a1622b75d7a582d75512d35c6f19bcb9d4e0af984638",
+        "cost_per_pass_usd": 0.045539103448275865,
+        "feasible": false,
+        "label": "F+context48k",
+        "mean_cost_usd": 0.04402113333333334,
+        "medians": {},
+        "n_records": 30,
+        "pass_rate": 0.9666666666666667,
+        "passes": 29,
+        "rank": null,
+        "ratios": {},
+        "reason": "not eligible: the freeze considers the confirmed configurations only",
+        "tasks_covered": 30,
+        "values": {
+          "context_limit_tokens": 48000,
+          "feedback_rounds": 3,
+          "planning": false,
+          "retries": 1,
+          "retrieval": "none",
+          "tactic_tools": "none"
+        }
+      }
+    ],
+    "records": 330,
+    "records_per_stage": {
+      "confirm": 120,
+      "stage1": 210
+    },
+    "records_sha256": "0466c6699a40d0d3b9a130a63d918dc09c3a9af90c2282e7aad12d1c900b627c"
+  },
+  "freeze_sha256": "ad17dec0891d68d992d56595ce4e0ee9196c26933c7b59b03543f6747df8a879",
+  "frozen": {
+    "config": {
+      "context_limit_tokens": 12000,
+      "feedback_rounds": 3,
+      "planning": false,
+      "retries": 1,
+      "retrieval": "none",
+      "tactic_tools": "none"
+    },
+    "config_hash": "37f78cb9d35ff2de8e0d84da8a2f995d04ff0dbede6e595a2332d8ed1fc43afd",
+    "label": "F",
+    "same_as_baseline": false
+  },
+  "frozen_at": "2026-11-23T14:30:39+00:00",
+  "git_head": "2a1b60f473ec7676faba067752b05d99671fae4b",
+  "harnesslab_version": "0.3.0",
+  "held_out_spec": {
+    "comparators": [],
+    "order_seed": 7,
+    "repetitions": 3,
+    "require_committed_freeze": true,
+    "robustness": null
+  },
+  "objective": {
+    "cost_cap_multiple": 4.0,
+    "drop_tasks_where_baseline_unverified": true,
+    "kind": "pass_rate",
+    "metrics": [],
+    "offset": 1.0,
+    "then": [],
+    "tie_tolerance": 0.0334
+  },
+  "sealed_sections": {
+    "held_out": {
+      "order_seed": 7,
+      "repetitions": 3,
+      "require_committed_freeze": true
+    },
+    "objective": {
+      "cost_cap_multiple": 4.0,
+      "kind": "pass_rate",
+      "tie_tolerance": 0.0334
+    },
+    "stats": {
+      "level": 0.95,
+      "report_metrics": [
+        "cost_usd",
+        "llm_calls",
+        "wall_time_s"
+      ],
+      "resamples": 10000,
+      "seed": 20261122
+    }
+  },
+  "sealed_sections_of": "written",
+  "spec_sha256": "bcf30d2aa6087d3a3f80c02068f6e8e277db94c4ef7b97f7c4d27e93b779a9ce",
+  "split": {
+    "dev_ids_sha256": "e8ad717914afa1b3702bd5c24f2a59053813e26fbcd7ab72c5185739319eb73f",
+    "file_sha256": "52af3cad57fff625f1fffda84f88e1937e31503616361239a13d1645107df9aa",
+    "held_out_ids_sha256": "99171b4046de7625db09e97c7b0b532987a4318a52d3f612396818f59b1db711",
+    "n_dev": 30,
+    "n_held_out": 40
+  },
+  "stats": {
+    "higher_is_better": [],
+    "level": 0.95,
+    "report_metrics": [
+      "cost_usd",
+      "llm_calls",
+      "wall_time_s"
+    ],
+    "resamples": 10000,
+    "seed": 20261122,
+    "tag_groups": []
+  },
+  "study": "2026-11-math-minif2f"
+}

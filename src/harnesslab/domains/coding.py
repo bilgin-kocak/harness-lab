@@ -44,7 +44,10 @@ How the contract maps onto the pipeline:
     snapshotted). Then :meth:`ExperimentService.execute_run` runs the cell with the cell's
     repetition and removes its worktree. The attempt's ``payload`` is the run's
     :class:`RunOutcome`; ``output`` identifies the run and repeats the verifier's outcome and
-    score.
+    score. The run's status maps onto the attempt's: ``completed``, ``timeout``, ``unavailable``
+    when the harness never ran (nothing to verify; the core runs the cell again), and ``error``
+    for every other status, including an improvement run whose harness ran some rounds before it
+    could not launch (the pipeline verified it).
 ``verify``
     The verdict the hidden-test verifier recorded during the run: pass, fail, or (not verified)
     unverifiable. Nothing is re-run (the worktree no longer exists); the verdict stays
@@ -136,7 +139,8 @@ VARIANT_KNOB = "variant"
 OFFLINE_RUNNERS = frozenset({"fake"})
 OPTIONS = frozenset({"suite", "home", "pricing", "knobs", "variants", "base_variant", "baseline"})
 
-# Every other run status (crashed, blocked, interrupted, ...) is an error.
+# Every other run status (crashed, blocked, interrupted, ...) is an error; an unavailable run is
+# unavailable only when its harness never ran (see _attempt_status).
 ATTEMPT_STATUS: dict[RunStatus, AttemptStatus] = {
     RunStatus.COMPLETED: AttemptStatus.COMPLETED,
     RunStatus.TIMEOUT: AttemptStatus.TIMEOUT,
@@ -191,6 +195,27 @@ def _matching_level(knob: Knob, value: Any) -> Any:
         if canonical_json(level) == key:
             return level
     raise ValueError(f"{value!r} is not a level of knob {knob.name!r}")
+
+
+def _harness_ran(outcome: RunOutcome) -> bool:
+    """Whether the run's harness ran at all: the verifier decided, or an improvement round ran
+    before the harness became unavailable (the pipeline's own reason to verify such a run)."""
+    if outcome.outcome != Outcome.NOT_VERIFIED:
+        return True
+    rounds = outcome.metrics.improve_history or []
+    return any(r.get("status") != RunStatus.UNAVAILABLE.value for r in rounds)
+
+
+def _attempt_status(outcome: RunOutcome) -> AttemptStatus:
+    """The attempt status of a run. ``unavailable`` (no outcome: the core runs the cell again) is
+    for a run whose harness never ran. The pipeline also reports as unavailable an improvement run
+    whose harness worked in some rounds and then could not launch; that run was verified, and
+    Harness Lab counts it, so it is an ``error`` with its verdict (``details.run_status`` still
+    says ``unavailable``)."""
+    status = ATTEMPT_STATUS.get(outcome.status, AttemptStatus.ERROR)
+    if status == AttemptStatus.UNAVAILABLE and _harness_ran(outcome):
+        return AttemptStatus.ERROR
+    return status
 
 
 def _reason(outcome: RunOutcome) -> str:
@@ -423,7 +448,7 @@ class CodingAdapter(DomainAdapterBase):
             task_id=task.id,
             config_hash=config.config_hash,
             repetition=ctx.repetition,
-            status=ATTEMPT_STATUS.get(outcome.status, AttemptStatus.ERROR),
+            status=_attempt_status(outcome),
             output={
                 "run_id": outcome.run_id,
                 "experiment_id": experiment.id,

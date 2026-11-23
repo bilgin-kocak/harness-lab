@@ -476,6 +476,58 @@ def test_the_baseline_runs_first_in_any_stage_that_contains_it(tmp_path: Path):
     assert {e["config_hash"] for e in first} == {base}
 
 
+def test_a_ranking_stage_refuses_to_run_before_the_stages_before_it(tmp_path: Path):
+    # core#5: `search --stage confirm` first fixed a confirm plan from an empty ranking (the
+    # baseline only), and the freeze was then restricted to the baseline.
+    study = _study2(tmp_path, search={"seed": 2, "stages": DECIDE}, objective={"kind": "pass_rate"})
+    with pytest.raises(ProtocolError, match=r"single \(has not run\), combo \(has not run\)"):
+        asyncio.run(study.run_stage("confirm"))
+    assert study.store.read_plan("dev", "confirm") is None and not study.store.records("dev")
+    with pytest.raises(ProtocolError, match=r"must finish first: combo \(has not run\)$"):
+        asyncio.run(study.search(["single", "confirm"]))  # leaving combine out is no better
+    assert study.store.read_plan("dev", "confirm") is None
+    out = asyncio.run(study.search())  # in spec order every stage runs
+    assert out["confirm"].ran > 0
+    assert study.freeze()["frozen"]["label"] == "p2"
+
+    # a stage the budget stopped is not finished either
+    (tmp_path / "cut").mkdir()
+    cut = _study2(
+        tmp_path / "cut",
+        search={"seed": 2, "stages": DECIDE},
+        objective={"kind": "pass_rate"},
+        budget={"max_attempts": 10},
+    )
+    asyncio.run(cut.run_stage("single"))
+    with pytest.raises(ProtocolError, match=r"single \(8 planned cell\(s\) without a valid"):
+        asyncio.run(cut.run_stage("combo"))
+    assert cut.store.read_plan("dev", "combo") is None
+
+    # explicit and grid stages do not rank anything: any order
+    (tmp_path / "any").mkdir()
+    stages = [
+        {"name": "one", "kind": "explicit", "configs": [{"label": "p2", "set": {"power": 2}}]},
+        {"name": "two", "kind": "grid", "knobs": ["style"]},
+    ]
+    free = _study2(tmp_path / "any", search={"seed": 1, "stages": stages})
+    assert asyncio.run(free.run_stage("two")).ran == 12
+
+
+def test_cli_refuses_a_ranking_stage_run_out_of_order(tmp_path: Path):
+    from typer.testing import CliRunner
+
+    from harnesslab.cli import app
+    from harnesslab.study.registry import register_domain
+
+    register_domain("toy", lambda options, study_dir: Toy2(options, study_dir))
+    spec = _write_study(
+        tmp_path, search={"seed": 2, "stages": DECIDE}, objective={"kind": "pass_rate"}
+    )
+    res = CliRunner().invoke(app, ["study", "search", str(spec), "--stage", "confirm"])
+    assert res.exit_code == 2 and "must finish first" in res.output
+    assert not (tmp_path / "dev" / "plans" / "confirm.json").exists()
+
+
 def test_grid_levels_can_be_restricted_to_a_subset(tmp_path: Path):
     stages = [
         {"name": "g", "kind": "grid", "knobs": ["power", "style"], "levels": {"power": [1, 3]}}

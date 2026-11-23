@@ -62,6 +62,9 @@ NOTHING_TO_RUN = "nothing_to_run"
 SKIPPED = "skipped"
 DECISIONS = (NOTHING_TO_RUN, SKIPPED)
 
+# Stage kinds decided from the ranking of the dev records made so far.
+RANKING_KINDS = ("refine", "combine", "confirm")
+
 
 class ProtocolError(RuntimeError):
     """The requested step would break the protocol (for example running held-out before freezing)."""
@@ -299,7 +302,7 @@ class Study:
 
     def stage_configs(self, stage: StageSpec) -> tuple[list[Config], str]:
         known = self._known_labels()
-        ranking = self.rank() if stage.kind in ("refine", "combine", "confirm") else None
+        ranking = self.rank() if stage.kind in RANKING_KINDS else None
         note = ""
         if stage.kind == "explicit":
             # this stage's own definitions (a label repeated across stages has the same settings)
@@ -408,6 +411,32 @@ class Study:
             done = self.store.completed(stage.phase)
         return [c for c in self._plan_cells(stage, plan) if c.key not in done]
 
+    def _require_earlier_stages(self, stage: StageSpec) -> None:
+        """A stage decided from the ranking (refine, combine, confirm) runs only once every stage
+        before it in the spec (in its phase) has fixed its plan or its decision and has a valid
+        record for every planned cell: otherwise it would be decided from missing results."""
+        unfinished: list[str] = []
+        done: set[Any] | None = None
+        for earlier in self.spec.search.stages:
+            if earlier.name == stage.name:
+                break
+            if earlier.phase != stage.phase:
+                continue
+            plan = self.stage_plan(earlier)
+            if plan is None:
+                unfinished.append(f"{earlier.name} (has not run)")
+                continue
+            if done is None:
+                done = self.store.completed(stage.phase)
+            n = len(self._unrecorded(earlier, plan, done))
+            if n:
+                unfinished.append(f"{earlier.name} ({n} planned cell(s) without a valid record)")
+        if unfinished:
+            raise ProtocolError(
+                f"stage {stage.name}: a {stage.kind} stage is decided from the results of the "
+                f"stages before it, which must finish first: {', '.join(unfinished)}"
+            )
+
     def stage_plan(self, stage: StageSpec) -> dict[str, Any] | None:
         """The plan a stage fixed when it first ran (its cells, or its decision to run none), or
         None if it has not run."""
@@ -450,6 +479,8 @@ class Study:
             if self.store.read_freeze() is not None:
                 raise ProtocolError("the study is frozen: no more search")
             stage = self.spec.stage(name)
+            if stage.kind in RANKING_KINDS:
+                self._require_earlier_stages(stage)
             plan = self.stage_plan(stage)
             if plan is not None and plan.get("decision") in DECISIONS:
                 what = "nothing to run" if plan["decision"] == NOTHING_TO_RUN else "skipped"

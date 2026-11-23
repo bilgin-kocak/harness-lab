@@ -1149,9 +1149,10 @@ async def test_the_client_needs_the_key_and_pins_the_endpoint(monkeypatch):
 
     client = AnthropicMessagesClient(model=MODEL, effort="medium", max_tokens=32000)
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
-    with pytest.raises(LLMCallError, match="ANTHROPIC_API_KEY is not set") as missing:
+    monkeypatch.delenv("HARNESSLAB_ANTHROPIC_API_KEY", raising=False)
+    with pytest.raises(LLMCallError, match="no API key: none of HARNESSLAB_ANTHROPIC_API_KEY") as e:
         await client.complete("s", [{"role": "user", "content": "x"}], [])
-    assert missing.value.infrastructure is True and missing.value.billed is False
+    assert e.value.infrastructure is True and e.value.billed is False
     built = {}
 
     class Recorder:
@@ -1168,6 +1169,11 @@ async def test_the_client_needs_the_key_and_pins_the_endpoint(monkeypatch):
         "max_retries": 2,
     }
     assert API_BASE_URL == "https://api.anthropic.com"
+    # The harness-safe name wins when both are set (cloud sessions hide ANTHROPIC_API_KEY).
+    monkeypatch.setenv("HARNESSLAB_ANTHROPIC_API_KEY", "sk-test-preferred")
+    client._client = None
+    client._sdk_client()
+    assert built["api_key"] == "sk-test-preferred"
 
 
 async def test_metrics_are_complete_and_pure(tmp_path):

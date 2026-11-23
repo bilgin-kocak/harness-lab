@@ -6,8 +6,13 @@ that already has a valid record is never run again.
 
 ## 0. Prerequisites
 
-- **API key.** `ANTHROPIC_API_KEY` must be set in the environment. Check it without printing it:
-  `[ -n "$ANTHROPIC_API_KEY" ] && echo set`. Never print, log or commit the key.
+- **API key.** The client reads `HARNESSLAB_ANTHROPIC_API_KEY`, then `ANTHROPIC_API_KEY`.
+  - **In a Claude Code cloud session,** store the key as `HARNESSLAB_ANTHROPIC_API_KEY` in the
+    environment's variables, then start a new session. The harness hides `ANTHROPIC_API_KEY`
+    from commands, even when the environment sets it.
+  - **Check it without printing it:**
+    `[ -n "${HARNESSLAB_ANTHROPIC_API_KEY:-$ANTHROPIC_API_KEY}" ] && echo set`.
+  - Never print, log or commit the key.
 - **Machine.** 4 CPUs, 15 GB RAM and 10 GB of free disk. Each Lean process uses about 5 GB, and
   the spec allows 3 at once (`lean_workers`).
 - **Network.** github.com (miniF2F, Mathlib), the Mathlib cache server (`lake exe cache get`)

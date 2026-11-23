@@ -3,8 +3,9 @@ returning a normalized response.
 
 :class:`AnthropicMessagesClient` uses the official Anthropic SDK (imported only when the first call
 is made): ``AsyncAnthropic(api_key=..., base_url="https://api.anthropic.com", max_retries=2)``,
-with the key taken from ``ANTHROPIC_API_KEY`` and passed explicitly (never from the SDK's other
-sources: a profile or ``ANTHROPIC_BASE_URL`` must not change the system under test),
+with the key taken from the first of :data:`KEY_VARIABLES` that is set and passed explicitly
+(never from the SDK's other sources: a profile or ``ANTHROPIC_BASE_URL`` must not change the
+system under test; Claude Code cloud sessions hide ``ANTHROPIC_API_KEY`` itself),
 ``client.messages.stream(**kwargs)`` and ``get_final_message()``. A call that fails after the
 SDK's retries raises :class:`LLMCallError`, marked ``infrastructure`` when the failure says
 nothing about the configuration under test (no key, credentials or permissions refused, model not
@@ -67,6 +68,9 @@ class LLMResponse:
 
 
 API_BASE_URL = "https://api.anthropic.com"
+# Where the API key is read, in order. Claude Code cloud sessions hide ANTHROPIC_API_KEY from
+# commands (the harness reserves the name), so a study run there stores the key under the first.
+KEY_VARIABLES = ("HARNESSLAB_ANTHROPIC_API_KEY", "ANTHROPIC_API_KEY")
 # HTTP statuses that say nothing about the configuration under test: credentials or permissions
 # refused, model not found, request timeout, conflict, rate limit; and every 5xx (529 overload).
 INFRASTRUCTURE_STATUS = frozenset({401, 403, 404, 408, 409, 429})
@@ -189,11 +193,11 @@ class AnthropicMessagesClient:
 
             import anthropic  # the optional `lean` extra; imported on first use only
 
-            key = os.environ.get("ANTHROPIC_API_KEY")
+            key = next((os.environ[v] for v in KEY_VARIABLES if os.environ.get(v)), None)
             if not key:
                 raise LLMCallError(
-                    "ANTHROPIC_API_KEY is not set: the study reads its API key from the "
-                    "environment only",
+                    f"no API key: none of {', '.join(KEY_VARIABLES)} is set (the study reads "
+                    "its key from the environment only)",
                     billed=False,
                     infrastructure=True,
                 )

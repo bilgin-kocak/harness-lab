@@ -262,8 +262,10 @@ Split `20261122`; run order (interleaving problems, configurations and repeats) 
      (A8).
    - **Why.** Before this change, an outage or a bad key would have counted as failed proofs of
      whichever configuration was running at the time.
-2. **The key and the endpoint are explicit.** The client takes `ANTHROPIC_API_KEY` from the
-   environment and passes it, with `base_url="https://api.anthropic.com"`, to `AsyncAnthropic`.
+2. **The key and the endpoint are explicit.** The client takes the key from the environment and
+   passes it, with `base_url="https://api.anthropic.com"`, to `AsyncAnthropic`. It reads
+   `HARNESSLAB_ANTHROPIC_API_KEY` first, because Claude Code cloud sessions hide
+   `ANTHROPIC_API_KEY` from commands; then it reads `ANTHROPIC_API_KEY`.
    The SDK's other sources (a profile, `ANTHROPIC_BASE_URL`) can no longer change the system
    under test. Without a key, no call is made and the attempt is `unavailable`. The provenance
    records the endpoint and the statuses that count as unavailable.

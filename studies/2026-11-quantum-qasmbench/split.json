@@ -1,0 +1,2090 @@
+{
+  "study": "2026-11-quantum-qasmbench",
+  "dataset": {
+    "repo": "https://github.com/pnnl/QASMBench",
+    "commit": "357b942396d5c2b7cbc1c229c585a6ef5ccaebac",
+    "license": "Battelle Memorial Institute BSD-style license with PNNL/DOE notice (LICENSE, NOTICE)"
+  },
+  "qiskit": "2.6.2",
+  "target": {
+    "description": "heavy-hex lattice, code distance 5, both directions on every edge",
+    "constructor": "qiskit.transpiler.CouplingMap.from_heavy_hex(5, bidirectional=True)",
+    "num_qubits": 57,
+    "edges": [
+      [
+        0,
+        25
+      ],
+      [
+        0,
+        37
+      ],
+      [
+        1,
+        37
+      ],
+      [
+        1,
+        38
+      ],
+      [
+        2,
+        38
+      ],
+      [
+        2,
+        39
+      ],
+      [
+        3,
+        39
+      ],
+      [
+        3,
+        40
+      ],
+      [
+        4,
+        40
+      ],
+      [
+        5,
+        25
+      ],
+      [
+        5,
+        41
+      ],
+      [
+        6,
+        41
+      ],
+      [
+        6,
+        42
+      ],
+      [
+        7,
+        42
+      ],
+      [
+        7,
+        43
+      ],
+      [
+        8,
+        43
+      ],
+      [
+        8,
+        44
+      ],
+      [
+        9,
+        30
+      ],
+      [
+        9,
+        44
+      ],
+      [
+        10,
+        31
+      ],
+      [
+        10,
+        45
+      ],
+      [
+        11,
+        45
+      ],
+      [
+        11,
+        46
+      ],
+      [
+        12,
+        46
+      ],
+      [
+        12,
+        47
+      ],
+      [
+        13,
+        47
+      ],
+      [
+        13,
+        48
+      ],
+      [
+        14,
+        30
+      ],
+      [
+        14,
+        48
+      ],
+      [
+        15,
+        31
+      ],
+      [
+        15,
+        49
+      ],
+      [
+        16,
+        49
+      ],
+      [
+        16,
+        50
+      ],
+      [
+        17,
+        50
+      ],
+      [
+        17,
+        51
+      ],
+      [
+        18,
+        51
+      ],
+      [
+        18,
+        52
+      ],
+      [
+        19,
+        36
+      ],
+      [
+        19,
+        52
+      ],
+      [
+        20,
+        53
+      ],
+      [
+        21,
+        53
+      ],
+      [
+        21,
+        54
+      ],
+      [
+        22,
+        54
+      ],
+      [
+        22,
+        55
+      ],
+      [
+        23,
+        55
+      ],
+      [
+        23,
+        56
+      ],
+      [
+        24,
+        36
+      ],
+      [
+        24,
+        56
+      ],
+      [
+        25,
+        0
+      ],
+      [
+        25,
+        5
+      ],
+      [
+        26,
+        38
+      ],
+      [
+        26,
+        42
+      ],
+      [
+        27,
+        40
+      ],
+      [
+        27,
+        44
+      ],
+      [
+        28,
+        41
+      ],
+      [
+        28,
+        45
+      ],
+      [
+        29,
+        43
+      ],
+      [
+        29,
+        47
+      ],
+      [
+        30,
+        9
+      ],
+      [
+        30,
+        14
+      ],
+      [
+        31,
+        10
+      ],
+      [
+        31,
+        15
+      ],
+      [
+        32,
+        46
+      ],
+      [
+        32,
+        50
+      ],
+      [
+        33,
+        48
+      ],
+      [
+        33,
+        52
+      ],
+      [
+        34,
+        49
+      ],
+      [
+        34,
+        53
+      ],
+      [
+        35,
+        51
+      ],
+      [
+        35,
+        55
+      ],
+      [
+        36,
+        19
+      ],
+      [
+        36,
+        24
+      ],
+      [
+        37,
+        0
+      ],
+      [
+        37,
+        1
+      ],
+      [
+        38,
+        1
+      ],
+      [
+        38,
+        2
+      ],
+      [
+        38,
+        26
+      ],
+      [
+        39,
+        2
+      ],
+      [
+        39,
+        3
+      ],
+      [
+        40,
+        3
+      ],
+      [
+        40,
+        4
+      ],
+      [
+        40,
+        27
+      ],
+      [
+        41,
+        5
+      ],
+      [
+        41,
+        6
+      ],
+      [
+        41,
+        28
+      ],
+      [
+        42,
+        6
+      ],
+      [
+        42,
+        7
+      ],
+      [
+        42,
+        26
+      ],
+      [
+        43,
+        7
+      ],
+      [
+        43,
+        8
+      ],
+      [
+        43,
+        29
+      ],
+      [
+        44,
+        8
+      ],
+      [
+        44,
+        9
+      ],
+      [
+        44,
+        27
+      ],
+      [
+        45,
+        10
+      ],
+      [
+        45,
+        11
+      ],
+      [
+        45,
+        28
+      ],
+      [
+        46,
+        11
+      ],
+      [
+        46,
+        12
+      ],
+      [
+        46,
+        32
+      ],
+      [
+        47,
+        12
+      ],
+      [
+        47,
+        13
+      ],
+      [
+        47,
+        29
+      ],
+      [
+        48,
+        13
+      ],
+      [
+        48,
+        14
+      ],
+      [
+        48,
+        33
+      ],
+      [
+        49,
+        15
+      ],
+      [
+        49,
+        16
+      ],
+      [
+        49,
+        34
+      ],
+      [
+        50,
+        16
+      ],
+      [
+        50,
+        17
+      ],
+      [
+        50,
+        32
+      ],
+      [
+        51,
+        17
+      ],
+      [
+        51,
+        18
+      ],
+      [
+        51,
+        35
+      ],
+      [
+        52,
+        18
+      ],
+      [
+        52,
+        19
+      ],
+      [
+        52,
+        33
+      ],
+      [
+        53,
+        20
+      ],
+      [
+        53,
+        21
+      ],
+      [
+        53,
+        34
+      ],
+      [
+        54,
+        21
+      ],
+      [
+        54,
+        22
+      ],
+      [
+        55,
+        22
+      ],
+      [
+        55,
+        23
+      ],
+      [
+        55,
+        35
+      ],
+      [
+        56,
+        23
+      ],
+      [
+        56,
+        24
+      ]
+    ],
+    "basis_gates": [
+      "cz",
+      "rz",
+      "sx",
+      "x"
+    ],
+    "target": "Target.from_configuration(basis_gates=basis_gates, coupling_map=<edges>)"
+  },
+  "selection": {
+    "seed": 20261122,
+    "method": "per pool: rank by sha256(f'{seed}:{id}'), alternate held-out, dev, held-out, ...",
+    "pool_A": "eligible, at most 10 qubits: exact operator check",
+    "pool_B": "eligible, 11-27 qubits: only with the decision-diagram checker"
+  },
+  "assignment": {
+    "A": {
+      "held_out": [
+        "small/linearsolver_n3",
+        "small/dnn_n8",
+        "small/dnn_n2",
+        "small/pea_n5",
+        "small/lpn_n5",
+        "small/qaoa_n6",
+        "small/hhl_n7",
+        "small/variational_n4",
+        "small/simon_n6",
+        "small/basis_trotter_n4",
+        "small/qaoa_n3",
+        "small/basis_change_n3",
+        "small/adder_n4",
+        "small/deutsch_n2",
+        "small/hs4_n4",
+        "small/grover_n2"
+      ],
+      "dev": [
+        "small/iswap_n2",
+        "small/vqe_n4",
+        "small/wstate_n3",
+        "small/ising_n10",
+        "small/bell_n4",
+        "small/teleportation_n3",
+        "small/cat_state_n4",
+        "small/fredkin_n3",
+        "small/toffoli_n3",
+        "small/sat_n7",
+        "small/qec_en_n5",
+        "small/quantumwalks_n2",
+        "small/adder_n10",
+        "small/error_correctiond3_n5",
+        "small/qpe_n9",
+        "small/qft_n4"
+      ]
+    },
+    "B": {
+      "held_out": [
+        "medium/factor247_n15",
+        "medium/dnn_n16",
+        "medium/ghz_state_n23",
+        "medium/cat_state_n22",
+        "medium/multiply_n13",
+        "medium/bv_n14",
+        "medium/wstate_n27",
+        "medium/qram_n20",
+        "medium/swap_test_n25",
+        "medium/qf21_n15"
+      ],
+      "dev": [
+        "medium/bigadder_n18",
+        "medium/vqe_n24",
+        "medium/qft_n18",
+        "medium/ising_n26",
+        "medium/knn_n25",
+        "medium/qec9xz_n17",
+        "medium/multiplier_n15",
+        "medium/bv_n19",
+        "medium/sat_n11"
+      ]
+    }
+  },
+  "circuits": [
+    {
+      "id": "small/adder_n10",
+      "file": "small/adder_n10/adder_n10.qasm",
+      "sha256": "89af975627593648e7aca6ac6cb936d2c872093c1eedcaa1b2ab4fa14b602624",
+      "qubits": 10,
+      "ops": [
+        "cx",
+        "majority",
+        "unmaj",
+        "x"
+      ],
+      "multi_qubit_gates": 9,
+      "status": "eligible",
+      "pool": "A",
+      "role": "dev"
+    },
+    {
+      "id": "small/adder_n4",
+      "file": "small/adder_n4/adder_n4.qasm",
+      "sha256": "30f0be9eb50d37ab2de7c87676e32ff7c66bc67eff32dfeafa0cf69951d92438",
+      "qubits": 4,
+      "ops": [
+        "cx",
+        "h",
+        "s",
+        "t",
+        "tdg",
+        "x"
+      ],
+      "multi_qubit_gates": 10,
+      "status": "eligible",
+      "pool": "A",
+      "role": "held_out"
+    },
+    {
+      "id": "small/basis_change_n3",
+      "file": "small/basis_change_n3/basis_change_n3.qasm",
+      "sha256": "2d998840327e516c71142442f6d9c2924962a8fad2e12e70a2c90d53a78be851",
+      "qubits": 3,
+      "ops": [
+        "cz",
+        "u3"
+      ],
+      "multi_qubit_gates": 10,
+      "status": "eligible",
+      "pool": "A",
+      "role": "held_out"
+    },
+    {
+      "id": "small/basis_trotter_n4",
+      "file": "small/basis_trotter_n4/basis_trotter_n4.qasm",
+      "sha256": "9ead0e7d5f41cb6675c19457d4e414b77cf90c78cea3e0412bcccdc3f9f73dd5",
+      "qubits": 4,
+      "ops": [
+        "cx",
+        "h",
+        "rx",
+        "ry",
+        "rz",
+        "swap",
+        "u3",
+        "z"
+      ],
+      "multi_qubit_gates": 462,
+      "status": "eligible",
+      "pool": "A",
+      "role": "held_out"
+    },
+    {
+      "id": "small/bb84_n8",
+      "file": "small/bb84_n8/bb84_n8.qasm",
+      "sha256": "32cb8b0b9a82ab794e99a69e24cce92fd313f37a4725cc61be2f1d761df4fd82",
+      "qubits": 8,
+      "ops": [
+        "h",
+        "measure",
+        "x"
+      ],
+      "status": "skipped",
+      "reason": "not unitary after removing final measurements: measure"
+    },
+    {
+      "id": "small/bell_n4",
+      "file": "small/bell_n4/bell_n4.qasm",
+      "sha256": "1f3a1115385d87f6a444189776e521d6bba1d300f96454e85cb58bb3e297bf81",
+      "qubits": 4,
+      "ops": [
+        "cx",
+        "h",
+        "rx",
+        "ry",
+        "rz",
+        "u3"
+      ],
+      "multi_qubit_gates": 7,
+      "status": "eligible",
+      "pool": "A",
+      "role": "dev"
+    },
+    {
+      "id": "small/cat_state_n4",
+      "file": "small/cat_state_n4/cat_state_n4.qasm",
+      "sha256": "caa882935bb73087db2edbee2aa77133965bdda3aec9687166f9e96b9a2ef8ff",
+      "qubits": 4,
+      "ops": [
+        "cx",
+        "h"
+      ],
+      "multi_qubit_gates": 3,
+      "status": "eligible",
+      "pool": "A",
+      "role": "dev"
+    },
+    {
+      "id": "small/deutsch_n2",
+      "file": "small/deutsch_n2/deutsch_n2.qasm",
+      "sha256": "56a7b3389495fb497df1a331abb7d4f64ac57d397aaa1c1169d0ac33a10889cd",
+      "qubits": 2,
+      "ops": [
+        "cx",
+        "h",
+        "x"
+      ],
+      "multi_qubit_gates": 1,
+      "status": "eligible",
+      "pool": "A",
+      "role": "held_out"
+    },
+    {
+      "id": "small/dnn_n2",
+      "file": "small/dnn_n2/dnn_n2.qasm",
+      "sha256": "ce0359edb654e5dd1f54035e07cec177d2f50ae1ecd45b651ba71637854b7921",
+      "qubits": 2,
+      "ops": [
+        "cx",
+        "rx",
+        "ry",
+        "rz",
+        "u3"
+      ],
+      "multi_qubit_gates": 42,
+      "status": "eligible",
+      "pool": "A",
+      "role": "held_out"
+    },
+    {
+      "id": "small/dnn_n8",
+      "file": "small/dnn_n8/dnn_n8.qasm",
+      "sha256": "7f1f342a59a7a9159a2f0fa619b8a64170a159158ae838eaa75b13212cf2a161",
+      "qubits": 8,
+      "ops": [
+        "cx",
+        "rx",
+        "ry",
+        "rz",
+        "u3"
+      ],
+      "multi_qubit_gates": 192,
+      "status": "eligible",
+      "pool": "A",
+      "role": "held_out"
+    },
+    {
+      "id": "small/error_correctiond3_n5",
+      "file": "small/error_correctiond3_n5/error_correctiond3_n5.qasm",
+      "sha256": "c33b5a03491bceb26ca6d494632936614df035a352d437369eca28087ae72ff5",
+      "qubits": 5,
+      "ops": [
+        "cx",
+        "h",
+        "id",
+        "sdg"
+      ],
+      "multi_qubit_gates": 49,
+      "status": "eligible",
+      "pool": "A",
+      "role": "dev"
+    },
+    {
+      "id": "small/fredkin_n3",
+      "file": "small/fredkin_n3/fredkin_n3.qasm",
+      "sha256": "5ede0e9d4cdc723afcdb515f16f984bf47cf53423e12fcafc10ee03bd9577996",
+      "qubits": 3,
+      "ops": [
+        "cx",
+        "h",
+        "t",
+        "tdg",
+        "x"
+      ],
+      "multi_qubit_gates": 8,
+      "status": "eligible",
+      "pool": "A",
+      "role": "dev"
+    },
+    {
+      "id": "small/grover_n2",
+      "file": "small/grover_n2/grover_n2.qasm",
+      "sha256": "afd134759fa0eefb9f84a88d3e9f156cd54e83b10177d02c33bb6f519c08b813",
+      "qubits": 2,
+      "ops": [
+        "cx",
+        "h",
+        "x"
+      ],
+      "multi_qubit_gates": 2,
+      "status": "eligible",
+      "pool": "A",
+      "role": "held_out"
+    },
+    {
+      "id": "small/hhl_n10",
+      "file": "small/hhl_n10/hhl_n10.qasm",
+      "sha256": "07f6ec77d01a41db21212b70fb024e06e26c6c563914e8cd8abc434a190aaddc",
+      "status": "skipped",
+      "reason": "does not parse: QASM2ParseError: \"hhl_n10.qasm:186801,8: 'q' is not defined in this scope\""
+    },
+    {
+      "id": "small/hhl_n7",
+      "file": "small/hhl_n7/hhl_n7.qasm",
+      "sha256": "8d7754418a92a0f8e28010f1430d7bc4e9db4b08f4f364473bd5290ee6fc8b94",
+      "qubits": 7,
+      "ops": [
+        "cx",
+        "h",
+        "rx",
+        "ry",
+        "rz"
+      ],
+      "multi_qubit_gates": 196,
+      "status": "eligible",
+      "pool": "A",
+      "role": "held_out"
+    },
+    {
+      "id": "small/hs4_n4",
+      "file": "small/hs4_n4/hs4_n4.qasm",
+      "sha256": "f362ca9ffd7f045f517dfe4d67350794ac998f4eb427586a804eed9379340f63",
+      "qubits": 4,
+      "ops": [
+        "cx",
+        "h",
+        "x"
+      ],
+      "multi_qubit_gates": 4,
+      "status": "eligible",
+      "pool": "A",
+      "role": "held_out"
+    },
+    {
+      "id": "small/inverseqft_n4",
+      "file": "small/inverseqft_n4/inverseqft_n4.qasm",
+      "sha256": "2b950bb566ea547918adcea27b13defb3ad31fb10bf3b4ccb25d51e91b5527b1",
+      "qubits": 4,
+      "ops": [
+        "barrier",
+        "h",
+        "if_else"
+      ],
+      "status": "skipped",
+      "reason": "not unitary after removing final measurements: if_else"
+    },
+    {
+      "id": "small/ipea_n2",
+      "file": "small/ipea_n2/ipea_n2.qasm",
+      "sha256": "78a11d6fadec00a0a119d9e40641124a40fd8b4eebacfb36e81ed525775e4ee8",
+      "qubits": 2,
+      "ops": [
+        "ctu",
+        "h",
+        "if_else",
+        "measure",
+        "reset"
+      ],
+      "status": "skipped",
+      "reason": "not unitary after removing final measurements: if_else, measure, reset"
+    },
+    {
+      "id": "small/ising_n10",
+      "file": "small/ising_n10/ising_n10.qasm",
+      "sha256": "c10edc4a40eadf4d610aa012524e9eed4bdd1a02fc9d939cccae8ad4ed942f67",
+      "qubits": 10,
+      "ops": [
+        "cx",
+        "h",
+        "rz"
+      ],
+      "multi_qubit_gates": 90,
+      "status": "eligible",
+      "pool": "A",
+      "role": "dev"
+    },
+    {
+      "id": "small/iswap_n2",
+      "file": "small/iswap_n2/iswap_n2.qasm",
+      "sha256": "0c6d4dffaeb32c5758511cb51d5f89bcb6c97f3f60c1f5e3cbbeabb53c53ed50",
+      "qubits": 2,
+      "ops": [
+        "cx",
+        "h",
+        "s",
+        "x"
+      ],
+      "multi_qubit_gates": 2,
+      "status": "eligible",
+      "pool": "A",
+      "role": "dev"
+    },
+    {
+      "id": "small/linearsolver_n3",
+      "file": "small/linearsolver_n3/linearsolver_n3.qasm",
+      "sha256": "ad98aaab04fdd11eed43b6839122909c568ff848dd0b97ed09c11346dd592c42",
+      "qubits": 3,
+      "ops": [
+        "cx",
+        "h",
+        "u3",
+        "x"
+      ],
+      "multi_qubit_gates": 4,
+      "status": "eligible",
+      "pool": "A",
+      "role": "held_out"
+    },
+    {
+      "id": "small/lpn_n5",
+      "file": "small/lpn_n5/lpn_n5.qasm",
+      "sha256": "4216e9b4fdf9f22e6ae4f92a67aac8c634209093db4e3f0290f5413165b4de87",
+      "qubits": 5,
+      "ops": [
+        "cx",
+        "h"
+      ],
+      "multi_qubit_gates": 2,
+      "status": "eligible",
+      "pool": "A",
+      "role": "held_out"
+    },
+    {
+      "id": "small/pea_n5",
+      "file": "small/pea_n5/pea_n5.qasm",
+      "sha256": "0ab8129a30be0350c68704b5fcd91f2dfb4c868303c5ad761af411f277f91660",
+      "qubits": 5,
+      "ops": [
+        "ctu",
+        "cu1",
+        "h"
+      ],
+      "multi_qubit_gates": 21,
+      "status": "eligible",
+      "pool": "A",
+      "role": "held_out"
+    },
+    {
+      "id": "small/qaoa_n3",
+      "file": "small/qaoa_n3/qaoa_n3.qasm",
+      "sha256": "4dc17a12b187cc3cf02962cf023a36de4cc48ed3923343ab9ef84e3daf89f5c7",
+      "qubits": 3,
+      "ops": [
+        "cx",
+        "h",
+        "rx",
+        "rz"
+      ],
+      "multi_qubit_gates": 6,
+      "status": "eligible",
+      "pool": "A",
+      "role": "held_out"
+    },
+    {
+      "id": "small/qaoa_n6",
+      "file": "small/qaoa_n6/qaoa_n6.qasm",
+      "sha256": "fde5eff21c334ef02430bbfa8ea38f9287625cab3ffbd45d92d79590ee27dcc9",
+      "qubits": 6,
+      "ops": [
+        "cx",
+        "h",
+        "rx",
+        "ry",
+        "rz",
+        "u3"
+      ],
+      "multi_qubit_gates": 54,
+      "status": "eligible",
+      "pool": "A",
+      "role": "held_out"
+    },
+    {
+      "id": "small/qec_en_n5",
+      "file": "small/qec_en_n5/qec_en_n5.qasm",
+      "sha256": "d7b95967326b65050c5e645c180f2361f8cb3513dae7936de0e0cf53a63fec58",
+      "qubits": 5,
+      "ops": [
+        "cx",
+        "h",
+        "t"
+      ],
+      "multi_qubit_gates": 10,
+      "status": "eligible",
+      "pool": "A",
+      "role": "dev"
+    },
+    {
+      "id": "small/qec_sm_n5",
+      "file": "small/qec_sm_n5/qec_sm_n5.qasm",
+      "sha256": "dcf8d069188a5cf96a04aaaed23ff6f78e3663523c429609676e066a90332598",
+      "qubits": 5,
+      "ops": [
+        "barrier",
+        "if_else",
+        "syndrome",
+        "x"
+      ],
+      "status": "skipped",
+      "reason": "not unitary after removing final measurements: if_else"
+    },
+    {
+      "id": "small/qft_n4",
+      "file": "small/qft_n4/qft_n4.qasm",
+      "sha256": "62c6c8c7ddd95ac2b5367420b9925dbf82d6fb45725f089f01619a639621ad60",
+      "qubits": 4,
+      "ops": [
+        "barrier",
+        "cu1",
+        "h",
+        "x"
+      ],
+      "multi_qubit_gates": 6,
+      "status": "eligible",
+      "pool": "A",
+      "role": "dev"
+    },
+    {
+      "id": "small/qpe_n9",
+      "file": "small/qpe_n9/qpe_n9.qasm",
+      "sha256": "b341d904913f8a41f22fee387a7939ec9b43873e5f2efeb739d57317ef2b4523",
+      "qubits": 9,
+      "ops": [
+        "barrier",
+        "ccx",
+        "cu1",
+        "cz",
+        "h",
+        "x"
+      ],
+      "multi_qubit_gates": 18,
+      "status": "eligible",
+      "pool": "A",
+      "role": "dev"
+    },
+    {
+      "id": "small/qrng_n4",
+      "file": "small/qrng_n4/qrng_n4.qasm",
+      "sha256": "627d604f685cebe71f4d079cea6a9266a8d6a136279b6199b32cbc010079a184",
+      "qubits": 4,
+      "ops": [
+        "h"
+      ],
+      "multi_qubit_gates": 0,
+      "status": "skipped",
+      "reason": "no multi-qubit gate: nothing to compile"
+    },
+    {
+      "id": "small/quantumwalks_n2",
+      "file": "small/quantumwalks_n2/quantumwalks_n2.qasm",
+      "sha256": "dea93828107b2b17f6381ed75cb8d985bc8790be74a7378179b441932a84e80b",
+      "qubits": 2,
+      "ops": [
+        "cx",
+        "u3"
+      ],
+      "multi_qubit_gates": 3,
+      "status": "eligible",
+      "pool": "A",
+      "role": "dev"
+    },
+    {
+      "id": "small/sat_n7",
+      "file": "small/sat_n7/sat_n7.qasm",
+      "sha256": "8b1f5b293141114e9f550d05fa04958f88f819e7d7aa7b1ef691c6158b0bd926",
+      "qubits": 7,
+      "ops": [
+        "ccx",
+        "h",
+        "x"
+      ],
+      "multi_qubit_gates": 10,
+      "status": "eligible",
+      "pool": "A",
+      "role": "dev"
+    },
+    {
+      "id": "small/shor_n5",
+      "file": "small/shor_n5/shor_n5.qasm",
+      "sha256": "e4dace5c3769f934e9c94786e9e12e5b2106960792a0812816cce36bc3b1a615",
+      "qubits": 5,
+      "ops": [
+        "cswap",
+        "cx",
+        "h",
+        "if_else",
+        "measure",
+        "reset",
+        "x"
+      ],
+      "status": "skipped",
+      "reason": "not unitary after removing final measurements: if_else, measure, reset"
+    },
+    {
+      "id": "small/simon_n6",
+      "file": "small/simon_n6/simon_n6.qasm",
+      "sha256": "756eee6bf939d1b5879da3ff1bae66cfd2599b9b96515f336ecde6f9ca512fc9",
+      "qubits": 6,
+      "ops": [
+        "barrier",
+        "ccx",
+        "cx",
+        "h",
+        "x"
+      ],
+      "multi_qubit_gates": 4,
+      "status": "eligible",
+      "pool": "A",
+      "role": "held_out"
+    },
+    {
+      "id": "small/teleportation_n3",
+      "file": "small/teleportation_n3/teleportation_n3.qasm",
+      "sha256": "71891c017af93f74cf72b1f222b26d02650ec23242ba9c96b0e8c34da93a5bd6",
+      "qubits": 3,
+      "ops": [
+        "cx",
+        "h",
+        "s",
+        "t"
+      ],
+      "multi_qubit_gates": 2,
+      "status": "eligible",
+      "pool": "A",
+      "role": "dev"
+    },
+    {
+      "id": "small/toffoli_n3",
+      "file": "small/toffoli_n3/toffoli_n3.qasm",
+      "sha256": "3cd72f83491b25a3c7c94fa826f85fe13f1af28079268b2c34e144299380968f",
+      "qubits": 3,
+      "ops": [
+        "cx",
+        "h",
+        "s",
+        "t",
+        "tdg",
+        "x"
+      ],
+      "multi_qubit_gates": 6,
+      "status": "eligible",
+      "pool": "A",
+      "role": "dev"
+    },
+    {
+      "id": "small/variational_n4",
+      "file": "small/variational_n4/variational_n4.qasm",
+      "sha256": "df4ced794da7fd4ca56eb2b02bce53ee77207bec77286cb4626115c6a9b6357d",
+      "qubits": 4,
+      "ops": [
+        "cx",
+        "h",
+        "rz",
+        "x"
+      ],
+      "multi_qubit_gates": 16,
+      "status": "eligible",
+      "pool": "A",
+      "role": "held_out"
+    },
+    {
+      "id": "small/vqe_n4",
+      "file": "small/vqe_n4/vqe_n4.qasm",
+      "sha256": "f6777e4fdd8eadcbc8a85a5135e797a96d3b91b3f494593a5b8c9fdcd37530c6",
+      "qubits": 4,
+      "ops": [
+        "cx",
+        "rz",
+        "sx"
+      ],
+      "multi_qubit_gates": 9,
+      "status": "eligible",
+      "pool": "A",
+      "role": "dev"
+    },
+    {
+      "id": "small/vqe_uccsd_n4",
+      "file": "small/vqe_uccsd_n4/vqe_uccsd_n4.qasm",
+      "sha256": "be59c8aa33b7cc3b997187e09c24e5f59223cfe79a0c38016d3615d828fed1dd",
+      "status": "skipped",
+      "reason": "does not parse: QASM2ParseError: \"vqe_uccsd_n4.qasm:225,8: 'q' is not defined in this scope\""
+    },
+    {
+      "id": "small/vqe_uccsd_n6",
+      "file": "small/vqe_uccsd_n6/vqe_uccsd_n6.qasm",
+      "sha256": "f80361ccbdb3c333ba29a5efce4d1f0b1c018b4a63d40e9c2976df2144747fea",
+      "status": "skipped",
+      "reason": "does not parse: QASM2ParseError: \"vqe_uccsd_n6.qasm:2286,8: 'q' is not defined in this scope\""
+    },
+    {
+      "id": "small/vqe_uccsd_n8",
+      "file": "small/vqe_uccsd_n8/vqe_uccsd_n8.qasm",
+      "sha256": "5bf2dd10d4767825289ebe9e30933986fa2782063cf60066a44487d7f257b115",
+      "status": "skipped",
+      "reason": "does not parse: QASM2ParseError: \"vqe_uccsd_n8.qasm:10813,8: 'q' is not defined in this scope\""
+    },
+    {
+      "id": "small/wstate_n3",
+      "file": "small/wstate_n3/wstate_n3.qasm",
+      "sha256": "9077432a88fea0f3da2c3b24558333c1a329261b20836ba82b253418d8c7b0dd",
+      "qubits": 3,
+      "ops": [
+        "cH",
+        "ccx",
+        "cx",
+        "u3",
+        "x"
+      ],
+      "multi_qubit_gates": 3,
+      "status": "eligible",
+      "pool": "A",
+      "role": "dev"
+    },
+    {
+      "id": "medium/bigadder_n18",
+      "file": "medium/bigadder_n18/bigadder_n18.qasm",
+      "sha256": "097ac44672d0bb9696cd77e561bc094a661f45fa84762373df840efddac4d094",
+      "qubits": 18,
+      "ops": [
+        "add4",
+        "x"
+      ],
+      "multi_qubit_gates": 2,
+      "status": "eligible",
+      "pool": "B",
+      "role": "dev"
+    },
+    {
+      "id": "medium/bv_n14",
+      "file": "medium/bv_n14/bv_n14.qasm",
+      "sha256": "c98cf8b70ed55423525f55bebe8293fd69a97a33472d83cbf5d39693b6ed5e14",
+      "qubits": 14,
+      "ops": [
+        "barrier",
+        "cx",
+        "h",
+        "x"
+      ],
+      "multi_qubit_gates": 13,
+      "status": "eligible",
+      "pool": "B",
+      "role": "held_out"
+    },
+    {
+      "id": "medium/bv_n19",
+      "file": "medium/bv_n19/bv_n19.qasm",
+      "sha256": "e80db1204270dc9fdf894c8acc682c2a2883c653185c61dcdc77a99ce5b6723a",
+      "qubits": 19,
+      "ops": [
+        "barrier",
+        "cx",
+        "h",
+        "x"
+      ],
+      "multi_qubit_gates": 18,
+      "status": "eligible",
+      "pool": "B",
+      "role": "dev"
+    },
+    {
+      "id": "medium/bwt_n21",
+      "file": "medium/bwt_n21/bwt_n21.qasm",
+      "sha256": "d53499b597f9f1f3253758501cbacbfb468fdcc77192d7f6f320ee5284bdefd4",
+      "qubits": 21,
+      "ops": [
+        "ccx",
+        "cx",
+        "h",
+        "reset",
+        "rz",
+        "s",
+        "sdg",
+        "t",
+        "tdg",
+        "x"
+      ],
+      "status": "skipped",
+      "reason": "not unitary after removing final measurements: reset"
+    },
+    {
+      "id": "medium/cat_state_n22",
+      "file": "medium/cat_state_n22/cat_state_n22.qasm",
+      "sha256": "a7b6a6a5c83397281250f255ce303f34e90c65d3990ef5b3ecc96fc685083c1e",
+      "qubits": 22,
+      "ops": [
+        "cx",
+        "h"
+      ],
+      "multi_qubit_gates": 21,
+      "status": "eligible",
+      "pool": "B",
+      "role": "held_out"
+    },
+    {
+      "id": "medium/cc_n12",
+      "file": "medium/cc_n12/cc_n12.qasm",
+      "sha256": "67cd81d8392049d251e32e4ad1d7399706c054f829f1ab347c3995fe72d914af",
+      "qubits": 12,
+      "ops": [
+        "barrier",
+        "cx",
+        "h",
+        "if_else",
+        "measure"
+      ],
+      "status": "skipped",
+      "reason": "not unitary after removing final measurements: if_else, measure"
+    },
+    {
+      "id": "medium/dnn_n16",
+      "file": "medium/dnn_n16/dnn_n16.qasm",
+      "sha256": "c194be8740c380fc9679ebcca2515ac52215aea1c58dc5cfc507679a88c64d79",
+      "qubits": 16,
+      "ops": [
+        "cx",
+        "rx",
+        "ry",
+        "rz",
+        "u3"
+      ],
+      "multi_qubit_gates": 384,
+      "status": "eligible",
+      "pool": "B",
+      "role": "held_out"
+    },
+    {
+      "id": "medium/factor247_n15",
+      "file": "medium/factor247_n15/factor247_n15.qasm",
+      "sha256": "eb18ab2af0cb5c41e4901104bef1a28626676e8d9be4839b0bf597ba81e4f11c",
+      "qubits": 15,
+      "ops": [
+        "cp",
+        "cx",
+        "h",
+        "p",
+        "swap",
+        "t",
+        "tdg",
+        "u",
+        "u3"
+      ],
+      "multi_qubit_gates": 273074,
+      "status": "eligible",
+      "pool": "B",
+      "role": "held_out"
+    },
+    {
+      "id": "medium/gcm_n13",
+      "file": "medium/gcm_n13/gcm_n13.qasm",
+      "status": "skipped",
+      "reason": "no <name>.qasm file in the circuit folder"
+    },
+    {
+      "id": "medium/ghz_state_n23",
+      "file": "medium/ghz_state_n23/ghz_state_n23.qasm",
+      "sha256": "27e77c753e2993b3b4785872ec83d434dfac62cc526f4ee574347e6f5c8986ff",
+      "qubits": 23,
+      "ops": [
+        "cx",
+        "h"
+      ],
+      "multi_qubit_gates": 22,
+      "status": "eligible",
+      "pool": "B",
+      "role": "held_out"
+    },
+    {
+      "id": "medium/hhl_n14",
+      "file": "medium/hhl_n14/hhl_n14.qasm",
+      "sha256": "db9a67316219936e78f2dd60e72aa215cf048a80f21a323dabbdfc24f19e701e",
+      "status": "skipped",
+      "reason": "does not parse: QASM2ParseError: \"hhl_n14.qasm:3726512,8: 'q' is not defined in this scope\""
+    },
+    {
+      "id": "medium/ising_n26",
+      "file": "medium/ising_n26/ising_n26.qasm",
+      "sha256": "ac0dc5f6af55575ad454ce16f78820fa7e1aa16b027a6ab8e49af82b276054ba",
+      "qubits": 26,
+      "ops": [
+        "cx",
+        "h",
+        "rz"
+      ],
+      "multi_qubit_gates": 50,
+      "status": "eligible",
+      "pool": "B",
+      "role": "dev"
+    },
+    {
+      "id": "medium/knn_n25",
+      "file": "medium/knn_n25/knn_n25.qasm",
+      "sha256": "44d66b3aaca346922c64a61316bf166278621667e804fd59ea40eb465c33e678",
+      "qubits": 25,
+      "ops": [
+        "cswap",
+        "h",
+        "ry"
+      ],
+      "multi_qubit_gates": 12,
+      "status": "eligible",
+      "pool": "B",
+      "role": "dev"
+    },
+    {
+      "id": "medium/multiplier_n15",
+      "file": "medium/multiplier_n15/multiplier_n15.qasm",
+      "sha256": "e8ad585e5be09f96dd60f7495bd649562c6c05f8bf5d8a416b85a9d834e7eab8",
+      "qubits": 15,
+      "ops": [
+        "ccx",
+        "cx",
+        "x"
+      ],
+      "multi_qubit_gates": 66,
+      "status": "eligible",
+      "pool": "B",
+      "role": "dev"
+    },
+    {
+      "id": "medium/multiply_n13",
+      "file": "medium/multiply_n13/multiply_n13.qasm",
+      "sha256": "6d00a50a97f2224ddbb993ed3d82b1928cc1397997fc0347296d7fc42d731755",
+      "qubits": 13,
+      "ops": [
+        "barrier",
+        "ccx",
+        "cx",
+        "x"
+      ],
+      "multi_qubit_gates": 10,
+      "status": "eligible",
+      "pool": "B",
+      "role": "held_out"
+    },
+    {
+      "id": "medium/qec9xz_n17",
+      "file": "medium/qec9xz_n17/qec9xz_n17.qasm",
+      "sha256": "27399092d22b16052641827cf12c87f524342ec308d8a2f6589a2d9f815682d3",
+      "qubits": 17,
+      "ops": [
+        "cx",
+        "h"
+      ],
+      "multi_qubit_gates": 32,
+      "status": "eligible",
+      "pool": "B",
+      "role": "dev"
+    },
+    {
+      "id": "medium/qf21_n15",
+      "file": "medium/qf21_n15/qf21_n15.qasm",
+      "sha256": "46a3b2997c7aa44c97396a55cd4f0c71004cce4fbb52bee55b4c8ffe4fc8c7f3",
+      "qubits": 15,
+      "ops": [
+        "barrier",
+        "ccx",
+        "cu1",
+        "cz",
+        "h",
+        "x"
+      ],
+      "multi_qubit_gates": 50,
+      "status": "eligible",
+      "pool": "B",
+      "role": "held_out"
+    },
+    {
+      "id": "medium/qft_n18",
+      "file": "medium/qft_n18/qft_n18.qasm",
+      "sha256": "5ed6ee804a7067160294d7db81859886788ae56e853286e7307e9c74d5c35ab3",
+      "qubits": 18,
+      "ops": [
+        "cx",
+        "h",
+        "u1"
+      ],
+      "multi_qubit_gates": 306,
+      "status": "eligible",
+      "pool": "B",
+      "role": "dev"
+    },
+    {
+      "id": "medium/qram_n20",
+      "file": "medium/qram_n20/qram_n20.qasm",
+      "sha256": "2b22f2a0a013cb91c5b59063b04e33998a1e24bbd5300a085b01edadd9ac763d",
+      "qubits": 20,
+      "ops": [
+        "ccx",
+        "cx",
+        "x"
+      ],
+      "multi_qubit_gates": 36,
+      "status": "eligible",
+      "pool": "B",
+      "role": "held_out"
+    },
+    {
+      "id": "medium/sat_n11",
+      "file": "medium/sat_n11/sat_n11.qasm",
+      "sha256": "a876bce6261e0c6b2eff07cca8606a6937fe37ba46d8b1c28cc735d9c8fa325e",
+      "qubits": 11,
+      "ops": [
+        "ccx",
+        "h",
+        "x"
+      ],
+      "multi_qubit_gates": 42,
+      "status": "eligible",
+      "pool": "B",
+      "role": "dev"
+    },
+    {
+      "id": "medium/seca_n11",
+      "file": "medium/seca_n11/seca_n11.qasm",
+      "sha256": "42ed28a2fe7ef6e8f3498a4b4fe326886ba3ee730569874e6d6f928a4efb1b6a",
+      "qubits": 11,
+      "ops": [
+        "barrier",
+        "ccx",
+        "cx",
+        "cz",
+        "h",
+        "measure",
+        "z"
+      ],
+      "status": "skipped",
+      "reason": "not unitary after removing final measurements: measure"
+    },
+    {
+      "id": "medium/square_root_n18",
+      "file": "medium/square_root_n18/square_root_n18.qasm",
+      "sha256": "601bbadb967001504c15a00bc6740e7b91f4f125343af0bb2c3166f51515b650",
+      "qubits": 18,
+      "ops": [
+        "ccx",
+        "cx",
+        "h",
+        "reset",
+        "x",
+        "z"
+      ],
+      "status": "skipped",
+      "reason": "not unitary after removing final measurements: reset"
+    },
+    {
+      "id": "medium/swap_test_n25",
+      "file": "medium/swap_test_n25/swap_test_n25.qasm",
+      "sha256": "45649f6f4af12870b87c8088d97e286fff709b34e38f6363fef79c35a6bda1f0",
+      "qubits": 25,
+      "ops": [
+        "cswap",
+        "h",
+        "rx"
+      ],
+      "multi_qubit_gates": 12,
+      "status": "eligible",
+      "pool": "B",
+      "role": "held_out"
+    },
+    {
+      "id": "medium/vqe_n24",
+      "file": "medium/vqe_n24/vqe_n24.qasm",
+      "sha256": "810251e4416db8dfde203818be620fa88d7ef7f5d1604d064087509ac2ff0b02",
+      "qubits": 24,
+      "ops": [
+        "cx",
+        "h",
+        "rx",
+        "rz"
+      ],
+      "multi_qubit_gates": 1538240,
+      "status": "eligible",
+      "pool": "B",
+      "role": "dev"
+    },
+    {
+      "id": "medium/wstate_n27",
+      "file": "medium/wstate_n27/wstate_n27.qasm",
+      "sha256": "ecd71063a3bf7e3a7a7440130c932f734aa13c6e368521e82a23f59572071a84",
+      "qubits": 27,
+      "ops": [
+        "cx",
+        "cz",
+        "ry",
+        "x"
+      ],
+      "multi_qubit_gates": 52,
+      "status": "eligible",
+      "pool": "B",
+      "role": "held_out"
+    },
+    {
+      "id": "large/QAOA_3SAT_N10000_p1",
+      "file": "large/QAOA_3SAT_N10000_p1/QAOA_3SAT_N10000_p1.qasm",
+      "status": "skipped",
+      "reason": "no <name>.qasm file in the circuit folder"
+    },
+    {
+      "id": "large/QAOA_3SAT_N1000_p1",
+      "file": "large/QAOA_3SAT_N1000_p1/QAOA_3SAT_N1000_p1.qasm",
+      "status": "skipped",
+      "reason": "no <name>.qasm file in the circuit folder"
+    },
+    {
+      "id": "large/QAOA_3SAT_N100_p100",
+      "file": "large/QAOA_3SAT_N100_p100/QAOA_3SAT_N100_p100.qasm",
+      "status": "skipped",
+      "reason": "no <name>.qasm file in the circuit folder"
+    },
+    {
+      "id": "large/QAOA_3SAT_N100_p1000",
+      "file": "large/QAOA_3SAT_N100_p1000/QAOA_3SAT_N100_p1000.qasm",
+      "status": "skipped",
+      "reason": "no <name>.qasm file in the circuit folder"
+    },
+    {
+      "id": "large/QV_n100",
+      "file": "large/QV_n100/QV_n100.qasm",
+      "status": "skipped",
+      "reason": "no <name>.qasm file in the circuit folder"
+    },
+    {
+      "id": "large/QV_n1000",
+      "file": "large/QV_n1000/QV_n1000.qasm",
+      "status": "skipped",
+      "reason": "no <name>.qasm file in the circuit folder"
+    },
+    {
+      "id": "large/QV_n32",
+      "file": "large/QV_n32/QV_n32.qasm",
+      "status": "skipped",
+      "reason": "no <name>.qasm file in the circuit folder"
+    },
+    {
+      "id": "large/adder_n118",
+      "file": "large/adder_n118/adder_n118.qasm",
+      "sha256": "b6efc8e67fd640f8ba24fb36529248fe573cfacedfe45e050b3d9f0dfedc6b69",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/adder_n28",
+      "file": "large/adder_n28/adder_n28.qasm",
+      "sha256": "18ffaae6478e1b9ab873e12035cb3071d826e27d4f51d1c77ec6685206b3a3cf",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/adder_n433",
+      "file": "large/adder_n433/adder_n433.qasm",
+      "sha256": "808136ae027cabd653ebfb9dfe016a913e60eecc56de70a9679e241a7b7036ad",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/adder_n64",
+      "file": "large/adder_n64/adder_n64.qasm",
+      "sha256": "ec67a182baee4a03a5cf2b0c33d5043260e8fda16a4e89a995356baa530e58e6",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/bv_n140",
+      "file": "large/bv_n140/bv_n140.qasm",
+      "sha256": "100b4d69fc11f00dfc27c09e2ccd5661fe6b7183c9e3eb685a78bc2659344ca5",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/bv_n280",
+      "file": "large/bv_n280/bv_n280.qasm",
+      "sha256": "799c589de67bb852632f37d75bc33fecc560c3cafe49eb33da36ab1c50b11246",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/bv_n30",
+      "file": "large/bv_n30/bv_n30.qasm",
+      "sha256": "a9f50bd7aecba85c5148d621c91fab9a9d940cf34f9463982366b77228027ade",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/bv_n70",
+      "file": "large/bv_n70/bv_n70.qasm",
+      "sha256": "802e0740406305735367ebd1f2b43578922b68c8c6b9a30cf48ff8d3b0ffd35a",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/bwt_n177",
+      "file": "large/bwt_n177/bwt_n177.qasm",
+      "sha256": "03da49fcf30b7532d0f62e59d6c5ac5b961623a6d386a245c1a18405d9e256f9",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/bwt_n37",
+      "file": "large/bwt_n37/bwt_n37.qasm",
+      "sha256": "ae87adc21c21d45260b9f7605d6947ac96269a38c3870760f718029abdd39016",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/bwt_n57",
+      "file": "large/bwt_n57/bwt_n57.qasm",
+      "sha256": "e30e7cc4c5aeca6a6af214aa516393d9ca6bb3858e32432c3ba278829a6d7e5e",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/bwt_n97",
+      "file": "large/bwt_n97/bwt_n97.qasm",
+      "sha256": "3380e3865b72e95eb7559e47ce260d80b32d45ee39e222efb31882a1bb2ee39f",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/cat_n130",
+      "file": "large/cat_n130/cat_n130.qasm",
+      "sha256": "0ffa7aa1fd3df9fc2be6dc631331aeff43f28980dfad32d832de60981080784d",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/cat_n260",
+      "file": "large/cat_n260/cat_n260.qasm",
+      "sha256": "11eecef13fbe9601983789c61fe6c7eb1946e7d457afaf5a78ba621938f0b75d",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/cat_n35",
+      "file": "large/cat_n35/cat_n35.qasm",
+      "sha256": "9a0d29ba7813c5f641e6e4aeaddbff3257e783d0d3bee1ebd4e759a649b5fd74",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/cat_n65",
+      "file": "large/cat_n65/cat_n65.qasm",
+      "sha256": "02f08cc7717ce8862c6b485f851ee88b44f5c14e86bc0b054955fc86d396178a",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/cc_n151",
+      "file": "large/cc_n151/cc_n151.qasm",
+      "sha256": "23a0d0d4a8bea37c4a8e76cf79fe75e498cea9250a22a363207669854ad05eec",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/cc_n301",
+      "file": "large/cc_n301/cc_n301.qasm",
+      "sha256": "10f364bf814ea2824635a21a8fe229c911cacf0077120a124902f87be2416276",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/cc_n32",
+      "file": "large/cc_n32/cc_n32.qasm",
+      "sha256": "0f67ec718f5663c1e55bbfc5ad930418266151bfa4bbe5b77d67529c22e7051a",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/cc_n64",
+      "file": "large/cc_n64/cc_n64.qasm",
+      "sha256": "eb67f8cf6f308aed40b78eb84561f07cdc5987e4ec1eba8e1a9b37f8f40185cb",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/dnn_n33",
+      "file": "large/dnn_n33/dnn_n33.qasm",
+      "sha256": "50a5f79da7cbb38754bd7fa0aca2e672266642ad7e9e7ce16ccdd613af5db070",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/dnn_n51",
+      "file": "large/dnn_n51/dnn_n51.qasm",
+      "sha256": "df6c9e37a068afe01a13daf528910e1ba0c23ff0a82c64b8e8d02ab7d65317f9",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/ghz_n127",
+      "file": "large/ghz_n127/ghz_n127.qasm",
+      "sha256": "8e7ae59d4f9d3d31c8fed8a19fe36e9542b76f3fc4d873d2662365df1040b0a7",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/ghz_n255",
+      "file": "large/ghz_n255/ghz_n255.qasm",
+      "status": "skipped",
+      "reason": "no <name>.qasm file in the circuit folder"
+    },
+    {
+      "id": "large/ghz_n40",
+      "file": "large/ghz_n40/ghz_n40.qasm",
+      "sha256": "f31c4f2beba87afc710f4f828ef0258b91952fe744379272018751e13a4eddf2",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/ghz_n78",
+      "file": "large/ghz_n78/ghz_n78.qasm",
+      "sha256": "9e199ccf5888ff36b9d8191dbc49befa8b0252e14d88a9dbbd9a3949acd02343",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/ising_n34",
+      "file": "large/ising_n34/ising_n34.qasm",
+      "sha256": "c4367870578a74cd7dbfd337dd8b1ece3fb2c76709261a16a093225dfb7307ec",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/ising_n42",
+      "file": "large/ising_n42/ising_n42.qasm",
+      "sha256": "28cc7db51ac0ddc75b8407c414cd0986e028dc9750010d938c34fa25f157a853",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/ising_n420",
+      "file": "large/ising_n420/ising_n420.qasm",
+      "sha256": "edec5ff2f3a0380db3e073a41cf3046f9196c52b9e57cbd45e5bcd23c0e7feec",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/ising_n66",
+      "file": "large/ising_n66/ising_n66.qasm",
+      "sha256": "ab80ae764db392991593e3bcbcd8591ee74998c747b964f2713a822b30862fdc",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/ising_n98",
+      "file": "large/ising_n98/ising_n98.qasm",
+      "sha256": "a5df0fa957b250a59561348cf0d3b30f01626634b33cfbaea09d32f770a5f8af",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/knn_n129",
+      "file": "large/knn_n129/knn_n129.qasm",
+      "status": "skipped",
+      "reason": "no <name>.qasm file in the circuit folder"
+    },
+    {
+      "id": "large/knn_n31",
+      "file": "large/knn_n31/knn_n31.qasm",
+      "sha256": "7f5af7d17ec13348df03c30e665aec773b04fcd65fb7e4d536866d820ca43bc0",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/knn_n341",
+      "file": "large/knn_n341/knn_n341.qasm",
+      "status": "skipped",
+      "reason": "no <name>.qasm file in the circuit folder"
+    },
+    {
+      "id": "large/knn_n41",
+      "file": "large/knn_n41/knn_n41.qasm",
+      "sha256": "0b62f07ebd93d7a043e26669a353b3534661c4b26eab54d206e9d5dae792543e",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/knn_n67",
+      "file": "large/knn_n67/knn_n67.qasm",
+      "sha256": "3368a00839e39ee324d2208b0f3eb39a271c1cb3a98699fdbed13bdda533c30a",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/multiplier_n350",
+      "file": "large/multiplier_n350/multiplier_n350.qasm",
+      "sha256": "d1de151becada0b2723f5aadf2984c2a73fa60b1ce9611d114e19a507c4f14ef",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/multiplier_n400",
+      "file": "large/multiplier_n400/multiplier_n400.qasm",
+      "sha256": "5258c62c7ac1026d97c690126dd59feef793bc56f93194481d27578cbd45c3e5",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/multiplier_n45",
+      "file": "large/multiplier_n45/multiplier_n45.qasm",
+      "sha256": "606b3ce2308cf7ca71c7c0b800e76370c3530ad255906431099c4292bec13e34",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/multiplier_n75",
+      "file": "large/multiplier_n75/multiplier_n75.qasm",
+      "sha256": "a32cc4f8dccd803af702d55a5b16cd657899016df0695b9027309d369a72cd8b",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/qft_n160",
+      "file": "large/qft_n160/qft_n160.qasm",
+      "sha256": "f386a94358ecd1a634245db452bc8e00f6ea89698632a3ebb25ddec8f0067e0b",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/qft_n29",
+      "file": "large/qft_n29/qft_n29.qasm",
+      "sha256": "e17668cbd88ae90820a1498c4b71d9e3539fbacf1e7d9c4e08d5f9d5eb6564c3",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/qft_n320",
+      "file": "large/qft_n320/qft_n320.qasm",
+      "sha256": "109a02d9cec5617edeea026b20947fc84cc0b2dd93e4af35e4df3b59476fd612",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/qft_n63",
+      "file": "large/qft_n63/qft_n63.qasm",
+      "sha256": "6fad7f3a11b4f50b10a467b076521d22891505bb759f63146be84e74225417ba",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/quantum_telecloning_N1_M1000_LNN",
+      "file": "large/quantum_telecloning_N1_M1000_LNN/quantum_telecloning_N1_M1000_LNN.qasm",
+      "status": "skipped",
+      "reason": "no <name>.qasm file in the circuit folder"
+    },
+    {
+      "id": "large/quantum_telecloning_N1_M1000_all_to_all",
+      "file": "large/quantum_telecloning_N1_M1000_all_to_all/quantum_telecloning_N1_M1000_all_to_all.qasm",
+      "status": "skipped",
+      "reason": "no <name>.qasm file in the circuit folder"
+    },
+    {
+      "id": "large/quantum_telecloning_N1_M100_LNN",
+      "file": "large/quantum_telecloning_N1_M100_LNN/quantum_telecloning_N1_M100_LNN.qasm",
+      "status": "skipped",
+      "reason": "no <name>.qasm file in the circuit folder"
+    },
+    {
+      "id": "large/quantum_telecloning_N1_M100_all_to_all",
+      "file": "large/quantum_telecloning_N1_M100_all_to_all/quantum_telecloning_N1_M100_all_to_all.qasm",
+      "status": "skipped",
+      "reason": "no <name>.qasm file in the circuit folder"
+    },
+    {
+      "id": "large/qugan_n111",
+      "file": "large/qugan_n111/qugan_n111.qasm",
+      "sha256": "949bc69389fd910b0ca274a878632ccc7bfd312623ee9d1eb466f054ec1a9bde",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/qugan_n39",
+      "file": "large/qugan_n39/qugan_n39.qasm",
+      "sha256": "4b4358666bd1091cb6c2877a2f4a161c5bfeb2e60755412f16c082b7f791963f",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/qugan_n395",
+      "file": "large/qugan_n395/qugan_n395.qasm",
+      "sha256": "f58ddc98613854ced82f3e14406fec605e57328fdc41f986037cb3b5b2e55abe",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/qugan_n71",
+      "file": "large/qugan_n71/qugan_n71.qasm",
+      "sha256": "4ed00f78f929652258fa329a80923f0b17d2514e14c3c4c6a2e606382570cdab",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/square_root_n45",
+      "file": "large/square_root_n45/square_root_n45.qasm",
+      "sha256": "1ab43276437fe6002f2464cbb8756e30a7a7f8d57b84c5df990b39fadf8f8cc6",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/square_root_n60",
+      "file": "large/square_root_n60/square_root_n60.qasm",
+      "sha256": "9eca8cadef1060758fc0653732795ee5e766c58d28b4b49bace733dc20127f3c",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/swap_test_n115",
+      "file": "large/swap_test_n115/swap_test_n115.qasm",
+      "sha256": "52f452fdbb48d20b981d1a4d1292b80790f2dfe23f1a3d3477cc4cc00d6abf5c",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/swap_test_n361",
+      "file": "large/swap_test_n361/swap_test_n361.qasm",
+      "sha256": "3a18b5d650f327fef40b43e5cd15977526145cbbf1704e0bc796d8d7a6ba286a",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/swap_test_n41",
+      "file": "large/swap_test_n41/swap_test_n41.qasm",
+      "sha256": "1637275b83d889f9b8f7352947f125ceee8fde7e5977b4da245467342ff9987b",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/swap_test_n83",
+      "file": "large/swap_test_n83/swap_test_n83.qasm",
+      "sha256": "f424a498f16be2a3f656c5394754e9fc154c645acf803ea6c0347b2911805eb4",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/vqe_uccsd_n28",
+      "file": "large/vqe_uccsd_n28/vqe_uccsd_n28.qasm",
+      "sha256": "210f623f700919c1094c6b1b4c06b38f01c022eae5d210d7cac029670605194d",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/wstate_n118",
+      "file": "large/wstate_n118/wstate_n118.qasm",
+      "sha256": "f7dbdb1c724d36e4b3a226d78456a60ae88b39ea950200bbf22f6abb45b6af55",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/wstate_n36",
+      "file": "large/wstate_n36/wstate_n36.qasm",
+      "sha256": "6cc4f6ee67aeb3b4b565d801f6514cde8173e45eedbe8b935ffcc87d4b5ecc09",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/wstate_n380",
+      "file": "large/wstate_n380/wstate_n380.qasm",
+      "sha256": "d55e760505c1f96b18b64a0b88e463b45442419e103ea72eeff8de23196fbe2d",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    },
+    {
+      "id": "large/wstate_n76",
+      "file": "large/wstate_n76/wstate_n76.qasm",
+      "sha256": "b11a71ff3339a21822470839a6155ae505d1bc0bc885788181fe58c8b41bbcac",
+      "status": "skipped",
+      "reason": "large/: too large for any equivalence check used here"
+    }
+  ]
+}

@@ -56,8 +56,13 @@ def _nav_pages(node) -> set[str]:
     return pages
 
 
+# Working documents kept out of the published site (mkdocs.yml excludes the same folders):
+# design plans, architecture decisions, experiment plans and unapproved results.
+UNPUBLISHED = {"superpowers", "adr", "plans", "results"}
+
+
 def _pages() -> list[Path]:
-    return [p for p in DOCS.rglob("*.md") if "superpowers" not in p.relative_to(DOCS).parts]
+    return [p for p in DOCS.rglob("*.md") if not UNPUBLISHED & set(p.relative_to(DOCS).parts[:-1])]
 
 
 def _prose(text: str) -> str:

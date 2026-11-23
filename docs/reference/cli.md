@@ -32,6 +32,7 @@ $ harnesslab [OPTIONS] COMMAND [ARGS]...
 * `grow`: Growing Harness: grow a harness bundle...
 * `harness`: Inspect and validate harness bundles.
 * `ablate`: Component ablation: test every part of a...
+* `study`: Studies: search on dev tasks, freeze the...
 
 ## `harnesslab version`
 
@@ -619,6 +620,143 @@ $ harnesslab ablate report [OPTIONS] {experiment_id}
 **Arguments**:
 
 * `experiment_id`: [required]
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+## `harnesslab study`
+
+Studies: search on dev tasks, freeze the choice, compare once on held-out tasks.
+
+**Usage**:
+
+```console
+$ harnesslab study [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `check`: Check the split, the spec and the dev...
+* `search`: Run search stages on dev tasks (cells...
+* `freeze`: Write freeze.json once, from the dev ranking.
+* `heldout`: Run the frozen comparison on the held-out...
+* `report`: Compute results.json from the records...
+* `status`: Records, cost and budget per phase.
+
+### `harnesslab study check`
+
+Check the split, the spec and the dev tasks before running anything.
+
+**Usage**:
+
+```console
+$ harnesslab study check [OPTIONS] {spec}
+```
+
+**Arguments**:
+
+* `spec`: The study YAML (next to its split.json).  [required]
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+### `harnesslab study search`
+
+Run search stages on dev tasks (cells already recorded are skipped).
+
+**Usage**:
+
+```console
+$ harnesslab study search [OPTIONS] {spec}
+```
+
+**Arguments**:
+
+* `spec`: The study YAML (next to its split.json).  [required]
+
+**Options**:
+
+* `--stage <str>`: Run only these stages (repeatable).
+* `--yes`: Do not ask (required outside a terminal for irreversible or paid steps).
+* `--help`: Show this message and exit.
+
+### `harnesslab study freeze`
+
+Write freeze.json once, from the dev ranking. Commit it before running heldout.
+
+**Usage**:
+
+```console
+$ harnesslab study freeze [OPTIONS] {spec}
+```
+
+**Arguments**:
+
+* `spec`: The study YAML (next to its split.json).  [required]
+
+**Options**:
+
+* `--yes`: Do not ask (required outside a terminal for irreversible or paid steps).
+* `--help`: Show this message and exit.
+
+### `harnesslab study heldout`
+
+Run the frozen comparison on the held-out tasks, once.
+
+**Usage**:
+
+```console
+$ harnesslab study heldout [OPTIONS] {spec}
+```
+
+**Arguments**:
+
+* `spec`: The study YAML (next to its split.json).  [required]
+
+**Options**:
+
+* `--yes`: Do not ask (required outside a terminal for irreversible or paid steps).
+* `--help`: Show this message and exit.
+
+### `harnesslab study report`
+
+Compute results.json from the records (paired statistics on held-out tasks).
+
+**Usage**:
+
+```console
+$ harnesslab study report [OPTIONS] {spec}
+```
+
+**Arguments**:
+
+* `spec`: The study YAML (next to its split.json).  [required]
+
+**Options**:
+
+* `--json`: Print results.json to stdout.
+* `--markdown <path>`: Also write results.json&#x27;s tables as Markdown here.
+* `--help`: Show this message and exit.
+
+### `harnesslab study status`
+
+Records, cost and budget per phase.
+
+**Usage**:
+
+```console
+$ harnesslab study status [OPTIONS] {spec}
+```
+
+**Arguments**:
+
+* `spec`: The study YAML (next to its split.json).  [required]
 
 **Options**:
 

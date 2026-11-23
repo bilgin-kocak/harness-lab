@@ -1,0 +1,15 @@
+{
+  "configs": [],
+  "created_at": "2026-11-23T14:15:44+00:00",
+  "decision": "nothing_to_run",
+  "kind": "combine",
+  "note": "0 single-knob addition(s) beat 'F' by at least 0.0666; 2 needed",
+  "phase": "dev",
+  "reason": "0 single-knob addition(s) beat 'F' by at least 0.0666; 2 needed",
+  "repetition_starts": {},
+  "repetitions": 1,
+  "stage": "combine",
+  "stage_sha256": "15a126c74cce3da26eab16026f03b248544ff95521adea6b0e8f6d06047ffbe0",
+  "stage_sha256_of": "written",
+  "tasks": []
+}

@@ -17,8 +17,6 @@ alongside.  No third-party statistics dependency is needed.
 
 from __future__ import annotations
 
-import math
-import random
 import statistics
 from collections import defaultdict
 from typing import TYPE_CHECKING, Literal
@@ -27,11 +25,20 @@ from pydantic import BaseModel
 
 from harnesslab.core.models import VerdictMetric
 
+# The pure helpers live in the domain-neutral core and are re-exported here unchanged.
+from harnesslab.study.stats import (  # noqa: F401
+    DEFAULT_LEVEL,
+    DEFAULT_RESAMPLES,
+    TIE_TOLERANCE,
+    Interval,
+    _snap,
+    bootstrap_mean_diff,
+    exact_sign_test,
+)
+
 if TYPE_CHECKING:  # aggregate imports this module; RunSample is only needed for annotations
     from harnesslab.experiments.aggregate import RunSample
 
-DEFAULT_RESAMPLES = 2000
-DEFAULT_LEVEL = 0.95
 DEFAULT_MIN_TASKS = 5
 
 Verdict = Literal["better", "worse", "no evidence", "not enough tasks"]
@@ -43,17 +50,6 @@ METRIC_LABELS: dict[str, str] = {
     "improve_ratio": "improvement ratio",
     "anytime": "anytime score",
 }
-
-
-class Interval(BaseModel):
-    """Mean of per-task differences (B − A) with a bootstrap interval."""
-
-    estimate: float
-    low: float
-    high: float
-    level: float = DEFAULT_LEVEL
-    p_positive: float  # share of bootstrap means above zero
-    n: int
 
 
 class PairedTask(BaseModel):
@@ -196,51 +192,6 @@ def paired_tasks(
             )
         )
     return out
-
-
-TIE_TOLERANCE = 1e-9
-
-
-def _snap(diff: float) -> float:
-    """Float noise is a tie: means that are equal on paper can differ in their last bits."""
-    return 0.0 if abs(diff) <= TIE_TOLERANCE else diff
-
-
-def bootstrap_mean_diff(
-    diffs: list[float],
-    *,
-    resamples: int = DEFAULT_RESAMPLES,
-    seed: int = 0,
-    level: float = DEFAULT_LEVEL,
-) -> Interval | None:
-    """Percentile bootstrap interval of the mean of ``diffs`` (one value per task)."""
-    n = len(diffs)
-    if n == 0:
-        return None
-    estimate = statistics.fmean(diffs)
-    rng = random.Random(seed)
-    means = sorted(statistics.fmean(rng.choices(diffs, k=n)) for _ in range(max(1, resamples)))
-    alpha = (1.0 - level) / 2.0
-    low = means[max(0, math.floor(alpha * len(means)))]
-    high = means[min(len(means) - 1, math.ceil((1.0 - alpha) * len(means)) - 1)]
-    return Interval(
-        estimate=estimate,
-        low=low,
-        high=high,
-        level=level,
-        p_positive=sum(1 for m in means if m > 0) / len(means),
-        n=n,
-    )
-
-
-def exact_sign_test(wins: int, losses: int) -> float | None:
-    """Two-sided exact binomial test of wins vs losses under p = 0.5 (ties excluded)."""
-    n = wins + losses
-    if n == 0:
-        return None
-    k = min(wins, losses)
-    tail = sum(math.comb(n, i) for i in range(k + 1)) / 2**n
-    return min(1.0, 2.0 * tail)
 
 
 def verdict_for(interval: Interval | None, n_tasks: int, min_tasks: int) -> Verdict:

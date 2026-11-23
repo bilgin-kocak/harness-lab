@@ -1,0 +1,1156 @@
+{
+  "adapter": {
+    "name": "qiskit-qasmbench",
+    "options_sha256": "5b1483231424c863b8e284393564f1e9bc5ff3ec118539075bdfb1f950101bb8",
+    "provenance": {
+      "adapter": "qiskit-qasmbench 2",
+      "exact_checker": "exact-isometry/2 numpy 2.5.5",
+      "mqt.core": "3.12.0",
+      "mqt.qcec": "3.12.0",
+      "numpy": "2.5.5",
+      "python": "3.12.3",
+      "qasmbench_commit": "357b942396d5c2b7cbc1c229c585a6ef5ccaebac",
+      "qasmbench_repo": "https://github.com/pnnl/QASMBench",
+      "qiskit": "2.6.2",
+      "qpy_version": "16",
+      "split_sha256": "c49c3e592d7a45d26fc3a765371ced221c23b12a8b34de879ce0c1c26e062ece",
+      "target_checker": "target-validity/2",
+      "target_sha256": "f4d703bfefca84653de35e531be493c63d9ca10b120c79bad7774a409fdec8d2"
+    },
+    "version": "2"
+  },
+  "baseline": {
+    "config": {
+      "approximation_degree": 1.0,
+      "hls_mcx": "default",
+      "layout_method": "default",
+      "optimization_level": 2,
+      "qubits_initially_zero": true,
+      "routing_method": "default",
+      "seed_transpiler": 0,
+      "translation_method": "default"
+    },
+    "config_hash": "843db842cf08f89e9b427443dcc3b387bf4094ff9f7990c16a31da2ab6a042be",
+    "label": "baseline"
+  },
+  "comparators": [
+    {
+      "config": {
+        "approximation_degree": 1.0,
+        "hls_mcx": "default",
+        "layout_method": "default",
+        "optimization_level": 3,
+        "qubits_initially_zero": true,
+        "routing_method": "default",
+        "seed_transpiler": 0,
+        "translation_method": "default"
+      },
+      "config_hash": "78f2fa9955a4f0ce218be817aa134e8e1b4d7ce466f06f34043ec6c6b80c6c65",
+      "label": "opt3"
+    },
+    {
+      "config": {
+        "approximation_degree": 1.0,
+        "hls_mcx": "default",
+        "layout_method": "default",
+        "optimization_level": 2,
+        "qubits_initially_zero": true,
+        "routing_method": "default",
+        "seed_transpiler": 1001,
+        "translation_method": "default"
+      },
+      "config_hash": "37c25e69df9eea8e8ede48d48cc1cde50e68a75d10b4e9296cbe843b6e2afdb9",
+      "label": "baseline@seed_transpiler=1001"
+    },
+    {
+      "config": {
+        "approximation_degree": 1.0,
+        "hls_mcx": "default",
+        "layout_method": "default",
+        "optimization_level": 2,
+        "qubits_initially_zero": true,
+        "routing_method": "default",
+        "seed_transpiler": 1002,
+        "translation_method": "default"
+      },
+      "config_hash": "1442ed84fce373ae31a360a84a9fde5ad9d57a53077039917a7329c6d9289482",
+      "label": "baseline@seed_transpiler=1002"
+    },
+    {
+      "config": {
+        "approximation_degree": 1.0,
+        "hls_mcx": "default",
+        "layout_method": "default",
+        "optimization_level": 2,
+        "qubits_initially_zero": true,
+        "routing_method": "default",
+        "seed_transpiler": 1003,
+        "translation_method": "default"
+      },
+      "config_hash": "9fddda58b41b6b251a0a7309e3803f36ff8abe87d1be55f2360f3a687fad3e0f",
+      "label": "baseline@seed_transpiler=1003"
+    },
+    {
+      "config": {
+        "approximation_degree": 1.0,
+        "hls_mcx": "default",
+        "layout_method": "default",
+        "optimization_level": 2,
+        "qubits_initially_zero": true,
+        "routing_method": "default",
+        "seed_transpiler": 1004,
+        "translation_method": "default"
+      },
+      "config_hash": "c7ff94b36bccbb0ea994066dfd081ef70931a9e5c78f3eefb8c844a440ef0d08",
+      "label": "baseline@seed_transpiler=1004"
+    },
+    {
+      "config": {
+        "approximation_degree": 1.0,
+        "hls_mcx": "default",
+        "layout_method": "default",
+        "optimization_level": 2,
+        "qubits_initially_zero": true,
+        "routing_method": "default",
+        "seed_transpiler": 1005,
+        "translation_method": "default"
+      },
+      "config_hash": "5fc9aa1ec429c21b3f5be8e438434d07facef63d44c706a65c3b3cc37ca80ea9",
+      "label": "baseline@seed_transpiler=1005"
+    },
+    {
+      "config": {
+        "approximation_degree": 1.0,
+        "hls_mcx": "default",
+        "layout_method": "default",
+        "optimization_level": 3,
+        "qubits_initially_zero": true,
+        "routing_method": "default",
+        "seed_transpiler": 1001,
+        "translation_method": "default"
+      },
+      "config_hash": "8edc3fe41615d1895f8ec54338f2a0a2aa3ead4a1d37179f25898884c4e60a10",
+      "label": "frozen@seed_transpiler=1001"
+    },
+    {
+      "config": {
+        "approximation_degree": 1.0,
+        "hls_mcx": "default",
+        "layout_method": "default",
+        "optimization_level": 3,
+        "qubits_initially_zero": true,
+        "routing_method": "default",
+        "seed_transpiler": 1002,
+        "translation_method": "default"
+      },
+      "config_hash": "033559656d3acd17fdd3ee981d9edcf81fc66592c032ea842015652c901dbd60",
+      "label": "frozen@seed_transpiler=1002"
+    },
+    {
+      "config": {
+        "approximation_degree": 1.0,
+        "hls_mcx": "default",
+        "layout_method": "default",
+        "optimization_level": 3,
+        "qubits_initially_zero": true,
+        "routing_method": "default",
+        "seed_transpiler": 1003,
+        "translation_method": "default"
+      },
+      "config_hash": "40c24bef5deaa063e0149788441d26d1f7a20219feb20be3445b1fb0adbb8f99",
+      "label": "frozen@seed_transpiler=1003"
+    },
+    {
+      "config": {
+        "approximation_degree": 1.0,
+        "hls_mcx": "default",
+        "layout_method": "default",
+        "optimization_level": 3,
+        "qubits_initially_zero": true,
+        "routing_method": "default",
+        "seed_transpiler": 1004,
+        "translation_method": "default"
+      },
+      "config_hash": "0391cb9b4602ffcac4d8283057e9ee58309d7fa113012c20b5f70636244c9546",
+      "label": "frozen@seed_transpiler=1004"
+    },
+    {
+      "config": {
+        "approximation_degree": 1.0,
+        "hls_mcx": "default",
+        "layout_method": "default",
+        "optimization_level": 3,
+        "qubits_initially_zero": true,
+        "routing_method": "default",
+        "seed_transpiler": 1005,
+        "translation_method": "default"
+      },
+      "config_hash": "776b7cf59a101df0f0a0b71c8eec498c1e9903daaeb5ba5329ae3cabb5d67bf2",
+      "label": "frozen@seed_transpiler=1005"
+    }
+  ],
+  "dev": {
+    "configurations": 750,
+    "considered_tasks": [
+      "small/iswap_n2",
+      "small/vqe_n4",
+      "small/wstate_n3",
+      "small/ising_n10",
+      "small/bell_n4",
+      "small/teleportation_n3",
+      "small/cat_state_n4",
+      "small/fredkin_n3",
+      "small/toffoli_n3",
+      "small/sat_n7",
+      "small/qec_en_n5",
+      "small/quantumwalks_n2",
+      "small/adder_n10",
+      "small/error_correctiond3_n5",
+      "small/qpe_n9",
+      "small/qft_n4",
+      "medium/bigadder_n18",
+      "medium/ising_n26",
+      "medium/qec9xz_n17",
+      "medium/multiplier_n15",
+      "medium/bv_n19",
+      "medium/sat_n11"
+    ],
+    "cost_usd": 0.0,
+    "dropped_tasks": {
+      "medium/knn_n25": "the baseline output did not verify (unverifiable)",
+      "medium/qft_n18": "the baseline output did not verify (unverifiable)",
+      "medium/vqe_n24": "the baseline output did not verify (unverifiable)"
+    },
+    "eligible": null,
+    "interrupted": {
+      "cells": 0,
+      "charged_usd": 0,
+      "without_record": []
+    },
+    "ranking_top": [
+      {
+        "complete": true,
+        "config_hash": "78f2fa9955a4f0ce218be817aa134e8e1b4d7ce466f06f34043ec6c6b80c6c65",
+        "cost_per_pass_usd": null,
+        "feasible": true,
+        "label": "opt3",
+        "mean_cost_usd": 0.0,
+        "medians": {
+          "compile_time_s": 0.011109282500001427
+        },
+        "n_records": 25,
+        "pass_rate": null,
+        "passes": 22,
+        "rank": 1,
+        "ratios": {
+          "depth": 0.9912824843196324,
+          "two_qubit_gates": 0.9960823537285967
+        },
+        "reason": "",
+        "tasks_covered": 25,
+        "values": {
+          "approximation_degree": 1.0,
+          "hls_mcx": "default",
+          "layout_method": "default",
+          "optimization_level": 3,
+          "qubits_initially_zero": true,
+          "routing_method": "default",
+          "seed_transpiler": 0,
+          "translation_method": "default"
+        }
+      },
+      {
+        "complete": true,
+        "config_hash": "4fad70e6fa56bb6c2e549728e104a369e7eafdae50fb5b029c605c1400d84441",
+        "cost_per_pass_usd": null,
+        "feasible": true,
+        "label": "stage1:optimization_level=3,layout_method=default,routing_method=sabre,translation_method=translator,seed_transpiler=0+approximation_degree=1.0,qubits_initially_zero=false",
+        "mean_cost_usd": 0.0,
+        "medians": {
+          "compile_time_s": 0.01199872749930364
+        },
+        "n_records": 22,
+        "pass_rate": null,
+        "passes": 22,
+        "rank": 2,
+        "ratios": {
+          "depth": 0.9912824843196324,
+          "two_qubit_gates": 0.9960823537285967
+        },
+        "reason": "",
+        "tasks_covered": 22,
+        "values": {
+          "approximation_degree": 1.0,
+          "hls_mcx": "default",
+          "layout_method": "default",
+          "optimization_level": 3,
+          "qubits_initially_zero": false,
+          "routing_method": "sabre",
+          "seed_transpiler": 0,
+          "translation_method": "translator"
+        }
+      },
+      {
+        "complete": true,
+        "config_hash": "97b62f5b74d78dbc8fbf967f54bfb4039d3cac76110eab9a890ba0b6876fcd98",
+        "cost_per_pass_usd": null,
+        "feasible": true,
+        "label": "stage1:optimization_level=3,layout_method=default,routing_method=default,translation_method=translator,seed_transpiler=0",
+        "mean_cost_usd": 0.0,
+        "medians": {
+          "compile_time_s": 0.012464894500226364
+        },
+        "n_records": 22,
+        "pass_rate": null,
+        "passes": 22,
+        "rank": 3,
+        "ratios": {
+          "depth": 0.9912824843196324,
+          "two_qubit_gates": 0.9960823537285967
+        },
+        "reason": "",
+        "tasks_covered": 22,
+        "values": {
+          "approximation_degree": 1.0,
+          "hls_mcx": "default",
+          "layout_method": "default",
+          "optimization_level": 3,
+          "qubits_initially_zero": true,
+          "routing_method": "default",
+          "seed_transpiler": 0,
+          "translation_method": "translator"
+        }
+      },
+      {
+        "complete": true,
+        "config_hash": "7fdea4e3d22062c43939c354ecc406885c2f06fd4066a7a9848052ba3016043f",
+        "cost_per_pass_usd": null,
+        "feasible": true,
+        "label": "opt3+approximation_degree=1.0,qubits_initially_zero=false",
+        "mean_cost_usd": 0.0,
+        "medians": {
+          "compile_time_s": 0.012707745499028533
+        },
+        "n_records": 22,
+        "pass_rate": null,
+        "passes": 22,
+        "rank": 4,
+        "ratios": {
+          "depth": 0.9912824843196324,
+          "two_qubit_gates": 0.9960823537285967
+        },
+        "reason": "",
+        "tasks_covered": 22,
+        "values": {
+          "approximation_degree": 1.0,
+          "hls_mcx": "default",
+          "layout_method": "default",
+          "optimization_level": 3,
+          "qubits_initially_zero": false,
+          "routing_method": "default",
+          "seed_transpiler": 0,
+          "translation_method": "default"
+        }
+      },
+      {
+        "complete": true,
+        "config_hash": "9fba07b3f3e9a7830e1deb4caea14f5e1bfacc15877e73267f8312f31f8411d1",
+        "cost_per_pass_usd": null,
+        "feasible": true,
+        "label": "stage1:optimization_level=3,layout_method=default,routing_method=sabre,translation_method=default,seed_transpiler=0+approximation_degree=1.0,qubits_initially_zero=false",
+        "mean_cost_usd": 0.0,
+        "medians": {
+          "compile_time_s": 0.014165842500005965
+        },
+        "n_records": 22,
+        "pass_rate": null,
+        "passes": 22,
+        "rank": 5,
+        "ratios": {
+          "depth": 0.9912824843196324,
+          "two_qubit_gates": 0.9960823537285967
+        },
+        "reason": "",
+        "tasks_covered": 22,
+        "values": {
+          "approximation_degree": 1.0,
+          "hls_mcx": "default",
+          "layout_method": "default",
+          "optimization_level": 3,
+          "qubits_initially_zero": false,
+          "routing_method": "sabre",
+          "seed_transpiler": 0,
+          "translation_method": "default"
+        }
+      },
+      {
+        "complete": true,
+        "config_hash": "77d0efa5ec6755a07c7cb8dffdf4a58792160689f992110c91cd1cc8a283e86b",
+        "cost_per_pass_usd": null,
+        "feasible": true,
+        "label": "stage1:optimization_level=3,layout_method=default,routing_method=sabre,translation_method=translator,seed_transpiler=0",
+        "mean_cost_usd": 0.0,
+        "medians": {
+          "compile_time_s": 0.015011706000223057
+        },
+        "n_records": 22,
+        "pass_rate": null,
+        "passes": 22,
+        "rank": 6,
+        "ratios": {
+          "depth": 0.9912824843196324,
+          "two_qubit_gates": 0.9960823537285967
+        },
+        "reason": "",
+        "tasks_covered": 22,
+        "values": {
+          "approximation_degree": 1.0,
+          "hls_mcx": "default",
+          "layout_method": "default",
+          "optimization_level": 3,
+          "qubits_initially_zero": true,
+          "routing_method": "sabre",
+          "seed_transpiler": 0,
+          "translation_method": "translator"
+        }
+      },
+      {
+        "complete": true,
+        "config_hash": "624dee39ba81f2999ac469a13e7234039c184755c56f523f618048eb5dce62d8",
+        "cost_per_pass_usd": null,
+        "feasible": true,
+        "label": "stage1:optimization_level=3,layout_method=default,routing_method=sabre,translation_method=default,seed_transpiler=0",
+        "mean_cost_usd": 0.0,
+        "medians": {
+          "compile_time_s": 0.017146118999335158
+        },
+        "n_records": 22,
+        "pass_rate": null,
+        "passes": 22,
+        "rank": 7,
+        "ratios": {
+          "depth": 0.9912824843196324,
+          "two_qubit_gates": 0.9960823537285967
+        },
+        "reason": "",
+        "tasks_covered": 22,
+        "values": {
+          "approximation_degree": 1.0,
+          "hls_mcx": "default",
+          "layout_method": "default",
+          "optimization_level": 3,
+          "qubits_initially_zero": true,
+          "routing_method": "sabre",
+          "seed_transpiler": 0,
+          "translation_method": "default"
+        }
+      },
+      {
+        "complete": true,
+        "config_hash": "bd93f60f467acb4f8adb219b696fb39369f9a6ae6f70c82155755d748e2a89e0",
+        "cost_per_pass_usd": null,
+        "feasible": true,
+        "label": "stage1:optimization_level=3,layout_method=default,routing_method=default,translation_method=translator,seed_transpiler=0+approximation_degree=1.0,qubits_initially_zero=false",
+        "mean_cost_usd": 0.0,
+        "medians": {
+          "compile_time_s": 0.018165365499953623
+        },
+        "n_records": 22,
+        "pass_rate": null,
+        "passes": 22,
+        "rank": 8,
+        "ratios": {
+          "depth": 0.9912824843196324,
+          "two_qubit_gates": 0.9960823537285967
+        },
+        "reason": "",
+        "tasks_covered": 22,
+        "values": {
+          "approximation_degree": 1.0,
+          "hls_mcx": "default",
+          "layout_method": "default",
+          "optimization_level": 3,
+          "qubits_initially_zero": false,
+          "routing_method": "default",
+          "seed_transpiler": 0,
+          "translation_method": "translator"
+        }
+      },
+      {
+        "complete": true,
+        "config_hash": "eb1f575098807a872f9f93ce9109339d3b6213357367b3f8e559e7c6b5938379",
+        "cost_per_pass_usd": null,
+        "feasible": true,
+        "label": "stage1:optimization_level=3,layout_method=default,routing_method=default,translation_method=synthesis,seed_transpiler=0+approximation_degree=1.0,qubits_initially_zero=false",
+        "mean_cost_usd": 0.0,
+        "medians": {
+          "compile_time_s": 0.016260813000371854
+        },
+        "n_records": 22,
+        "pass_rate": null,
+        "passes": 22,
+        "rank": 9,
+        "ratios": {
+          "depth": 1.0318290329303432,
+          "two_qubit_gates": 0.996281391385582
+        },
+        "reason": "",
+        "tasks_covered": 22,
+        "values": {
+          "approximation_degree": 1.0,
+          "hls_mcx": "default",
+          "layout_method": "default",
+          "optimization_level": 3,
+          "qubits_initially_zero": false,
+          "routing_method": "default",
+          "seed_transpiler": 0,
+          "translation_method": "synthesis"
+        }
+      },
+      {
+        "complete": true,
+        "config_hash": "32d8ef8986cc8b9f4102958444ee150da4fa86426fe7dfa600ea627ab7ff667c",
+        "cost_per_pass_usd": null,
+        "feasible": true,
+        "label": "stage1:optimization_level=3,layout_method=default,routing_method=sabre,translation_method=synthesis,seed_transpiler=0",
+        "mean_cost_usd": 0.0,
+        "medians": {
+          "compile_time_s": 0.017261289000089164
+        },
+        "n_records": 22,
+        "pass_rate": null,
+        "passes": 22,
+        "rank": 10,
+        "ratios": {
+          "depth": 1.0318290329303432,
+          "two_qubit_gates": 0.996281391385582
+        },
+        "reason": "",
+        "tasks_covered": 22,
+        "values": {
+          "approximation_degree": 1.0,
+          "hls_mcx": "default",
+          "layout_method": "default",
+          "optimization_level": 3,
+          "qubits_initially_zero": true,
+          "routing_method": "sabre",
+          "seed_transpiler": 0,
+          "translation_method": "synthesis"
+        }
+      },
+      {
+        "complete": true,
+        "config_hash": "675dfcf01485871ecd2f1b13d3b0998ad1442c97d8a742ce052be5a5e34cbeea",
+        "cost_per_pass_usd": null,
+        "feasible": true,
+        "label": "stage1:optimization_level=3,layout_method=default,routing_method=default,translation_method=synthesis,seed_transpiler=0",
+        "mean_cost_usd": 0.0,
+        "medians": {
+          "compile_time_s": 0.01859035249981389
+        },
+        "n_records": 22,
+        "pass_rate": null,
+        "passes": 22,
+        "rank": 11,
+        "ratios": {
+          "depth": 1.0318290329303432,
+          "two_qubit_gates": 0.996281391385582
+        },
+        "reason": "",
+        "tasks_covered": 22,
+        "values": {
+          "approximation_degree": 1.0,
+          "hls_mcx": "default",
+          "layout_method": "default",
+          "optimization_level": 3,
+          "qubits_initially_zero": true,
+          "routing_method": "default",
+          "seed_transpiler": 0,
+          "translation_method": "synthesis"
+        }
+      },
+      {
+        "complete": true,
+        "config_hash": "f6b49fd76fb8a992a594984bdf22a6f1799c7f99faca321d7f025ba87a8106cc",
+        "cost_per_pass_usd": null,
+        "feasible": true,
+        "label": "stage1:optimization_level=3,layout_method=default,routing_method=sabre,translation_method=synthesis,seed_transpiler=0+approximation_degree=1.0,qubits_initially_zero=false",
+        "mean_cost_usd": 0.0,
+        "medians": {
+          "compile_time_s": 0.02103136900041136
+        },
+        "n_records": 22,
+        "pass_rate": null,
+        "passes": 22,
+        "rank": 12,
+        "ratios": {
+          "depth": 1.0318290329303432,
+          "two_qubit_gates": 0.996281391385582
+        },
+        "reason": "",
+        "tasks_covered": 22,
+        "values": {
+          "approximation_degree": 1.0,
+          "hls_mcx": "default",
+          "layout_method": "default",
+          "optimization_level": 3,
+          "qubits_initially_zero": false,
+          "routing_method": "sabre",
+          "seed_transpiler": 0,
+          "translation_method": "synthesis"
+        }
+      },
+      {
+        "complete": true,
+        "config_hash": "d48dcf1203b352ecb82bac178ef0370022562b15b0385e54e44b709f8c0680ea",
+        "cost_per_pass_usd": null,
+        "feasible": true,
+        "label": "stage1:optimization_level=3,layout_method=default,routing_method=default,translation_method=default,seed_transpiler=2",
+        "mean_cost_usd": 0.0,
+        "medians": {
+          "compile_time_s": 0.012190825998914079
+        },
+        "n_records": 22,
+        "pass_rate": null,
+        "passes": 22,
+        "rank": 13,
+        "ratios": {
+          "depth": 1.0049803935888248,
+          "two_qubit_gates": 0.9979387473619424
+        },
+        "reason": "",
+        "tasks_covered": 22,
+        "values": {
+          "approximation_degree": 1.0,
+          "hls_mcx": "default",
+          "layout_method": "default",
+          "optimization_level": 3,
+          "qubits_initially_zero": true,
+          "routing_method": "default",
+          "seed_transpiler": 2,
+          "translation_method": "default"
+        }
+      },
+      {
+        "complete": true,
+        "config_hash": "561e618bb7f10568b5e8ed1fc64825ce4ca26d31ab4c3b78bd03dc93fc853e3e",
+        "cost_per_pass_usd": null,
+        "feasible": true,
+        "label": "stage1:optimization_level=3,layout_method=default,routing_method=default,translation_method=translator,seed_transpiler=2+approximation_degree=1.0,qubits_initially_zero=false",
+        "mean_cost_usd": 0.0,
+        "medians": {
+          "compile_time_s": 0.012711148000562389
+        },
+        "n_records": 22,
+        "pass_rate": null,
+        "passes": 22,
+        "rank": 14,
+        "ratios": {
+          "depth": 1.0049803935888248,
+          "two_qubit_gates": 0.9979387473619424
+        },
+        "reason": "",
+        "tasks_covered": 22,
+        "values": {
+          "approximation_degree": 1.0,
+          "hls_mcx": "default",
+          "layout_method": "default",
+          "optimization_level": 3,
+          "qubits_initially_zero": false,
+          "routing_method": "default",
+          "seed_transpiler": 2,
+          "translation_method": "translator"
+        }
+      },
+      {
+        "complete": true,
+        "config_hash": "2340d05f91d3c087aa0c2235d0450375eba0a8ae63d8433d08e7e1bfad5fee6e",
+        "cost_per_pass_usd": null,
+        "feasible": true,
+        "label": "stage1:optimization_level=3,layout_method=default,routing_method=sabre,translation_method=default,seed_transpiler=2+approximation_degree=1.0,qubits_initially_zero=false",
+        "mean_cost_usd": 0.0,
+        "medians": {
+          "compile_time_s": 0.013172446499993384
+        },
+        "n_records": 22,
+        "pass_rate": null,
+        "passes": 22,
+        "rank": 15,
+        "ratios": {
+          "depth": 1.0049803935888248,
+          "two_qubit_gates": 0.9979387473619424
+        },
+        "reason": "",
+        "tasks_covered": 22,
+        "values": {
+          "approximation_degree": 1.0,
+          "hls_mcx": "default",
+          "layout_method": "default",
+          "optimization_level": 3,
+          "qubits_initially_zero": false,
+          "routing_method": "sabre",
+          "seed_transpiler": 2,
+          "translation_method": "default"
+        }
+      },
+      {
+        "complete": true,
+        "config_hash": "9ad7cee870289bbb6d2c145be9b28e16cba34a84c246099a2ac3754665657087",
+        "cost_per_pass_usd": null,
+        "feasible": true,
+        "label": "stage1:optimization_level=3,layout_method=default,routing_method=sabre,translation_method=translator,seed_transpiler=2+approximation_degree=1.0,qubits_initially_zero=false",
+        "mean_cost_usd": 0.0,
+        "medians": {
+          "compile_time_s": 0.013690730000234907
+        },
+        "n_records": 22,
+        "pass_rate": null,
+        "passes": 22,
+        "rank": 16,
+        "ratios": {
+          "depth": 1.0049803935888248,
+          "two_qubit_gates": 0.9979387473619424
+        },
+        "reason": "",
+        "tasks_covered": 22,
+        "values": {
+          "approximation_degree": 1.0,
+          "hls_mcx": "default",
+          "layout_method": "default",
+          "optimization_level": 3,
+          "qubits_initially_zero": false,
+          "routing_method": "sabre",
+          "seed_transpiler": 2,
+          "translation_method": "translator"
+        }
+      },
+      {
+        "complete": true,
+        "config_hash": "a47e3dc743b3ad48f0e74c3309796599ef52a4a5db95acd37c7e041c4ef2e2d1",
+        "cost_per_pass_usd": null,
+        "feasible": true,
+        "label": "stage1:optimization_level=3,layout_method=default,routing_method=default,translation_method=translator,seed_transpiler=2",
+        "mean_cost_usd": 0.0,
+        "medians": {
+          "compile_time_s": 0.014243683500353654
+        },
+        "n_records": 22,
+        "pass_rate": null,
+        "passes": 22,
+        "rank": 17,
+        "ratios": {
+          "depth": 1.0049803935888248,
+          "two_qubit_gates": 0.9979387473619424
+        },
+        "reason": "",
+        "tasks_covered": 22,
+        "values": {
+          "approximation_degree": 1.0,
+          "hls_mcx": "default",
+          "layout_method": "default",
+          "optimization_level": 3,
+          "qubits_initially_zero": true,
+          "routing_method": "default",
+          "seed_transpiler": 2,
+          "translation_method": "translator"
+        }
+      },
+      {
+        "complete": true,
+        "config_hash": "133d5a7c7e046413dd92f9d4304e396ba5a49f4c1482e3936e0a1d7bbaa62b5b",
+        "cost_per_pass_usd": null,
+        "feasible": true,
+        "label": "stage1:optimization_level=3,layout_method=default,routing_method=default,translation_method=default,seed_transpiler=2+approximation_degree=1.0,qubits_initially_zero=false",
+        "mean_cost_usd": 0.0,
+        "medians": {
+          "compile_time_s": 0.014721882000230835
+        },
+        "n_records": 22,
+        "pass_rate": null,
+        "passes": 22,
+        "rank": 18,
+        "ratios": {
+          "depth": 1.0049803935888248,
+          "two_qubit_gates": 0.9979387473619424
+        },
+        "reason": "",
+        "tasks_covered": 22,
+        "values": {
+          "approximation_degree": 1.0,
+          "hls_mcx": "default",
+          "layout_method": "default",
+          "optimization_level": 3,
+          "qubits_initially_zero": false,
+          "routing_method": "default",
+          "seed_transpiler": 2,
+          "translation_method": "default"
+        }
+      },
+      {
+        "complete": true,
+        "config_hash": "f4c0c00ff6ff637fa4fb7a4297419c647172a88be1ec0ffe96ce8365622ab0a5",
+        "cost_per_pass_usd": null,
+        "feasible": true,
+        "label": "stage1:optimization_level=3,layout_method=default,routing_method=sabre,translation_method=translator,seed_transpiler=2",
+        "mean_cost_usd": 0.0,
+        "medians": {
+          "compile_time_s": 0.014742445499905443
+        },
+        "n_records": 22,
+        "pass_rate": null,
+        "passes": 22,
+        "rank": 19,
+        "ratios": {
+          "depth": 1.0049803935888248,
+          "two_qubit_gates": 0.9979387473619424
+        },
+        "reason": "",
+        "tasks_covered": 22,
+        "values": {
+          "approximation_degree": 1.0,
+          "hls_mcx": "default",
+          "layout_method": "default",
+          "optimization_level": 3,
+          "qubits_initially_zero": true,
+          "routing_method": "sabre",
+          "seed_transpiler": 2,
+          "translation_method": "translator"
+        }
+      },
+      {
+        "complete": true,
+        "config_hash": "a33f78cd608e1c017a5d7e1bbeef8daf167423e43d894d545bf6dc801ca57290",
+        "cost_per_pass_usd": null,
+        "feasible": true,
+        "label": "stage1:optimization_level=3,layout_method=default,routing_method=sabre,translation_method=default,seed_transpiler=2",
+        "mean_cost_usd": 0.0,
+        "medians": {
+          "compile_time_s": 0.014752752499589405
+        },
+        "n_records": 22,
+        "pass_rate": null,
+        "passes": 22,
+        "rank": 20,
+        "ratios": {
+          "depth": 1.0049803935888248,
+          "two_qubit_gates": 0.9979387473619424
+        },
+        "reason": "",
+        "tasks_covered": 22,
+        "values": {
+          "approximation_degree": 1.0,
+          "hls_mcx": "default",
+          "layout_method": "default",
+          "optimization_level": 3,
+          "qubits_initially_zero": true,
+          "routing_method": "sabre",
+          "seed_transpiler": 2,
+          "translation_method": "default"
+        }
+      },
+      {
+        "complete": true,
+        "config_hash": "dc2083e5d71850ff33a67ced5bf353279d22e17c8f8513df9638056f660b04dc",
+        "cost_per_pass_usd": null,
+        "feasible": true,
+        "label": "stage1:optimization_level=3,layout_method=default,routing_method=default,translation_method=synthesis,seed_transpiler=2",
+        "mean_cost_usd": 0.0,
+        "medians": {
+          "compile_time_s": 0.01793267349967209
+        },
+        "n_records": 22,
+        "pass_rate": null,
+        "passes": 22,
+        "rank": 21,
+        "ratios": {
+          "depth": 1.0353997187753616,
+          "two_qubit_gates": 0.9979387473619424
+        },
+        "reason": "",
+        "tasks_covered": 22,
+        "values": {
+          "approximation_degree": 1.0,
+          "hls_mcx": "default",
+          "layout_method": "default",
+          "optimization_level": 3,
+          "qubits_initially_zero": true,
+          "routing_method": "default",
+          "seed_transpiler": 2,
+          "translation_method": "synthesis"
+        }
+      },
+      {
+        "complete": true,
+        "config_hash": "fcd3eaade332ba43d5aedcdab9d3d775564fd80afd04c047b9a6026040d856d7",
+        "cost_per_pass_usd": null,
+        "feasible": true,
+        "label": "stage1:optimization_level=3,layout_method=default,routing_method=sabre,translation_method=synthesis,seed_transpiler=2",
+        "mean_cost_usd": 0.0,
+        "medians": {
+          "compile_time_s": 0.01805308400071226
+        },
+        "n_records": 22,
+        "pass_rate": null,
+        "passes": 22,
+        "rank": 22,
+        "ratios": {
+          "depth": 1.0353997187753616,
+          "two_qubit_gates": 0.9979387473619424
+        },
+        "reason": "",
+        "tasks_covered": 22,
+        "values": {
+          "approximation_degree": 1.0,
+          "hls_mcx": "default",
+          "layout_method": "default",
+          "optimization_level": 3,
+          "qubits_initially_zero": true,
+          "routing_method": "sabre",
+          "seed_transpiler": 2,
+          "translation_method": "synthesis"
+        }
+      },
+      {
+        "complete": true,
+        "config_hash": "9d58ada46fdbad03f84486241a868c251daedf05f12b24ba0b8480debe421ccb",
+        "cost_per_pass_usd": null,
+        "feasible": true,
+        "label": "stage1:optimization_level=3,layout_method=default,routing_method=sabre,translation_method=default,seed_transpiler=1",
+        "mean_cost_usd": 0.0,
+        "medians": {
+          "compile_time_s": 0.012868004000665678
+        },
+        "n_records": 22,
+        "pass_rate": null,
+        "passes": 22,
+        "rank": 23,
+        "ratios": {
+          "depth": 0.9811576860893509,
+          "two_qubit_gates": 0.9997614744722413
+        },
+        "reason": "",
+        "tasks_covered": 22,
+        "values": {
+          "approximation_degree": 1.0,
+          "hls_mcx": "default",
+          "layout_method": "default",
+          "optimization_level": 3,
+          "qubits_initially_zero": true,
+          "routing_method": "sabre",
+          "seed_transpiler": 1,
+          "translation_method": "default"
+        }
+      },
+      {
+        "complete": true,
+        "config_hash": "dbc39450ddaae5e19f9dba62417397b33710325a53d8c5454a7db0a4b47a44e7",
+        "cost_per_pass_usd": null,
+        "feasible": true,
+        "label": "stage1:optimization_level=3,layout_method=default,routing_method=default,translation_method=translator,seed_transpiler=1",
+        "mean_cost_usd": 0.0,
+        "medians": {
+          "compile_time_s": 0.01299869100057549
+        },
+        "n_records": 22,
+        "pass_rate": null,
+        "passes": 22,
+        "rank": 24,
+        "ratios": {
+          "depth": 0.9811576860893509,
+          "two_qubit_gates": 0.9997614744722413
+        },
+        "reason": "",
+        "tasks_covered": 22,
+        "values": {
+          "approximation_degree": 1.0,
+          "hls_mcx": "default",
+          "layout_method": "default",
+          "optimization_level": 3,
+          "qubits_initially_zero": true,
+          "routing_method": "default",
+          "seed_transpiler": 1,
+          "translation_method": "translator"
+        }
+      },
+      {
+        "complete": true,
+        "config_hash": "e9956d1a9cc8af695eeaa203880d08a85c0e67b1663d416c57049c8e9059f575",
+        "cost_per_pass_usd": null,
+        "feasible": true,
+        "label": "stage1:optimization_level=3,layout_method=default,routing_method=sabre,translation_method=translator,seed_transpiler=1",
+        "mean_cost_usd": 0.0,
+        "medians": {
+          "compile_time_s": 0.013154696500350838
+        },
+        "n_records": 22,
+        "pass_rate": null,
+        "passes": 22,
+        "rank": 25,
+        "ratios": {
+          "depth": 0.9811576860893509,
+          "two_qubit_gates": 0.9997614744722413
+        },
+        "reason": "",
+        "tasks_covered": 22,
+        "values": {
+          "approximation_degree": 1.0,
+          "hls_mcx": "default",
+          "layout_method": "default",
+          "optimization_level": 3,
+          "qubits_initially_zero": true,
+          "routing_method": "sabre",
+          "seed_transpiler": 1,
+          "translation_method": "translator"
+        }
+      }
+    ],
+    "records": 16506,
+    "records_per_stage": {
+      "baseline": 50,
+      "stage1": 15796,
+      "stage2": 660
+    },
+    "records_sha256": "19eccac0ef0084c745b70672d92d7847d264d83c311fd6cf0f4251ed14b217ab"
+  },
+  "freeze_sha256": "b73586158d8ece3a4761168bc4a5877be183ae4f3486b7565220525f6363cde4",
+  "frozen": {
+    "config": {
+      "approximation_degree": 1.0,
+      "hls_mcx": "default",
+      "layout_method": "default",
+      "optimization_level": 3,
+      "qubits_initially_zero": true,
+      "routing_method": "default",
+      "seed_transpiler": 0,
+      "translation_method": "default"
+    },
+    "config_hash": "78f2fa9955a4f0ce218be817aa134e8e1b4d7ce466f06f34043ec6c6b80c6c65",
+    "label": "opt3",
+    "same_as_baseline": false
+  },
+  "frozen_at": "2026-11-23T11:22:54+00:00",
+  "git_head": "975466b9531459a7fcd47df2e230b349a6c09b23",
+  "harnesslab_version": "0.3.0",
+  "held_out_spec": {
+    "comparators": [
+      {
+        "base": "baseline",
+        "label": "opt3",
+        "set": {
+          "optimization_level": 3
+        }
+      }
+    ],
+    "order_seed": 20261122,
+    "repetitions": 1,
+    "require_committed_freeze": true,
+    "robustness": {
+      "configs": [
+        "baseline",
+        "frozen"
+      ],
+      "knob": "seed_transpiler",
+      "levels": [
+        1001,
+        1002,
+        1003,
+        1004,
+        1005
+      ]
+    }
+  },
+  "objective": {
+    "cost_cap_multiple": null,
+    "drop_tasks_where_baseline_unverified": true,
+    "kind": "baseline_ratio",
+    "metrics": [
+      "two_qubit_gates",
+      "depth"
+    ],
+    "offset": 1.0,
+    "then": [
+      "compile_time_s"
+    ],
+    "tie_tolerance": 1e-09
+  },
+  "sealed_sections": {
+    "held_out": {
+      "comparators": [
+        {
+          "base": "baseline",
+          "label": "opt3",
+          "set": {
+            "optimization_level": 3
+          }
+        }
+      ],
+      "order_seed": 20261122,
+      "repetitions": 1,
+      "require_committed_freeze": true,
+      "robustness": {
+        "configs": [
+          "baseline",
+          "frozen"
+        ],
+        "knob": "seed_transpiler",
+        "levels": [
+          1001,
+          1002,
+          1003,
+          1004,
+          1005
+        ]
+      }
+    },
+    "objective": {
+      "drop_tasks_where_baseline_unverified": true,
+      "kind": "baseline_ratio",
+      "metrics": [
+        "two_qubit_gates",
+        "depth"
+      ],
+      "offset": 1.0,
+      "then": [
+        "compile_time_s"
+      ],
+      "tie_tolerance": 1e-09
+    },
+    "stats": {
+      "level": 0.95,
+      "report_metrics": [
+        "compile_time_s",
+        "size"
+      ],
+      "resamples": 10000,
+      "seed": 20261122,
+      "tag_groups": [
+        "A",
+        "B"
+      ]
+    }
+  },
+  "sealed_sections_of": "written",
+  "spec_sha256": "f07518ba66658ba59cbb63c320c253765e71998f23eac4706e4fd43cbbb8f464",
+  "split": {
+    "dev_ids_sha256": "c5865f559ba890fc2c6e6f8732328e2ea83b24653101b809c6059b27e3eec60b",
+    "file_sha256": "c49c3e592d7a45d26fc3a765371ced221c23b12a8b34de879ce0c1c26e062ece",
+    "held_out_ids_sha256": "abdddbd242df36469b54ce8a8aabbe374e16c02f507c9f612b7f7d078da6735e",
+    "n_dev": 25,
+    "n_held_out": 26
+  },
+  "stats": {
+    "higher_is_better": [],
+    "level": 0.95,
+    "report_metrics": [
+      "compile_time_s",
+      "size"
+    ],
+    "resamples": 10000,
+    "seed": 20261122,
+    "tag_groups": [
+      "A",
+      "B"
+    ]
+  },
+  "study": "2026-11-quantum-qasmbench"
+}

@@ -39,6 +39,9 @@ class Toy2(Toy):
         # per power: the cost reported instead of 0.01 * power, and a delay before running
         self.cost_by_power = dict(options.get("cost_by_power", {}))
         self.delay_by_power = dict(options.get("delay_by_power", {}))
+        # task id -> what cannot be stored: "surrogate", "bytes", "object" (in the output) or
+        # "verdict" (an object in the verdict's details)
+        self.unstorable_on = dict(options.get("unstorable_on", {}))
         self.prov = options.get("prov", "1")
         self.seen_limits: list[float | None] = []
 
@@ -68,11 +71,22 @@ class Toy2(Toy):
             attempt.usage.cost_usd = -1.0
         if config.values["power"] in self.fails_after_first_rep and ctx.repetition >= 1:
             attempt.output["degraded"] = True
+        unstorable = self.unstorable_on.get(task.id)
+        if unstorable == "surrogate":  # a broken \ud83d escape in a model reply
+            attempt.output["reply"] = "proof \ud83d"
+        elif unstorable == "bytes":
+            attempt.output["raw"] = b"\xff\xfe"
+        elif unstorable == "object":
+            attempt.output["handle"] = object()
+        elif unstorable == "verdict":
+            attempt.output["odd_verdict"] = True
         return attempt
 
     async def verify(self, task, attempt, ctx):
         if attempt.output.get("degraded"):
             return Verdict(status=VerdictStatus.FAIL, checker="toy/1", reason="degraded")
+        if attempt.output.get("odd_verdict"):
+            return Verdict(status=VerdictStatus.PASS, checker="toy/1", details={"h": object()})
         return await super().verify(task, attempt, ctx)
 
     def provenance(self):
@@ -228,6 +242,44 @@ def test_an_invalid_cost_is_a_harness_error(tmp_path: Path):
         asyncio.run(study.run_stage("grid"))
     bad = [r for r in study.store.records("dev") if r["harness_error"]]
     assert bad and all(r["charged_usd"] >= 0 for r in study.store.records("dev"))
+
+
+@pytest.mark.parametrize("kind", ["surrogate", "bytes", "object", "verdict"])
+def test_an_attempt_that_cannot_be_stored_leaves_a_harness_error_record(tmp_path: Path, kind):
+    # core#7: model_dump raising, or a lone surrogate failing the UTF-8 write, left no record at
+    # all: the reservation dangled and the cell (a held-out cell too) ran again.
+    study = _study2(
+        tmp_path,
+        options={"unstorable_on": {"d2": kind}},
+        budget={"max_cost_usd": 5.0, "cost_limit_per_attempt_usd": 0.05},
+    )
+    with pytest.raises(HarnessError, match="cannot be stored"):
+        asyncio.run(study.run_stage("grid"))
+    bad = [r for r in study.store.records("dev") if r["task_id"] == "d2"]
+    assert bad and all("cannot be stored" in r["harness_error"] for r in bad)
+    assert all(r["verdict"] is None and r["metrics"] == {} for r in bad)
+    # charged what the attempt reported (0.01 x power), not the 0.05 reservation
+    assert all(r["charged_usd"] == pytest.approx(0.01 * r["config"]["power"]) for r in bad)
+    reserved = {e["id"] for e in study.store.reservations("dev")}
+    assert {r["reservation_id"] for r in bad} <= reserved
+    assert not study.store.dangling_reservations("dev")
+    assert not {(r["task_id"], r["config_hash"], 0) for r in bad} & study.store.completed("dev")
+    fixed = _reopen(study)
+    fixed.adapter.unstorable_on = {}
+    asyncio.run(fixed.run_stage("grid"))
+    assert len(fixed.store.effective("dev")) == 36
+    fixed.freeze()
+    assert fixed.results()["audit"]["dev"]["harness_error_records"] == len(bad)
+
+
+def test_a_record_that_cannot_be_encoded_is_not_written_at_all(tmp_path: Path):
+    store = StudyStore(tmp_path)
+    with store.locked():
+        store.append("dev", {"task_id": "d0", "config_hash": "x", "repetition": 0})
+        before = store.attempts_path("dev").read_bytes()
+        with pytest.raises(UnicodeEncodeError):
+            store.append("dev", {"task_id": "d1", "note": "x" * 100_000 + "\ud83d"})
+    assert store.attempts_path("dev").read_bytes() == before
 
 
 # -- budget ----------------------------------------------------------------------------------------

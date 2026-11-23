@@ -62,6 +62,16 @@ def cell_key(record: dict[str, Any]) -> CellKey:
     return (record["task_id"], record["config_hash"], int(record["repetition"]))
 
 
+def encode_line(record: dict[str, Any]) -> bytes:
+    """A record as one line of the JSONL files: strict JSON (no NaN), encoded as UTF-8.
+
+    Raises (``TypeError``, ``ValueError``, ``UnicodeEncodeError``) for a record that cannot be
+    stored, before anything is written.
+    """
+    line = json.dumps(record, sort_keys=True, ensure_ascii=False, allow_nan=False)
+    return (line + "\n").encode("utf-8")
+
+
 def effective_records(records: list[dict[str, Any]], *, where: str = "") -> list[dict[str, Any]]:
     """The records that decide outcomes: those without a harness error, one per cell.
 
@@ -216,11 +226,11 @@ class StudyStore:
 
     def _append_line(self, path: Path, record: dict[str, Any]) -> None:
         self._require_lock()
+        data = encode_line(record)  # a record that cannot be encoded fails before any write
         path.parent.mkdir(parents=True, exist_ok=True)
         self._repair_tail(path)
-        line = json.dumps(record, sort_keys=True, ensure_ascii=False, allow_nan=False)
-        with path.open("a", encoding="utf-8") as fh:
-            fh.write(line + "\n")
+        with path.open("ab") as fh:
+            fh.write(data)
             fh.flush()
             os.fsync(fh.fileno())
 

@@ -147,6 +147,20 @@ Hardening added after an adversarial review of the first version (2026-11-22):
   - the dev records.
 - Reports mark an incomplete held-out phase and never count an unrun cell as a loss.
 
+Hardening added after a red-team review of the core (2026-11-23), one line per finding:
+
+- A stage that runs nothing stores that decision in its plan; `search` stops at an unfinished stage.
+- In any stage that contains the baseline, the baseline's cells run first.
+- Refine, combine and confirm stages refuse to run until every stage before them has finished.
+- A budget refusal waits only while reservations are in flight, so float residue cannot hang it.
+- An attempt that cannot be stored leaves a harness-error record with its charge and reservation.
+- Combine counts only single-knob additions on top of the reference, never undoing its knobs.
+- An unavailable attempt is a harness error: never verified, never a loss, and the cell runs again.
+- `results.json`, the Markdown tables and `study check` say when robustness is not compared.
+- Plans and the freeze hash the spec as written, so a new optional field invalidates nothing.
+- The study lock is re-entrant for its owner only; a concurrent step in one process is refused.
+- `study check` validates comparator levels; a configuration error exits 2 with a message.
+
 ### How the coding adapter maps onto the contract
 
 | Contract | Coding adapter, using today's objects unchanged |

@@ -36,7 +36,14 @@ from typing import Any
 from pydantic import BaseModel
 
 from harnesslab.study.budget import Budget
-from harnesslab.study.contract import Config, DomainAdapter, Task, canonical_json, sha256_json
+from harnesslab.study.contract import (
+    Config,
+    ConfigError,
+    DomainAdapter,
+    Task,
+    canonical_json,
+    sha256_json,
+)
 from harnesslab.study.objective import Ranking, rank_configs
 from harnesslab.study.report import build_results, robustness_not_computed
 from harnesslab.study.runner import Cell, RunSummary, run_cells
@@ -52,7 +59,14 @@ from harnesslab.study.search import (
     shuffled,
     stage_levels,
 )
-from harnesslab.study.spec import Split, StageSpec, StudySpec, load_split, spec_sha256
+from harnesslab.study.spec import (
+    ComparatorSpec,
+    Split,
+    StageSpec,
+    StudySpec,
+    load_split,
+    spec_sha256,
+)
 from harnesslab.study.store import PHASES, StudyStore, cell_key
 
 # Spec sections the freeze seals: changing any of them after the freeze invalidates the study.
@@ -256,13 +270,25 @@ class Study:
                 problems.append(f"stage {stage.name}: unknown base {stage.base!r}")
             if stage.kind == "combine" and stage.reference not in known:
                 problems.append(f"stage {stage.name}: unknown reference {stage.reference!r}")
+        # The held-out configurations, built as the freeze builds them (the baseline stands in
+        # for the frozen configuration, which is some point of the search space).
         for comp in self.spec.held_out.comparators:
-            for k in comp.set:
-                if k not in self.space.names:
-                    problems.append(f"comparator {comp.label}: unknown knob {k!r}")
+            unknown = [k for k in comp.set if k not in self.space.names]
+            for k in unknown:
+                problems.append(f"comparator {comp.label}: unknown knob {k!r}")
+            if not unknown:
+                try:
+                    self._comparator(comp, self.baseline)
+                except ConfigError as exc:
+                    problems.append(f"comparator {comp.label}: {exc}")
         rob = self.spec.held_out.robustness
         if rob is not None and rob.knob not in self.space.names:
             problems.append(f"robustness: unknown knob {rob.knob!r}")
+        elif rob is not None:
+            try:
+                self._robustness_configs(self.baseline)
+            except ConfigError as exc:
+                problems.append(f"robustness: {exc}")
         not_compared = robustness_not_computed(self.spec)
         if not_compared is not None:
             problems.append(f"robustness: {not_compared}")
@@ -607,13 +633,14 @@ class Study:
         return None
 
     # -- freeze ----------------------------------------------------------------
-    def _comparators(self, frozen: Config) -> list[Config]:
+    def _comparator(self, comp: ComparatorSpec, frozen: Config) -> Config:
+        base = frozen if comp.base == "frozen" else self.baseline
+        cfg = base.replace(label=comp.label, **comp.set)
+        self.space.validate_config(cfg)
+        return cfg
+
+    def _robustness_configs(self, frozen: Config) -> list[Config]:
         out = []
-        for comp in self.spec.held_out.comparators:
-            base = frozen if comp.base == "frozen" else self.baseline
-            cfg = base.replace(label=comp.label, **comp.set)
-            self.space.validate_config(cfg)
-            out.append(cfg)
         rob = self.spec.held_out.robustness
         if rob is not None:
             for name in rob.configs:
@@ -623,6 +650,12 @@ class Study:
                     self.space.validate_config(cfg, off_grid=[rob.knob])
                     out.append(cfg)
         return out
+
+    def _comparators(self, frozen: Config) -> list[Config]:
+        """The held-out comparators and robustness configurations (:class:`ConfigError` if one is
+        not a configuration of the search space)."""
+        out = [self._comparator(comp, frozen) for comp in self.spec.held_out.comparators]
+        return out + self._robustness_configs(frozen)
 
     def freeze_eligible(self) -> set[str] | None:
         """Configurations the freeze may choose: after a confirm stage ran, only its configurations
@@ -688,6 +721,13 @@ class Study:
             if best is None:
                 raise ProtocolError("no configuration is feasible on dev: nothing to freeze")
             frozen = Config(values=best.values, label=best.label or "frozen")
+            try:
+                comparators = self._comparators(frozen)
+            except ConfigError as exc:
+                raise ProtocolError(
+                    f"cannot freeze: a held-out comparator is not a configuration of the search "
+                    f"space ({exc}); `harnesslab study check` reports this before the search"
+                ) from exc
             dev_records = self.store.effective("dev")
             stage_counts = Counter(r["stage"] for r in dev_records)
             data: dict[str, Any] = {
@@ -723,7 +763,7 @@ class Study:
                 },
                 "comparators": [
                     {"label": c.label, "config": c.values, "config_hash": c.config_hash}
-                    for c in self._comparators(frozen)
+                    for c in comparators
                 ],
                 "dev": {
                     "records": len(dev_records),

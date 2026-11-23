@@ -1129,6 +1129,41 @@ def test_cli_turns_protocol_errors_into_messages(tmp_path: Path):
     assert "Traceback" not in res.output
 
 
+def test_an_invalid_comparator_level_is_found_by_check_not_at_the_freeze(tmp_path: Path):
+    # core#13: check() validated comparator knob names only; a value that is not a level passed,
+    # the search spent its budget, and the freeze died with a ValueError traceback.
+    from typer.testing import CliRunner
+
+    from harnesslab.cli import app
+    from harnesslab.study.registry import register_domain
+
+    held_out = {
+        "repetitions": 1,
+        "require_committed_freeze": False,
+        "comparators": [
+            {"label": "p4", "set": {"power": 4}},
+            {"label": "f-c", "base": "frozen", "set": {"style": "c"}},
+            {"label": "ok", "base": "frozen", "set": {"style": "b"}},
+        ],
+    }
+    study = _study2(tmp_path, held_out=held_out)
+    problems = study.check()
+    assert "comparator p4: config p4: 4 is not a level of knob 'power'" in problems
+    assert "comparator f-c: config f-c: 'c' is not a level of knob 'style'" in problems
+    assert not any("comparator ok" in p for p in problems)
+
+    register_domain("toy", lambda options, study_dir: Toy2(options, study_dir))
+    spec = tmp_path / "study.yaml"
+    runner = CliRunner()
+    res = runner.invoke(app, ["study", "check", str(spec)])
+    assert res.exit_code == 1 and "4 is not a level of knob 'power'" in res.output
+    assert runner.invoke(app, ["study", "search", str(spec)]).exit_code == 0
+    res = runner.invoke(app, ["study", "freeze", str(spec), "--yes"])
+    assert res.exit_code == 2, res.output
+    assert "4 is not a level of knob 'power'" in res.output and "Traceback" not in res.output
+    assert not (tmp_path / "freeze.json").exists()
+
+
 # -- report ----------------------------------------------------------------------------------------
 
 

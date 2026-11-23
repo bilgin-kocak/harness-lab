@@ -420,6 +420,62 @@ def test_search_stops_at_a_stage_cut_short_and_decides_nothing_after_it(tmp_path
     assert study.store.read_plan("dev", "confirm")["configs"]
 
 
+ORDER = [
+    {
+        "name": "stage1",
+        "kind": "explicit",
+        "configs": [
+            {"label": "p2", "set": {"power": 2}},
+            {"label": "p3", "set": {"power": 3}},
+            {"label": "sb", "set": {"style": "b"}},
+            {"label": "baseline", "set": {}},
+        ],
+    },
+    {"name": "confirm", "kind": "confirm", "top_k": 1, "repetitions": 2},
+]
+
+
+def _late_baseline_seed(study: Study) -> tuple[int, list[str]]:
+    """A search seed whose plain shuffle runs the baseline after a candidate, both in stage1 and
+    in confirm (p2 and the baseline), and stage1's shuffled order of the candidates."""
+    from harnesslab.study.contract import Config
+    from harnesslab.study.search import explicit_configs, shuffled
+
+    base = study.baseline.config_hash
+    configs = explicit_configs(
+        study.spec.stage("stage1"), study.space, {"baseline": study.baseline}
+    )
+    confirm = [Config(values={"power": 2, "style": "a"}, label="p2"), study.baseline]
+    for seed in range(200):
+        order = shuffled(configs, seed, "stage1")
+        if order[0].config_hash != base and shuffled(confirm, seed, "confirm")[0].label == "p2":
+            return seed, [c.config_hash for c in order if c.config_hash != base]
+    raise AssertionError("no seed found")
+
+
+def test_the_baseline_runs_first_in_any_stage_that_contains_it(tmp_path: Path):
+    # core#4: shuffled late, the baseline was never reached when the budget stopped stage 1, so
+    # nothing could be compared with it and nothing could be frozen.
+    seed, candidates = _late_baseline_seed(_study2(tmp_path, search={"seed": 0, "stages": ORDER}))
+    study = _study2(tmp_path, search={"seed": seed, "stages": ORDER}, budget={"max_attempts": 6})
+    base = study.baseline.config_hash
+    configs, _ = study.stage_configs(study.spec.stage("stage1"))
+    assert configs[0].config_hash == base
+    assert [c.config_hash for c in configs[1:]] == candidates  # the others keep the seeded order
+    out = asyncio.run(study.run_stage("stage1"))
+    assert out.budget_stop and out.ran == 6
+    assert {r["config_hash"] for r in study.store.records("dev")} == {base}
+    assert study.freeze()["frozen"]["same_as_baseline"]  # the baseline is complete and feasible
+
+    (tmp_path / "confirm").mkdir()
+    full = _study2(tmp_path / "confirm", search={"seed": seed, "stages": ORDER})
+    asyncio.run(full.search())
+    plan = full.store.read_plan("dev", "confirm")
+    assert [c["label"] for c in plan["configs"]] == ["baseline", "p2"]
+    first = [e for e in full.store.reservations("dev") if e["stage"] == "confirm"][:12]
+    assert {e["config_hash"] for e in first} == {base}
+
+
 def test_grid_levels_can_be_restricted_to_a_subset(tmp_path: Path):
     stages = [
         {"name": "g", "kind": "grid", "knobs": ["power", "style"], "levels": {"power": [1, 3]}}

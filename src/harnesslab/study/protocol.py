@@ -39,6 +39,7 @@ from harnesslab.study.objective import Ranking, rank_configs
 from harnesslab.study.report import build_results
 from harnesslab.study.runner import Cell, RunSummary, run_cells
 from harnesslab.study.search import (
+    baseline_first,
     combine_config,
     confirm_configs,
     dedupe,
@@ -312,7 +313,10 @@ class Study:
             configs = [cfg] if cfg else []
         else:
             configs = confirm_configs(stage, ranking, self.baseline)  # type: ignore[arg-type]
-        return shuffled(dedupe(configs), self.spec.search.seed, stage.name), note
+        # A seeded shuffle, except that the baseline's cells run first: a stage the budget stops
+        # still has the baseline every comparison needs.
+        order = shuffled(dedupe(configs), self.spec.search.seed, stage.name)
+        return baseline_first(order, self.baseline.config_hash), note
 
     def _stage_tasks(self, stage: StageSpec) -> list[Task]:
         tasks = self.dev_tasks()

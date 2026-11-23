@@ -3,7 +3,9 @@
 Stages are declared in the study spec (see :class:`harnesslab.study.spec.StageSpec`). Expansion is
 deterministic: the same records and the same spec always give the same configurations, and the
 evaluation order of a stage is a seeded shuffle, so a stage stopped by the budget has evaluated a
-random subsample of its configurations rather than a biased prefix.
+random subsample of its configurations rather than a biased prefix. The one exception is the
+baseline: in a stage that contains it, it runs first, because it anchors cost caps and ratios and
+without it nothing a stage evaluated could be compared or frozen.
 """
 
 from __future__ import annotations
@@ -169,3 +171,9 @@ def shuffled(configs: Sequence[Config], seed: int, stage_name: str) -> list[Conf
     order = sorted(configs, key=lambda c: c.config_hash)
     random.Random(salt).shuffle(order)
     return order
+
+
+def baseline_first(configs: Sequence[Config], baseline_hash: str) -> list[Config]:
+    """The baseline (when the stage contains it) first, the others in their given order."""
+    first = [c for c in configs if c.config_hash == baseline_hash]
+    return first + [c for c in configs if c.config_hash != baseline_hash]

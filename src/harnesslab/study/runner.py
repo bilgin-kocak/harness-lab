@@ -18,6 +18,9 @@ Rules the runner enforces for every adapter:
   an invalid or over-the-cap cost, or a record that cannot be stored. The cell is recorded with a
   ``harness_error`` (it has no valid outcome and may run again once the harness is fixed), the
   cells already running finish and are recorded, and the first problem is raised.
+* So does an attempt with status ``unavailable`` (the system could not start at all): it is not
+  verified, it is recorded with ``harness_error`` "unavailable: <reason>" and the cost it
+  reported, and the cell runs again once the system is available; it is never a loss.
 """
 
 from __future__ import annotations
@@ -320,6 +323,11 @@ async def run_cells(
                 != cell.key
             ):
                 problem = f"adapter returned an attempt for {attempt.task_id}/{attempt.repetition}"
+            if problem is None and not raised and attempt.status == AttemptStatus.UNAVAILABLE:
+                # The system could not start at all (a missing CLI, an outage): there is nothing
+                # to verify and no outcome to count, so the cell is left without one (it runs
+                # again) and the phase stops like for any other harness problem.
+                problem = f"unavailable: {attempt.error or 'the system could not start'}"
             verdict: Verdict | None = None
             metrics: dict[str, Any] = {}
             if problem is None and raised:

@@ -18,7 +18,7 @@ import pytest
 import yaml
 
 from harnesslab.study.budget import Budget, Refusal
-from harnesslab.study.contract import Verdict, VerdictStatus
+from harnesslab.study.contract import Attempt, AttemptStatus, Verdict, VerdictStatus
 from harnesslab.study.protocol import ProtocolError, Study
 from harnesslab.study.runner import HarnessError
 from harnesslab.study.spec import StudySpecError, load_study_spec
@@ -42,6 +42,9 @@ class Toy2(Toy):
         # task id -> what cannot be stored: "surrogate", "bytes", "object" (in the output) or
         # "verdict" (an object in the verdict's details)
         self.unstorable_on = dict(options.get("unstorable_on", {}))
+        # the system under test cannot start on these tasks (a missing CLI, an outage)
+        self.unavailable_on = set(options.get("unavailable_on", []))
+        self.verified: list[str] = []
         self.prov = options.get("prov", "1")
         self.seen_limits: list[float | None] = []
 
@@ -61,6 +64,14 @@ class Toy2(Toy):
         self.seen_limits.append(ctx.cost_limit_usd)
         if task.id in self.harness_error_on:
             raise HarnessError("the adapter lost its toolchain")
+        if task.id in self.unavailable_on:
+            return Attempt(
+                task_id=task.id,
+                config_hash=config.config_hash,
+                repetition=ctx.repetition,
+                status=AttemptStatus.UNAVAILABLE,
+                error="the CLI is not installed",
+            )
         power = config.values["power"]
         if power in self.delay_by_power:
             await asyncio.sleep(self.delay_by_power[power])
@@ -83,11 +94,19 @@ class Toy2(Toy):
         return attempt
 
     async def verify(self, task, attempt, ctx):
+        self.verified.append(task.id)
+        if attempt.status == AttemptStatus.UNAVAILABLE:  # as the coding adapter does
+            return Verdict(status=VerdictStatus.UNVERIFIABLE, checker="toy/1", reason="unavailable")
         if attempt.output.get("degraded"):
             return Verdict(status=VerdictStatus.FAIL, checker="toy/1", reason="degraded")
         if attempt.output.get("odd_verdict"):
             return Verdict(status=VerdictStatus.PASS, checker="toy/1", details={"h": object()})
         return await super().verify(task, attempt, ctx)
+
+    def metrics(self, task, attempt, verdict):
+        if attempt.status == AttemptStatus.UNAVAILABLE:  # nothing ran: no domain numbers
+            return {"gates": None, "calls": 0}
+        return super().metrics(task, attempt, verdict)
 
     def provenance(self):
         return {"toy": self.prov}
@@ -270,6 +289,46 @@ def test_an_attempt_that_cannot_be_stored_leaves_a_harness_error_record(tmp_path
     assert len(fixed.store.effective("dev")) == 36
     fixed.freeze()
     assert fixed.results()["audit"]["dev"]["harness_error_records"] == len(bad)
+
+
+def test_an_unavailable_attempt_is_no_outcome_and_runs_again(tmp_path: Path):
+    # core#9: "the system could not start at all" was recorded as a final outcome: never run
+    # again, and a loss in the held-out comparison.
+    study = _study2(
+        tmp_path,
+        options={"unavailable_on": ["d1"]},
+        budget={"max_cost_usd": 5.0, "cost_limit_per_attempt_usd": 0.05},
+    )
+    with pytest.raises(HarnessError, match="unavailable: the CLI is not installed"):
+        asyncio.run(study.run_stage("grid"))
+    bad = [r for r in study.store.records("dev") if r["task_id"] == "d1"]
+    assert bad and all(r["harness_error"] == "unavailable: the CLI is not installed" for r in bad)
+    assert all(r["verdict"] is None and r["metrics"] == {} for r in bad)
+    assert all(r["attempt"]["status"] == "unavailable" for r in bad)
+    assert all(r["charged_usd"] == 0.0 for r in bad)  # what it reported, not the reservation
+    assert "d1" not in study.adapter.verified  # nothing to verify
+    assert not study.store.dangling_reservations("dev")
+    assert not {(r["task_id"], r["config_hash"], 0) for r in bad} & study.store.completed("dev")
+    fixed = _reopen(study)
+    fixed.adapter.unavailable_on = set()
+    asyncio.run(fixed.run_stage("grid"))
+    assert len(fixed.store.effective("dev")) == 36
+
+    # held-out: an outage stops the phase; once over, the cells run and none counts as a loss
+    (tmp_path / "ho").mkdir()
+    ho = _study2(tmp_path / "ho", options={"unavailable_on": ["h2"]})
+    asyncio.run(ho.run_stage("grid"))
+    ho.freeze()
+    with pytest.raises(HarnessError, match="unavailable"):
+        asyncio.run(ho.held_out())
+    back = _reopen(ho)
+    back.adapter.unavailable_on = set()
+    asyncio.run(back.held_out())
+    data = back.results()
+    assert data["held_out"]["complete"]
+    assert data["audit"]["held_out"]["harness_error_records"] >= 1
+    main = data["held_out"]["comparisons"][0]
+    assert main["n"] == 6 and main["not_run"] == [] and main["losses"] == 0
 
 
 def test_a_record_that_cannot_be_encoded_is_not_written_at_all(tmp_path: Path):

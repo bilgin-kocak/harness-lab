@@ -116,8 +116,17 @@ def combine_config(
     ranking: Ranking,
     obj: ObjectiveSpec,
 ) -> tuple[Config | None, str]:
-    """``reference`` plus every single-knob change that beat it by ``min_gain``; or why not."""
+    """``reference`` plus every single-knob addition that beat it by ``min_gain``; or why not.
+
+    An addition is a feasible configuration that differs from the reference in exactly one knob,
+    on which the reference still has the baseline's level: it adds that knob on top of the
+    reference. A configuration that undoes or changes a knob the reference already moved (the
+    baseline itself, when the reference is the baseline plus one knob) is not an addition. The
+    combined configuration keeps every setting of the reference and sets each winning knob to
+    its best-scoring level.
+    """
     ref = resolve_label(stage.reference or "", known)
+    base = resolve_label("baseline", known)
     ref_score = ranking.get(ref.config_hash)
     if ref_score is None or not ref_score.feasible:
         return None, f"reference {stage.reference!r} has no feasible dev result"
@@ -126,18 +135,20 @@ def combine_config(
     for s in ranking.scores:
         if not s.feasible or s.config_hash == ref.config_hash:
             continue
-        diff = [k for k in ref.values if s.values.get(k) != ref.values[k]]
+        diff = [k for k in ref.values if not _same(s.values.get(k), ref.values[k])]
         if len(diff) != 1:
             continue
+        knob = diff[0]
+        if not _same(ref.values[knob], base.values.get(knob)):
+            continue  # the reference moved this knob: undoing or changing it adds nothing
         p = primary_score(s, obj)
         if p is None or ref_primary is None or p - ref_primary < stage.min_gain - 1e-12:
             continue
-        knob = diff[0]
         if knob not in winners or p > winners[knob][0]:
             winners[knob] = (p, s.values[knob])
     if len(winners) < stage.min_winners:
         return None, (
-            f"{len(winners)} single-knob change(s) beat {stage.reference!r} by at least "
+            f"{len(winners)} single-knob addition(s) beat {stage.reference!r} by at least "
             f"{stage.min_gain:g}; {stage.min_winners} needed"
         )
     changes = {k: v for k, (_, v) in sorted(winners.items())}

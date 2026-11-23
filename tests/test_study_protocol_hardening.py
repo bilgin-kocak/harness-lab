@@ -646,6 +646,79 @@ def test_cli_refuses_a_ranking_stage_run_out_of_order(tmp_path: Path):
     assert not (tmp_path / "dev" / "plans" / "confirm.json").exists()
 
 
+def test_combine_counts_only_knobs_added_on_top_of_the_reference():
+    # core#8: F = baseline + fb 3. The baseline differs from F in one knob (it undoes fb) and
+    # counted as a winning "addition": the combination silently reset fb to the baseline's 0.
+    from harnesslab.study.contract import Config, Knob, SearchSpace
+    from harnesslab.study.objective import ConfigScore, Ranking
+    from harnesslab.study.search import combine_config
+    from harnesslab.study.spec import ObjectiveSpec, StageSpec
+
+    space = SearchSpace(
+        knobs=(
+            Knob(name="fb", levels=(0, 3, 5)),
+            Knob(name="x", levels=(0, 1)),
+            Knob(name="y", levels=(0, 1)),
+        )
+    )
+    base = Config(values={"fb": 0, "x": 0, "y": 0}, label="baseline")
+    f = base.replace(label="F", fb=3)
+    known = {"baseline": base, "F": f}
+    stage = StageSpec(name="combine", kind="combine", reference="F", min_gain=0.1)
+    obj = ObjectiveSpec(kind="pass_rate")
+
+    def ranking(rates: dict[str, tuple[Config, float]]) -> Ranking:
+        scores = [
+            ConfigScore(config_hash=c.config_hash, label=c.label, values=c.values, pass_rate=r)
+            for c, r in rates.values()
+        ]
+        for s in scores:
+            s.feasible = s.complete = True
+        return Ranking(
+            kind="pass_rate", task_ids=["t"], baseline_hash=base.config_hash, scores=scores
+        )
+
+    fx, fy = f.replace(label="F+x", x=1), f.replace(label="F+y", y=1)
+    f5 = f.replace(label="F+fb5", fb=5)  # changes the knob F moved: not an addition either
+    cfg, note = combine_config(
+        stage,
+        space,
+        known,
+        ranking({"F": (f, 0.5), "B": (base, 0.8), "F+x": (fx, 0.7), "F+fb5": (f5, 0.9)}),
+        obj,
+    )
+    assert cfg is None and note.startswith("1 single-knob addition(s)")
+    cfg, note = combine_config(
+        stage,
+        space,
+        known,
+        ranking({"F": (f, 0.5), "B": (base, 0.8), "F+x": (fx, 0.7), "F+y": (fy, 0.65)}),
+        obj,
+    )
+    assert cfg is not None and cfg.values == {"fb": 3, "x": 1, "y": 1}  # keeps F's fb
+    assert note == "combined x, y"
+
+
+def test_combine_in_a_study_ignores_a_change_of_the_reference_s_own_knob(tmp_path: Path):
+    stages = [
+        {
+            "name": "single",
+            "kind": "explicit",
+            "configs": [
+                {"label": "baseline", "set": {}},
+                {"label": "F", "set": {"power": 2}},
+                {"label": "F+p3", "base": "F", "set": {"power": 3}},
+                {"label": "F+b", "base": "F", "set": {"style": "b"}},
+            ],
+        },
+        {"name": "combo", "kind": "combine", "reference": "F", "min_gain": 0.1},
+    ]
+    study = _study2(tmp_path, search={"seed": 1, "stages": stages}, objective={"kind": "pass_rate"})
+    out = asyncio.run(study.search())
+    # F+p3 (6/6) changes F's own knob; only F+b (5/6 against F's 4/6) adds one
+    assert out["combo"] == "1 single-knob addition(s) beat 'F' by at least 0.1; 2 needed"
+
+
 def test_grid_levels_can_be_restricted_to_a_subset(tmp_path: Path):
     stages = [
         {"name": "g", "kind": "grid", "knobs": ["power", "style"], "levels": {"power": [1, 3]}}

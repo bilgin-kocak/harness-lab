@@ -60,8 +60,10 @@ class StageSpec(_Strict):
       ``refine``: the ``top_k`` best configurations so far, each crossed with every combination of
       the levels of ``knobs``.
       For both, ``levels`` may restrict a knob to some of its levels (a subset of the adapter's).
-      ``combine``: ``reference`` plus every single-knob change that beat it by at least
-      ``min_gain`` (objective score), when at least ``min_winners`` such changes exist.
+      ``combine``: ``reference`` plus every single-knob addition that beat it by at least
+      ``min_gain`` (objective score), when at least ``min_winners`` such additions exist. An
+      addition sets one knob the reference leaves at the baseline's level; undoing or changing a
+      knob the reference already moved is not one. The combination keeps the reference's settings.
       ``confirm``: the ``top_k`` best configurations so far (and the baseline), with
       ``repetitions`` more repetitions each.
     ``phase: smoke`` records into a separate phase that selection never reads.

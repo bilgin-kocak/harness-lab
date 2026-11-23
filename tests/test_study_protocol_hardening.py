@@ -55,6 +55,10 @@ class Toy2(Toy):
         self.unstorable_on = dict(options.get("unstorable_on", {}))
         # the system under test cannot start on these tasks (a missing CLI, an outage)
         self.unavailable_on = set(options.get("unavailable_on", []))
+        # run() raises an ordinary exception on these tasks (the system under test crashed), and
+        # verify() raises on these; both texts quote a broken \ud83d escape from a model reply
+        self.raise_on = set(options.get("raise_on", []))
+        self.verify_raise_on = set(options.get("verify_raise_on", []))
         self.verified: list[str] = []
         self.prov = options.get("prov", "1")
         self.seen_limits: list[float | None] = []
@@ -83,6 +87,8 @@ class Toy2(Toy):
                 status=AttemptStatus.UNAVAILABLE,
                 error="the CLI is not installed",
             )
+        if task.id in self.raise_on:
+            raise ValueError("could not parse the reply: by simp \ud83d")
         power = config.values["power"]
         if power in self.delay_by_power:
             await asyncio.sleep(self.delay_by_power[power])
@@ -106,6 +112,8 @@ class Toy2(Toy):
 
     async def verify(self, task, attempt, ctx):
         self.verified.append(task.id)
+        if task.id in self.verify_raise_on:
+            raise RuntimeError("the checker choked on \ud83d")
         if attempt.status == AttemptStatus.UNAVAILABLE:  # as the coding adapter does
             return Verdict(status=VerdictStatus.UNVERIFIABLE, checker="toy/1", reason="unavailable")
         if attempt.output.get("degraded"):
@@ -451,6 +459,36 @@ def test_an_attempt_that_cannot_be_stored_leaves_a_harness_error_record(tmp_path
     assert len(fixed.store.effective("dev")) == 36
     fixed.freeze()
     assert fixed.results()["audit"]["dev"]["harness_error_records"] == len(bad)
+
+
+def test_a_crash_whose_text_cannot_be_encoded_is_still_a_recorded_failure(tmp_path: Path):
+    # F5: run() raising is a result of the system under test: an error attempt with the core's
+    # fail verdict, and the phase goes on. A lone surrogate in the exception's text (a broken
+    # \ud83d escape quoted from a model reply) made the attempt the core built unstorable: a
+    # harness error that halted the phase, and the cell ran again on every resume.
+    study = _study2(
+        tmp_path,
+        options={"raise_on": ["d3"]},
+        budget={"max_cost_usd": 5.0, "cost_limit_per_attempt_usd": 0.05},
+    )
+    summary = asyncio.run(study.run_stage("grid"))
+    assert summary.ran == 36 and summary.harness_errors == 0 and summary.errors == 6
+    crashed = [r for r in study.store.records("dev") if r["task_id"] == "d3"]
+    assert len(crashed) == 6 and len(study.store.effective("dev")) == 36
+    for r in crashed:
+        assert r["harness_error"] is None and r["verdict"]["status"] == "fail"
+        assert r["attempt"]["status"] == "error" and r["charged_usd"] == 0.05
+        assert r["attempt"]["error"] == "ValueError: could not parse the reply: by simp \\ud83d"
+        assert "by simp \\ud83d" in r["attempt"]["details"]["traceback"]
+
+    # a verifier crash stays a harness error; its record keeps the attempt and the traceback
+    (tmp_path / "verify").mkdir()
+    broken = _study2(tmp_path / "verify", options={"verify_raise_on": ["d3"]})
+    with pytest.raises(HarnessError, match=r"verify/metrics failed: RuntimeError: .*\\ud83d"):
+        asyncio.run(broken.run_stage("grid"))
+    bad = [r for r in broken.store.records("dev") if r["task_id"] == "d3"]
+    assert bad and all(r["attempt"]["status"] == "completed" for r in bad)
+    assert all("the checker choked on \\ud83d" in r["harness_traceback"] for r in bad)
 
 
 def test_an_unavailable_attempt_is_no_outcome_and_runs_again(tmp_path: Path):

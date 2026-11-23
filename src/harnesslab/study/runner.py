@@ -12,7 +12,8 @@ Rules the runner enforces for every adapter:
 * ``run`` raising an ordinary exception is part of the system under test: the cell is recorded as
   an ``error`` attempt with a ``fail`` verdict from the core (there is no output to verify), it is
   charged its whole reservation (it may have spent money it could not report), and the phase goes
-  on.
+  on. The core writes that attempt itself (the exception's text and traceback, made storable), so
+  it is always recorded.
 * A broken harness stops the phase: ``run`` raising :class:`HarnessError` or returning something
   other than an :class:`Attempt`, an attempt for another cell, ``verify`` or ``metrics`` raising,
   an invalid or over-the-cap cost, or a record that cannot be stored. The cell is recorded with a
@@ -104,6 +105,21 @@ def _clean(value: Any) -> Any:
     if isinstance(value, list | tuple):
         return [_clean(v) for v in value]
     return value
+
+
+def _message(exc: BaseException) -> str:
+    """An exception's text as the store can always write it: the text may quote a lone surrogate
+    (a broken escape from a model reply), and ``str()`` itself may fail."""
+    try:
+        text = str(exc)
+    except Exception:
+        text = "<the message cannot be shown>"
+    return _clean(text)
+
+
+def _traceback(limit: int = 4000) -> str:
+    """The traceback of the exception being handled, as the store can always write it."""
+    return _clean(traceback.format_exc()[-limit:])
 
 
 def _attempt_text(attempt: Attempt, limit: int = 4000) -> str:
@@ -291,17 +307,18 @@ async def run_cells(
                 else:
                     problem = f"run() returned {type(result).__name__}, not an Attempt"
             except HarnessError as exc:
-                problem = f"run() reported a harness error: {exc}"
-                record["harness_traceback"] = traceback.format_exc()[-4000:]
+                problem = f"run() reported a harness error: {_message(exc)}"
+                record["harness_traceback"] = _traceback()
             except Exception as exc:  # the system under test failed: a recorded result
+                # (the core writes this attempt itself, so it is always storable)
                 raised = True
                 attempt = Attempt(
                     task_id=cell.task.id,
                     config_hash=cell.config.config_hash,
                     repetition=cell.repetition,
                     status=AttemptStatus.ERROR,
-                    error=f"{type(exc).__name__}: {exc}",
-                    details={"traceback": traceback.format_exc()[-4000:]},
+                    error=f"{type(exc).__name__}: {_message(exc)}",
+                    details={"traceback": _traceback()},
                 )
             if attempt is None:  # a harness problem inside run(): no attempt to keep
                 raised = True  # nothing reported: charge the whole reservation
@@ -365,8 +382,8 @@ async def run_cells(
                     if bad:
                         raise ValueError(f"non-finite metric value(s): {', '.join(sorted(bad))}")
                 except Exception as exc:
-                    problem = f"verify/metrics failed: {type(exc).__name__}: {exc}"
-                    record["harness_traceback"] = traceback.format_exc()[-4000:]
+                    problem = f"verify/metrics failed: {type(exc).__name__}: {_message(exc)}"
+                    record["harness_traceback"] = _traceback()
             cost = attempt.usage.cost_usd
             cost_ok = isinstance(cost, int | float) and math.isfinite(cost) and cost >= 0
             if problem is None and not raised:

@@ -373,6 +373,11 @@ class StudyStore:
             return None
         return json.loads(path.read_text(encoding="utf-8"))
 
+    def plan_files(self, phase: str) -> list[Path]:
+        """Every plan file of a phase, whichever stage wrote it."""
+        plans = self.phase_dir(phase) / "plans"
+        return sorted(plans.glob("*.json")) if plans.is_dir() else []
+
     # -- freeze ------------------------------------------------------------
     def write_freeze(self, data: dict[str, Any]) -> None:
         """Write ``freeze.json`` once; refuse if it exists (O_EXCL, so two processes cannot race)."""

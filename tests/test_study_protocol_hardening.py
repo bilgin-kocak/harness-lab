@@ -709,6 +709,44 @@ def test_a_stage_with_nothing_to_run_keeps_that_decision(tmp_path: Path):
         asyncio.run(edited.run_stage("combo"))
 
 
+def test_a_stage_renamed_or_removed_after_it_decided_is_refused(tmp_path: Path):
+    # F1: plans are kept by stage name. Renaming combo, which had decided to run nothing, left its
+    # plan unread: the next search decided the stage again from confirm's records (made after
+    # it) and ran new cells (core#2's harm), and nothing said why.
+    study = _study2(
+        tmp_path,
+        adapter_options={"fails_after_first_rep": [1]},
+        search={"seed": 2, "stages": DECIDE},
+        objective={"kind": "pass_rate"},
+    )
+    assert isinstance(asyncio.run(study.search())["combo"], str)
+    n = len(study.store.records("dev"))
+    path = tmp_path / "study.yaml"
+    original = path.read_text()
+    data = yaml.safe_load(original)
+    orphan = "dev/plans/combo.json: stage 'combo' ran or decided under that name"
+    for edit in ("rename", "remove"):
+        if edit == "rename":
+            data["search"]["stages"][1]["name"] = "combine"
+        else:
+            del data["search"]["stages"][1]
+        path.write_text(yaml.safe_dump(data))
+        edited = _with_code(study, StudySpec)
+        assert [p for p in edited.check() if p.startswith(orphan)]
+        for step in (edited.search(), edited.run_stage("confirm")):
+            with pytest.raises(ProtocolError, match="the stage plans do not match the spec"):
+                asyncio.run(step)
+        with pytest.raises(ProtocolError, match=f"cannot freeze:\n- {orphan}"):
+            edited.freeze()
+    assert len(study.store.records("dev")) == n  # nothing ran, nothing was decided again
+    assert study.store.read_plan("dev", "combine") is None
+    path.write_text(original)  # undone, the study goes on as it was
+    restored = _with_code(study, StudySpec)
+    assert restored.check() == []
+    assert all(isinstance(v, str) or v.ran == 0 for v in asyncio.run(restored.search()).values())
+    assert restored.freeze()["frozen"]["label"] == "p2"
+
+
 def test_a_skipped_stage_stays_skipped(tmp_path: Path):
     stages = [
         {

@@ -10,7 +10,8 @@ The protocol is what makes a result trustworthy, so it is strict:
   its decision to run nothing (no configuration qualified, or skipped by ``if_budget_allows``),
   so resuming a stage, or re-running ``search``, adds nothing and changes nothing; ``search``
   stops at a stage left with planned cells unrecorded (the budget stopped it) rather than decide
-  the stages after it from incomplete results;
+  the stages after it from incomplete results; a stage edited after it ran or decided is
+  refused, and a plan whose stage was renamed or removed since stops the search and the freeze;
 * ``freeze.json`` is written once. Before the held-out phase it must still match the split file,
   the adapter (name, version, options, provenance), the objective, statistics and held-out
   sections of the spec and the dev records, and re-ranking the dev records must give the same
@@ -25,6 +26,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import importlib.metadata
+import json
 import random
 import subprocess
 from collections import Counter
@@ -270,6 +272,7 @@ class Study:
                 problems.append(f"stage {stage.name}: unknown base {stage.base!r}")
             if stage.kind == "combine" and stage.reference not in known:
                 problems.append(f"stage {stage.name}: unknown reference {stage.reference!r}")
+        problems += self.orphaned_plans()
         # The held-out configurations, built as the freeze builds them (the baseline stands in
         # for the frozen configuration, which is some point of the search space).
         for comp in self.spec.held_out.comparators:
@@ -487,6 +490,32 @@ class Study:
                 f"stages before it, which must finish first: {', '.join(unfinished)}"
             )
 
+    def orphaned_plans(self) -> list[str]:
+        """Plans that no stage of the spec reads: the stage that ran or decided under that name
+        was renamed or removed since. Plans are kept by stage name, so its plan would be ignored
+        and the stage decided again, from records made after it (by the stages after it)."""
+        problems = []
+        for phase in ("smoke", "dev"):
+            expected = {
+                self.store.plan_path(phase, s.name): s.name
+                for s in self.spec.search.stages
+                if s.phase == phase
+            }
+            for path in self.store.plan_files(phase):
+                where = f"{phase}/plans/{path.name}"
+                try:
+                    stage = json.loads(path.read_text(encoding="utf-8")).get("stage")
+                except (OSError, ValueError, AttributeError) as exc:
+                    problems.append(f"{where}: unreadable plan ({type(exc).__name__}: {exc})")
+                    continue
+                if expected.get(path) != stage:
+                    problems.append(
+                        f"{where}: stage {stage!r} ran or decided under that name and the spec "
+                        f"has no {phase} stage of that name now (renamed, removed or moved); a "
+                        "pre-registered stage cannot be renamed or removed mid-study"
+                    )
+        return problems
+
     def stage_plan(self, stage: StageSpec) -> dict[str, Any] | None:
         """The plan a stage fixed when it first ran (its cells, or its decision to run none), or
         None if it has not run."""
@@ -534,6 +563,11 @@ class Study:
             self._require_sound_split()
             if self.store.read_freeze() is not None:
                 raise ProtocolError("the study is frozen: no more search")
+            orphaned = self.orphaned_plans()
+            if orphaned:
+                raise ProtocolError(
+                    "the stage plans do not match the spec:\n- " + "\n- ".join(orphaned)
+                )
             stage = self.spec.stage(name)
             if stage.kind in RANKING_KINDS:
                 self._require_earlier_stages(stage)
@@ -672,7 +706,8 @@ class Study:
 
     def _search_problems(self) -> list[str]:
         """Reasons the dev records cannot be frozen as they are."""
-        problems = []
+        # a renamed confirm stage would no longer restrict the choice to its configurations
+        problems = self.orphaned_plans()
         dev_all = self.store.records("dev")
         valid = {cell_key(r) for r in self.store.effective("dev")}
         broken = sorted({cell_key(r) for r in dev_all if r.get("harness_error")} - valid)

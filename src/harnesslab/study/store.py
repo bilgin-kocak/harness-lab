@@ -26,12 +26,14 @@ reported.
 
 from __future__ import annotations
 
+import asyncio
 import contextlib
 import contextvars
 import gzip
 import json
 import os
 import re
+import threading
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
@@ -40,12 +42,24 @@ from harnesslab.study.contract import sha256_json
 
 PHASES = ("smoke", "dev", "held_out")
 
-# The study locks held by the current context (one token per lock). A thread has its own context,
-# and an asyncio task starts with a copy of its creator's: the tasks a step starts (its cells)
-# hold the step's lock, while a step running concurrently in another task does not.
+# The study locks held by the current context (one token per lock), which decides who may write.
+# A thread has its own context, and an asyncio task starts with a copy of its creator's: the tasks
+# a step starts (its cells) write under the step's lock, while a step running concurrently in
+# another task does not. Entering the lock again is decided by who took it (see
+# :meth:`StudyStore.locked`), not by the context, since a task inherits it.
 _HELD_LOCKS: contextvars.ContextVar[tuple[object, ...]] = contextvars.ContextVar(
     "harnesslab_study_locks", default=()
 )
+
+
+def _running_step() -> object:
+    """What runs the calling code: its asyncio task, or its thread outside any task."""
+    try:
+        task = asyncio.current_task()
+    except RuntimeError:  # no event loop runs in this thread
+        task = None
+    return task if task is not None else threading.current_thread()
+
 
 CellKey = tuple[str, str, int]  # task id, config hash, repetition
 
@@ -106,6 +120,7 @@ class StudyStore:
         self.root = Path(root)
         self._lock_fh: Any = None
         self._owner: object | None = None  # the token of the context holding the lock
+        self._holder: object | None = None  # the task (or thread) that took it
         self._depth = 0
 
     # -- the lock ----------------------------------------------------------
@@ -122,14 +137,16 @@ class StudyStore:
         """Hold the study's exclusive lock.
 
         Every step that writes records, plans, the freeze or the results holds it, so two
-        processes can never run the same cells or spend the same budget twice. It is re-entrant
-        for its owner only: the thread, or the asyncio task and the tasks it starts, that took
-        it. Another step of the same process (a concurrent task or thread) is refused like
-        another process. Each block entered counts; the OS lock is released when the count
-        returns to 0 (the last block to end, even one a started task entered).
+        processes can never run the same cells or spend the same budget twice. Only the asyncio
+        task (or, outside one, the thread) that took it may enter it again; its blocks nest, and
+        the OS lock is released when its outermost block ends. Any other task or thread of the
+        process is refused like another process: a step running concurrently, and also a step
+        that the holder started as a task of its own (two of them would share the lock, each
+        with its own budget). The tasks a step starts for its cells do not enter the lock; they
+        write under it while the step holds it.
         """
         if self._lock_fh is not None:
-            if not self._owned():
+            if _running_step() is not self._holder:
                 raise StudyLockedError(
                     f"another step of the study in {self.root} is running in this process; "
                     "wait for it to finish"
@@ -158,12 +175,11 @@ class StudyStore:
                 f"(lock {self.lock_path}); wait for it to finish"
             ) from exc
         token = object()
-        self._lock_fh, self._owner, self._depth = fh, token, 1
+        self._lock_fh, self._owner, self._holder, self._depth = fh, token, _running_step(), 1
         reset = _HELD_LOCKS.set((*_HELD_LOCKS.get(), token))
         try:
             yield
         finally:
-            # this context no longer holds the lock, whoever else still does
             try:
                 _HELD_LOCKS.reset(reset)
             except ValueError:  # exited in another context than it was entered
@@ -173,7 +189,7 @@ class StudyStore:
     def _leave(self) -> None:
         self._depth -= 1
         if self._depth == 0:
-            fh, self._lock_fh, self._owner = self._lock_fh, None, None
+            fh, self._lock_fh, self._owner, self._holder = self._lock_fh, None, None, None
             fh.close()  # closing the file releases the lock
 
     def _require_lock(self) -> None:

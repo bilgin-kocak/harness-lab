@@ -233,40 +233,81 @@ def test_the_lock_is_re_entrant_for_its_owner_only(tmp_path: Path):
     assert [r["repetition"] for r in store.records("dev")] == [0, 1, 2]
 
 
-def test_the_lock_is_released_when_its_last_block_ends(tmp_path: Path):
-    # A task started under the lock holds it too; if it is still inside a block of its own when
-    # the block that took the lock ends, the OS lock stays held until it is done.
+def test_a_task_started_under_the_lock_writes_under_it_but_cannot_enter_it(tmp_path: Path):
+    # A task started under the lock may write while the step that started it holds the lock (a
+    # step's cells do), but entering the lock is for the task that took it; the OS lock is
+    # released when that task's outermost block ends, and a later write is refused.
     store = StudyStore(tmp_path)
     another_process = StudyStore(tmp_path)
+    rec = {"task_id": "d0", "config_hash": "x", "repetition": 0}
 
     async def scenario() -> list[str]:
         seen: list[str] = []
-        inside, finish = asyncio.Event(), asyncio.Event()
+        wrote, finish = asyncio.Event(), asyncio.Event()
 
         async def child() -> None:
-            with store.locked():
-                inside.set()
-                await finish.wait()
-                store.append("dev", {"task_id": "d0", "config_hash": "x", "repetition": 0})
+            try:
+                with store.locked():
+                    seen.append("child entered the lock")
+            except StudyLockedError:
+                seen.append("child refused")
+            store.append("dev", rec)
+            wrote.set()
+            await finish.wait()
+            with pytest.raises(RuntimeError, match="without holding its lock"):
+                store.append("dev", {**rec, "repetition": 1})
+            seen.append("late write refused")
 
         with store.locked():
             task = asyncio.create_task(child())
-            await inside.wait()
-        try:
-            with another_process.locked():
-                seen.append("taken while the child held it")
-        except StudyLockedError:
-            seen.append("still held")
-        with pytest.raises(RuntimeError, match="without holding its lock"):
-            store.append("dev", {"task_id": "d1", "config_hash": "x", "repetition": 0})
-        finish.set()
-        await task
+            await wrote.wait()
         with another_process.locked():
             seen.append("released")
+        finish.set()
+        await task
         return seen
 
-    assert asyncio.run(scenario()) == ["still held", "released"]
+    assert asyncio.run(scenario()) == ["child refused", "released", "late write refused"]
     assert len(store.records("dev")) == 1
+
+
+def test_steps_started_as_tasks_inside_a_locked_block_are_refused(tmp_path: Path):
+    # F10: a task inherited the lock from the task that started it, so two stages gathered
+    # inside a locked block both ran: the same cells twice (two valid records per cell, the study
+    # untrustworthy), or two stages each with its own budget, past the cap together.
+    stages = [
+        {"name": "a", "kind": "explicit", "configs": [{"label": "p3", "set": {"power": 3}}]},
+        {
+            "name": "b",
+            "kind": "explicit",
+            "configs": [{"label": "b3", "set": {"power": 3, "style": "b"}}],
+        },
+    ]
+    study = _study2(
+        tmp_path,
+        options={"delay": 0.01},
+        search={"seed": 1, "stages": stages},
+        budget={"max_cost_usd": 0.25, "cost_limit_per_attempt_usd": 0.03},
+    )
+
+    async def gathered(names: tuple[str, ...]) -> list:
+        with study.store.locked():
+            steps = (study.run_stage(n) for n in names)
+            return await asyncio.gather(*steps, return_exceptions=True)
+
+    for names in (("a", "a"), ("a", "b")):
+        out = asyncio.run(gathered(names))
+        assert all(isinstance(r, StudyLockedError) for r in out), out
+    assert not study.store.records("dev") and not study.store.reservations("dev")
+
+    async def in_turn() -> list:  # the task that took the lock runs steps one after the other
+        with study.store.locked():
+            return [await study.run_stage("a"), await study.run_stage("b")]
+
+    a, b = asyncio.run(in_turn())
+    assert a.ran == 6 and b.budget_stop
+    assert sum(r["charged_usd"] for r in study.store.records("dev")) <= 0.25 + 1e-12
+    assert len(study.store.effective("dev")) == a.ran + b.ran  # one valid record per cell
 
 
 def test_two_valid_records_for_one_cell_make_the_phase_untrustworthy():

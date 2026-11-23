@@ -1,0 +1,16 @@
+smoke records: 6
+smoke cost $0.3506; 15 API calls; $0.0234 per call
+
+configuration   n  $/attempt  calls   $/call   in tok  out tok  wall s  verdicts
+all-on         3     0.0846   4.00   0.0211      303     3097    45.2  {'pass': 3}
+baseline       3     0.0323   1.00   0.0323        4     1387    12.1  {'pass': 3}
+
+projection (plan A9 call counts x measured $/call | upper bound):
+  stage 1: 7 configurations x 30 dev x 1                     $   12.62 | $   16.19
+  stage 2 (conditional): baseline + winner, 2 more repeats   $    5.61 | $    7.01
+  held-out: baseline + frozen x 40 x 3                       $   11.22 | $   14.03
+  smoke (spent)                                              $    0.35 | $    0.35
+  total                                                      $   29.80 | $   37.58   (cap $150)
+
+held-out reserve (1.25 x projected held-out): $14.03 (plan counts) | $17.53 (upper bound)
+total without stage 2 (plan counts): $24.19

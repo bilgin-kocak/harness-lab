@@ -13,6 +13,8 @@ Steps, each printed with PASS or FAIL:
    made: split, adapter, provenance, sealed spec sections, dev records, and that re-ranking gives
    the frozen choice. Skipped: that ``freeze.json`` is committed (``git log -- freeze.json``
    shows that), because the scratch copy is not a git checkout.
+   **Leakage audit.** ``Study.check()`` runs again: the split checks, and the adapter's audit that
+   no held-out theorem name or statement occurs in the dev data, the prompts or the Mathlib index.
 3. **Report.** ``results.json`` is recomputed from the committed records (``*.jsonl.gz``,
    decompressed into a scratch copy of the study), and every held-out comparison must match.
 4. **Complete.** The held-out phase recorded every planned cell.
@@ -117,6 +119,12 @@ def main(argv: list[str] | None = None) -> int:
                 if not p.endswith(("is not committed to git", "differs from the committed version"))
             ]
             ok &= _ok("freeze checks", not problems, "; ".join(problems))
+            audit = study.check()
+            ok &= _ok(
+                "leakage audit (split, dev data, prompts, Mathlib index)",
+                not audit,
+                "; ".join(audit[:5]) or "no problem",
+            )
             committed = json.loads((source / "results.json").read_text(encoding="utf-8"))
             fresh = study.results()
             a = [_strip(c) for c in committed["held_out"]["comparisons"]]

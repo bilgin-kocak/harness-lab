@@ -36,6 +36,9 @@ class Toy2(Toy):
         self.harness_error_on = set(options.get("harness_error_on", []))
         # configurations with these powers fail every repetition after the first
         self.fails_after_first_rep = set(options.get("fails_after_first_rep", []))
+        # per power: the cost reported instead of 0.01 * power, and a delay before running
+        self.cost_by_power = dict(options.get("cost_by_power", {}))
+        self.delay_by_power = dict(options.get("delay_by_power", {}))
         self.prov = options.get("prov", "1")
         self.seen_limits: list[float | None] = []
 
@@ -55,7 +58,12 @@ class Toy2(Toy):
         self.seen_limits.append(ctx.cost_limit_usd)
         if task.id in self.harness_error_on:
             raise HarnessError("the adapter lost its toolchain")
+        power = config.values["power"]
+        if power in self.delay_by_power:
+            await asyncio.sleep(self.delay_by_power[power])
         attempt = await super().run(task, config, ctx)
+        if power in self.cost_by_power:
+            attempt.usage.cost_usd = self.cost_by_power[power]
         if task.id in self.negative_cost_on:
             attempt.usage.cost_usd = -1.0
         if config.values["power"] in self.fails_after_first_rep and ctx.repetition >= 1:
@@ -264,6 +272,64 @@ def test_refusals_say_whether_waiting_can_help():
     b.reserved_usd = 0.0
     r = b.try_reserve()
     assert isinstance(r, Refusal) and not r.retryable  # the money is gone
+
+
+def test_float_residue_never_makes_a_refusal_wait_with_nothing_in_flight():
+    # core#6: 0.3 + 0.1 - 0.1 - 0.3 leaves 5.6e-17 "reserved" with no cell running; the refusal
+    # was retryable and the runner waited for a settlement that never came.
+    b = Budget(max_cost_usd=0.4, per_attempt_usd=0.3)
+    q, p = b.try_reserve(0.3), b.try_reserve(0.1)
+    b.settle(p, 0.1, 0.0)
+    b.settle(q, 0.200000000001, 0.0)
+    assert b.reserved_usd == 0.0  # nothing in flight: exactly nothing reserved
+    assert not isinstance(b.try_reserve(0.1), Refusal)  # 0.400000000001 fits the cap
+    spent = Budget(max_cost_usd=0.4, per_attempt_usd=0.3, spent_usd=0.35, reserved_usd=1e-17)
+    r = spent.try_reserve(0.1)
+    assert isinstance(r, Refusal) and not r.retryable  # no reservation in flight: final
+
+
+def test_the_runner_does_not_hang_on_float_residue(tmp_path: Path):
+    from harnesslab.study.contract import Config
+    from harnesslab.study.runner import Cell, run_cells
+
+    adapter = Toy2(
+        {
+            "worst_case": 0.1,
+            "cost_by_power": {3: 0.200000000001, 1: 0.1},
+            "delay_by_power": {3: 0.05},
+        },
+        tmp_path,
+    )
+    q_task, p_task, r_task = adapter.load_tasks(["d0", "d1", "d2"])
+    big, small = (
+        Config(values={"power": 3, "style": "a"}),
+        Config(values={"power": 1, "style": "a"}),
+    )
+    cells = [
+        Cell(task=q_task, config=big, repetition=0, stage="s"),  # reserves 0.3, spends 0.2+
+        Cell(task=p_task, config=small, repetition=0, stage="s"),  # reserves and spends 0.1
+        Cell(task=r_task, config=small, repetition=0, stage="s"),  # waits for 0.1
+    ]
+    store = StudyStore(tmp_path)
+
+    async def go():
+        with store.locked():
+            return await asyncio.wait_for(
+                run_cells(
+                    adapter,
+                    store,
+                    study="s",
+                    phase="dev",
+                    cells=cells,
+                    budget=Budget(max_cost_usd=0.4, per_attempt_usd=0.3),
+                    parallelism=2,
+                    keep_artifacts=False,
+                ),
+                timeout=5,
+            )
+
+    summary = asyncio.run(go())
+    assert summary.ran == 3 and summary.budget_stop is None
 
 
 def test_the_held_out_phase_is_not_limited_by_the_search_limits(tmp_path: Path):

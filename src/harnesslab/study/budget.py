@@ -42,6 +42,7 @@ class Budget:
     reserved_usd: float = 0.0
     search_limits: bool = True  # apply max_attempts and max_cell_seconds
     refusals: list[str] = field(default_factory=list)
+    in_flight: int = 0  # reservations not settled yet (cells still running)
 
     @property
     def cost_ceiling(self) -> float | None:
@@ -72,14 +73,23 @@ class Budget:
             return Refusal(
                 f"budget: ${self.spent_usd:.4f} spent and ${self.reserved_usd:.4f} reserved; one "
                 f"more cell (${need:.4f}) would pass ${ceiling:.4f}",
-                retryable=self.reserved_usd > 0 and self.spent_usd + need <= ceiling + 1e-12,
+                # Waiting helps only while a reservation is in flight: its settlement wakes the
+                # waiter. (Not reserved_usd > 0: float residue can outlive every reservation.)
+                retryable=self.in_flight > 0 and self.spent_usd + need <= ceiling + 1e-12,
             )
         self.attempts += 1
+        self.in_flight += 1
         self.reserved_usd += need
         return Reservation(usd=need)
 
     def settle(self, reservation: Reservation, cost_usd: float, seconds: float) -> None:
-        self.reserved_usd = max(0.0, self.reserved_usd - reservation.usd)
+        self.in_flight = max(0, self.in_flight - 1)
+        # Float sums leave residue (0.3 + 0.1 - 0.1 - 0.3 is 5.6e-17): with no reservation in
+        # flight, nothing is reserved, exactly.
+        if self.in_flight == 0:
+            self.reserved_usd = 0.0
+        else:
+            self.reserved_usd = max(0.0, self.reserved_usd - reservation.usd)
         self.spent_usd += max(0.0, cost_usd)
         self.cell_seconds += max(0.0, seconds)
 

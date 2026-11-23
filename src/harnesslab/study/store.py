@@ -27,6 +27,7 @@ reported.
 from __future__ import annotations
 
 import contextlib
+import contextvars
 import gzip
 import json
 import os
@@ -38,6 +39,13 @@ from typing import Any
 from harnesslab.study.contract import sha256_json
 
 PHASES = ("smoke", "dev", "held_out")
+
+# The study locks held by the current context (one token per lock). A thread has its own context,
+# and an asyncio task starts with a copy of its creator's: the tasks a step starts (its cells)
+# hold the step's lock, while a step running concurrently in another task does not.
+_HELD_LOCKS: contextvars.ContextVar[tuple[object, ...]] = contextvars.ContextVar(
+    "harnesslab_study_locks", default=()
+)
 
 CellKey = tuple[str, str, int]  # task id, config hash, repetition
 
@@ -97,21 +105,39 @@ class StudyStore:
     def __init__(self, root: Path) -> None:
         self.root = Path(root)
         self._lock_fh: Any = None
+        self._owner: object | None = None  # the token of the context holding the lock
+        self._depth = 0
 
     # -- the lock ----------------------------------------------------------
     @property
     def lock_path(self) -> Path:
         return self.root / ".lock"
 
+    def _owned(self) -> bool:
+        """Whether the current context (or the one that started it) holds the lock."""
+        return self._owner is not None and self._owner in _HELD_LOCKS.get()
+
     @contextlib.contextmanager
     def locked(self) -> Iterator[None]:
-        """Hold the study's exclusive lock (re-entrant within one store object).
+        """Hold the study's exclusive lock.
 
         Every step that writes records, plans, the freeze or the results holds it, so two
-        processes can never run the same cells or spend the same budget twice.
+        processes can never run the same cells or spend the same budget twice. It is re-entrant
+        for its owner only: the thread, or the asyncio task and the tasks it starts, that took
+        it. Another step of the same process (a concurrent task or thread) is refused like
+        another process, and the OS lock is released when the owner's outermost block ends.
         """
         if self._lock_fh is not None:
-            yield
+            if not self._owned():
+                raise StudyLockedError(
+                    f"another step of the study in {self.root} is running in this process; "
+                    "wait for it to finish"
+                )
+            self._depth += 1
+            try:
+                yield
+            finally:
+                self._depth -= 1
             return
         self.root.mkdir(parents=True, exist_ok=True)
         fh = open(self.lock_path, "a+")  # noqa: SIM115 - held for the duration of the block
@@ -130,15 +156,21 @@ class StudyStore:
                 f"another process is running a step of the study in {self.root} "
                 f"(lock {self.lock_path}); wait for it to finish"
             ) from exc
-        self._lock_fh = fh
+        token = object()
+        self._lock_fh, self._owner, self._depth = fh, token, 1
+        reset = _HELD_LOCKS.set((*_HELD_LOCKS.get(), token))
         try:
             yield
         finally:
-            self._lock_fh = None
+            self._lock_fh, self._owner, self._depth = None, None, 0
+            try:
+                _HELD_LOCKS.reset(reset)
+            except ValueError:  # exited in another context than it was entered
+                _HELD_LOCKS.set(tuple(t for t in _HELD_LOCKS.get() if t is not token))
             fh.close()  # closing the file releases the lock
 
     def _require_lock(self) -> None:
-        if self._lock_fh is None:
+        if self._lock_fh is None or not self._owned():
             raise RuntimeError("write to a study without holding its lock (StudyStore.locked())")
 
     # -- paths -------------------------------------------------------------

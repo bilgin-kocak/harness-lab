@@ -12,6 +12,7 @@ import gzip
 import json
 import math
 import shutil
+import threading
 from pathlib import Path
 
 import pytest
@@ -156,6 +157,80 @@ def test_writes_without_the_lock_are_refused(tmp_path: Path):
     store = StudyStore(tmp_path)
     with pytest.raises(RuntimeError, match="without holding its lock"):
         store.append("dev", {"task_id": "d0", "config_hash": "x", "repetition": 0})
+
+
+def test_two_concurrent_steps_in_one_process_do_not_share_the_lock(tmp_path: Path):
+    # core#12: any entry while the lock file was open counted as re-entry, so two concurrent
+    # steps shared the lock (each with its own budget) and the first to finish released it under
+    # the other, whose writes then failed and whose reservations dangled.
+    stages = [
+        {"name": "a", "kind": "explicit", "configs": [{"label": "p2", "set": {"power": 2}}]},
+        {"name": "b", "kind": "explicit", "configs": [{"label": "p3", "set": {"power": 3}}]},
+    ]
+    study = _study2(tmp_path, options={"delay": 0.02}, search={"seed": 1, "stages": stages})
+
+    async def both():
+        return await asyncio.gather(
+            study.run_stage("a"), study.run_stage("b"), return_exceptions=True
+        )
+
+    a, b = asyncio.run(both())
+    assert not isinstance(a, BaseException) and a.ran == 6
+    assert isinstance(b, StudyLockedError)
+    assert len(study.store.records("dev")) == 6 and not study.store.dangling_reservations("dev")
+    assert asyncio.run(study.run_stage("b")).ran == 6  # once the first step is over
+
+
+def test_the_lock_is_re_entrant_for_its_owner_only(tmp_path: Path):
+    store = StudyStore(tmp_path)
+    another_process = StudyStore(tmp_path)
+    rec = {"task_id": "d0", "config_hash": "x", "repetition": 0}
+    with store.locked():
+        with store.locked():  # re-entry by the owner nests
+            store.append("dev", rec)
+        with pytest.raises(StudyLockedError), another_process.locked():
+            pass  # the inner block did not release the OS lock
+        outcome: list[str] = []
+
+        def other_thread() -> None:
+            try:
+                with store.locked():
+                    outcome.append("entered")
+            except StudyLockedError:
+                outcome.append("refused")
+
+        thread = threading.Thread(target=other_thread)
+        thread.start()
+        thread.join()
+        assert outcome == ["refused"]
+        store.append("dev", {**rec, "repetition": 1})
+
+    async def two_tasks() -> str:
+        held, done = asyncio.Event(), asyncio.Event()
+
+        async def owner() -> None:
+            with store.locked():
+                held.set()
+                await done.wait()
+                store.append("dev", {**rec, "repetition": 2})  # still held: the other was refused
+
+        async def intruder() -> str:
+            await held.wait()
+            try:
+                with store.locked():
+                    return "entered"
+            except StudyLockedError:
+                return "refused"
+            finally:
+                done.set()
+
+        _, outcome = await asyncio.gather(owner(), intruder())
+        return outcome
+
+    assert asyncio.run(two_tasks()) == "refused"
+    with another_process.locked():  # released when the owner's outermost block ended
+        pass
+    assert [r["repetition"] for r in store.records("dev")] == [0, 1, 2]
 
 
 def test_two_valid_records_for_one_cell_make_the_phase_untrustworthy():

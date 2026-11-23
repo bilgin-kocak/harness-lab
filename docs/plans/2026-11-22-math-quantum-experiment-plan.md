@@ -567,6 +567,28 @@ No search cell had run when they were made.
     - **Unchanged.** The order and the stop rule stay the same: configurations run in a seeded
       random order, and if the budget still runs out, the evaluated ones are a random subsample.
 
+11. **A second adversarial round on v2.**
+    - **Replayed and passed.** Every earlier reproduction was replayed and gets the expected
+      verdict.
+    - **Clean results.** A 300-case randomized differential test and 150 sampled real outputs
+      found no false pass, no raise and no wrong verdict.
+    - **New crashes, now fixed.** The round found payloads that made `verify` raise or killed
+      the analysis worker. Each now gets a verdict:
+      - a delay whose unit QPY drops, which fails only when Qiskit first builds the operation:
+        `unverifiable`;
+      - operations that are not Qiskit instructions (an `AnnotatedOperation`, a `Clifford`):
+        outside the basis;
+      - a 4 KB file whose header declares millions of qubits, which made Qiskit's reader abort
+        the worker.
+    - **The pre-read header check.** The headers are now read first. A file is refused
+      (`unverifiable`) when:
+      - its counts exceed the target's qubits, 4,096 clbits, or what the file can hold;
+      - its QPY version is not 16, the adapter's own.
+
+      All 24 dev baseline outputs that were checked pass this.
+    - **Stable reasons.** A symbolic global phase is described by its free parameters, so the
+      reason text no longer includes a memory address.
+
 B8's "the alternating and ZX checkers" is replaced by item 3.
 
 ---

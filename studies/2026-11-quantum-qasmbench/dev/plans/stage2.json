@@ -1,0 +1,598 @@
+{
+  "configs": [
+    {
+      "config_hash": "a33f78cd608e1c017a5d7e1bbeef8daf167423e43d894d545bf6dc801ca57290",
+      "label": "stage1:optimization_level=3,layout_method=default,routing_method=sabre,translation_method=default,seed_transpiler=2+approximation_degree=1.0,qubits_initially_zero=true",
+      "values": {
+        "approximation_degree": 1.0,
+        "hls_mcx": "default",
+        "layout_method": "default",
+        "optimization_level": 3,
+        "qubits_initially_zero": true,
+        "routing_method": "sabre",
+        "seed_transpiler": 2,
+        "translation_method": "default"
+      }
+    },
+    {
+      "config_hash": "54dc162e266fe7bf1268bc836bb00e789775cf2d96e95b9e1fe77b942dcd4977",
+      "label": "stage1:optimization_level=3,layout_method=default,routing_method=sabre,translation_method=synthesis,seed_transpiler=0+approximation_degree=0.99,qubits_initially_zero=false",
+      "values": {
+        "approximation_degree": 0.99,
+        "hls_mcx": "default",
+        "layout_method": "default",
+        "optimization_level": 3,
+        "qubits_initially_zero": false,
+        "routing_method": "sabre",
+        "seed_transpiler": 0,
+        "translation_method": "synthesis"
+      }
+    },
+    {
+      "config_hash": "eb1f575098807a872f9f93ce9109339d3b6213357367b3f8e559e7c6b5938379",
+      "label": "stage1:optimization_level=3,layout_method=default,routing_method=default,translation_method=synthesis,seed_transpiler=0+approximation_degree=1.0,qubits_initially_zero=false",
+      "values": {
+        "approximation_degree": 1.0,
+        "hls_mcx": "default",
+        "layout_method": "default",
+        "optimization_level": 3,
+        "qubits_initially_zero": false,
+        "routing_method": "default",
+        "seed_transpiler": 0,
+        "translation_method": "synthesis"
+      }
+    },
+    {
+      "config_hash": "78f2fa9955a4f0ce218be817aa134e8e1b4d7ce466f06f34043ec6c6b80c6c65",
+      "label": "opt3+approximation_degree=1.0,qubits_initially_zero=true",
+      "values": {
+        "approximation_degree": 1.0,
+        "hls_mcx": "default",
+        "layout_method": "default",
+        "optimization_level": 3,
+        "qubits_initially_zero": true,
+        "routing_method": "default",
+        "seed_transpiler": 0,
+        "translation_method": "default"
+      }
+    },
+    {
+      "config_hash": "c0ec7e4a7b2c6a97e05198500105dd171ff604478a6b1fce31ead71a99ec9814",
+      "label": "opt3+approximation_degree=0.99,qubits_initially_zero=false",
+      "values": {
+        "approximation_degree": 0.99,
+        "hls_mcx": "default",
+        "layout_method": "default",
+        "optimization_level": 3,
+        "qubits_initially_zero": false,
+        "routing_method": "default",
+        "seed_transpiler": 0,
+        "translation_method": "default"
+      }
+    },
+    {
+      "config_hash": "a47e3dc743b3ad48f0e74c3309796599ef52a4a5db95acd37c7e041c4ef2e2d1",
+      "label": "stage1:optimization_level=3,layout_method=default,routing_method=default,translation_method=translator,seed_transpiler=2+approximation_degree=1.0,qubits_initially_zero=true",
+      "values": {
+        "approximation_degree": 1.0,
+        "hls_mcx": "default",
+        "layout_method": "default",
+        "optimization_level": 3,
+        "qubits_initially_zero": true,
+        "routing_method": "default",
+        "seed_transpiler": 2,
+        "translation_method": "translator"
+      }
+    },
+    {
+      "config_hash": "4fad70e6fa56bb6c2e549728e104a369e7eafdae50fb5b029c605c1400d84441",
+      "label": "stage1:optimization_level=3,layout_method=default,routing_method=sabre,translation_method=translator,seed_transpiler=0+approximation_degree=1.0,qubits_initially_zero=false",
+      "values": {
+        "approximation_degree": 1.0,
+        "hls_mcx": "default",
+        "layout_method": "default",
+        "optimization_level": 3,
+        "qubits_initially_zero": false,
+        "routing_method": "sabre",
+        "seed_transpiler": 0,
+        "translation_method": "translator"
+      }
+    },
+    {
+      "config_hash": "9126bd4dd9f9d9e346498ba199e285d892174c3f421c713d880eca3409697dce",
+      "label": "stage1:optimization_level=3,layout_method=default,routing_method=sabre,translation_method=translator,seed_transpiler=2+approximation_degree=0.99,qubits_initially_zero=true",
+      "values": {
+        "approximation_degree": 0.99,
+        "hls_mcx": "default",
+        "layout_method": "default",
+        "optimization_level": 3,
+        "qubits_initially_zero": true,
+        "routing_method": "sabre",
+        "seed_transpiler": 2,
+        "translation_method": "translator"
+      }
+    },
+    {
+      "config_hash": "7fdea4e3d22062c43939c354ecc406885c2f06fd4066a7a9848052ba3016043f",
+      "label": "opt3+approximation_degree=1.0,qubits_initially_zero=false",
+      "values": {
+        "approximation_degree": 1.0,
+        "hls_mcx": "default",
+        "layout_method": "default",
+        "optimization_level": 3,
+        "qubits_initially_zero": false,
+        "routing_method": "default",
+        "seed_transpiler": 0,
+        "translation_method": "default"
+      }
+    },
+    {
+      "config_hash": "1b094e633ab94e739f88813622f0fbbc8dbddc34693d44f2652a89865a1ac83a",
+      "label": "stage1:optimization_level=3,layout_method=default,routing_method=sabre,translation_method=translator,seed_transpiler=2+approximation_degree=0.99,qubits_initially_zero=false",
+      "values": {
+        "approximation_degree": 0.99,
+        "hls_mcx": "default",
+        "layout_method": "default",
+        "optimization_level": 3,
+        "qubits_initially_zero": false,
+        "routing_method": "sabre",
+        "seed_transpiler": 2,
+        "translation_method": "translator"
+      }
+    },
+    {
+      "config_hash": "32d8ef8986cc8b9f4102958444ee150da4fa86426fe7dfa600ea627ab7ff667c",
+      "label": "stage1:optimization_level=3,layout_method=default,routing_method=sabre,translation_method=synthesis,seed_transpiler=0+approximation_degree=1.0,qubits_initially_zero=true",
+      "values": {
+        "approximation_degree": 1.0,
+        "hls_mcx": "default",
+        "layout_method": "default",
+        "optimization_level": 3,
+        "qubits_initially_zero": true,
+        "routing_method": "sabre",
+        "seed_transpiler": 0,
+        "translation_method": "synthesis"
+      }
+    },
+    {
+      "config_hash": "2340d05f91d3c087aa0c2235d0450375eba0a8ae63d8433d08e7e1bfad5fee6e",
+      "label": "stage1:optimization_level=3,layout_method=default,routing_method=sabre,translation_method=default,seed_transpiler=2+approximation_degree=1.0,qubits_initially_zero=false",
+      "values": {
+        "approximation_degree": 1.0,
+        "hls_mcx": "default",
+        "layout_method": "default",
+        "optimization_level": 3,
+        "qubits_initially_zero": false,
+        "routing_method": "sabre",
+        "seed_transpiler": 2,
+        "translation_method": "default"
+      }
+    },
+    {
+      "config_hash": "ed88d2a6dd26a9448c13742ac438ca18583a8585dc9506b1eda4459a788043af",
+      "label": "stage1:optimization_level=3,layout_method=default,routing_method=default,translation_method=translator,seed_transpiler=2+approximation_degree=0.99,qubits_initially_zero=false",
+      "values": {
+        "approximation_degree": 0.99,
+        "hls_mcx": "default",
+        "layout_method": "default",
+        "optimization_level": 3,
+        "qubits_initially_zero": false,
+        "routing_method": "default",
+        "seed_transpiler": 2,
+        "translation_method": "translator"
+      }
+    },
+    {
+      "config_hash": "3229e9e640e6b0aa3732f6e018e339e909beb082cac67b4d800a87fcb346abb3",
+      "label": "stage1:optimization_level=3,layout_method=default,routing_method=sabre,translation_method=translator,seed_transpiler=0+approximation_degree=0.99,qubits_initially_zero=true",
+      "values": {
+        "approximation_degree": 0.99,
+        "hls_mcx": "default",
+        "layout_method": "default",
+        "optimization_level": 3,
+        "qubits_initially_zero": true,
+        "routing_method": "sabre",
+        "seed_transpiler": 0,
+        "translation_method": "translator"
+      }
+    },
+    {
+      "config_hash": "675dfcf01485871ecd2f1b13d3b0998ad1442c97d8a742ce052be5a5e34cbeea",
+      "label": "stage1:optimization_level=3,layout_method=default,routing_method=default,translation_method=synthesis,seed_transpiler=0+approximation_degree=1.0,qubits_initially_zero=true",
+      "values": {
+        "approximation_degree": 1.0,
+        "hls_mcx": "default",
+        "layout_method": "default",
+        "optimization_level": 3,
+        "qubits_initially_zero": true,
+        "routing_method": "default",
+        "seed_transpiler": 0,
+        "translation_method": "synthesis"
+      }
+    },
+    {
+      "config_hash": "4359eac17e058ddedf6037f278406190d28094019465dc2ba41d2f8d114b4866",
+      "label": "stage1:optimization_level=3,layout_method=default,routing_method=sabre,translation_method=default,seed_transpiler=0+approximation_degree=0.99,qubits_initially_zero=true",
+      "values": {
+        "approximation_degree": 0.99,
+        "hls_mcx": "default",
+        "layout_method": "default",
+        "optimization_level": 3,
+        "qubits_initially_zero": true,
+        "routing_method": "sabre",
+        "seed_transpiler": 0,
+        "translation_method": "default"
+      }
+    },
+    {
+      "config_hash": "f6b49fd76fb8a992a594984bdf22a6f1799c7f99faca321d7f025ba87a8106cc",
+      "label": "stage1:optimization_level=3,layout_method=default,routing_method=sabre,translation_method=synthesis,seed_transpiler=0+approximation_degree=1.0,qubits_initially_zero=false",
+      "values": {
+        "approximation_degree": 1.0,
+        "hls_mcx": "default",
+        "layout_method": "default",
+        "optimization_level": 3,
+        "qubits_initially_zero": false,
+        "routing_method": "sabre",
+        "seed_transpiler": 0,
+        "translation_method": "synthesis"
+      }
+    },
+    {
+      "config_hash": "bd93f60f467acb4f8adb219b696fb39369f9a6ae6f70c82155755d748e2a89e0",
+      "label": "stage1:optimization_level=3,layout_method=default,routing_method=default,translation_method=translator,seed_transpiler=0+approximation_degree=1.0,qubits_initially_zero=false",
+      "values": {
+        "approximation_degree": 1.0,
+        "hls_mcx": "default",
+        "layout_method": "default",
+        "optimization_level": 3,
+        "qubits_initially_zero": false,
+        "routing_method": "default",
+        "seed_transpiler": 0,
+        "translation_method": "translator"
+      }
+    },
+    {
+      "config_hash": "76263fa362ce785ad6f5258fae66a68b5edb1046f687b8b9eff4b25688c8dc0e",
+      "label": "opt3+approximation_degree=0.99,qubits_initially_zero=true",
+      "values": {
+        "approximation_degree": 0.99,
+        "hls_mcx": "default",
+        "layout_method": "default",
+        "optimization_level": 3,
+        "qubits_initially_zero": true,
+        "routing_method": "default",
+        "seed_transpiler": 0,
+        "translation_method": "default"
+      }
+    },
+    {
+      "config_hash": "9fba07b3f3e9a7830e1deb4caea14f5e1bfacc15877e73267f8312f31f8411d1",
+      "label": "stage1:optimization_level=3,layout_method=default,routing_method=sabre,translation_method=default,seed_transpiler=0+approximation_degree=1.0,qubits_initially_zero=false",
+      "values": {
+        "approximation_degree": 1.0,
+        "hls_mcx": "default",
+        "layout_method": "default",
+        "optimization_level": 3,
+        "qubits_initially_zero": false,
+        "routing_method": "sabre",
+        "seed_transpiler": 0,
+        "translation_method": "default"
+      }
+    },
+    {
+      "config_hash": "77d0efa5ec6755a07c7cb8dffdf4a58792160689f992110c91cd1cc8a283e86b",
+      "label": "stage1:optimization_level=3,layout_method=default,routing_method=sabre,translation_method=translator,seed_transpiler=0+approximation_degree=1.0,qubits_initially_zero=true",
+      "values": {
+        "approximation_degree": 1.0,
+        "hls_mcx": "default",
+        "layout_method": "default",
+        "optimization_level": 3,
+        "qubits_initially_zero": true,
+        "routing_method": "sabre",
+        "seed_transpiler": 0,
+        "translation_method": "translator"
+      }
+    },
+    {
+      "config_hash": "5d2546b508c9afd31affd0fbfd374c45378b7c49f4f6aa52ccf6f92af3010866",
+      "label": "stage1:optimization_level=3,layout_method=default,routing_method=default,translation_method=translator,seed_transpiler=2+approximation_degree=0.99,qubits_initially_zero=true",
+      "values": {
+        "approximation_degree": 0.99,
+        "hls_mcx": "default",
+        "layout_method": "default",
+        "optimization_level": 3,
+        "qubits_initially_zero": true,
+        "routing_method": "default",
+        "seed_transpiler": 2,
+        "translation_method": "translator"
+      }
+    },
+    {
+      "config_hash": "ecd9d68faa747f0d8fac46872c622603e9d82c7dd44fb72ee53bfad65b03c0e9",
+      "label": "stage1:optimization_level=3,layout_method=default,routing_method=default,translation_method=synthesis,seed_transpiler=0+approximation_degree=0.99,qubits_initially_zero=true",
+      "values": {
+        "approximation_degree": 0.99,
+        "hls_mcx": "default",
+        "layout_method": "default",
+        "optimization_level": 3,
+        "qubits_initially_zero": true,
+        "routing_method": "default",
+        "seed_transpiler": 0,
+        "translation_method": "synthesis"
+      }
+    },
+    {
+      "config_hash": "c2a4a8f420aee9377afc00816e82d8fe5a5b3393a68b52a831b49ce5fc648020",
+      "label": "stage1:optimization_level=3,layout_method=default,routing_method=default,translation_method=default,seed_transpiler=2+approximation_degree=0.99,qubits_initially_zero=true",
+      "values": {
+        "approximation_degree": 0.99,
+        "hls_mcx": "default",
+        "layout_method": "default",
+        "optimization_level": 3,
+        "qubits_initially_zero": true,
+        "routing_method": "default",
+        "seed_transpiler": 2,
+        "translation_method": "default"
+      }
+    },
+    {
+      "config_hash": "d48dcf1203b352ecb82bac178ef0370022562b15b0385e54e44b709f8c0680ea",
+      "label": "stage1:optimization_level=3,layout_method=default,routing_method=default,translation_method=default,seed_transpiler=2+approximation_degree=1.0,qubits_initially_zero=true",
+      "values": {
+        "approximation_degree": 1.0,
+        "hls_mcx": "default",
+        "layout_method": "default",
+        "optimization_level": 3,
+        "qubits_initially_zero": true,
+        "routing_method": "default",
+        "seed_transpiler": 2,
+        "translation_method": "default"
+      }
+    },
+    {
+      "config_hash": "62c8fbb0306b1a96bfb992610baac0ad42b8d25b28ce589b4c6777c1f1ae5373",
+      "label": "stage1:optimization_level=3,layout_method=default,routing_method=default,translation_method=translator,seed_transpiler=0+approximation_degree=0.99,qubits_initially_zero=false",
+      "values": {
+        "approximation_degree": 0.99,
+        "hls_mcx": "default",
+        "layout_method": "default",
+        "optimization_level": 3,
+        "qubits_initially_zero": false,
+        "routing_method": "default",
+        "seed_transpiler": 0,
+        "translation_method": "translator"
+      }
+    },
+    {
+      "config_hash": "9ad7cee870289bbb6d2c145be9b28e16cba34a84c246099a2ac3754665657087",
+      "label": "stage1:optimization_level=3,layout_method=default,routing_method=sabre,translation_method=translator,seed_transpiler=2+approximation_degree=1.0,qubits_initially_zero=false",
+      "values": {
+        "approximation_degree": 1.0,
+        "hls_mcx": "default",
+        "layout_method": "default",
+        "optimization_level": 3,
+        "qubits_initially_zero": false,
+        "routing_method": "sabre",
+        "seed_transpiler": 2,
+        "translation_method": "translator"
+      }
+    },
+    {
+      "config_hash": "e6085688a266f5b31c65996a20abefe20ffc6b731603dbfcc9e82c8c87204fca",
+      "label": "stage1:optimization_level=3,layout_method=default,routing_method=default,translation_method=translator,seed_transpiler=0+approximation_degree=0.99,qubits_initially_zero=true",
+      "values": {
+        "approximation_degree": 0.99,
+        "hls_mcx": "default",
+        "layout_method": "default",
+        "optimization_level": 3,
+        "qubits_initially_zero": true,
+        "routing_method": "default",
+        "seed_transpiler": 0,
+        "translation_method": "translator"
+      }
+    },
+    {
+      "config_hash": "8238a5fbb437f75f0819e6598162c30e050ec7294f6b92c6aad3800ebfdb060c",
+      "label": "stage1:optimization_level=3,layout_method=default,routing_method=default,translation_method=default,seed_transpiler=2+approximation_degree=0.99,qubits_initially_zero=false",
+      "values": {
+        "approximation_degree": 0.99,
+        "hls_mcx": "default",
+        "layout_method": "default",
+        "optimization_level": 3,
+        "qubits_initially_zero": false,
+        "routing_method": "default",
+        "seed_transpiler": 2,
+        "translation_method": "default"
+      }
+    },
+    {
+      "config_hash": "863da5f6105074c926cb190d1e7591fbec14343d6fa17e98ba7c0b82dd7e8e20",
+      "label": "stage1:optimization_level=3,layout_method=default,routing_method=sabre,translation_method=default,seed_transpiler=0+approximation_degree=0.99,qubits_initially_zero=false",
+      "values": {
+        "approximation_degree": 0.99,
+        "hls_mcx": "default",
+        "layout_method": "default",
+        "optimization_level": 3,
+        "qubits_initially_zero": false,
+        "routing_method": "sabre",
+        "seed_transpiler": 0,
+        "translation_method": "default"
+      }
+    },
+    {
+      "config_hash": "799921f6c92323b832a44e01bc62f1e76704f4b692ebe3a83c67eca53e98e1b3",
+      "label": "stage1:optimization_level=3,layout_method=default,routing_method=sabre,translation_method=default,seed_transpiler=2+approximation_degree=0.99,qubits_initially_zero=true",
+      "values": {
+        "approximation_degree": 0.99,
+        "hls_mcx": "default",
+        "layout_method": "default",
+        "optimization_level": 3,
+        "qubits_initially_zero": true,
+        "routing_method": "sabre",
+        "seed_transpiler": 2,
+        "translation_method": "default"
+      }
+    },
+    {
+      "config_hash": "f4c0c00ff6ff637fa4fb7a4297419c647172a88be1ec0ffe96ce8365622ab0a5",
+      "label": "stage1:optimization_level=3,layout_method=default,routing_method=sabre,translation_method=translator,seed_transpiler=2+approximation_degree=1.0,qubits_initially_zero=true",
+      "values": {
+        "approximation_degree": 1.0,
+        "hls_mcx": "default",
+        "layout_method": "default",
+        "optimization_level": 3,
+        "qubits_initially_zero": true,
+        "routing_method": "sabre",
+        "seed_transpiler": 2,
+        "translation_method": "translator"
+      }
+    },
+    {
+      "config_hash": "624dee39ba81f2999ac469a13e7234039c184755c56f523f618048eb5dce62d8",
+      "label": "stage1:optimization_level=3,layout_method=default,routing_method=sabre,translation_method=default,seed_transpiler=0+approximation_degree=1.0,qubits_initially_zero=true",
+      "values": {
+        "approximation_degree": 1.0,
+        "hls_mcx": "default",
+        "layout_method": "default",
+        "optimization_level": 3,
+        "qubits_initially_zero": true,
+        "routing_method": "sabre",
+        "seed_transpiler": 0,
+        "translation_method": "default"
+      }
+    },
+    {
+      "config_hash": "cc7054e006cdc41b63ccd7487b883820cfbdd57613ae5fd97b7d6e92cf6f9722",
+      "label": "stage1:optimization_level=3,layout_method=default,routing_method=sabre,translation_method=translator,seed_transpiler=0+approximation_degree=0.99,qubits_initially_zero=false",
+      "values": {
+        "approximation_degree": 0.99,
+        "hls_mcx": "default",
+        "layout_method": "default",
+        "optimization_level": 3,
+        "qubits_initially_zero": false,
+        "routing_method": "sabre",
+        "seed_transpiler": 0,
+        "translation_method": "translator"
+      }
+    },
+    {
+      "config_hash": "4d905550a04a5ebde31f0aadb306954f14b57cb3d4f5a20a68c54bb45aafc649",
+      "label": "stage1:optimization_level=3,layout_method=default,routing_method=sabre,translation_method=synthesis,seed_transpiler=0+approximation_degree=0.99,qubits_initially_zero=true",
+      "values": {
+        "approximation_degree": 0.99,
+        "hls_mcx": "default",
+        "layout_method": "default",
+        "optimization_level": 3,
+        "qubits_initially_zero": true,
+        "routing_method": "sabre",
+        "seed_transpiler": 0,
+        "translation_method": "synthesis"
+      }
+    },
+    {
+      "config_hash": "97b62f5b74d78dbc8fbf967f54bfb4039d3cac76110eab9a890ba0b6876fcd98",
+      "label": "stage1:optimization_level=3,layout_method=default,routing_method=default,translation_method=translator,seed_transpiler=0+approximation_degree=1.0,qubits_initially_zero=true",
+      "values": {
+        "approximation_degree": 1.0,
+        "hls_mcx": "default",
+        "layout_method": "default",
+        "optimization_level": 3,
+        "qubits_initially_zero": true,
+        "routing_method": "default",
+        "seed_transpiler": 0,
+        "translation_method": "translator"
+      }
+    },
+    {
+      "config_hash": "133d5a7c7e046413dd92f9d4304e396ba5a49f4c1482e3936e0a1d7bbaa62b5b",
+      "label": "stage1:optimization_level=3,layout_method=default,routing_method=default,translation_method=default,seed_transpiler=2+approximation_degree=1.0,qubits_initially_zero=false",
+      "values": {
+        "approximation_degree": 1.0,
+        "hls_mcx": "default",
+        "layout_method": "default",
+        "optimization_level": 3,
+        "qubits_initially_zero": false,
+        "routing_method": "default",
+        "seed_transpiler": 2,
+        "translation_method": "default"
+      }
+    },
+    {
+      "config_hash": "97f9d9624c33221de6d3165e9d182623ecff2f33e78617478f0657e7035e8641",
+      "label": "stage1:optimization_level=3,layout_method=default,routing_method=sabre,translation_method=default,seed_transpiler=2+approximation_degree=0.99,qubits_initially_zero=false",
+      "values": {
+        "approximation_degree": 0.99,
+        "hls_mcx": "default",
+        "layout_method": "default",
+        "optimization_level": 3,
+        "qubits_initially_zero": false,
+        "routing_method": "sabre",
+        "seed_transpiler": 2,
+        "translation_method": "default"
+      }
+    },
+    {
+      "config_hash": "561e618bb7f10568b5e8ed1fc64825ce4ca26d31ab4c3b78bd03dc93fc853e3e",
+      "label": "stage1:optimization_level=3,layout_method=default,routing_method=default,translation_method=translator,seed_transpiler=2+approximation_degree=1.0,qubits_initially_zero=false",
+      "values": {
+        "approximation_degree": 1.0,
+        "hls_mcx": "default",
+        "layout_method": "default",
+        "optimization_level": 3,
+        "qubits_initially_zero": false,
+        "routing_method": "default",
+        "seed_transpiler": 2,
+        "translation_method": "translator"
+      }
+    },
+    {
+      "config_hash": "1128d2888b0007a17ae92b0b69427156a654e4e5789fcdb71a9d21403bee5145",
+      "label": "stage1:optimization_level=3,layout_method=default,routing_method=default,translation_method=synthesis,seed_transpiler=0+approximation_degree=0.99,qubits_initially_zero=false",
+      "values": {
+        "approximation_degree": 0.99,
+        "hls_mcx": "default",
+        "layout_method": "default",
+        "optimization_level": 3,
+        "qubits_initially_zero": false,
+        "routing_method": "default",
+        "seed_transpiler": 0,
+        "translation_method": "synthesis"
+      }
+    }
+  ],
+  "created_at": "2026-11-23T11:19:22+00:00",
+  "decision": "run",
+  "kind": "refine",
+  "note": "",
+  "phase": "dev",
+  "repetition_starts": {},
+  "repetitions": 1,
+  "stage": "stage2",
+  "stage_sha256": "8b98a8dd36bc77ab2469a517e479f35573be8dffe272ade6257c300c57188c31",
+  "stage_sha256_of": "written",
+  "tasks": [
+    "small/iswap_n2",
+    "small/vqe_n4",
+    "small/wstate_n3",
+    "small/ising_n10",
+    "small/bell_n4",
+    "small/teleportation_n3",
+    "small/cat_state_n4",
+    "small/fredkin_n3",
+    "small/toffoli_n3",
+    "small/sat_n7",
+    "small/qec_en_n5",
+    "small/quantumwalks_n2",
+    "small/adder_n10",
+    "small/error_correctiond3_n5",
+    "small/qpe_n9",
+    "small/qft_n4",
+    "medium/bigadder_n18",
+    "medium/ising_n26",
+    "medium/qec9xz_n17",
+    "medium/multiplier_n15",
+    "medium/bv_n19",
+    "medium/sat_n11"
+  ]
+}

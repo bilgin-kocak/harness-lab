@@ -150,16 +150,22 @@ Hardening added after an adversarial review of the first version (2026-11-22):
 Hardening added after a red-team review of the core (2026-11-23), one line per finding:
 
 - A stage that runs nothing stores that decision in its plan; `search` stops at an unfinished stage.
+  A plan whose stage was renamed or removed since stops `search` and the freeze.
 - In any stage that contains the baseline, the baseline's cells run first.
 - Refine, combine and confirm stages refuse to run until every stage before them has finished.
 - A budget refusal waits only while reservations are in flight, so float residue cannot hang it.
 - An attempt that cannot be stored leaves a harness-error record with its charge and reservation.
+  The attempt the core writes for a run that raised is always storable, so it stays a failure.
 - Combine counts only single-knob additions on top of the reference, never undoing its knobs.
 - An unavailable attempt is a harness error: never verified, never a loss, and the cell runs again.
+  The coding adapter reports one only when the harness never ran.
 - `results.json`, the Markdown tables and `study check` say when robustness is not compared.
-- Plans and the freeze hash the spec as written, so a new optional field invalidates nothing.
-- The study lock is re-entrant for its owner only; a concurrent step in one process is refused.
-- `study check` validates comparator levels; a configuration error exits 2 with a message.
+- Plans and the freeze hash the spec as written, so a new optional field invalidates nothing; the
+  freeze also keeps the sealed sections in effect, so a default changed since is refused.
+- Only the task or thread that took the study lock may enter it again; any other step in the
+  process is refused, even one the holder started as a task.
+- `study check` validates comparator levels; a configuration error, or a stage naming an unknown
+  knob, exits 2 with a message.
 
 ### How the coding adapter maps onto the contract
 
@@ -168,7 +174,7 @@ Hardening added after a red-team review of the core (2026-11-23), one line per f
 | `load_tasks` | `load_suite()` → `TaskSpec` per ID; `content_hash` = the task's spec hash combined with the fixture's base commit (what `task_hash` records today). |
 | `search_space` | The sweep's factors (`FactorLevels`) over its `base_variant`. |
 | `baseline_config` | The sweep's `baseline` levels, or a named suite variant. |
-| `run` | `ExperimentService.execute_run` for one cell: worktree, setup, runner, diff capture, hidden-test verifier, metrics. Returns the stored run as the attempt. |
+| `run` | `ExperimentService.execute_run` for one cell: worktree, setup, runner, diff capture, hidden-test verifier, metrics. Returns the stored run as the attempt; it is `unavailable` only when the harness never ran. |
 | `verify` | Returns the verdict that `CommandVerifier` recorded during `run`. |
 | `metrics` | The run's metrics: tokens, cost, LLM calls, tool calls, files changed, wall time, safety counts. |
 

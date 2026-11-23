@@ -48,6 +48,7 @@ from harnesslab.domains.quantum.adapter import (  # noqa: E402
 )
 from harnesslab.domains.quantum.compile import (  # noqa: E402
     BASELINE,
+    QPY_VERSION,
     NonUnitaryCircuit,
     WorkerDied,
     WorkerPool,
@@ -209,10 +210,14 @@ def compiled(attempt: Attempt) -> QuantumCircuit:
 
 
 def attempt_with(task: Task, circuit: QuantumCircuit) -> Attempt:
-    """An attempt whose output is ``circuit``, written with plain (default-version) QPY."""
+    """An attempt whose output is ``circuit``, written as plain QPY of the adapter's version."""
     buffer = io.BytesIO()
-    qpy.dump(circuit, buffer)
-    data = buffer.getvalue()
+    qpy.dump(circuit, buffer, version=QPY_VERSION)
+    return attempt_with_bytes(task, buffer.getvalue())
+
+
+def attempt_with_bytes(task: Task, data: bytes) -> Attempt:
+    """An attempt whose payload is exactly ``data``."""
     return Attempt(
         task_id=task.id,
         config_hash="variant",
@@ -1266,6 +1271,14 @@ async def test_unreadable_payloads_and_slow_analyses_are_unverifiable(
         verdict = await fresh.verify(task, attempt, verify_ctx(tmp_path))
         assert verdict.status == VerdictStatus.UNVERIFIABLE
         assert verdict.details["decided_by"] == "load"
+        assert "the compiled circuit is not read: the QPY headers cannot be read" in verdict.reason
+        # Valid headers, truncated body: Qiskit's reader fails, which is a verdict too.
+        real = await fresh.run(task, fresh.baseline_config(), run_ctx(tmp_path, 2))
+        truncated = real.payload[: len(real.payload) * 2 // 3]
+        verdict = await fresh.verify(
+            task, attempt_with_bytes(task, truncated), verify_ctx(tmp_path)
+        )
+        assert verdict.status == VerdictStatus.UNVERIFIABLE
         assert "QPY cannot read the compiled circuit back" in verdict.reason
     finally:
         await fresh.close()
@@ -1288,6 +1301,87 @@ async def test_a_disagreement_inside_the_tolerance_gap_is_unverifiable(
     attempt_b = attempt_with(task_b, with_angle_pair(compiled(base_b), 1e-7, 0.0))
     verdict_b = await adapter.verify(task_b, attempt_b, verify_ctx(tmp_path))
     assert verdict_b.status == VerdictStatus.FAIL and verdict_b.details["decided_by"] == "qcec"
+
+
+def _with_header_count(data: bytes, field: str, value: int) -> bytes:
+    """``data`` with one count of its QPY v16 circuit header replaced (the rest untouched)."""
+    import struct
+
+    from qiskit.qpy import formats
+
+    offset = struct.unpack_from(
+        formats.CIRCUIT_TABLE_ENTRY_PACK, data, formats.FILE_HEADER_V10_SIZE + 1
+    )[0]
+    header = formats.CIRCUIT_HEADER_V12._make(
+        struct.unpack_from(formats.CIRCUIT_HEADER_V12_PACK, data, offset)
+    )
+    patched = struct.pack(formats.CIRCUIT_HEADER_V12_PACK, *header._replace(**{field: value}))
+    return data[:offset] + patched + data[offset + len(patched) :]
+
+
+@pytest.mark.parametrize("task_id", ["small/ghz_n3", "medium/wide_n5"])
+async def test_late_failing_operations_and_qpy_bombs_are_verdicts_not_crashes(
+    adapter: QiskitQasmBenchAdapter, tmp_path: Path, task_id: str
+):
+    """Re-attack of verifier v2: payloads that made verify() raise or killed its worker."""
+    from qiskit.circuit import AnnotatedOperation, ControlModifier
+    from qiskit.circuit.library import XGate
+    from qiskit.quantum_info import Clifford
+
+    task, base = await baseline_attempt(adapter, task_id, tmp_path)
+    circuit = compiled(base)
+    qubit = positions(circuit)[1][0]
+
+    # A real delay whose unit QPY drops: Qiskit fails only when the operation is first read.
+    delayed = circuit.copy()
+    delayed.delay(1e-6, qubit, unit="s")
+    verdict = await adapter.verify(task, attempt_with(task, delayed), verify_ctx(tmp_path))
+    assert verdict.status == VerdictStatus.UNVERIFIABLE, verdict.reason
+    assert verdict.details["decided_by"] == "load" and "cannot be read" in verdict.reason
+
+    # Operations that are not Instructions (no base_class): outside the basis.
+    for operation, qubits in (
+        (AnnotatedOperation(XGate(), ControlModifier(1)), [0, 1]),
+        (Clifford(QuantumCircuit(1)), [qubit]),
+    ):
+        odd = circuit.copy()
+        odd.append(operation, qubits)
+        verdict = await adapter.verify(task, attempt_with(task, odd), verify_ctx(tmp_path))
+        assert verdict.status == VerdictStatus.FAIL, verdict.reason
+        assert verdict.details["decided_by"] == "target"
+        assert "outside the basis" in verdict.reason
+
+    # A few kilobytes declaring millions of bits: refused before Qiskit's reader allocates them.
+    for field in ("num_qubits", "num_clbits"):
+        bomb = _with_header_count(base.payload, field, 16_000_000)
+        verdict = await adapter.verify(task, attempt_with_bytes(task, bomb), verify_ctx(tmp_path))
+        assert verdict.status == VerdictStatus.UNVERIFIABLE, verdict.reason
+        assert "declares 16000000" in verdict.reason
+    other = io.BytesIO()
+    qpy.dump(circuit, other, version=QPY_VERSION + 1)
+    verdict = await adapter.verify(
+        task, attempt_with_bytes(task, other.getvalue()), verify_ctx(tmp_path)
+    )
+    assert verdict.status == VerdictStatus.UNVERIFIABLE
+    assert f"not the adapter's {QPY_VERSION}" in verdict.reason
+
+
+async def test_a_symbolic_phase_gets_the_same_reason_in_every_process(
+    study: Path, dataset: tuple[Path, str], tmp_path: Path
+):
+    reasons = []
+    for _ in range(2):
+        fresh = make_adapter(study, dataset, workers=1)
+        try:
+            task, base = await baseline_attempt(fresh, "small/ghz_n3", tmp_path)
+            phased = with_phase(compiled(base), _parameter() * 0 + 0.5)
+            verdict = await fresh.verify(task, attempt_with(task, phased), verify_ctx(tmp_path))
+        finally:
+            await fresh.close()
+        assert verdict.status == VerdictStatus.FAIL
+        reasons.append(verdict.reason)
+    assert reasons[0] == reasons[1] and "0x" not in reasons[0]
+    assert "an expression with free parameters ['p']" in reasons[0]
 
 
 # --- the exact check on its own ---------------------------------------------------------------

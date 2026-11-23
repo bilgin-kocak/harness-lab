@@ -41,6 +41,7 @@ from __future__ import annotations
 import io
 import math
 import numbers
+import struct
 import time
 from collections import Counter, OrderedDict
 from collections.abc import Callable, Mapping, Sequence
@@ -63,6 +64,8 @@ TARGET_CHECK_ID = "target-validity/2"
 FIDELITY_TOLERANCE = 1e-9
 AMPLITUDE_TOLERANCE = 1e-7
 # The counts of attempt.output that verify() compares with the payload (see the adapter).
+# More classical bits than any input of the study keeps after removing final measurements.
+MAX_CLBITS = 4096
 COUNT_KEYS = (
     "two_qubit_gates",
     "depth",
@@ -147,6 +150,20 @@ def _identities() -> tuple[type, ...]:
     return (Barrier, Delay)
 
 
+def describe_value(value: Any) -> str:
+    """A stable description of a parameter value for a verdict's reason.
+
+    A parameter expression's ``repr`` carries a memory address, which would make the same bytes
+    give a different reason in each process; it is described by its free parameters instead.
+    """
+    from qiskit.circuit import ParameterExpression
+
+    if isinstance(value, ParameterExpression):
+        names = sorted(str(p.name) for p in value.parameters)
+        return f"(an expression with free parameters {names})" if names else f"({value})"
+    return repr(value)
+
+
 def register_problem(circuit: Any) -> str | None:
     """Why the circuit's qubits are not exactly one register in circuit order (None if they are)."""
     registers = list(circuit.qregs)
@@ -178,8 +195,9 @@ def scan_target(circuit: Any, spec: Mapping[str, Any]) -> tuple[list[str], set[i
     touched: set[int] = set()
     for inst in circuit.data:
         op = inst.operation
-        name = op.name
-        if op.base_class in identities and not inst.clbits:
+        name = str(getattr(op, "name", type(op).__name__))
+        base = getattr(op, "base_class", None)  # None: not an Instruction (a Clifford, say)
+        if base in identities and not inst.clbits:
             continue
         qubits = tuple(index[q] for q in inst.qubits)
         touched.update(qubits)
@@ -189,7 +207,7 @@ def scan_target(circuit: Any, spec: Mapping[str, Any]) -> tuple[list[str], set[i
             continue
         cls, arity, num_params = expected
         if (
-            op.base_class is not cls
+            base is not cls
             or len(qubits) != arity
             or len(op.params) != num_params
             or getattr(op, "ctrl_state", 1) != 1
@@ -207,7 +225,9 @@ def scan_target(circuit: Any, spec: Mapping[str, Any]) -> tuple[list[str], set[i
     if registers is not None:
         problems.append(registers)
     if finite_real(circuit.global_phase) is None:
-        problems.append(f"the global phase {circuit.global_phase!r} is not a finite real number")
+        problems.append(
+            f"the global phase {describe_value(circuit.global_phase)} is not a finite real number"
+        )
     if outside:
         problems.append(
             f"{outside.total()} operations outside the basis {{{', '.join(basis)}}}: "
@@ -253,7 +273,7 @@ def canonical_circuit(circuit: Any) -> Any:
         canonical._layout = circuit.layout
     for inst in circuit.data:
         op = inst.operation
-        base = op.base_class
+        base = getattr(op, "base_class", None)
         if base in identities and not inst.clbits:
             continue
         known = standard.get(base)
@@ -434,14 +454,64 @@ def reference_unitary(source: str, sha256: str, name: str) -> np.ndarray:
     return unitary
 
 
-def read_compiled(path: Path, sha256: str) -> tuple[Any | None, str | None]:
-    """``(circuit, None)`` from a QPY file, or ``(None, why)`` when QPY cannot read it back.
+def qpy_header_problem(data: bytes, max_qubits: int, max_clbits: int) -> str | None:
+    """Why a QPY file must not be handed to Qiskit's reader (None when it may).
+
+    Reads only the fixed-size headers of a version-16 file: the file header, the program type
+    key and offset table, and the circuit header. Qiskit's reader creates every declared bit
+    before anything else and aborts the process when memory runs out, so a 4 KB file declaring
+    millions of qubits kills the worker; such counts are refused here. Counts that cannot fit in
+    the file (registers, instructions, variables) are refused too.
+    """
+    from qiskit.qpy import formats
+
+    from harnesslab.domains.quantum.compile import QPY_VERSION
+
+    try:
+        head = formats.FILE_HEADER_V10._make(
+            struct.unpack_from(formats.FILE_HEADER_V10_PACK, data, 0)
+        )
+        if head.preface != b"QISKIT":
+            return "not a QPY file"
+        if head.qpy_version != QPY_VERSION:
+            return f"QPY version {head.qpy_version}, not the adapter's {QPY_VERSION}"
+        if head.num_programs != 1:
+            return f"the QPY file holds {head.num_programs} programs, not one"
+        position = formats.FILE_HEADER_V10_SIZE
+        if data[position : position + 1] != b"q":
+            return "the QPY file does not hold a circuit"
+        (offset,) = struct.unpack_from(formats.CIRCUIT_TABLE_ENTRY_PACK, data, position + 1)
+        header = formats.CIRCUIT_HEADER_V12._make(
+            struct.unpack_from(formats.CIRCUIT_HEADER_V12_PACK, data, offset)
+        )
+    except struct.error as exc:
+        return f"the QPY headers cannot be read: {exc}"
+    if header.num_qubits > max_qubits:
+        return f"the QPY header declares {header.num_qubits} qubits, the target has {max_qubits}"
+    if header.num_clbits > max_clbits:
+        return f"the QPY header declares {header.num_clbits} clbits, more than {max_clbits}"
+    for field in ("num_registers", "num_instructions", "num_vars"):
+        if getattr(header, field) > len(data):
+            return (
+                f"the QPY header declares {getattr(header, field)} {field[4:]} in {len(data)} bytes"
+            )
+    return None
+
+
+def read_compiled(
+    path: Path, sha256: str, max_qubits: int, max_clbits: int = MAX_CLBITS
+) -> tuple[Any | None, str | None]:
+    """``(circuit, None)`` from a QPY file, or ``(None, why)`` when it cannot be read back.
 
     The file must match ``sha256`` (a mismatch raises: the harness, not the output, is wrong).
+    Its headers are checked first (:func:`qpy_header_problem`).
     """
     from qiskit import qpy
 
     data = read_verified(path, sha256)
+    refused = qpy_header_problem(data, max_qubits, max_clbits)
+    if refused is not None:
+        return None, f"the compiled circuit is not read: {refused}"
     try:
         circuits = qpy.load(io.BytesIO(data))
     except Exception as exc:  # any reader failure: the output cannot be checked
@@ -467,21 +537,31 @@ def analyze_job(
     qubits that do not start with an input qubit. ``load_error`` is set when QPY cannot read
     the file back. The exact check reads :func:`canonical_circuit`.
     """
-    compiled, load_error = read_compiled(Path(compiled_path), compiled_sha256)
+    compiled, load_error = read_compiled(
+        Path(compiled_path), compiled_sha256, int(target_spec["num_qubits"])
+    )
     if compiled is None:
         return {"load_error": load_error, "target_problems": []}
-    problems, touched = scan_target(compiled, target_spec)
+    try:  # QPY builds each operation when it is first read; that can fail late (a delay's unit)
+        problems, touched = scan_target(compiled, target_spec)
+    except Exception as exc:  # the payload, not the harness: recorded, never a pass
+        return {
+            "load_error": f"the compiled circuit cannot be read: {type(exc).__name__}: {exc}",
+            "target_problems": [],
+        }
     result: dict[str, Any] = {"target_problems": problems, "physical_qubits": len(touched)}
     try:
         initial, final = layout_positions(compiled, num_inputs)
     except LayoutProblem as exc:
         problems.append(f"layout: {exc}")
         return result
-    result["counts"] = describe_compiled(compiled, num_inputs)
     active = touched | set(initial) | set(final)
     result["active_qubits"] = len(active)
     result["active_ancillas"] = len(active - set(initial))
-    if problems or exact_input is None:
+    if problems:
+        return result
+    result["counts"] = describe_compiled(compiled, num_inputs)
+    if exact_input is None:
         return result
     result["exact"] = exact_isometry_check(
         lambda: reference_unitary(*exact_input),

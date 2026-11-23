@@ -233,6 +233,42 @@ def test_the_lock_is_re_entrant_for_its_owner_only(tmp_path: Path):
     assert [r["repetition"] for r in store.records("dev")] == [0, 1, 2]
 
 
+def test_the_lock_is_released_when_its_last_block_ends(tmp_path: Path):
+    # A task started under the lock holds it too; if it is still inside a block of its own when
+    # the block that took the lock ends, the OS lock stays held until it is done.
+    store = StudyStore(tmp_path)
+    another_process = StudyStore(tmp_path)
+
+    async def scenario() -> list[str]:
+        seen: list[str] = []
+        inside, finish = asyncio.Event(), asyncio.Event()
+
+        async def child() -> None:
+            with store.locked():
+                inside.set()
+                await finish.wait()
+                store.append("dev", {"task_id": "d0", "config_hash": "x", "repetition": 0})
+
+        with store.locked():
+            task = asyncio.create_task(child())
+            await inside.wait()
+        try:
+            with another_process.locked():
+                seen.append("taken while the child held it")
+        except StudyLockedError:
+            seen.append("still held")
+        with pytest.raises(RuntimeError, match="without holding its lock"):
+            store.append("dev", {"task_id": "d1", "config_hash": "x", "repetition": 0})
+        finish.set()
+        await task
+        with another_process.locked():
+            seen.append("released")
+        return seen
+
+    assert asyncio.run(scenario()) == ["still held", "released"]
+    assert len(store.records("dev")) == 1
+
+
 def test_two_valid_records_for_one_cell_make_the_phase_untrustworthy():
     rec = {"task_id": "d0", "config_hash": "x", "repetition": 0}
     with pytest.raises(Exception, match="two valid records"):

@@ -125,7 +125,8 @@ class StudyStore:
         processes can never run the same cells or spend the same budget twice. It is re-entrant
         for its owner only: the thread, or the asyncio task and the tasks it starts, that took
         it. Another step of the same process (a concurrent task or thread) is refused like
-        another process, and the OS lock is released when the owner's outermost block ends.
+        another process. Each block entered counts; the OS lock is released when the count
+        returns to 0 (the last block to end, even one a started task entered).
         """
         if self._lock_fh is not None:
             if not self._owned():
@@ -137,7 +138,7 @@ class StudyStore:
             try:
                 yield
             finally:
-                self._depth -= 1
+                self._leave()
             return
         self.root.mkdir(parents=True, exist_ok=True)
         fh = open(self.lock_path, "a+")  # noqa: SIM115 - held for the duration of the block
@@ -162,11 +163,17 @@ class StudyStore:
         try:
             yield
         finally:
-            self._lock_fh, self._owner, self._depth = None, None, 0
+            # this context no longer holds the lock, whoever else still does
             try:
                 _HELD_LOCKS.reset(reset)
             except ValueError:  # exited in another context than it was entered
                 _HELD_LOCKS.set(tuple(t for t in _HELD_LOCKS.get() if t is not token))
+            self._leave()
+
+    def _leave(self) -> None:
+        self._depth -= 1
+        if self._depth == 0:
+            fh, self._lock_fh, self._owner = self._lock_fh, None, None
             fh.close()  # closing the file releases the lock
 
     def _require_lock(self) -> None:

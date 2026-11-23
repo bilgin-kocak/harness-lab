@@ -17,8 +17,10 @@ Steps, each printed with PASS or FAIL:
    adapter, provenance, sealed spec sections, dev records, re-ranking gives the frozen choice).
 3. **Report.** ``results.json`` is recomputed from the committed records (``*.jsonl.gz``
    decompressed into a scratch copy of the study) and every held-out comparison must match.
-4. ``--rerun-held-out``: every held-out cell is compiled again with the adapter (deterministic:
-   fixed seeds, canonical QPY) and its output hash must equal the recorded one.
+4. ``--rerun-held-out``: every held-out cell is compiled again with the adapter (fixed seeds,
+   canonical QPY). Its two-qubit gates, depth and size must equal the recorded ones, and its
+   bytes must too, except on circuits whose records flag the compiler as nondeterministic (the
+   repeated compilations of one attempt differed); every cell that differs is listed.
    ``--reverify N`` also re-runs the verifier on N recorded held-out cells per configuration
    and compares verdicts. Re-running reads held-out circuits, which is fine after the freeze.
 
@@ -156,9 +158,15 @@ async def _rerun(study, freeze: dict, rerun: bool, reverify: int) -> bool:  # no
     tasks = {t.id: t for t in study.adapter.load_tasks(study.held_out_ids)}
     cells = study.held_out_cells(freeze, list(tasks.values()))
     ok = True
-    mismatched = 0
+    mismatched: list[str] = []
+    counts_differ: list[str] = []
     checked = 0
     per_config: dict[str, int] = {}
+    flagged = {
+        r["task_id"]
+        for r in records.values()
+        if (r["attempt"].get("details") or {}).get("nondeterministic")
+    }
     with tempfile.TemporaryDirectory() as tmp:
         (Path(tmp) / "a").mkdir()
         for cell in cells:
@@ -177,8 +185,18 @@ async def _rerun(study, freeze: dict, rerun: bool, reverify: int) -> bool:  # no
             if not rerun and per_config.get(cell.config.config_hash, 0) >= reverify:
                 continue
             attempt = await study.adapter.run(cell.task, cell.config, ctx)
-            same = attempt.output.get("qpy_sha256") == rec["attempt"]["output"].get("qpy_sha256")
-            mismatched += not same
+            recorded = rec["attempt"]["output"]
+            same = attempt.output.get("qpy_sha256") == recorded.get("qpy_sha256")
+            keys = ("two_qubit_gates", "depth", "size")
+            same_counts = all(attempt.output.get(k) == recorded.get(k) for k in keys)
+            label = f"{cell.task.id} / {cell.config.label}"
+            if not same:
+                mismatched.append(
+                    label
+                    + (" (nondeterministic in the records)" if cell.task.id in flagged else "")
+                )
+            if not same_counts:
+                counts_differ.append(label)
             checked += 1
             if per_config.get(cell.config.config_hash, 0) < reverify:
                 per_config[cell.config.config_hash] = per_config.get(cell.config.config_hash, 0) + 1
@@ -194,8 +212,20 @@ async def _rerun(study, freeze: dict, rerun: bool, reverify: int) -> bool:  # no
                 )
                 if verdict.status.value != (rec.get("verdict") or {}).get("status"):
                     ok &= _ok(f"re-verified {cell.task.id} / {cell.config.label}", False)
+    for label in mismatched:
+        print(f"  differs in bytes: {label}")
+    unflagged = [m for m in mismatched if not m.endswith("(nondeterministic in the records)")]
     ok &= _ok(
-        "held-out outputs recompiled", mismatched == 0, f"{checked} cells, {mismatched} differ"
+        "held-out outputs recompiled byte-identical, except on circuits the records flag as "
+        "nondeterministic",
+        not unflagged,
+        f"{checked} cells, {len(mismatched)} differ in bytes, {len(unflagged)} of them unflagged",
+    )
+    ok &= _ok(
+        "recompiled two-qubit gates, depth and size equal the recorded ones",
+        not counts_differ,
+        f"{checked} cells, {len(counts_differ)} differ"
+        + (f": {counts_differ[:10]}" if counts_differ else ""),
     )
     return ok
 

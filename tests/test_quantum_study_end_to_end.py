@@ -280,4 +280,5 @@ def test_the_quantum_study_runs_end_to_end_and_reproduces(tmp_path: Path, capsys
     out = capsys.readouterr().out
     assert code == 0, out
     assert "ALL PASS" in out and "[FAIL]" not in out
-    assert "[PASS] held-out outputs recompiled" in out
+    assert "[PASS] held-out outputs recompiled byte-identical" in out
+    assert "[PASS] recompiled two-qubit gates, depth and size equal the recorded ones" in out

@@ -87,8 +87,9 @@ budget:
   # 12 calls x (32,000 output tokens at $20/M + ~48,000 input tokens at $4/M) is about $9.98,
   # so an attempt can never be cut short by this reservation before its own call cap.
   cost_limit_per_attempt_usd: 10.0
-  # Set from the smoke test before stage 1 (A9): 1.25 x the projected held-out cost.
-  held_out_reserve_usd: 0.0
+  # Set from the smoke test before stage 1 (A9): 1.25 x the projected held-out cost, upper bound
+  # ($14.03 x 1.25; smoke/project_cost.txt). The owner approved the run on 2026-11-23.
+  held_out_reserve_usd: 17.53
 
 held_out:
   repetitions: 3

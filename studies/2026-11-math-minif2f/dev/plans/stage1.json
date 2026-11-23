@@ -1,0 +1,130 @@
+{
+  "configs": [
+    {
+      "config_hash": "980e935d0d7eae91f170b863a9f56f57870bcc2fe908bd200d22c7980d952382",
+      "label": "baseline",
+      "values": {
+        "context_limit_tokens": 12000,
+        "feedback_rounds": 0,
+        "planning": false,
+        "retries": 1,
+        "retrieval": "none",
+        "tactic_tools": "none"
+      }
+    },
+    {
+      "config_hash": "a27611937c6fba48d3a49744ac0545a9388a1848d1e4cd4fa694dcc8d5e334ce",
+      "label": "F+retrieval",
+      "values": {
+        "context_limit_tokens": 12000,
+        "feedback_rounds": 3,
+        "planning": false,
+        "retries": 1,
+        "retrieval": "mathlib_names",
+        "tactic_tools": "none"
+      }
+    },
+    {
+      "config_hash": "c64a4b3fd9d0b88d110043bb227a98a4183758f1c7d736c0076025e7927245d2",
+      "label": "F+tactics",
+      "values": {
+        "context_limit_tokens": 12000,
+        "feedback_rounds": 3,
+        "planning": false,
+        "retries": 1,
+        "retrieval": "none",
+        "tactic_tools": "probe"
+      }
+    },
+    {
+      "config_hash": "44894b956b0abc2b81e3a942c7f95aff1f028d66e46ff431c6880ae7ed9e326a",
+      "label": "F+planning",
+      "values": {
+        "context_limit_tokens": 12000,
+        "feedback_rounds": 3,
+        "planning": true,
+        "retries": 1,
+        "retrieval": "none",
+        "tactic_tools": "none"
+      }
+    },
+    {
+      "config_hash": "370f4767efe754fb84b7a1622b75d7a582d75512d35c6f19bcb9d4e0af984638",
+      "label": "F+context48k",
+      "values": {
+        "context_limit_tokens": 48000,
+        "feedback_rounds": 3,
+        "planning": false,
+        "retries": 1,
+        "retrieval": "none",
+        "tactic_tools": "none"
+      }
+    },
+    {
+      "config_hash": "37f78cb9d35ff2de8e0d84da8a2f995d04ff0dbede6e595a2332d8ed1fc43afd",
+      "label": "F",
+      "values": {
+        "context_limit_tokens": 12000,
+        "feedback_rounds": 3,
+        "planning": false,
+        "retries": 1,
+        "retrieval": "none",
+        "tactic_tools": "none"
+      }
+    },
+    {
+      "config_hash": "acb96dab9e5f94c984b9d7041e0ff9bede34fdf8a06885797d59cfbc50fea8d0",
+      "label": "F+retries2",
+      "values": {
+        "context_limit_tokens": 12000,
+        "feedback_rounds": 3,
+        "planning": false,
+        "retries": 2,
+        "retrieval": "none",
+        "tactic_tools": "none"
+      }
+    }
+  ],
+  "created_at": "2026-11-23T13:37:23+00:00",
+  "decision": "run",
+  "kind": "explicit",
+  "note": "",
+  "phase": "dev",
+  "repetition_starts": {},
+  "repetitions": 1,
+  "stage": "stage1",
+  "stage_sha256": "16a79eee07aa579b5c7a2340c52fb4a824a547dc756d27a9681b3bd0d56b1378",
+  "stage_sha256_of": "written",
+  "tasks": [
+    "aimeII_2020_p6",
+    "mathd_numbertheory_30",
+    "imo_1964_p1_2",
+    "mathd_algebra_405",
+    "amc12b_2002_p3",
+    "induction_ineq_nsqlefactn",
+    "induction_sum_1oktkp1",
+    "mathd_algebra_73",
+    "algebra_sqineq_2at2pclta2c2p41pc",
+    "aime_1987_p8",
+    "mathd_algebra_493",
+    "mathd_numbertheory_92",
+    "aime_1996_p5",
+    "mathd_numbertheory_284",
+    "amc12a_2019_p21",
+    "mathd_algebra_327",
+    "mathd_numbertheory_32",
+    "mathd_algebra_126",
+    "imo_1961_p1",
+    "mathd_algebra_109",
+    "mathd_algebra_185",
+    "mathd_numbertheory_43",
+    "mathd_numbertheory_252",
+    "amc12a_2008_p15",
+    "mathd_numbertheory_461",
+    "mathd_algebra_31",
+    "algebra_manipexpr_apbeq2cceqiacpbceqm2",
+    "mathd_algebra_455",
+    "imo_2006_p3",
+    "mathd_numbertheory_709"
+  ]
+}

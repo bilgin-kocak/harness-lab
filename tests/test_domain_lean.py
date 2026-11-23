@@ -1110,6 +1110,66 @@ async def test_api_errors_end_the_attempt_and_unknown_costs_are_charged(tmp_path
     assert attempt.usage.cost_usd == (pytest.approx(worst) if charged else 0)
 
 
+@pytest.mark.parametrize(
+    ("error", "status"),
+    [
+        (LLMCallError("overloaded", billed=False, infrastructure=True), AttemptStatus.UNAVAILABLE),
+        (LLMCallError("reset", billed=None, infrastructure=True), AttemptStatus.UNAVAILABLE),
+        (LLMCallError("prompt is too long", billed=False), AttemptStatus.ERROR),
+    ],
+)
+async def test_infrastructure_failures_are_unavailable_not_failed(tmp_path, error, status):
+    """An API failure that says nothing about the configuration is no outcome (the core then
+    records a harness error and runs the cell again); an invalid request is a failed attempt."""
+    adapter, _, _ = make_adapter(tmp_path, script=[error])
+    task = adapter.load_tasks(["fixture_dev_one"])[0]
+    attempt = await adapter.run(task, adapter.baseline_config(), run_ctx(tmp_path))
+    assert attempt.status == status and attempt.details["api_errors"] == 1
+    if status == AttemptStatus.UNAVAILABLE:
+        assert attempt.details["stop"] == "error:unavailable"
+        assert attempt.error.startswith("API unavailable: ")
+
+
+def test_which_sdk_errors_are_infrastructure():
+    from harnesslab.domains.lean.llm import infrastructure_failure
+
+    def status(code):
+        return SimpleNamespace(status_code=code)
+
+    for code in (401, 403, 404, 408, 409, 429, 500, 502, 503, 504, 529):
+        assert infrastructure_failure(status(code)), code
+    for code in (400, 413, 422, 200):
+        assert not infrastructure_failure(status(code)), code
+    assert infrastructure_failure(RuntimeError("connection reset"))  # no status at all
+
+
+async def test_the_client_needs_the_key_and_pins_the_endpoint(monkeypatch):
+    anthropic = pytest.importorskip("anthropic")
+    from harnesslab.domains.lean.llm import API_BASE_URL
+
+    client = AnthropicMessagesClient(model=MODEL, effort="medium", max_tokens=32000)
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    with pytest.raises(LLMCallError, match="ANTHROPIC_API_KEY is not set") as missing:
+        await client.complete("s", [{"role": "user", "content": "x"}], [])
+    assert missing.value.infrastructure is True and missing.value.billed is False
+    built = {}
+
+    class Recorder:
+        def __init__(self, **kwargs):
+            built.update(kwargs)
+
+    monkeypatch.setattr(anthropic, "AsyncAnthropic", Recorder)
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test-not-a-real-key")
+    monkeypatch.setenv("ANTHROPIC_BASE_URL", "https://elsewhere.invalid")
+    client._sdk_client()
+    assert built == {
+        "api_key": "sk-test-not-a-real-key",
+        "base_url": API_BASE_URL,
+        "max_retries": 2,
+    }
+    assert API_BASE_URL == "https://api.anthropic.com"
+
+
 async def test_metrics_are_complete_and_pure(tmp_path):
     adapter, _, _ = make_adapter(tmp_path, script=[proof_reply("linarith")])
     task = adapter.load_tasks(["fixture_dev_one"])[0]

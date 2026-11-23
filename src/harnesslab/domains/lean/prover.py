@@ -270,7 +270,14 @@ class Prover:
             state.last_proof, state.inloop_passed = None, None
         except LLMCallError as exc:
             state.api_errors += 1
-            status, error, state.stop = AttemptStatus.ERROR, f"API error: {exc}", "error"
+            if exc.infrastructure:  # nothing about the configuration: no outcome, run again
+                status, error, state.stop = (
+                    AttemptStatus.UNAVAILABLE,
+                    f"API unavailable: {exc}",
+                    "error:unavailable",
+                )
+            else:
+                status, error, state.stop = AttemptStatus.ERROR, f"API error: {exc}", "error"
         except Exception as exc:  # recorded as an error attempt, with what was spent so far
             status, error, state.stop = AttemptStatus.ERROR, f"{type(exc).__name__}: {exc}", "error"
         for record in state.rounds:

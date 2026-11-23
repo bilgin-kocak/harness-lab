@@ -175,8 +175,9 @@ class AttemptStatus(StrEnum):
     TIMEOUT = "timeout"
     REFUSED = "refused"  # a model declined; counted, never retried on another model
     ERROR = "error"
-    # The system could not start at all: the core records no outcome (a harness error) and runs
-    # the cell again later; it is never verified or counted as a failure.
+    # The system could not start, or its infrastructure failed (credentials refused, rate limit,
+    # outage): nothing about the configuration under test. The core records no outcome (a harness
+    # error) and runs the cell again later; it is never verified or counted as a failure.
     UNAVAILABLE = "unavailable"
 
 

@@ -13,6 +13,11 @@ that already has a valid record is never run again.
 - **Network.** github.com (miniF2F, Mathlib), the Mathlib cache server (`lake exe cache get`)
   and api.anthropic.com.
 
+- **A stop with `unavailable`.** If the API fails for reasons that have nothing to do with the
+  configuration (no key, credentials refused, rate limit, overload, a server or connection
+  error), the attempt is `unavailable` (plan A13). The phase stops with a harness error, and no
+  outcome is recorded. Wait, then run the same command again: cells already recorded are skipped.
+
 ## 1. Setup (no paid call)
 
 ```bash
@@ -70,4 +75,4 @@ report, and include:
 - the timeout count (a cold file cache can push a Lean check towards its 300 s timeout);
 - every knob that was not searched, with the reason.
 
-Compress the raw records to `attempts.jsonl.gz` before committing them.
+Compress the raw records to `attempts.jsonl.gz` before committing them (`*.jsonl` is ignored).

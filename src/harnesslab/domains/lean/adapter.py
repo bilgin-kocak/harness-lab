@@ -55,7 +55,7 @@ from harnesslab.study.contract import (
 )
 
 from . import pricing, prompts
-from .llm import AnthropicMessagesClient, LLMClient
+from .llm import API_BASE_URL, INFRASTRUCTURE_STATUS, AnthropicMessagesClient, LLMClient
 from .prover import Prover, ProverConfig, ProverLimits
 from .retrieval import MathlibIndex, build_index, expected_meta_problems, iter_rows, read_meta
 from .toolchain import (
@@ -580,6 +580,8 @@ class LeanAdapter(DomainAdapterBase):
             "thinking": "adaptive",
             "prompt_caching": "automatic (top-level cache_control ephemeral)",
             "llm_client": self.client_kind,
+            "api_base_url": API_BASE_URL,
+            "api_unavailable_statuses": sorted(INFRASTRUCTURE_STATUS) + ["5xx", "no status"],
             "anthropic_sdk": _package_version("anthropic"),
             "prices": pricing.price_record(self.model),
             "prompts_sha256": hashlib.sha256(

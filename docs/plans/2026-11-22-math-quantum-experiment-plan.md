@@ -242,6 +242,41 @@ Split `20261122`; run order (interleaving problems, configurations and repeats) 
 - 30 dev problems at 1 repeat can only detect large effects; the held-out test is what protects
   the claim.
 
+### A13. Amendments before the smoke test (2026-11-23, before any paid call)
+
+1. **API failures that say nothing about the configuration are not failed attempts.**
+   - **Which failures.** They happen after the SDK's own retries, and are:
+     - no API key in the environment;
+     - credentials or permissions refused (401, 403);
+     - model not found (404);
+     - request timeout, conflict or rate limit (408, 409, 429);
+     - any 5xx, including 529 overloaded;
+     - a connection lost, or any error that carries no HTTP status.
+   - **What happens.** Such an attempt is `unavailable`. The core then:
+     - records no outcome but a harness error, with what was spent;
+     - stops the phase;
+     - runs the cell again when the phase resumes.
+   - **What still fails.** An invalid request (for example a prompt longer than the context
+     window: 400, 413, 422) is the configuration's own failure and still fails the attempt.
+   - **Unchanged.** Refusals still count as failures (A3), and API errors are still counted
+     (A8).
+   - **Why.** Before this change, an outage or a bad key would have counted as failed proofs of
+     whichever configuration was running at the time.
+2. **The key and the endpoint are explicit.** The client takes `ANTHROPIC_API_KEY` from the
+   environment and passes it, with `base_url="https://api.anthropic.com"`, to `AsyncAnthropic`.
+   The SDK's other sources (a profile, `ANTHROPIC_BASE_URL`) can no longer change the system
+   under test. Without a key, no call is made and the attempt is `unavailable`. The provenance
+   records the endpoint and the statuses that count as unavailable.
+3. **Core fixes that change how stages run** (ADR, hardening list):
+   - **Baseline first in stage 1.** The baseline's cells run first in stage 1, so a budget cut
+     cannot leave it incomplete.
+   - **Combine counts additions only.** Combine counts only single-knob additions on top of F.
+     The baseline, which undoes F's feedback rounds, is not a winner.
+   - **Decisions are kept.** A stage's decision to run nothing, or its budget skip, is kept and
+     not decided again with later data.
+   - **Stage order is enforced.** Combine and confirm refuse to run before the stages before
+     them are complete.
+
 ---
 
 ## B. Quantum compilation: Qiskit on QASMBench

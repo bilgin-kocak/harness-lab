@@ -2,8 +2,16 @@
 returning a normalized response.
 
 :class:`AnthropicMessagesClient` uses the official Anthropic SDK (imported only when the first call
-is made): ``AsyncAnthropic(max_retries=2)`` with the API key read from the environment by the SDK,
-``client.messages.stream(**kwargs)`` and ``get_final_message()``. The request is built by the pure
+is made): ``AsyncAnthropic(api_key=..., base_url="https://api.anthropic.com", max_retries=2)``,
+with the key taken from ``ANTHROPIC_API_KEY`` and passed explicitly (never from the SDK's other
+sources: a profile or ``ANTHROPIC_BASE_URL`` must not change the system under test),
+``client.messages.stream(**kwargs)`` and ``get_final_message()``. A call that fails after the
+SDK's retries raises :class:`LLMCallError`, marked ``infrastructure`` when the failure says
+nothing about the configuration under test (no key, credentials or permissions refused, model not
+found, timeout, conflict, rate limit, overload or server error, connection lost): the prover then
+ends the attempt as ``unavailable``, which the study core records as a harness error and runs
+again. Any other failure (an invalid request, such as a prompt too long for the context window)
+ends it as ``error``, a failed attempt. The request is built by the pure
 function :func:`build_request_kwargs`: ``model``, ``max_tokens``, ``output_config={"effort": ...}``,
 ``thinking={"type": "adaptive"}``, ``system``, ``messages``, ``tools`` (only when there are any;
 ``tool_choice`` is left to its default ``auto``, since forced tool choice is rejected on this
@@ -58,16 +66,37 @@ class LLMResponse:
         return [b for b in self.content if b.get("type") == "tool_use"]
 
 
+API_BASE_URL = "https://api.anthropic.com"
+# HTTP statuses that say nothing about the configuration under test: credentials or permissions
+# refused, model not found, request timeout, conflict, rate limit; and every 5xx (529 overload).
+INFRASTRUCTURE_STATUS = frozenset({401, 403, 404, 408, 409, 429})
+
+
+def infrastructure_failure(exc: BaseException) -> bool:
+    """Whether an SDK error after its retries is the infrastructure's, not the configuration's.
+
+    No HTTP status (a connection or timeout error, an error event mid-stream) counts as
+    infrastructure, as does any status in :data:`INFRASTRUCTURE_STATUS` or from 500 up.
+    """
+    status = getattr(exc, "status_code", None)
+    if not isinstance(status, int):
+        return True
+    return status in INFRASTRUCTURE_STATUS or status >= 500
+
+
 class LLMCallError(Exception):
     """A call that failed after the SDK's own retries.
 
     ``billed`` is ``False`` when the API refused the request before streaming any output (nothing
     is charged), ``None`` when the failure came after the stream started and the cost is unknown.
+    ``infrastructure`` marks a failure that says nothing about the configuration under test
+    (see :func:`infrastructure_failure`); the prover ends such an attempt as ``unavailable``.
     """
 
-    def __init__(self, message: str, *, billed: bool | None) -> None:
+    def __init__(self, message: str, *, billed: bool | None, infrastructure: bool = False) -> None:
         super().__init__(message)
         self.billed = billed
+        self.infrastructure = infrastructure
 
 
 class LLMClient(Protocol):
@@ -156,9 +185,21 @@ class AnthropicMessagesClient:
 
     def _sdk_client(self) -> Any:
         if self._client is None:
+            import os
+
             import anthropic  # the optional `lean` extra; imported on first use only
 
-            self._client = anthropic.AsyncAnthropic(max_retries=self.max_retries)
+            key = os.environ.get("ANTHROPIC_API_KEY")
+            if not key:
+                raise LLMCallError(
+                    "ANTHROPIC_API_KEY is not set: the study reads its API key from the "
+                    "environment only",
+                    billed=False,
+                    infrastructure=True,
+                )
+            self._client = anthropic.AsyncAnthropic(
+                api_key=key, base_url=API_BASE_URL, max_retries=self.max_retries
+            )
         return self._client
 
     async def complete(
@@ -183,7 +224,11 @@ class AnthropicMessagesClient:
                 message = await stream.get_final_message()
                 request_id = stream.request_id
         except anthropic.APIError as exc:
-            raise LLMCallError(_describe(exc), billed=None if opened else False) from exc
+            raise LLMCallError(
+                _describe(exc),
+                billed=None if opened else False,
+                infrastructure=infrastructure_failure(exc),
+            ) from exc
         return normalize_message(message, request_id=request_id, latency_s=time.monotonic() - start)
 
     async def close(self) -> None:

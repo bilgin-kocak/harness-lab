@@ -3,7 +3,11 @@
 Usage (with the pinned toolchain: ``uv sync --all-extras``)::
 
     python studies/2026-11-quantum-qasmbench/reproduce.py <QASMBench checkout at 357b942>
-        [--rerun-held-out] [--reverify N]
+        [--rerun-held-out] [--reverify N] [--study-dir DIR] [--skip-split-check]
+
+``--study-dir`` reproduces another study directory laid out the same way (the end-to-end test
+uses it on fixture circuits); ``--skip-split-check`` skips step 1 for a split that
+``select_tasks.py`` did not draw.
 
 Steps, each printed with PASS or FAIL:
 
@@ -57,10 +61,10 @@ def _ok(name: str, ok: bool, detail: str = "") -> bool:
     return ok
 
 
-def _scratch_copy(dest: Path) -> Path:
+def _scratch_copy(source: Path, dest: Path) -> Path:
     """The study directory with its records decompressed, in ``dest``."""
-    study = dest / HERE.name
-    shutil.copytree(HERE, study, ignore=shutil.ignore_patterns("artifacts", "__pycache__"))
+    study = dest / source.name
+    shutil.copytree(source, study, ignore=shutil.ignore_patterns("artifacts", "__pycache__"))
     for gz in study.rglob("*.jsonl.gz"):
         with gzip.open(gz, "rt", encoding="utf-8") as src:
             gz.with_suffix("").write_text(src.read(), encoding="utf-8")
@@ -85,23 +89,27 @@ def _strip(c: dict) -> dict:
     return {k: c.get(k) for k in COMPARE_KEYS}
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("qasmbench", type=Path)
     ap.add_argument("--rerun-held-out", action="store_true")
     ap.add_argument("--reverify", type=int, default=0)
-    args = ap.parse_args()
+    ap.add_argument("--study-dir", type=Path, default=HERE)
+    ap.add_argument("--skip-split-check", action="store_true")
+    args = ap.parse_args(argv)
+    source = args.study_dir.resolve()
     ok = True
 
-    res = subprocess.run(
-        [sys.executable, str(HERE / "select_tasks.py"), str(args.qasmbench), "--check"],
-        capture_output=True,
-        text=True,
-    )
-    ok &= _ok("split.json re-derived from the checkout", res.returncode == 0, res.stdout[-300:])
+    if not args.skip_split_check:
+        res = subprocess.run(
+            [sys.executable, str(HERE / "select_tasks.py"), str(args.qasmbench), "--check"],
+            capture_output=True,
+            text=True,
+        )
+        ok &= _ok("split.json re-derived from the checkout", res.returncode == 0, res.stdout[-300:])
 
     with tempfile.TemporaryDirectory() as tmp:
-        study_dir = _scratch_copy(Path(tmp))
+        study_dir = _scratch_copy(source, Path(tmp))
         study = _open_study(study_dir, args.qasmbench)
         try:
             freeze = study.store.read_freeze()
@@ -114,7 +122,7 @@ def main() -> int:
                 if not p.endswith(("is not committed to git", "differs from the committed version"))
             ]
             ok &= _ok("freeze checks", not problems, "; ".join(problems))
-            committed = json.loads((HERE / "results.json").read_text(encoding="utf-8"))
+            committed = json.loads((source / "results.json").read_text(encoding="utf-8"))
             fresh = study.results()
             a = [_strip(c) for c in committed["held_out"]["comparisons"]]
             b = [_strip(c) for c in fresh["held_out"]["comparisons"]]

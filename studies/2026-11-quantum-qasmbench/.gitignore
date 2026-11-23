@@ -1,0 +1,6 @@
+# Raw records grow while a phase runs; their compressed copies (*.jsonl.gz) are committed once
+# the phase is over. Stage plans, freeze.json and results.json are committed as they appear.
+*.jsonl
+!probes/*.jsonl
+.lock
+artifacts/

@@ -106,11 +106,13 @@ def _clean(value: Any) -> Any:
     return value
 
 
-def _safe_repr(value: Any, limit: int = 4000) -> str:
+def _attempt_text(attempt: Attempt, limit: int = 4000) -> str:
+    """The attempt as text, for a record that cannot hold it as JSON (without the payload, which
+    is never stored)."""
     try:
-        text = repr(value)
+        text = repr(attempt.model_dump(mode="python"))
     except Exception as exc:  # an object whose repr itself breaks
-        text = f"<{type(value).__name__}: repr failed: {type(exc).__name__}>"
+        text = f"<{attempt.status} attempt: not representable: {type(exc).__name__}>"
     return _clean(text[:limit])
 
 
@@ -162,7 +164,7 @@ def _storable(
     problem = _clean(problem) if problem is not None else reason
     reduced = {k: _clean(v) for k, v in record.items() if k not in ("harness_traceback", "attempt")}
     reduced.update(
-        attempt={"unstorable": _safe_repr(attempt), "reason": reason},
+        attempt={"unstorable": _attempt_text(attempt), "reason": reason},
         verdict=None,
         metrics={},
         harness_error=problem,

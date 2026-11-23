@@ -1191,6 +1191,55 @@ def test_a_code_update_that_adds_optional_spec_fields_refuses_nothing(tmp_path: 
     assert asyncio.run(later.held_out()).ran == 24
 
 
+# A later version of the code that changes the default of existing sealed fields.
+class _ObjectiveV3(ObjectiveSpec):
+    tie_tolerance: float = Field(default=0.5, ge=0.0)
+
+
+class _StatsV3(StatsSpec):
+    level: float = Field(default=0.8, gt=0.0, lt=1.0)
+
+
+class _HeldOutV3(HeldOutSpec):
+    repetitions: int = Field(default=3, ge=1)
+
+
+class _SpecV3(StudySpec):
+    objective: _ObjectiveV3
+    stats: _StatsV3 = Field(default_factory=_StatsV3)
+    held_out: _HeldOutV3 = Field(default_factory=_HeldOutV3)
+
+
+def test_a_code_update_that_changes_a_default_the_spec_relies_on_is_refused(tmp_path: Path):
+    # F9 follow-up: with the sections sealed as written, a code update changing the default of a
+    # field the spec leaves unset was invisible to the freeze: the held-out phase ran 3
+    # repetitions where the freeze fixed 1, and the report used 80% intervals.
+    study = _study2(
+        tmp_path,
+        held_out={"require_committed_freeze": False, "order_seed": 3},
+        stats={"resamples": 200, "seed": 1},
+    )
+    asyncio.run(study.run_stage("grid"))
+    freeze = study.freeze()
+    assert freeze["held_out_spec"]["repetitions"] == 1 and freeze["stats"]["level"] == 0.95
+    later = _with_code(study, _SpecV3)
+    problems = later.freeze_problems(later.store.read_freeze())
+    for name, field in (
+        ("objective", "tie_tolerance"),
+        ("stats", "level"),
+        ("held_out", "repetitions"),
+    ):
+        changed = f"the {name} section of the spec changed since the freeze: {field} (in effect"
+        assert [p for p in problems if p.startswith(changed)], problems
+    with pytest.raises(ProtocolError, match="held_out section of the spec changed"):
+        asyncio.run(later.held_out())
+    assert not study.store.records("held_out")
+    assert len(later.results()["audit"]["freeze_problems"]) >= 3  # the report says so too
+    # the code the freeze was made with, and a later one that only adds fields, run it
+    assert _reopen(study).freeze_problems(freeze) == []
+    assert asyncio.run(_with_code(study, _SpecV2).held_out()).ran == 12
+
+
 def test_a_real_edit_of_the_spec_is_still_refused(tmp_path: Path):
     study = _study2(tmp_path)
     asyncio.run(study.run_stage("grid"))

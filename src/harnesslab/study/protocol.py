@@ -14,8 +14,8 @@ The protocol is what makes a result trustworthy, so it is strict:
   refused, and a plan whose stage was renamed or removed since stops the search and the freeze;
 * ``freeze.json`` is written once. Before the held-out phase it must still match the split file,
   the adapter (name, version, options, provenance), the objective, statistics and held-out
-  sections of the spec and the dev records, and re-ranking the dev records must give the same
-  choice;
+  sections of the spec (as written, and their values in effect, so a changed default counts) and
+  the dev records, and re-ranking the dev records must give the same choice;
 * every held-out cell runs once (see :mod:`harnesslab.study.store`);
 * the budget covers every phase together, counts interrupted cells in full, and the search may not
   spend the held-out reserve.
@@ -141,6 +141,25 @@ def _diff_keys(a: Any, b: Any, prefix: str = "") -> list[str]:
             out += _diff_keys(a.get(k), b.get(k), f"{prefix}{k}.")
         return out
     return [] if canonical_json(a) == canonical_json(b) else [prefix.rstrip(".") or "(value)"]
+
+
+def _no_longer(frozen: Any, now: Any, prefix: str = "") -> list[str]:
+    """Dotted paths of ``frozen`` whose value ``now`` no longer has. Only what ``frozen`` has
+    counts: a key only ``now`` has (an optional field added since) is no change."""
+    if isinstance(frozen, dict) and isinstance(now, dict):
+        out = []
+        for k in sorted(frozen, key=str):
+            path = f"{prefix}{k}"
+            out += _no_longer(frozen[k], now[k], f"{path}.") if k in now else [path]
+        return out
+    if isinstance(frozen, list) and isinstance(now, list) and len(frozen) == len(now):
+        out = []
+        for i, (a, b) in enumerate(zip(frozen, now, strict=True)):
+            out += _no_longer(a, b, f"{prefix}{i}.")
+        return out
+    return (
+        [] if canonical_json(frozen) == canonical_json(now) else [prefix.rstrip(".") or "(value)"]
+    )
 
 
 class Study:
@@ -779,10 +798,12 @@ class Study:
                     "n_dev": len(self.dev_ids),
                     "n_held_out": len(self.held_out_ids),
                 },
-                # for the reader: the sections as in effect, defaults included (not checked)
+                # the sealed sections as in effect, defaults included: the held-out phase checks
+                # that they still have these values (a key added to the code since is no change)
                 "objective": self.spec.objective.model_dump(mode="json"),
+                "stats": self.spec.stats.model_dump(mode="json"),
                 "held_out_spec": self.spec.held_out.model_dump(mode="json"),
-                # what the held-out phase checks: the sections as the author wrote them
+                # ... and that the author still writes the same: the sections as written
                 "sealed_sections": self._sections(),
                 "sealed_sections_of": WRITTEN,
                 "baseline": {
@@ -851,10 +872,29 @@ class Study:
         ):
             problems.append("the held_out section of the spec changed since the freeze")
         sealed = freeze.get("sealed_sections")
-        if sealed is not None:
-            for name, value in self._sections(written=written).items():
-                if canonical_json(sealed.get(name)) != canonical_json(value):
-                    problems.append(f"the {name} section of the spec changed since the freeze")
+        # A freeze sealed as written also has the sections in effect: a value they have that the
+        # sections no longer have, with the same spec, is a default the code changed since.
+        in_effect = (
+            {
+                "objective": freeze.get("objective"),
+                "stats": freeze.get("stats"),
+                "held_out": freeze.get("held_out_spec"),
+            }
+            if written
+            else {}
+        )
+        for name, value in self._sections(written=written).items():
+            if sealed is not None and canonical_json(sealed.get(name)) != canonical_json(value):
+                problems.append(f"the {name} section of the spec changed since the freeze")
+            elif in_effect.get(name) is not None:
+                now = getattr(self.spec, name).model_dump(mode="json")
+                changed = _no_longer(in_effect[name], now)
+                if changed:
+                    problems.append(
+                        f"the {name} section of the spec changed since the freeze: "
+                        f"{', '.join(changed[:8])} (in effect, not as written: the code changed "
+                        "a default the spec relies on)"
+                    )
         dev = freeze.get("dev", {})
         if dev.get("records_sha256") is not None and dev[
             "records_sha256"

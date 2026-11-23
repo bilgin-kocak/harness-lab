@@ -33,6 +33,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from pydantic import BaseModel
+
 from harnesslab.study.budget import Budget
 from harnesslab.study.contract import Config, DomainAdapter, Task, canonical_json, sha256_json
 from harnesslab.study.objective import Ranking, rank_configs
@@ -55,6 +57,18 @@ from harnesslab.study.store import PHASES, StudyStore, cell_key
 
 # Spec sections the freeze seals: changing any of them after the freeze invalidates the study.
 SEALED_SECTIONS = ("objective", "stats", "held_out")
+
+# Plans and freezes hash and seal what the author wrote ("written": the fields set in the spec,
+# pydantic defaults left out), so a code update that only adds an optional field invalidates
+# nothing. Plans and freezes without this marker were made with the full dump, defaults included,
+# and are still checked that way.
+WRITTEN = "written"
+
+
+def _written(section: BaseModel) -> Any:
+    """A spec section or stage as its author wrote it: the fields set, defaults left out."""
+    return section.model_dump(mode="json", exclude_unset=True)
+
 
 # What a stage's plan file records when the stage runs no cell: no configuration qualified
 # ("nothing to run"), or ``if_budget_allows`` found the stage too expensive ("skipped").
@@ -158,8 +172,14 @@ class Study:
             "provenance_sha256": sha256_json(self._provenance()),
         }
 
-    def _sections(self) -> dict[str, Any]:
-        return {name: getattr(self.spec, name).model_dump(mode="json") for name in SEALED_SECTIONS}
+    def _sections(self, *, written: bool = True) -> dict[str, Any]:
+        """The sealed sections as written (or, for a freeze made before, as fully dumped)."""
+        return {
+            name: _written(getattr(self.spec, name))
+            if written
+            else getattr(self.spec, name).model_dump(mode="json")
+            for name in SEALED_SECTIONS
+        }
 
     # -- checks ----------------------------------------------------------------
     def _check_hashes(self, tasks: list[Task]) -> list[str]:
@@ -343,7 +363,8 @@ class Study:
     def _plan_header(self, stage: StageSpec) -> dict[str, Any]:
         return {
             "stage": stage.name,
-            "stage_sha256": sha256_json(stage.model_dump(mode="json")),
+            "stage_sha256": sha256_json(_written(stage)),
+            "stage_sha256_of": WRITTEN,
             "phase": stage.phase,
             "kind": stage.kind,
             "created_at": datetime.now(UTC).isoformat(timespec="seconds"),
@@ -444,7 +465,13 @@ class Study:
         """The plan a stage fixed when it first ran (its cells, or its decision to run none), or
         None if it has not run."""
         plan = self.store.read_plan(stage.phase, stage.name)
-        if plan is not None and plan["stage_sha256"] != sha256_json(stage.model_dump(mode="json")):
+        if plan is None:
+            return None
+        if plan.get("stage_sha256_of") == WRITTEN:
+            now = sha256_json(_written(stage))
+        else:  # a plan made before the hash left defaults out
+            now = sha256_json(stage.model_dump(mode="json"))
+        if plan["stage_sha256"] != now:
             raise ProtocolError(
                 f"stage {stage.name}: its definition in the spec changed after it started; a "
                 "pre-registered stage cannot be edited mid-study"
@@ -677,9 +704,12 @@ class Study:
                     "n_dev": len(self.dev_ids),
                     "n_held_out": len(self.held_out_ids),
                 },
+                # for the reader: the sections as in effect, defaults included (not checked)
                 "objective": self.spec.objective.model_dump(mode="json"),
                 "held_out_spec": self.spec.held_out.model_dump(mode="json"),
+                # what the held-out phase checks: the sections as the author wrote them
                 "sealed_sections": self._sections(),
+                "sealed_sections_of": WRITTEN,
                 "baseline": {
                     "label": "baseline",
                     "config": self.baseline.values,
@@ -738,13 +768,16 @@ class Study:
         changed = _diff_keys(adapter.get("provenance"), self._provenance())
         if changed:
             problems.append(f"the adapter's provenance changed since the freeze: {changed[:8]}")
-        if canonical_json(freeze.get("held_out_spec")) != canonical_json(
+        # A freeze made before sections were sealed as written compares full dumps (defaults
+        # included), as it was made; its held_out_spec was checked too.
+        written = freeze.get("sealed_sections_of") == WRITTEN
+        if not written and canonical_json(freeze.get("held_out_spec")) != canonical_json(
             self.spec.held_out.model_dump(mode="json")
         ):
             problems.append("the held_out section of the spec changed since the freeze")
         sealed = freeze.get("sealed_sections")
         if sealed is not None:
-            for name, value in self._sections().items():
+            for name, value in self._sections(written=written).items():
                 if canonical_json(sealed.get(name)) != canonical_json(value):
                     problems.append(f"the {name} section of the spec changed since the freeze")
         dev = freeze.get("dev", {})

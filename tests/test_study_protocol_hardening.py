@@ -16,12 +16,22 @@ from pathlib import Path
 
 import pytest
 import yaml
+from pydantic import Field
 
 from harnesslab.study.budget import Budget, Refusal
 from harnesslab.study.contract import Attempt, AttemptStatus, Verdict, VerdictStatus
 from harnesslab.study.protocol import ProtocolError, Study
 from harnesslab.study.runner import HarnessError
-from harnesslab.study.spec import StudySpecError, load_study_spec
+from harnesslab.study.spec import (
+    HeldOutSpec,
+    ObjectiveSpec,
+    SearchSpec,
+    StageSpec,
+    StatsSpec,
+    StudySpec,
+    StudySpecError,
+    load_study_spec,
+)
 from harnesslab.study.store import StudyLockedError, StudyStore, effective_records
 from tests.test_study_protocol import DEV, HELD, Toy, _hash, _study, _write_study
 
@@ -871,6 +881,109 @@ def test_freeze_refuses_dev_records_made_with_other_adapter_options(tmp_path: Pa
     study.spec.adapter_options["workers"] = 9
     with pytest.raises(ProtocolError, match="other adapter options"):
         study.freeze()
+
+
+# A later version of the code whose spec models gained optional fields, with defaults that keep
+# the old behaviour; the study.yaml is unchanged.
+class _StageV2(StageSpec):
+    after: list[str] = Field(default_factory=list)
+
+
+class _SearchV2(SearchSpec):
+    stages: list[_StageV2]
+
+
+class _ObjectiveV2(ObjectiveSpec):
+    weights: dict[str, float] = Field(default_factory=dict)
+
+
+class _StatsV2(StatsSpec):
+    alternative: str = "two-sided"
+
+
+class _HeldOutV2(HeldOutSpec):
+    note: str = ""
+
+
+class _SpecV2(StudySpec):
+    search: _SearchV2
+    objective: _ObjectiveV2
+    stats: _StatsV2 = Field(default_factory=_StatsV2)
+    held_out: _HeldOutV2 = Field(default_factory=_HeldOutV2)
+
+
+def _with_code(study: Study, spec_model: type[StudySpec]) -> Study:
+    """The study, opened by code whose spec models are ``spec_model`` (same files on disk)."""
+    path = study.spec.study_dir / "study.yaml"
+    spec = spec_model(**yaml.safe_load(path.read_text()))
+    spec.source_path = path.resolve()
+    return Study(spec, Toy2(spec.adapter_options, spec.study_dir), log=study.log)
+
+
+def test_a_code_update_that_adds_optional_spec_fields_refuses_nothing(tmp_path: Path):
+    # core#11: plans and the freeze hashed model_dump() with every default, so a code update
+    # adding an optional field refused to resume a stage and to run the held-out phase.
+    study = _study2(tmp_path, budget={"max_attempts": 20})
+    asyncio.run(study.run_stage("grid"))  # 20 of 36 cells: the stage has to be resumed
+    later = _with_code(study, _SpecV2)
+    later.spec.budget.max_attempts = None
+    assert asyncio.run(later.run_stage("grid")).ran == 16
+    study.spec.budget.max_attempts = None
+    study.freeze()  # frozen by the old code
+    assert later.freeze_problems(later.store.read_freeze()) == []
+    assert asyncio.run(later.held_out()).ran == 24
+
+
+def test_a_real_edit_of_the_spec_is_still_refused(tmp_path: Path):
+    study = _study2(tmp_path)
+    asyncio.run(study.run_stage("grid"))
+    path = tmp_path / "study.yaml"
+    data = yaml.safe_load(path.read_text())
+    data["search"]["stages"][0]["levels"] = {"power": [1, 2]}
+    path.write_text(yaml.safe_dump(data))
+    with pytest.raises(ProtocolError, match="changed after it started"):
+        asyncio.run(_with_code(study, StudySpec).run_stage("grid"))
+    with pytest.raises(ProtocolError, match="changed after it started"):
+        asyncio.run(_with_code(study, _SpecV2).run_stage("grid"))
+    del data["search"]["stages"][0]["levels"]
+    path.write_text(yaml.safe_dump(data))
+    study.freeze()
+    data["stats"]["resamples"] = 600
+    path.write_text(yaml.safe_dump(data))
+    for spec_model in (StudySpec, _SpecV2):
+        with pytest.raises(ProtocolError, match="stats section of the spec changed"):
+            asyncio.run(_with_code(study, spec_model).held_out())
+    assert not study.store.records("held_out")
+
+
+def test_plans_and_freezes_hashed_with_defaults_are_still_checked(tmp_path: Path):
+    # Plans and freezes written before the change hash the full dump (defaults included): the
+    # same code still resumes and runs them, and still refuses an edit.
+    from harnesslab.study.contract import sha256_json
+
+    study = _study2(tmp_path, budget={"max_attempts": 20})
+    asyncio.run(study.run_stage("grid"))
+    stage = study.spec.stage("grid")
+    path = study.store.plan_path("dev", "grid")
+    plan = {k: v for k, v in json.loads(path.read_text()).items() if k != "stage_sha256_of"}
+    plan["stage_sha256"] = sha256_json(stage.model_dump(mode="json"))
+    path.write_text(json.dumps(plan))
+    study.spec.budget.max_attempts = None
+    assert asyncio.run(_reopen(study).run_stage("grid")).ran == 16
+    freeze = {k: v for k, v in study.freeze().items() if k not in ("freeze_sha256",)}
+    freeze.pop("sealed_sections_of")
+    freeze["sealed_sections"] = {
+        name: getattr(study.spec, name).model_dump(mode="json")
+        for name in ("objective", "stats", "held_out")
+    }
+    freeze["freeze_sha256"] = sha256_json(freeze)
+    study.store.freeze_path.write_text(json.dumps(freeze))
+    assert study.freeze_problems(freeze) == []
+    study.spec.stats.seed = 2
+    assert any("stats section" in p for p in study.freeze_problems(freeze))
+    stage.repetitions = 2
+    with pytest.raises(ProtocolError, match="changed after it started"):
+        study.stage_plan(stage)
 
 
 # -- spec ------------------------------------------------------------------------------------------

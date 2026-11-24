@@ -20,3 +20,5 @@ $25. A watchdog stops a stage when the charged total reaches $24.00.
 | Stage | Study | Code commit | Started | Command |
 |---|---|---|---|---|
 | pilot | haiku | e4970af | 2026-11-24T18:01:42Z | `harnesslab study search studies/2026-11-math-pilot/haiku/study.yaml --stage pilot --yes` |
+| | haiku | | finished 2026-11-24T19:15:52Z | 360/360 cells, $1.1790, every call served by claude-haiku-5-5, 0 refusals, 0 harness errors |
+| pilot | opus | 6fa296b | 2026-11-24T19:15:52Z | `harnesslab study search studies/2026-11-math-pilot/opus/study.yaml --stage pilot --yes` |

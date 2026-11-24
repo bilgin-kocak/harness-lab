@@ -715,7 +715,7 @@ def test_search_space_and_baseline_follow_plan_a4(tmp_path):
         "context_limit_tokens": (12000, 48000),
         "tactic_tools": ("none", "probe"),
         "feedback_rounds": (0, 3),
-        "retries": (1, 2),
+        "retries": (1, 2, 4),
     }
     baseline = adapter.baseline_config()
     space.validate_config(baseline)
@@ -819,6 +819,40 @@ async def test_retries_start_from_scratch(tmp_path):
     assert client.requests[1]["messages"] == client.requests[0]["messages"]
     assert "Earlier" not in client.requests[1]["messages"][0]["content"]
     assert len(lean.sources) == 1  # try 1 checked in-loop; the last proof is left to the verifier
+
+
+async def test_four_fresh_tries_are_the_call_matched_control_for_feedback(tmp_path):
+    """retries 4, feedback_rounds 0 (R4): up to 4 calls like feedback_rounds 3 (F), each try from
+    scratch with the same prompt and no error text, stopping at the first in-loop pass."""
+    lean = FakeLeanRunner([_error_output, _error_output, clean_lean_output])
+    script = [proof_reply(p) for p in ("linarith", "nlinarith", "simp", "omega")]
+    adapter, client, _ = make_adapter(tmp_path, script=script, lean=lean)
+    task = adapter.load_tasks(["fixture_dev_one"])[0]
+    r4 = adapter.baseline_config().replace(retries=4)
+    adapter.search_space().validate_config(r4)
+    attempt = await adapter.run(task, r4, run_ctx(tmp_path))
+    assert attempt.usage.llm_calls == 3 and attempt.output["proof"] == "simp"
+    assert attempt.output["tries_used"] == 3 and attempt.output["inloop_passed"] is True
+    first = client.requests[0]["messages"]
+    assert all(r["messages"] == first for r in client.requests[1:])
+    assert all("Earlier" not in r["messages"][0]["content"] for r in client.requests)
+    assert len(lean.sources) == 3
+    # the same call cap and the same worst case as feedback_rounds 3
+    f = adapter.baseline_config().replace(feedback_rounds=3)
+    assert adapter.max_attempt_cost_usd(r4) == pytest.approx(adapter.max_attempt_cost_usd(f))
+
+
+async def test_four_fresh_tries_leave_the_last_proof_to_the_verifier(tmp_path):
+    lean = FakeLeanRunner([_error_output, _error_output, _error_output])
+    script = [proof_reply(p) for p in ("linarith", "nlinarith", "simp", "omega")]
+    adapter, client, _ = make_adapter(tmp_path, script=script, lean=lean)
+    task = adapter.load_tasks(["fixture_dev_one"])[0]
+    attempt = await adapter.run(
+        task, adapter.baseline_config().replace(retries=4), run_ctx(tmp_path)
+    )
+    assert attempt.usage.llm_calls == 4 and attempt.output["tries_used"] == 4
+    assert attempt.output["proof"] == "omega" and attempt.output["inloop_passed"] is None
+    assert len(lean.sources) == 3  # tries 1-3 checked in-loop; the last one by the verifier
 
 
 async def test_planning_adds_one_call_per_try_and_the_plan_reaches_every_round(tmp_path):
@@ -1022,8 +1056,98 @@ def test_pricing_and_the_worst_case_bound():
     assert usage_cost(MODEL, {"cache_read_input_tokens": million}) == pytest.approx(0.2)
     assert usage_cost(MODEL, {"cache_creation_input_tokens": million}) == pytest.approx(5.0)
     assert worst_case_cost(MODEL, input_tokens=1000, max_tokens=32000) == pytest.approx(0.645)
+    # Opus 5.5 has one price at every prompt length
+    assert usage_cost(MODEL, {"input_tokens": 200_000}) == pytest.approx(0.8)
     with pytest.raises(ValueError):
         price_for("claude-unknown")
+
+
+HAIKU = "claude-haiku-5-5"
+
+
+def test_haiku_prices_depend_on_the_prompt_length():
+    """Live pricing page, 2026-11-24: $0.10/$0.50 per million tokens (cache reads $0.01, 5-minute
+    writes $0.125) for prompts up to 100,000 tokens; above that $0.50/$2.50 ($0.05, $0.625) on
+    every token of the request. The prompt counts uncached input, cache reads and cache writes."""
+    price = price_for(HAIKU)
+    assert (price.input, price.output, price.cache_read, price.cache_write_5m) == (
+        0.10,
+        0.50,
+        0.01,
+        0.125,
+    )
+    million = 1_000_000
+    assert usage_cost(HAIKU, {"output_tokens": million}) == pytest.approx(0.50)
+    # 100,000 prompt tokens is still the standard price
+    short = {
+        "input_tokens": 40_000,
+        "cache_read_input_tokens": 50_000,
+        "cache_creation_input_tokens": 10_000,
+        "output_tokens": 30_000,
+    }
+    assert usage_cost(HAIKU, short) == pytest.approx(
+        (40_000 * 0.10 + 50_000 * 0.01 + 10_000 * 0.125 + 30_000 * 0.50) / million
+    )
+    # one more cached token puts the whole request, output included, at the long-prompt prices
+    long = {**short, "cache_read_input_tokens": 50_001}
+    assert usage_cost(HAIKU, long) == pytest.approx(
+        (40_000 * 0.50 + 50_001 * 0.05 + 10_000 * 0.625 + 30_000 * 2.50) / million
+    )
+    assert worst_case_cost(HAIKU, input_tokens=100_000, max_tokens=32_000) == pytest.approx(
+        (100_000 * 0.125 + 32_000 * 0.50) / million
+    )
+    assert worst_case_cost(HAIKU, input_tokens=100_001, max_tokens=32_000) == pytest.approx(
+        (100_001 * 0.625 + 32_000 * 2.50) / million
+    )
+
+
+def test_the_opus_price_record_is_the_one_the_2026_11_math_study_froze():
+    from harnesslab.domains.lean.pricing import price_record
+
+    assert price_record(MODEL) == {
+        "model": "claude-opus-5-5",
+        "usd_per_million_tokens": {
+            "input": 4.0,
+            "output": 20.0,
+            "cache_read": 0.2,
+            "cache_write_5m": 5.0,
+        },
+        "as_of": "2026-11-03",
+        "source": "Claude API skill, cached model table of 2026-11-03",
+        "note": "Re-check against the live pricing page before the first paid run.",
+    }
+    frozen = json.loads(
+        (
+            Path(__file__).resolve().parents[1] / "studies" / "2026-11-math-minif2f" / "freeze.json"
+        ).read_text(encoding="utf-8")
+    )
+    assert frozen["adapter"]["provenance"]["prices"] == price_record(MODEL)
+
+
+def test_the_haiku_price_record_names_its_source_and_long_prompt_prices():
+    from harnesslab.domains.lean.pricing import price_record
+
+    record = price_record(HAIKU)
+    assert record["as_of"] == "2026-11-24" and "platform.claude.com" in record["source"]
+    assert record["long_prompt"] == {
+        "threshold_prompt_tokens": 100_000,
+        "usd_per_million_tokens": {
+            "input": 0.5,
+            "output": 2.5,
+            "cache_read": 0.05,
+            "cache_write_5m": 0.625,
+        },
+    }
+
+
+async def test_a_haiku_adapter_prices_its_calls_at_haiku_rates(tmp_path):
+    usage = {"input_tokens": 3000, "output_tokens": 2000}
+    client = FakeLLMClient([proof_reply("linarith", model=HAIKU, usage=usage)], model=HAIKU)
+    adapter, _, _ = make_adapter(tmp_path, client=client, model=HAIKU)
+    assert adapter.provenance()["prices"]["model"] == HAIKU
+    task = adapter.load_tasks(["fixture_dev_one"])[0]
+    attempt = await adapter.run(task, adapter.baseline_config(), run_ctx(tmp_path))
+    assert attempt.usage.cost_usd == pytest.approx((3000 * 0.10 + 2000 * 0.50) / 1_000_000)
 
 
 async def test_refusals_and_max_tokens_stops_are_counted(tmp_path):

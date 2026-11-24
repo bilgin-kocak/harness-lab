@@ -13,7 +13,8 @@ Options (all optional; unknown options are an error):
   else a cache path (see :func:`.toolchain.prepare`).
 - ``lake``: the ``lake`` executable; default from ``PATH`` or ``~/.elan/bin``.
 - ``index_path``: the Mathlib name index (gzipped JSONL, :mod:`.retrieval`); default a cache path.
-- ``model`` (``claude-opus-5-5``), ``effort`` (``medium``), ``max_tokens`` (``32000``).
+- ``model`` (``claude-opus-5-5``; any model with prices in :mod:`.pricing`, such as
+  ``claude-haiku-5-5``), ``effort`` (``medium``), ``max_tokens`` (``32000``).
 - ``verify_timeout_s`` (``300``, the verifier), ``inloop_timeout_s`` (``120``, the prover's
   in-loop check), ``tool_timeout_s`` (``60``, the ``try_tactic`` tool).
 - ``max_tool_calls_per_round`` (``4``), ``max_calls_per_attempt`` (``12``),
@@ -341,7 +342,9 @@ class LeanAdapter(DomainAdapterBase):
                 ),
                 Knob(
                     name="retries",
-                    levels=(1, 2),
+                    # 4 with feedback_rounds 0 is the fresh-tries control for feedback_rounds 3:
+                    # the same 4-call cap and stopping rule, with no error text in any prompt.
+                    levels=(1, 2, 4),
                     description="independent tries from scratch",
                 ),
             )

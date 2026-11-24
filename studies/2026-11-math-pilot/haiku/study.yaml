@@ -1,0 +1,77 @@
+# EXPLORATORY PILOT, not a pre-registered study: no search, no freeze, no held-out phase.
+# Plan: studies/2026-11-math-pilot/PLAN.md. Model: Claude Haiku 5.5: baseline (1 call), F (feedback_rounds 3) and R4 (retries 4).
+# Problems: the 2026-11 math study's 40 held-out problems (used once there), as this pilot's dev set.
+# Run: harnesslab study check|search studies/2026-11-math-pilot/haiku/study.yaml --stage smoke|pilot
+# The smoke stage runs first and alone; the pilot stage runs only after the owner has seen its cost.
+name: 2026-11-math-pilot-haiku
+adapter: lean-minif2f
+adapter_options:
+  # The same options as the math study (studies/2026-11-math-minif2f/study.yaml) except the model.
+  fetch: true
+  model: claude-haiku-5-5
+  effort: medium
+  max_tokens: 32000
+  verify_timeout_s: 300
+  inloop_timeout_s: 120
+  tool_timeout_s: 60
+  max_tool_calls_per_round: 4
+  max_calls_per_attempt: 12
+  max_attempt_seconds: 1200
+  lean_workers: 3
+
+split:
+  file: split.json
+  dev: [dev]
+  held_out: [held_out]
+  hashes: [dev, held_out]
+
+parallelism: 4
+
+search:
+  seed: 20261124
+  stages:
+    # Smoke test: 3 of the 40 problems, 1 repetition, every configuration of the pilot.
+    # mathd_numbertheory_222: the baseline proved it 3/3 in the math study.
+    # amc12a_2013_p4, aime_1991_p9: the baseline failed 0/3 and F proved them 3/3.
+    - name: smoke
+      kind: explicit
+      phase: smoke
+      tasks: [mathd_numbertheory_222, amc12a_2013_p4, aime_1991_p9]
+      configs:
+        - {label: baseline, set: {}}
+        - {label: F, set: {feedback_rounds: 3}}
+        - {label: R4, set: {retries: 4}}
+    # The pilot: every configuration on all 40 problems, 3 repetitions (as the math study's
+    # held-out phase).
+    - name: pilot
+      kind: explicit
+      repetitions: 3
+      configs:
+        - {label: baseline, set: {}}
+        - {label: F, set: {feedback_rounds: 3}}
+        - {label: R4, set: {retries: 4}}
+
+objective:
+  # Unused: the pilot selects nothing. The math study's objective, so the spec is complete.
+  kind: pass_rate
+  cost_cap_multiple: 4.0
+  tie_tolerance: 0.0334
+
+budget:
+  # Hard cap. Projection before the smoke test: about $1-3 for the pilot stage.
+  max_cost_usd: 10.0
+  # As in the math study: an attempt can never be cut short by this before its own call cap.
+  cost_limit_per_attempt_usd: 10.0
+  held_out_reserve_usd: 0.0
+
+held_out:
+  # Unused: the pilot has no held-out phase (it would need a committed freeze, which it never makes).
+  repetitions: 3
+  order_seed: 7
+  require_committed_freeze: true
+
+stats:
+  resamples: 10000
+  seed: 20261124
+  level: 0.95
+  report_metrics: [cost_usd, llm_calls, wall_time_s]

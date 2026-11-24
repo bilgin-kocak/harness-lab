@@ -1,0 +1,31 @@
+{
+  "configs": [
+    {
+      "config_hash": "6e17893e50db13a1ad082ad407a64f3359bd7e34acf95bf504894e7b939d86b6",
+      "label": "R4",
+      "values": {
+        "context_limit_tokens": 12000,
+        "feedback_rounds": 0,
+        "planning": false,
+        "retries": 4,
+        "retrieval": "none",
+        "tactic_tools": "none"
+      }
+    }
+  ],
+  "created_at": "2026-11-24T06:53:21+00:00",
+  "decision": "run",
+  "kind": "explicit",
+  "note": "",
+  "phase": "smoke",
+  "repetition_starts": {},
+  "repetitions": 1,
+  "stage": "smoke",
+  "stage_sha256": "e34d0c0af71152df96a6602f64034c773f5549f223d1766e736329f5b0c3e138",
+  "stage_sha256_of": "written",
+  "tasks": [
+    "mathd_numbertheory_222",
+    "aime_1991_p9",
+    "amc12a_2013_p4"
+  ]
+}

@@ -7,3 +7,4 @@ used (index SHA-256 a2c6e670…, 233,022 entries). Times are UTC.
 | Stage | Study | Code commit | Started | Command |
 |---|---|---|---|---|
 | smoke | haiku | c8429b5 | 2026-11-24T06:44:46Z | `harnesslab study search studies/2026-11-math-pilot/haiku/study.yaml --stage smoke --yes` |
+| smoke | opus | a39511f | 2026-11-24T06:53:20Z | `harnesslab study search studies/2026-11-math-pilot/opus/study.yaml --stage smoke --yes` |

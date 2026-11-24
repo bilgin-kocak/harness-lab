@@ -54,9 +54,11 @@ objective:
   tie_tolerance: 0.0334
 
 budget:
-  # Hard cap. Projection before the smoke test: about $14 (pessimistic $19) for the pilot stage.
-  # An R4 cell reserves up to $6.41 before it starts, so the cap leaves room for the last cells.
-  max_cost_usd: 30.0
+  # A safety ceiling, not the expected spend: the projection before the smoke test is about $14
+  # (pessimistic $19) for the pilot stage. An R4 cell reserves $6.41 before it starts, and a cell
+  # interrupted before its record is charged that in full. $50 keeps 4 cells running at once for the
+  # whole pessimistic run (as in the math study) and survives a few interruptions.
+  max_cost_usd: 50.0
   # As in the math study: an attempt can never be cut short by this before its own call cap.
   cost_limit_per_attempt_usd: 10.0
   held_out_reserve_usd: 0.0

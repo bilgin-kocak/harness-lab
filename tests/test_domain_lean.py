@@ -715,6 +715,8 @@ def test_search_space_and_baseline_follow_plan_a4(tmp_path):
         "context_limit_tokens": (12000, 48000),
         "tactic_tools": ("none", "probe"),
         "feedback_rounds": (0, 3),
+        # level 4 came after the math study (which used 1 and 2), for the pilot's fresh-tries
+        # control R4 (studies/2026-11-math-pilot/PLAN.md)
         "retries": (1, 2, 4),
     }
     baseline = adapter.baseline_config()

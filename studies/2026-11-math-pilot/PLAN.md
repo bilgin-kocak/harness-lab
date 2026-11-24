@@ -7,14 +7,26 @@ They are not results to publish or quote.
 
 ## Why
 
-The math study (`docs/results/2026-11-23-math.md`) found that F (`feedback_rounds: 3`) proved more
-held-out problems than the baseline with Claude Opus 5.5: 117/120 against 102/120. F can make up
-to 4 calls per attempt and the baseline makes 1, so that comparison cannot say how much of the gain
-comes from Lean's error messages and how much from extra calls.
+The math study (`docs/results/2026-11-23-math.md`) compared F (`feedback_rounds: 3`) with the
+baseline on Claude Opus 5.5. F had 117 of 120 attempts verified (40 problems × 3), against 102 of
+120 for the baseline. F can make up to 4 calls per attempt and the baseline makes 1, so that
+comparison cannot say how much of the gain comes from what F shows the model and how much from
+extra calls.
 
-R4 (`retries: 4`) makes up to 4 fresh tries. It uses the same first prompt, the same 4-call cap and
-the same stopping rule (the first proof that passes the in-loop check), and never shows an error
-message. The pilot asks three things:
+R4 (`retries: 4`) makes up to 4 fresh tries. It uses the same first prompt and the same 4-call cap.
+It also uses the same stopping rule: the first proof that passes the in-loop check.
+
+- **R4 − baseline** measures extra samples, with Lean's pass/fail check choosing when to stop.
+- **F − R4** measures the effect of showing the model the history of its try, instead of drawing
+  fresh samples. That history is:
+  - its own failed proofs;
+  - Lean's first errors, or the timeout or rejection reason;
+  - notes on rounds that gave no proof, for example one that hit the output limit.
+
+  It is not the effect of Lean's error text alone. A later study would need a placebo arm for
+  that.
+
+The pilot asks three things:
 
 1. **Opus 5.5.** On the same 40 problems, where does R4 land between the math study's baseline and
    F?
@@ -37,6 +49,10 @@ The answers feed the design and budget of a later study on unused problems.
   thinking, `max_tokens` 32,000, the same timeouts and caps, and no fallback model.
   - A served model other than the configured one invalidates the attempt.
   - A refusal counts as a failed round. Refusals are counted and reported.
+- **Code:** commit `a17d9a1` or later, on branch `claude/bold-goldberg-ir2hpm`. Code before it
+  rejects `retries: 4`. The pilot's records carry the adapter's name and version (`lean-minif2f`
+  1, unchanged, since existing configurations behave as before) but no commit. So `RUNLOG.md`
+  records the commit at the start of each stage.
 - **Split** (`make_split.py`):
   - `dev` is the math study's 40 held-out problems.
   - `held_out` is the math study's 30 dev problems. The pilot never runs them.
@@ -58,16 +74,29 @@ The answers feed the design and budget of a later study on unused problems.
    approval.
 5. After approval, stage `pilot` runs Haiku first, then Opus. The two never run at the same time:
    each Lean process needs about 5 GB, and each study allows 3.
-   - Hard caps: $10 for `haiku/` and $30 for `opus/`, smoke included.
-   - The projected spend is about $15–22. Any change to a cap is committed before it takes effect.
+   - Safety ceilings: $20 for `haiku/` and $50 for `opus/`, smoke included. These are not the
+     expected spend.
+   - The ceilings are set so that a budget stop cannot cut off one configuration's block, and so
+     that Opus runs 4 cells at once for the whole run, as the math study did.
+   - The projected spend is about $15–22. Any change to a ceiling is committed before it takes
+     effect.
 
 ## Analysis (fixed now, before any pilot data)
 
 All of it is exploratory, and all of it is reported, whatever the result.
 
-- **Unit.** The unit is the per-problem verified rate: verified attempts / 3. Refusals, caps,
-  timeouts and errors count as not verified. Infrastructure failures (`unavailable`) are rerun by
-  the protocol and are not outcomes.
+- **Unit.** The unit is the per-problem verified rate: verified attempts / 3.
+  - An attempt is verified when the independent verifier accepted its output proof, whatever the
+    attempt's status. This is the math study's rule.
+  - An attempt that hit a cap or a non-infrastructure error still hands its last proof to the
+    verifier.
+  - Refusals, and attempts with no proof, are not verified.
+  - Infrastructure failures (`unavailable`) are rerun by the protocol and are not outcomes.
+  - The number of attempts per status (completed, capped, error, refused) is reported for each
+    configuration.
+- **Completeness.** Every configuration must have 3 valid records on each of the 40 problems. If
+  one does not (a stop at the budget ceiling, for example), the analysis says so, and reports the
+  contrasts on the problems complete on both sides.
 - **Contrasts.** Opus: R4 − baseline and F − R4, against the math study's records. Haiku: F −
   baseline, R4 − baseline and F − R4.
 - **Statistics for each contrast.**
@@ -87,7 +116,8 @@ All of it is exploratory, and all of it is reported, whatever the result.
   - Calls per attempt, output tokens, token-cap stops, refusals and wall time.
 - **Also reported.**
   - How often an R4 attempt repeats an earlier try's proof word for word.
-  - Every attempt that stopped at the 32,000-token output limit.
+  - Every attempt that stopped at the 32,000-token output limit, listed with its model,
+    configuration, problem, repetition and number of such stops.
 
 ## What it cannot show
 
@@ -97,4 +127,8 @@ All of it is exploratory, and all of it is reported, whatever the result.
   evidence of no effect.
 - **Opus contrasts span two dates.** The Opus contrasts join records made a day apart. A change in
   the model's serving, or in the machine's Lean timing, would show up as an effect.
+- **Haiku configurations run in blocks.** Within the Haiku study, the protocol runs an explicit
+  stage one configuration at a time: all baseline cells, then all F cells, then all R4 cells. So
+  the three run in different time windows of the same run. The math study's held-out phase
+  shuffled its two configurations together.
 - **One fixed setup.** One effort level, one prompt, one 4-call budget.

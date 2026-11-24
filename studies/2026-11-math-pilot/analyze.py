@@ -5,13 +5,18 @@ Usage: python studies/2026-11-math-pilot/analyze.py [--out results.json]
 Reads the pilot stage's records (``haiku/dev``, ``opus/dev``) and the math study's held-out records
 (Opus baseline and F, same 40 problems). Calls nothing. For each contrast it prints:
 
-* the per-problem verified rates (verified attempts / repetitions, where refusals, caps, timeouts
-  and errors count as not verified);
+* the per-problem verified rates (verified attempts / repetitions). As in the math study, an
+  attempt is verified when the independent verifier accepted its output proof, whatever the
+  attempt's status: a capped attempt's last proof is checked too. Refusals and attempts with no
+  proof are not verified;
 * the mean difference with a 95% percentile bootstrap interval over problems (10,000 resamples,
   seed 20261124), wins, losses and ties, the exact two-sided sign test, and every problem whose
   rates differ (``harnesslab.study.stats.paired_rates``).
 
-It also prints cost per model and configuration, the Opus decomposition and the R4 repeat count.
+It first checks that every configuration has 3 valid records on each of the 40 problems, and says
+so if one does not. It also prints the attempts per status, the cost per model and configuration,
+every attempt that stopped at the output token limit, the Opus decomposition and the R4 repeat
+count.
 Everything here is exploratory: 40 problems, used once before, three repetitions.
 """
 
@@ -30,6 +35,7 @@ from harnesslab.study.stats import paired_rates  # noqa: E402
 from harnesslab.study.store import StudyStore  # noqa: E402
 
 RESAMPLES = 10_000
+REPS = 3
 SEED = 20261124
 MATH = HERE.parent / "2026-11-math-minif2f"
 
@@ -40,6 +46,19 @@ def _outcomes(records: list[dict]) -> dict[str, dict[str, list[bool]]]:
     for r in records:
         out[r["config_label"]][r["task_id"]].append(bool((r.get("metrics") or {}).get("verified")))
     return out
+
+
+def _complete(name: str, outcomes: dict[str, dict[str, list[bool]]], labels, tasks) -> bool:
+    ok = True
+    for label in labels:
+        got = outcomes.get(label, {})
+        short = {t: len(got.get(t, [])) for t in tasks if len(got.get(t, [])) != REPS}
+        if short:
+            ok = False
+            print(
+                f"INCOMPLETE {name} {label}: {len(short)} problems without {REPS} records {short}"
+            )
+    return ok
 
 
 def _contrast(name: str, a: dict[str, list[bool]], b: dict[str, list[bool]]) -> dict:
@@ -112,7 +131,14 @@ def main() -> int:
     mo, ho, oo = _outcomes(math), _outcomes(haiku), _outcomes(opus)
 
     print("EXPLORATORY PILOT: 40 problems used once before, 3 repetitions; not a result to quote.")
-    results: dict = {"contrasts": [], "cost": [], "r4_repeats": {}}
+    tasks = sorted(mo["baseline"])
+    complete = (
+        _complete("math study", mo, ("baseline", "F"), tasks)
+        & _complete("opus", oo, ("R4",), tasks)
+        & _complete("haiku", ho, ("baseline", "F", "R4"), tasks)
+    )
+    print(f"{len(tasks)} problems; records complete: {complete}")
+    results: dict = {"complete": complete, "contrasts": [], "cost": [], "r4_repeats": {}}
     c = results["contrasts"]
     c.append(_contrast("Opus: R4 - baseline (math study)", mo["baseline"], oo["R4"]))
     c.append(_contrast("Opus: F (math study) - R4", oo["R4"], mo["F"]))
@@ -123,8 +149,9 @@ def main() -> int:
 
     f_b, r4_b, f_r4 = (x["diff"]["estimate"] for x in (c[2], c[0], c[1]))
     print(
-        f"\nOpus decomposition of F - baseline ({f_b:+.3f}): R4 - baseline (extra calls) "
-        f"{r4_b:+.3f}, F - R4 (feedback beyond extra calls) {f_r4:+.3f}. Rough: two run dates."
+        f"\nOpus decomposition of F - baseline ({f_b:+.3f}): R4 - baseline (extra samples, in-loop "
+        f"selection) {r4_b:+.3f}, F - R4 (showing the try's history) {f_r4:+.3f}. Rough: two run "
+        f"dates{'' if complete else '; records INCOMPLETE, so the parts need not add up'}."
     )
     results["opus_decomposition"] = {"f_minus_b": f_b, "r4_minus_b": r4_b, "f_minus_r4": f_r4}
 
@@ -136,6 +163,20 @@ def main() -> int:
     for label in ("baseline", "F", "R4"):
         rs = [r for r in haiku if r["config_label"] == label]
         results["cost"].append(_cost(label, "haiku", rs) | {"source": "pilot"})
+
+    print("\nattempts per status, and attempts that stopped at the output token limit:")
+    results["status"], results["max_tokens_attempts"] = {}, []
+    for model, recs in (("opus-math", math), ("opus", opus), ("haiku", haiku)):
+        for r in recs:
+            key = f"{model}/{r['config_label']}/{(r.get('attempt') or {}).get('status')}"
+            results["status"][key] = results["status"].get(key, 0) + 1
+            stops = int((r.get("metrics") or {}).get("max_tokens_stops") or 0)
+            if stops:
+                row = [model, r["config_label"], r["task_id"], int(r["repetition"]), stops]
+                results["max_tokens_attempts"].append(row)
+                print(f"  token cap: {row}")
+    for key, n in sorted(results["status"].items()):
+        print(f"  {key}: {n}")
 
     for model, recs in (("opus", opus), ("haiku", haiku)):
         rep = _repeats([r for r in recs if r["config_label"] == "R4"])

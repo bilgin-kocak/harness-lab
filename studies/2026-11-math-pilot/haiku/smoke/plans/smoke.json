@@ -1,0 +1,55 @@
+{
+  "configs": [
+    {
+      "config_hash": "980e935d0d7eae91f170b863a9f56f57870bcc2fe908bd200d22c7980d952382",
+      "label": "baseline",
+      "values": {
+        "context_limit_tokens": 12000,
+        "feedback_rounds": 0,
+        "planning": false,
+        "retries": 1,
+        "retrieval": "none",
+        "tactic_tools": "none"
+      }
+    },
+    {
+      "config_hash": "37f78cb9d35ff2de8e0d84da8a2f995d04ff0dbede6e595a2332d8ed1fc43afd",
+      "label": "F",
+      "values": {
+        "context_limit_tokens": 12000,
+        "feedback_rounds": 3,
+        "planning": false,
+        "retries": 1,
+        "retrieval": "none",
+        "tactic_tools": "none"
+      }
+    },
+    {
+      "config_hash": "6e17893e50db13a1ad082ad407a64f3359bd7e34acf95bf504894e7b939d86b6",
+      "label": "R4",
+      "values": {
+        "context_limit_tokens": 12000,
+        "feedback_rounds": 0,
+        "planning": false,
+        "retries": 4,
+        "retrieval": "none",
+        "tactic_tools": "none"
+      }
+    }
+  ],
+  "created_at": "2026-11-24T06:44:46+00:00",
+  "decision": "run",
+  "kind": "explicit",
+  "note": "",
+  "phase": "smoke",
+  "repetition_starts": {},
+  "repetitions": 1,
+  "stage": "smoke",
+  "stage_sha256": "b071b05d1ec9c46e49602769ad4853b2d0a7b64460366284c7bba97b3329dbb2",
+  "stage_sha256_of": "written",
+  "tasks": [
+    "mathd_numbertheory_222",
+    "aime_1991_p9",
+    "amc12a_2013_p4"
+  ]
+}

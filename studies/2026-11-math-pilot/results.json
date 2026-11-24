@@ -1,0 +1,849 @@
+{
+  "complete": true,
+  "contrasts": [
+    {
+      "contrast": "Opus: R4 - baseline (math study)",
+      "n": 40,
+      "tasks": [
+        "mathd_algebra_176",
+        "mathd_numbertheory_12",
+        "mathd_numbertheory_328",
+        "mathd_numbertheory_222",
+        "mathd_algebra_188",
+        "imo_1962_p2",
+        "mathd_algebra_598",
+        "algebra_abpbcpcageq3_sumaonsqrtapbgeq3onsqrt2",
+        "mathd_numbertheory_551",
+        "mathd_algebra_137",
+        "numbertheory_2pownm1prime_nprime",
+        "mathd_algebra_484",
+        "amc12a_2021_p18",
+        "mathd_algebra_359",
+        "mathd_numbertheory_341",
+        "mathd_numbertheory_618",
+        "mathd_numbertheory_233",
+        "mathd_numbertheory_150",
+        "algebra_sqineq_unitcircatbpabsamblt1",
+        "mathd_numbertheory_320",
+        "mathd_algebra_289",
+        "mathd_algebra_170",
+        "mathd_algebra_440",
+        "amc12b_2021_p3",
+        "amc12_2000_p1",
+        "mathd_algebra_293",
+        "mathd_numbertheory_314",
+        "aime_1991_p9",
+        "mathd_algebra_320",
+        "amc12a_2013_p4",
+        "algebra_absapbon1pabsapbleqsumabsaon1pabsa",
+        "mathd_numbertheory_582",
+        "imo_1997_p5",
+        "mathd_algebra_332",
+        "imosl_2007_algebra_p6",
+        "amc12a_2020_p15",
+        "mathd_numbertheory_135",
+        "amc12b_2021_p18",
+        "mathd_algebra_142",
+        "amc12_2000_p6"
+      ],
+      "rate_a": 0.85,
+      "rate_b": 0.9166666666666666,
+      "diff": {
+        "estimate": 0.06666666666666668,
+        "low": 0.008333333333333335,
+        "high": 0.14166666666666666,
+        "level": 0.95,
+        "p_positive": 0.9927,
+        "n": 40
+      },
+      "wins": 6,
+      "losses": 1,
+      "ties": 33,
+      "sign_test_p": 0.125,
+      "majority_only_b": 2,
+      "majority_only_a": 1,
+      "mcnemar_majority_p": 1.0,
+      "differing": [
+        [
+          "aime_1991_p9",
+          "0/3",
+          "1/3"
+        ],
+        [
+          "algebra_abpbcpcageq3_sumaonsqrtapbgeq3onsqrt2",
+          "2/3",
+          "1/3"
+        ],
+        [
+          "amc12_2000_p1",
+          "0/3",
+          "3/3"
+        ],
+        [
+          "amc12_2000_p6",
+          "1/3",
+          "3/3"
+        ],
+        [
+          "amc12b_2021_p18",
+          "2/3",
+          "3/3"
+        ],
+        [
+          "imo_1997_p5",
+          "2/3",
+          "3/3"
+        ],
+        [
+          "mathd_numbertheory_135",
+          "2/3",
+          "3/3"
+        ]
+      ]
+    },
+    {
+      "contrast": "Opus: F (math study) - R4",
+      "n": 40,
+      "tasks": [
+        "mathd_numbertheory_222",
+        "mathd_algebra_598",
+        "mathd_algebra_176",
+        "aime_1991_p9",
+        "imo_1962_p2",
+        "mathd_algebra_484",
+        "mathd_numbertheory_150",
+        "mathd_algebra_359",
+        "mathd_numbertheory_233",
+        "mathd_algebra_320",
+        "algebra_absapbon1pabsapbleqsumabsaon1pabsa",
+        "algebra_sqineq_unitcircatbpabsamblt1",
+        "mathd_numbertheory_135",
+        "amc12b_2021_p18",
+        "amc12a_2013_p4",
+        "imo_1997_p5",
+        "mathd_numbertheory_618",
+        "mathd_algebra_137",
+        "numbertheory_2pownm1prime_nprime",
+        "amc12_2000_p6",
+        "algebra_abpbcpcageq3_sumaonsqrtapbgeq3onsqrt2",
+        "mathd_numbertheory_551",
+        "mathd_algebra_142",
+        "amc12_2000_p1",
+        "mathd_numbertheory_341",
+        "amc12a_2021_p18",
+        "amc12a_2020_p15",
+        "mathd_numbertheory_582",
+        "mathd_numbertheory_320",
+        "mathd_algebra_289",
+        "mathd_algebra_332",
+        "amc12b_2021_p3",
+        "mathd_algebra_440",
+        "mathd_algebra_188",
+        "mathd_algebra_170",
+        "mathd_algebra_293",
+        "mathd_numbertheory_12",
+        "mathd_numbertheory_314",
+        "mathd_numbertheory_328",
+        "imosl_2007_algebra_p6"
+      ],
+      "rate_a": 0.9166666666666666,
+      "rate_b": 0.975,
+      "diff": {
+        "estimate": 0.058333333333333334,
+        "low": 0.0,
+        "high": 0.125,
+        "level": 0.95,
+        "p_positive": 0.9554,
+        "n": 40
+      },
+      "wins": 3,
+      "losses": 0,
+      "ties": 37,
+      "sign_test_p": 0.25,
+      "majority_only_b": 3,
+      "majority_only_a": 0,
+      "mcnemar_majority_p": 0.25,
+      "differing": [
+        [
+          "aime_1991_p9",
+          "1/3",
+          "3/3"
+        ],
+        [
+          "algebra_abpbcpcageq3_sumaonsqrtapbgeq3onsqrt2",
+          "1/3",
+          "3/3"
+        ],
+        [
+          "amc12a_2013_p4",
+          "0/3",
+          "3/3"
+        ]
+      ]
+    },
+    {
+      "contrast": "Opus: F - baseline (math study, for reference)",
+      "n": 40,
+      "tasks": [
+        "mathd_algebra_176",
+        "mathd_numbertheory_12",
+        "mathd_numbertheory_328",
+        "mathd_numbertheory_222",
+        "mathd_algebra_188",
+        "imo_1962_p2",
+        "mathd_algebra_598",
+        "algebra_abpbcpcageq3_sumaonsqrtapbgeq3onsqrt2",
+        "mathd_numbertheory_551",
+        "mathd_algebra_137",
+        "numbertheory_2pownm1prime_nprime",
+        "mathd_algebra_484",
+        "amc12a_2021_p18",
+        "mathd_algebra_359",
+        "mathd_numbertheory_341",
+        "mathd_numbertheory_618",
+        "mathd_numbertheory_233",
+        "mathd_numbertheory_150",
+        "algebra_sqineq_unitcircatbpabsamblt1",
+        "mathd_numbertheory_320",
+        "mathd_algebra_289",
+        "mathd_algebra_170",
+        "mathd_algebra_440",
+        "amc12b_2021_p3",
+        "amc12_2000_p1",
+        "mathd_algebra_293",
+        "mathd_numbertheory_314",
+        "aime_1991_p9",
+        "mathd_algebra_320",
+        "amc12a_2013_p4",
+        "algebra_absapbon1pabsapbleqsumabsaon1pabsa",
+        "mathd_numbertheory_582",
+        "imo_1997_p5",
+        "mathd_algebra_332",
+        "imosl_2007_algebra_p6",
+        "amc12a_2020_p15",
+        "mathd_numbertheory_135",
+        "amc12b_2021_p18",
+        "mathd_algebra_142",
+        "amc12_2000_p6"
+      ],
+      "rate_a": 0.85,
+      "rate_b": 0.975,
+      "diff": {
+        "estimate": 0.125,
+        "low": 0.04166666666666667,
+        "high": 0.225,
+        "level": 0.95,
+        "p_positive": 0.9999,
+        "n": 40
+      },
+      "wins": 8,
+      "losses": 0,
+      "ties": 32,
+      "sign_test_p": 0.0078125,
+      "majority_only_b": 4,
+      "majority_only_a": 0,
+      "mcnemar_majority_p": 0.125,
+      "differing": [
+        [
+          "aime_1991_p9",
+          "0/3",
+          "3/3"
+        ],
+        [
+          "algebra_abpbcpcageq3_sumaonsqrtapbgeq3onsqrt2",
+          "2/3",
+          "3/3"
+        ],
+        [
+          "amc12_2000_p1",
+          "0/3",
+          "3/3"
+        ],
+        [
+          "amc12_2000_p6",
+          "1/3",
+          "3/3"
+        ],
+        [
+          "amc12a_2013_p4",
+          "0/3",
+          "3/3"
+        ],
+        [
+          "amc12b_2021_p18",
+          "2/3",
+          "3/3"
+        ],
+        [
+          "imo_1997_p5",
+          "2/3",
+          "3/3"
+        ],
+        [
+          "mathd_numbertheory_135",
+          "2/3",
+          "3/3"
+        ]
+      ]
+    },
+    {
+      "contrast": "Haiku: F - baseline",
+      "n": 40,
+      "tasks": [
+        "mathd_numbertheory_222",
+        "mathd_algebra_598",
+        "mathd_algebra_176",
+        "aime_1991_p9",
+        "mathd_algebra_484",
+        "imo_1962_p2",
+        "mathd_numbertheory_150",
+        "mathd_algebra_359",
+        "mathd_numbertheory_233",
+        "mathd_algebra_320",
+        "algebra_absapbon1pabsapbleqsumabsaon1pabsa",
+        "algebra_sqineq_unitcircatbpabsamblt1",
+        "mathd_numbertheory_135",
+        "amc12b_2021_p18",
+        "amc12a_2013_p4",
+        "imo_1997_p5",
+        "mathd_numbertheory_618",
+        "mathd_algebra_137",
+        "numbertheory_2pownm1prime_nprime",
+        "amc12_2000_p6",
+        "mathd_numbertheory_551",
+        "algebra_abpbcpcageq3_sumaonsqrtapbgeq3onsqrt2",
+        "mathd_algebra_142",
+        "amc12_2000_p1",
+        "mathd_numbertheory_341",
+        "amc12a_2021_p18",
+        "amc12a_2020_p15",
+        "mathd_numbertheory_582",
+        "imosl_2007_algebra_p6",
+        "mathd_numbertheory_320",
+        "mathd_algebra_289",
+        "mathd_algebra_332",
+        "mathd_algebra_440",
+        "amc12b_2021_p3",
+        "mathd_algebra_188",
+        "mathd_algebra_170",
+        "mathd_algebra_293",
+        "mathd_numbertheory_12",
+        "mathd_numbertheory_314",
+        "mathd_numbertheory_328"
+      ],
+      "rate_a": 0.8083333333333333,
+      "rate_b": 0.9416666666666667,
+      "diff": {
+        "estimate": 0.13333333333333336,
+        "low": 0.058333333333333334,
+        "high": 0.2166666666666667,
+        "level": 0.95,
+        "p_positive": 1.0,
+        "n": 40
+      },
+      "wins": 10,
+      "losses": 0,
+      "ties": 30,
+      "sign_test_p": 0.001953125,
+      "majority_only_b": 5,
+      "majority_only_a": 0,
+      "mcnemar_majority_p": 0.0625,
+      "differing": [
+        [
+          "aime_1991_p9",
+          "0/3",
+          "3/3"
+        ],
+        [
+          "algebra_abpbcpcageq3_sumaonsqrtapbgeq3onsqrt2",
+          "1/3",
+          "3/3"
+        ],
+        [
+          "algebra_absapbon1pabsapbleqsumabsaon1pabsa",
+          "2/3",
+          "3/3"
+        ],
+        [
+          "amc12_2000_p6",
+          "2/3",
+          "3/3"
+        ],
+        [
+          "amc12a_2013_p4",
+          "0/3",
+          "2/3"
+        ],
+        [
+          "mathd_algebra_170",
+          "2/3",
+          "3/3"
+        ],
+        [
+          "mathd_algebra_320",
+          "1/3",
+          "3/3"
+        ],
+        [
+          "mathd_numbertheory_135",
+          "1/3",
+          "3/3"
+        ],
+        [
+          "mathd_numbertheory_618",
+          "2/3",
+          "3/3"
+        ],
+        [
+          "numbertheory_2pownm1prime_nprime",
+          "2/3",
+          "3/3"
+        ]
+      ]
+    },
+    {
+      "contrast": "Haiku: R4 - baseline",
+      "n": 40,
+      "tasks": [
+        "mathd_numbertheory_222",
+        "mathd_algebra_598",
+        "mathd_algebra_176",
+        "aime_1991_p9",
+        "mathd_algebra_484",
+        "imo_1962_p2",
+        "mathd_numbertheory_150",
+        "mathd_algebra_359",
+        "mathd_numbertheory_233",
+        "mathd_algebra_320",
+        "algebra_absapbon1pabsapbleqsumabsaon1pabsa",
+        "algebra_sqineq_unitcircatbpabsamblt1",
+        "mathd_numbertheory_135",
+        "amc12b_2021_p18",
+        "amc12a_2013_p4",
+        "imo_1997_p5",
+        "mathd_numbertheory_618",
+        "mathd_algebra_137",
+        "numbertheory_2pownm1prime_nprime",
+        "amc12_2000_p6",
+        "mathd_numbertheory_551",
+        "algebra_abpbcpcageq3_sumaonsqrtapbgeq3onsqrt2",
+        "mathd_algebra_142",
+        "amc12_2000_p1",
+        "mathd_numbertheory_341",
+        "amc12a_2021_p18",
+        "amc12a_2020_p15",
+        "mathd_numbertheory_582",
+        "imosl_2007_algebra_p6",
+        "mathd_numbertheory_320",
+        "mathd_algebra_289",
+        "mathd_algebra_332",
+        "mathd_algebra_440",
+        "amc12b_2021_p3",
+        "mathd_algebra_188",
+        "mathd_algebra_170",
+        "mathd_algebra_293",
+        "mathd_numbertheory_12",
+        "mathd_numbertheory_314",
+        "mathd_numbertheory_328"
+      ],
+      "rate_a": 0.8083333333333333,
+      "rate_b": 0.8833333333333334,
+      "diff": {
+        "estimate": 0.07500000000000001,
+        "low": 0.025,
+        "high": 0.14166666666666666,
+        "level": 0.95,
+        "p_positive": 0.9986,
+        "n": 40
+      },
+      "wins": 6,
+      "losses": 0,
+      "ties": 34,
+      "sign_test_p": 0.03125,
+      "majority_only_b": 3,
+      "majority_only_a": 0,
+      "mcnemar_majority_p": 0.25,
+      "differing": [
+        [
+          "algebra_abpbcpcageq3_sumaonsqrtapbgeq3onsqrt2",
+          "1/3",
+          "3/3"
+        ],
+        [
+          "algebra_absapbon1pabsapbleqsumabsaon1pabsa",
+          "2/3",
+          "3/3"
+        ],
+        [
+          "mathd_algebra_170",
+          "2/3",
+          "3/3"
+        ],
+        [
+          "mathd_algebra_320",
+          "1/3",
+          "3/3"
+        ],
+        [
+          "mathd_numbertheory_135",
+          "1/3",
+          "3/3"
+        ],
+        [
+          "mathd_numbertheory_618",
+          "2/3",
+          "3/3"
+        ]
+      ]
+    },
+    {
+      "contrast": "Haiku: F - R4",
+      "n": 40,
+      "tasks": [
+        "mathd_numbertheory_222",
+        "mathd_algebra_598",
+        "mathd_algebra_176",
+        "imo_1962_p2",
+        "aime_1991_p9",
+        "mathd_algebra_484",
+        "mathd_numbertheory_150",
+        "mathd_algebra_359",
+        "mathd_numbertheory_233",
+        "mathd_algebra_320",
+        "algebra_absapbon1pabsapbleqsumabsaon1pabsa",
+        "algebra_sqineq_unitcircatbpabsamblt1",
+        "mathd_numbertheory_135",
+        "amc12b_2021_p18",
+        "amc12a_2013_p4",
+        "mathd_numbertheory_618",
+        "mathd_algebra_137",
+        "numbertheory_2pownm1prime_nprime",
+        "imo_1997_p5",
+        "amc12_2000_p6",
+        "algebra_abpbcpcageq3_sumaonsqrtapbgeq3onsqrt2",
+        "mathd_numbertheory_551",
+        "mathd_algebra_142",
+        "amc12_2000_p1",
+        "mathd_numbertheory_341",
+        "amc12a_2021_p18",
+        "mathd_numbertheory_582",
+        "amc12a_2020_p15",
+        "mathd_numbertheory_320",
+        "mathd_algebra_289",
+        "mathd_algebra_332",
+        "imosl_2007_algebra_p6",
+        "amc12b_2021_p3",
+        "mathd_algebra_440",
+        "mathd_algebra_188",
+        "mathd_algebra_170",
+        "mathd_algebra_293",
+        "mathd_numbertheory_12",
+        "mathd_numbertheory_314",
+        "mathd_numbertheory_328"
+      ],
+      "rate_a": 0.8833333333333334,
+      "rate_b": 0.9416666666666667,
+      "diff": {
+        "estimate": 0.058333333333333334,
+        "low": 0.008333333333333335,
+        "high": 0.125,
+        "level": 0.95,
+        "p_positive": 0.9862,
+        "n": 40
+      },
+      "wins": 4,
+      "losses": 0,
+      "ties": 36,
+      "sign_test_p": 0.125,
+      "majority_only_b": 2,
+      "majority_only_a": 0,
+      "mcnemar_majority_p": 0.5,
+      "differing": [
+        [
+          "aime_1991_p9",
+          "0/3",
+          "3/3"
+        ],
+        [
+          "amc12_2000_p6",
+          "2/3",
+          "3/3"
+        ],
+        [
+          "amc12a_2013_p4",
+          "0/3",
+          "2/3"
+        ],
+        [
+          "numbertheory_2pownm1prime_nprime",
+          "2/3",
+          "3/3"
+        ]
+      ]
+    }
+  ],
+  "cost": [
+    {
+      "model": "opus",
+      "config": "baseline",
+      "attempts": 120,
+      "verified": 102,
+      "cost_usd": 6.5251,
+      "usd_per_attempt": 0.05438,
+      "usd_per_verified": 0.06397,
+      "calls_per_attempt": 1.0,
+      "output_tokens": 308457,
+      "max_tokens_stops": 4,
+      "refusals": 0,
+      "wall_time_s": 2688.2,
+      "source": "math study held-out"
+    },
+    {
+      "model": "opus",
+      "config": "F",
+      "attempts": 120,
+      "verified": 117,
+      "cost_usd": 13.2026,
+      "usd_per_attempt": 0.11002,
+      "usd_per_verified": 0.11284,
+      "calls_per_attempt": 1.225,
+      "output_tokens": 637268,
+      "max_tokens_stops": 12,
+      "refusals": 0,
+      "wall_time_s": 6626.0,
+      "source": "math study held-out"
+    },
+    {
+      "model": "opus",
+      "config": "R4",
+      "attempts": 120,
+      "verified": 110,
+      "cost_usd": 15.1449,
+      "usd_per_attempt": 0.12621,
+      "usd_per_verified": 0.13768,
+      "calls_per_attempt": 1.358,
+      "output_tokens": 746315,
+      "max_tokens_stops": 13,
+      "refusals": 0,
+      "wall_time_s": 8564.7,
+      "source": "pilot"
+    },
+    {
+      "model": "haiku",
+      "config": "baseline",
+      "attempts": 120,
+      "verified": 97,
+      "cost_usd": 0.236,
+      "usd_per_attempt": 0.00197,
+      "usd_per_verified": 0.00243,
+      "calls_per_attempt": 1.0,
+      "output_tokens": 459627,
+      "max_tokens_stops": 3,
+      "refusals": 0,
+      "wall_time_s": 1899.3,
+      "source": "pilot"
+    },
+    {
+      "model": "haiku",
+      "config": "F",
+      "attempts": 120,
+      "verified": 113,
+      "cost_usd": 0.441,
+      "usd_per_attempt": 0.00367,
+      "usd_per_verified": 0.0039,
+      "calls_per_attempt": 1.283,
+      "output_tokens": 862345,
+      "max_tokens_stops": 11,
+      "refusals": 0,
+      "wall_time_s": 4911.2,
+      "source": "pilot"
+    },
+    {
+      "model": "haiku",
+      "config": "R4",
+      "attempts": 120,
+      "verified": 106,
+      "cost_usd": 0.502,
+      "usd_per_attempt": 0.00418,
+      "usd_per_verified": 0.00474,
+      "calls_per_attempt": 1.417,
+      "output_tokens": 992048,
+      "max_tokens_stops": 13,
+      "refusals": 0,
+      "wall_time_s": 5552.2,
+      "source": "pilot"
+    }
+  ],
+  "r4_repeats": {
+    "opus": {
+      "attempts_with_two_or_more_proofs": 17,
+      "with_a_repeated_proof": 3
+    },
+    "haiku": {
+      "attempts_with_two_or_more_proofs": 15,
+      "with_a_repeated_proof": 3
+    }
+  },
+  "opus_decomposition": {
+    "f_minus_b": 0.125,
+    "r4_minus_b": 0.06666666666666668,
+    "f_minus_r4": 0.058333333333333334
+  },
+  "status": {
+    "opus-math/baseline/completed": 120,
+    "opus-math/F/completed": 120,
+    "opus/R4/completed": 120,
+    "haiku/baseline/completed": 120,
+    "haiku/F/completed": 120,
+    "haiku/R4/completed": 120
+  },
+  "max_tokens_attempts": [
+    [
+      "opus-math",
+      "F",
+      "imosl_2007_algebra_p6",
+      1,
+      4
+    ],
+    [
+      "opus-math",
+      "baseline",
+      "imosl_2007_algebra_p6",
+      2,
+      1
+    ],
+    [
+      "opus-math",
+      "baseline",
+      "imo_1997_p5",
+      0,
+      1
+    ],
+    [
+      "opus-math",
+      "F",
+      "imosl_2007_algebra_p6",
+      0,
+      4
+    ],
+    [
+      "opus-math",
+      "baseline",
+      "imosl_2007_algebra_p6",
+      0,
+      1
+    ],
+    [
+      "opus-math",
+      "baseline",
+      "imosl_2007_algebra_p6",
+      1,
+      1
+    ],
+    [
+      "opus-math",
+      "F",
+      "imosl_2007_algebra_p6",
+      2,
+      4
+    ],
+    [
+      "opus",
+      "R4",
+      "imo_1997_p5",
+      1,
+      1
+    ],
+    [
+      "opus",
+      "R4",
+      "imosl_2007_algebra_p6",
+      1,
+      4
+    ],
+    [
+      "opus",
+      "R4",
+      "imosl_2007_algebra_p6",
+      0,
+      4
+    ],
+    [
+      "opus",
+      "R4",
+      "imosl_2007_algebra_p6",
+      2,
+      4
+    ],
+    [
+      "haiku",
+      "baseline",
+      "imo_1997_p5",
+      0,
+      1
+    ],
+    [
+      "haiku",
+      "baseline",
+      "imo_1997_p5",
+      2,
+      1
+    ],
+    [
+      "haiku",
+      "baseline",
+      "imo_1997_p5",
+      1,
+      1
+    ],
+    [
+      "haiku",
+      "F",
+      "imo_1997_p5",
+      0,
+      3
+    ],
+    [
+      "haiku",
+      "F",
+      "imo_1997_p5",
+      1,
+      4
+    ],
+    [
+      "haiku",
+      "F",
+      "imo_1997_p5",
+      2,
+      4
+    ],
+    [
+      "haiku",
+      "R4",
+      "imo_1997_p5",
+      0,
+      4
+    ],
+    [
+      "haiku",
+      "R4",
+      "imo_1997_p5",
+      1,
+      4
+    ],
+    [
+      "haiku",
+      "R4",
+      "imo_1997_p5",
+      2,
+      4
+    ],
+    [
+      "haiku",
+      "R4",
+      "imosl_2007_algebra_p6",
+      0,
+      1
+    ]
+  ]
+}

@@ -13,12 +13,14 @@ Times are UTC.
 ## Owner approvals
 
 - 2026-11-25: "yes, run the smoke test". Prices were re-checked first (`price_check.md`).
+- 2026-11-25: "yes, run the setup check and freeze", given the smoke costs and projections above.
 
 ## Stages
 
 | Stage | Code commit | Started | Command | Result |
 |---|---|---|---|---|
 | smoke | 5a787d8 | 2026-11-25T08:38:00Z | `harnesslab study search studies/2026-11-math-feedback-haiku/study.yaml --stage smoke --yes` | 12/12 cells, $0.0546; every call served by claude-haiku-5-5; 0 refusals, token-cap stops or harness errors |
+| setup | a9398f8 | 2026-11-25T14:10:30Z | `harnesslab study search studies/2026-11-math-feedback-haiku/study.yaml --stage setup --yes` | (running) |
 
 ## Smoke test check (2026-11-25)
 

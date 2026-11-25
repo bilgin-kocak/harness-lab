@@ -20,7 +20,8 @@ Times are UTC.
 | Stage | Code commit | Started | Command | Result |
 |---|---|---|---|---|
 | smoke | 5a787d8 | 2026-11-25T08:38:00Z | `harnesslab study search studies/2026-11-math-feedback-haiku/study.yaml --stage smoke --yes` | 12/12 cells, $0.0546; every call served by claude-haiku-5-5; 0 refusals, token-cap stops or harness errors |
-| setup | a9398f8 | 2026-11-25T14:10:30Z | `harnesslab study search studies/2026-11-math-feedback-haiku/study.yaml --stage setup --yes` | (running) |
+| setup | a9398f8 | 2026-11-25T14:10:30Z | `harnesslab study search studies/2026-11-math-feedback-haiku/study.yaml --stage setup --yes` | 120/120 cells, $0.2701, 14:10-14:38; every call served by claude-haiku-5-5; 0 refusals, token-cap stops or harness errors |
+| freeze | d3deb77 | 2026-11-25T14:39:02Z | `harnesslab study freeze studies/2026-11-math-feedback-haiku/study.yaml --yes` | F frozen (8fadd8740a41), chosen by held_out.fixed_frozen; freeze.json committed in 61beca4 |
 
 ## Smoke test check (2026-11-25)
 
@@ -41,3 +42,21 @@ the warm smoke cells (about 87 s each on mostly hard problems), the held-out pha
 14-25 hours.
 
 No deviation.
+
+## Setup check and freeze (2026-11-25)
+
+- **Setup check:** every arm ran on all 30 dev problems. Every call was served by
+  claude-haiku-5-5, with no refusals, token-cap stops or harness errors. The setup records select
+  nothing. The ranking the freeze command prints is for the record only.
+- **Freeze checks against REGISTRATION.md, all passing:**
+  - frozen F, chosen by fixed_frozen; comparators R4 and P; baseline B;
+  - 5 repetitions, order seed 20261125;
+  - the 204 held-out IDs' hash and the prompts hash as registered;
+  - the placebo sentence and Haiku prices in provenance.
+- **The held-out phase's own checks** (`freeze_problems`): none fail.
+- **The cells it would run:** 4,080, 1,020 per arm, interleaved.
+- **Projection for the held-out phase:**
+  - cost: $10.04 from the smoke and setup costs, or $13.77 from the pilot's;
+  - budget: ceiling $35, with $0.32 spent;
+  - time: about 16-19 h (setup throughput 4.3 cells/min).
+- **Deviations:** none.

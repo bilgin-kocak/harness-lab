@@ -14,6 +14,7 @@ Times are UTC.
 
 - 2026-11-25: "yes, run the smoke test". Prices were re-checked first (`price_check.md`).
 - 2026-11-25: "yes, run the setup check and freeze", given the smoke costs and projections above.
+- 2026-11-25: "yes, start the held-out run", given a projection of $10-14 and the $35 cap.
 
 ## Stages
 
@@ -22,6 +23,7 @@ Times are UTC.
 | smoke | 5a787d8 | 2026-11-25T08:38:00Z | `harnesslab study search studies/2026-11-math-feedback-haiku/study.yaml --stage smoke --yes` | 12/12 cells, $0.0546; every call served by claude-haiku-5-5; 0 refusals, token-cap stops or harness errors |
 | setup | a9398f8 | 2026-11-25T14:10:30Z | `harnesslab study search studies/2026-11-math-feedback-haiku/study.yaml --stage setup --yes` | 120/120 cells, $0.2701, 14:10-14:38; every call served by claude-haiku-5-5; 0 refusals, token-cap stops or harness errors |
 | freeze | d3deb77 | 2026-11-25T14:39:02Z | `harnesslab study freeze studies/2026-11-math-feedback-haiku/study.yaml --yes` | F frozen (8fadd8740a41), chosen by held_out.fixed_frozen; freeze.json committed in 61beca4 |
+| held-out | e939c64 (+ run scripts) | 2026-11-25T17:17:01Z | `run_heldout.sh` (resumes after outages per section 8) and `snapshot_heldout.sh` (hourly record snapshots) | (running) |
 
 ## Smoke test check (2026-11-25)
 

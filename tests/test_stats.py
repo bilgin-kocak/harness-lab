@@ -250,3 +250,29 @@ def test_sign_flip_test_monte_carlo_is_seeded_and_close_to_exact():
     assert a == pytest.approx(math.erfc(z / math.sqrt(2)), abs=0.01)
     # the p-value of a Monte Carlo test is never 0
     assert sign_flip_test([1.0] * 40, resamples=1000, seed=1) == pytest.approx(1 / 1001)
+
+
+def test_sign_flip_test_on_a_lattice_is_exact_for_any_number_of_tasks():
+    import math
+    import random
+
+    from harnesslab.study.stats import sign_flip_test
+
+    # equal to full enumeration where both apply
+    rng = random.Random(3)
+    for _ in range(50):
+        diffs = [rng.choice([-1, -0.8, -0.4, 0, 0.2, 0.6, 1.0]) for _ in range(rng.randint(1, 14))]
+        exact = sign_flip_test(diffs)
+        if exact is None:
+            assert sign_flip_test(diffs, lattice=5) is None
+        else:
+            assert sign_flip_test(diffs, lattice=5) == pytest.approx(exact)
+    # thirds and fifths together on the lcm lattice
+    assert sign_flip_test([1 / 3, 1 / 3, 1 / 3, -1.0], lattice=60) == pytest.approx(1.0)
+    # many tasks: close to the normal approximation, and deterministic
+    big = [0.2, 0.4, -0.2, 0.6, 0.2, 0.2, -0.4, 0.8, 0.2, 0.4] * 20
+    p = sign_flip_test(big, lattice=5)
+    z = abs(math.fsum(big)) / math.sqrt(math.fsum(x * x for x in big))
+    assert p == pytest.approx(math.erfc(z / math.sqrt(2)), rel=0.2) and p < 1e-6
+    with pytest.raises(ValueError, match="multiple of 1/5"):
+        sign_flip_test([0.5, 0.2], lattice=5)

@@ -637,3 +637,18 @@ def test_without_fixed_frozen_the_freeze_is_unchanged(tmp_path: Path):
     freeze = study.freeze()
     assert "chosen_by" not in freeze["frozen"]
     assert freeze["held_out_spec"]["fixed_frozen"] is None
+
+
+def test_the_freeze_command_confirms_the_fixed_configuration(tmp_path: Path, monkeypatch):
+    from harnesslab import cli_study
+
+    held = {"require_committed_freeze": False, "fixed_frozen": {"label": "B", "set": {"power": 2}}}
+    study = _study(tmp_path, held_out=held)
+    asked: list[str] = []
+    monkeypatch.setattr(cli_study, "_confirm", lambda question, yes: asked.append(question))
+    cli_study._freeze(study, yes=False)  # no dev records: the ranking is empty, the freeze is not
+    cfg = study.fixed_frozen_config()
+    assert asked == [
+        f"Freeze B ({cfg.config_hash[:12]}), fixed by held_out.fixed_frozen? This cannot be undone."
+    ]
+    assert study.store.read_freeze()["frozen"]["config_hash"] == cfg.config_hash

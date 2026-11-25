@@ -157,7 +157,8 @@ def study_search(
 
 @study_app.command("freeze")
 def study_freeze(spec: SpecArg, yes: YesOpt = False) -> None:
-    """Write freeze.json once, from the dev ranking. Commit it before running heldout."""
+    """Write freeze.json once: held_out.fixed_frozen if the spec sets it, else the best
+    configuration on dev. Commit it before running heldout."""
     with _study(spec) as study:
         _freeze(study, yes=yes)
 
@@ -187,11 +188,30 @@ def _freeze(study: Any, *, yes: bool) -> None:
             f"[yellow]{len(open_cells)} interrupted dev cell(s) never ran again (resume the search "
             f"to complete them): {escape(', '.join(open_cells[:5]))}[/]"
         )
-    best = ranking.best
-    if best is None:
-        err_console.print("[red]no feasible configuration: nothing to freeze[/]")
-        raise typer.Exit(code=1)
-    _confirm(f"Freeze {best.label} ({best.config_hash[:12]})? This cannot be undone.", yes=yes)
+    fixed = study.spec.held_out.fixed_frozen
+    if fixed is not None:
+        from harnesslab.study.contract import ConfigError
+
+        try:
+            cfg = study.fixed_frozen_config()
+        except ConfigError as exc:
+            err_console.print(f"[red]fixed_frozen is not valid: {escape(str(exc))}[/]")
+            raise typer.Exit(code=1) from exc
+        console.print(
+            "The dev ranking above is for the record only: held_out.fixed_frozen fixes the frozen "
+            "configuration."
+        )
+        _confirm(
+            f"Freeze {fixed.label} ({cfg.config_hash[:12]}), fixed by held_out.fixed_frozen? "
+            "This cannot be undone.",
+            yes=yes,
+        )
+    else:
+        best = ranking.best
+        if best is None:
+            err_console.print("[red]no feasible configuration: nothing to freeze[/]")
+            raise typer.Exit(code=1)
+        _confirm(f"Freeze {best.label} ({best.config_hash[:12]})? This cannot be undone.", yes=yes)
     data = study.freeze()
     console.print(f"wrote {study.store.freeze_path} (sha256 {data['freeze_sha256'][:16]})")
     console.print("[yellow]Commit freeze.json before running `harnesslab study heldout`.[/]")

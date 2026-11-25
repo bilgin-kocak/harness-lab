@@ -1769,3 +1769,13 @@ def test_the_worst_case_cost_of_an_attempt_follows_its_configuration(tmp_path):
         context_limit_tokens=48000,
     )
     assert adapter.max_attempt_cost_usd(every) == pytest.approx(12 * per_call(48000))
+
+
+async def test_records_name_feedback_content_only_when_the_knob_is_on(tmp_path):
+    for knob in (False, True):
+        adapter, _, _ = make_adapter(
+            tmp_path / str(knob), script=[proof_reply("linarith")], feedback_knob=knob
+        )
+        task = adapter.load_tasks(["fixture_dev_one"])[0]
+        attempt = await adapter.run(task, adapter.baseline_config(), run_ctx(tmp_path / str(knob)))
+        assert ("feedback_content" in attempt.details["config"]) is knob

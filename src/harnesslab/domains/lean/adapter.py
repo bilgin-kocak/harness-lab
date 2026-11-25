@@ -447,6 +447,11 @@ class LeanAdapter(DomainAdapterBase):
         if ctx.keep_artifacts and isinstance(proof, str):
             ctx.attempt_dir.mkdir(parents=True, exist_ok=True)
             (ctx.attempt_dir / "proof.lean").write_text(proof + "\n", encoding="utf-8")
+        details = {**outcome.details, "phase": ctx.phase, "seed": ctx.seed}
+        if not self.feedback_knob:  # a record names only the knobs its search space has
+            details["config"] = {
+                k: v for k, v in details["config"].items() if k != "feedback_content"
+            }
         return Attempt(
             task_id=task.id,
             config_hash=config.config_hash,
@@ -456,7 +461,7 @@ class LeanAdapter(DomainAdapterBase):
             usage=outcome.usage,
             wall_time_s=outcome.wall_time_s,
             error=outcome.error,
-            details={**outcome.details, "phase": ctx.phase, "seed": ctx.seed},
+            details=details,
         )
 
     async def verify(self, task: Task, attempt: Attempt, ctx: VerifyContext) -> Verdict:

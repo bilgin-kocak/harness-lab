@@ -91,7 +91,12 @@ def render_markdown(results: dict[str, Any]) -> str:
             f"- baseline `{freeze['baseline']['config_hash'][:12]}`: "
             f"`{freeze['baseline']['config']}`",
             f"- frozen `{freeze['frozen'].get('label')}` "
-            f"`{freeze['frozen']['config_hash'][:12]}`: `{freeze['frozen']['config']}`",
+            f"`{freeze['frozen']['config_hash'][:12]}`: `{freeze['frozen']['config']}`"
+            + (
+                " (fixed by held_out.fixed_frozen, not ranked)"
+                if freeze["frozen"].get("chosen_by") == "held_out.fixed_frozen"
+                else ""
+            ),
         ]
         for c in freeze.get("comparators") or []:
             out.append(f"- comparator `{c['label']}` `{c['config_hash'][:12]}`")

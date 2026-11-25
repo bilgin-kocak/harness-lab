@@ -15,7 +15,9 @@ The protocol is what makes a result trustworthy, so it is strict:
 * ``freeze.json`` is written once. Before the held-out phase it must still match the split file,
   the adapter (name, version, options, provenance), the objective, statistics and held-out
   sections of the spec (as written, and their values in effect, so a changed default counts) and
-  the dev records, and re-ranking the dev records must give the same choice;
+  the dev records; and the frozen configuration must still be the one the spec fixes
+  (``held_out.fixed_frozen``, a confirmatory study) or, without it, what re-ranking the dev
+  records gives;
 * every held-out cell runs once (see :mod:`harnesslab.study.store`);
 * the budget covers every phase together, counts interrupted cells in full, and the search may not
   spend the held-out reserve.
@@ -295,7 +297,7 @@ class Study:
         stand_in = self.baseline
         if self.spec.held_out.fixed_frozen is not None:
             try:
-                stand_in = self._fixed_frozen()
+                stand_in = self.fixed_frozen_config()
             except ConfigError as exc:
                 problems.append(f"fixed_frozen: {exc}")
         # The held-out configurations, built as the freeze builds them (the baseline stands in
@@ -314,7 +316,7 @@ class Study:
             problems.append(f"robustness: unknown knob {rob.knob!r}")
         elif rob is not None:
             try:
-                self._robustness_configs(self.baseline)
+                self._robustness_configs(stand_in)
             except ConfigError as exc:
                 problems.append(f"robustness: {exc}")
         not_compared = robustness_not_computed(self.spec)
@@ -692,7 +694,7 @@ class Study:
         return None
 
     # -- freeze ----------------------------------------------------------------
-    def _fixed_frozen(self) -> Config:
+    def fixed_frozen_config(self) -> Config:
         """The frozen configuration the spec fixes (:class:`ConfigError` if it is not valid)."""
         fixed = self.spec.held_out.fixed_frozen
         if fixed is None:
@@ -789,7 +791,7 @@ class Study:
             fixed = self.spec.held_out.fixed_frozen is not None
             if fixed:
                 try:
-                    frozen = self._fixed_frozen()
+                    frozen = self.fixed_frozen_config()
                 except ConfigError as exc:
                     raise ProtocolError(
                         f"cannot freeze: fixed_frozen is not valid ({exc})"
@@ -927,7 +929,7 @@ class Study:
             problems.append("the dev records changed since the freeze")
         if freeze.get("frozen", {}).get("chosen_by") == "held_out.fixed_frozen":
             try:
-                fixed_hash = self._fixed_frozen().config_hash
+                fixed_hash = self.fixed_frozen_config().config_hash
             except ConfigError as exc:
                 fixed_hash = None
                 problems.append(f"the spec's fixed_frozen is no longer valid: {exc}")

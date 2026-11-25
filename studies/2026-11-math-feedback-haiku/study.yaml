@@ -50,15 +50,16 @@ search:
       configs: *arms
 
 objective:
-  # Not used to choose anything (held_out.fixed_frozen fixes F); a pass_rate objective keeps the
-  # spec complete and ranks the setup records for the record.
+  # Chooses nothing: held_out.fixed_frozen fixes F. The protocol needs an objective, and the setup
+  # records are only a check that every arm runs.
   kind: pass_rate
 
 budget:
-  # Set before the smoke test from the pilot's measured Haiku costs: held-out projected at about
-  # $14 (range $9-19). The reserve is 1.5 x the high end; the owner approves the held-out budget
-  # after seeing the smoke and setup costs, and any change here is committed before it applies.
-  max_cost_usd: 45.0
+  # REGISTRATION.md section 8. The cap stops every phase: $35 for all phases together; held-out is
+  # projected at about $14 (range $9-19) from the pilot's Haiku costs. $30 of it is reserved for the
+  # held-out phase, so the smoke test and setup check may spend at most $5. A higher cap needs the
+  # owner's approval and a DEVIATIONS.md entry committed before it applies.
+  max_cost_usd: 35.0
   cost_limit_per_attempt_usd: 10.0
   held_out_reserve_usd: 30.0
 

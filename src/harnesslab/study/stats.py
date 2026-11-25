@@ -89,21 +89,51 @@ def exact_sign_test(wins: int, losses: int) -> float | None:
 EXACT_SIGN_FLIP_MAX = 16  # nonzero differences up to which every sign pattern is enumerated
 
 
+def _lattice_sign_flip(units: list[int]) -> float:
+    """Exact two-sided sign-flip p-value for integer differences, by counting sign patterns."""
+    counts: dict[int, int] = {0: 1}
+    for u in units:
+        nxt: dict[int, int] = {}
+        for total, ways in counts.items():
+            for signed in (u, -u):
+                nxt[total + signed] = nxt.get(total + signed, 0) + ways
+        counts = nxt
+    observed = abs(sum(units))
+    hits = sum(ways for total, ways in counts.items() if abs(total) >= observed)
+    return hits / 2 ** len(units)
+
+
 def sign_flip_test(
-    diffs: Sequence[float], *, resamples: int = 100_000, seed: int = 0
+    diffs: Sequence[float],
+    *,
+    resamples: int = 100_000,
+    seed: int = 0,
+    lattice: int | None = None,
 ) -> float | None:
     """Two-sided p-value of a paired sign-flip test that the mean of ``diffs`` is zero.
 
     Under the null, each task's difference is as likely to have either sign. The statistic is
     the absolute sum of the differences. Ties (differences within :data:`TIE_TOLERANCE` of zero)
-    change no sum and are dropped. Up to :data:`EXACT_SIGN_FLIP_MAX` nonzero differences, every
-    sign pattern is enumerated (exact). Beyond that, ``resamples`` random patterns are drawn with
-    a seeded generator, and the p-value is ``(1 + hits) / (1 + resamples)``, which is never 0.
-    ``None`` when no difference is nonzero.
+    change no sum and are dropped. ``None`` when no difference is nonzero.
+
+    * With ``lattice``, every difference must be a multiple of ``1 / lattice`` (for example per-task
+      rates over 5 repetitions with ``lattice=5``, or over any 1 to 5 with ``lattice=60``). The
+      p-value is then exact for any number of tasks: the sign patterns are counted on the integers
+      ``diff * lattice``. A difference off the lattice raises ``ValueError``.
+    * Without it, every sign pattern is enumerated up to :data:`EXACT_SIGN_FLIP_MAX` nonzero
+      differences (exact). Beyond that, ``resamples`` random patterns are drawn with a seeded
+      generator, and the p-value is ``(1 + hits) / (1 + resamples)``, which is never 0.
     """
     d = [x for x in (_snap(float(v)) for v in diffs) if x != 0.0]
     if not d:
         return None
+    if lattice is not None:
+        if isinstance(lattice, bool) or not isinstance(lattice, int) or lattice < 1:
+            raise ValueError("lattice must be a positive integer")
+        units = [round(x * lattice) for x in d]
+        if any(abs(u - x * lattice) > 1e-6 for u, x in zip(units, d, strict=True)):
+            raise ValueError(f"a difference is not a multiple of 1/{lattice}")
+        return _lattice_sign_flip(units)
     observed = abs(math.fsum(d))
     slack = TIE_TOLERANCE * len(d)  # a pattern equal to the observed sum on paper counts
     if len(d) <= EXACT_SIGN_FLIP_MAX:

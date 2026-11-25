@@ -1,0 +1,71 @@
+{
+  "configs": [
+    {
+      "config_hash": "993d6730d926ebc731c14c0292c67a1b95e94a43e1cd935cc062b1439551bf16",
+      "label": "baseline",
+      "values": {
+        "context_limit_tokens": 12000,
+        "feedback_content": "lean",
+        "feedback_rounds": 0,
+        "planning": false,
+        "retries": 1,
+        "retrieval": "none",
+        "tactic_tools": "none"
+      }
+    },
+    {
+      "config_hash": "59eb7f95143b9fcfb6ed55261eb29b51a7bb9f44f5188f603a0fca17c5704807",
+      "label": "P",
+      "values": {
+        "context_limit_tokens": 12000,
+        "feedback_content": "placebo",
+        "feedback_rounds": 3,
+        "planning": false,
+        "retries": 1,
+        "retrieval": "none",
+        "tactic_tools": "none"
+      }
+    },
+    {
+      "config_hash": "8fadd8740a416895ef13cf487e9d99db140b538c8e7b71371f5c52e2f7b7ed28",
+      "label": "F",
+      "values": {
+        "context_limit_tokens": 12000,
+        "feedback_content": "lean",
+        "feedback_rounds": 3,
+        "planning": false,
+        "retries": 1,
+        "retrieval": "none",
+        "tactic_tools": "none"
+      }
+    },
+    {
+      "config_hash": "40ca2d6a9288fc1d181d0473be3efa4224251cbc9b42c53346804e1f10b3b551",
+      "label": "R4",
+      "values": {
+        "context_limit_tokens": 12000,
+        "feedback_content": "lean",
+        "feedback_rounds": 0,
+        "planning": false,
+        "retries": 4,
+        "retrieval": "none",
+        "tactic_tools": "none"
+      }
+    }
+  ],
+  "created_at": "2026-11-25T08:38:19+00:00",
+  "decision": "run",
+  "kind": "explicit",
+  "note": "",
+  "phase": "smoke",
+  "repetition_starts": {},
+  "repetitions": 1,
+  "stage": "smoke",
+  "stage_sha256": "3884196f85d50066f74f5dad157a5a9d913f163808671cd6eb4eb0a5a9c8f853",
+  "stage_sha256_of": "written",
+  "tasks": [
+    "mathd_numbertheory_30",
+    "amc12a_2019_p21",
+    "amc12a_2008_p15"
+  ]
+}

@@ -1,9 +1,9 @@
 # Pre-registration: does showing a failed proof with Lean's report beat fresh tries? Claude Haiku 5.5 on miniF2F, at a cap of 4 calls
 
-- **Status: DRAFT, under review, not yet registered.** The registration will be the commit that
-  changes this line to "registered" and fills in section 11's hashes. That commit is made before any
-  paid call of this study. Its hash is then recorded in `RUNLOG.md`.
-- **Authors:** [owner to fill in]
+- **Status: registered, 2026-11-25.** The registration is the commit that set this line and filled
+  in section 11's hashes, before any paid call of this study. Its hash is recorded in `RUNLOG.md`.
+- **Authors:** [owner to fill in before lodging on OSF. Filling in this field and section 12's
+  funding field is not a deviation.]
 - **Calls made:** none.
 
 ## 1. Summary
@@ -13,9 +13,9 @@ it is shown that proof with Lean's report, rather than simply trying again from 
 
 - **Model:** Claude Haiku 5.5.
 - **Problems:** 204 miniF2F problems we have never run.
-- **Arms:** four, each repeated 5 times per problem, in one interleaved random order. All four share
-  the same cap of 4 model calls per attempt. The calls, tokens and cost actually used are reported
-  by arm.
+- **Arms:** four, each repeated 5 times per problem, in one interleaved random order. F, R4 and P
+  share the same cap of 4 model calls per attempt; B makes one call. The calls, tokens and cost
+  actually used are reported by arm.
   - B: one call.
   - F: up to 3 rounds, each showing the failed proof and Lean's report.
   - R4: up to 4 fresh tries.
@@ -30,11 +30,13 @@ it is shown that proof with Lean's report, rather than simply trying again from 
   117/120 held-out attempts against the baseline's 102/120 with Claude Opus 5.5. F could make up to
   4 calls and the baseline 1, so the comparison mixed feedback with extra calls.
 - **Our exploratory pilot** (`studies/2026-11-math-pilot/`) ran B, F and R4 with Haiku 5.5, and R4
-  with Opus 5.5. It used the same 40 problems, already used once. Its figures are exploratory, not
-  results.
+  with Opus 5.5. It used the same 40 problems, already used once. Its figures, taken from
+  `studies/2026-11-math-pilot/REPORT.md`, are exploratory, not results.
   - **Haiku:** F's verified rate was 5.8 points above R4's (4 problems up, 0 down, sign test
     p = 0.125).
-  - **Opus:** F was 5.8 points above R4 (3 up, 0 down, p = 0.25).
+  - **Opus:** F was 5.8 points above R4 (3 up, 0 down, p = 0.25). F's records come from the math
+    study's held-out run on 2026-11-23, and R4's from the pilot on 2026-11-24, so the two arms ran
+    on different days.
   - **First-call noise.** About 1.8 of Haiku's 5.8 points came from first-call successes, which F
     and R4 share by design: 103 against 99 of 120 with the identical first request. The arms ran in
     separate time blocks. At equal first-call success, the gap would have been about +4 points.
@@ -57,10 +59,14 @@ it is shown that proof with Lean's report, rather than simply trying again from 
     16+16 against 32 on 59 hard problems) report gains from repair at matched sample counts.
   - Goedel-Prover-V2 reports that removing compiler error messages lowers performance, without a
     matched resampling arm.
-- **What is new here.** We found no pre-registered comparison that combines all of these:
-  - error feedback against fresh tries at an equal call cap;
-  - repeated attempts on each problem;
-  - a placebo arm that keeps the failed proof but removes Lean's report.
+- **What is new here.** Li & Li test conditions analogous to F and P against resampling. What this
+  study adds:
+  - pre-registration;
+  - a multi-round cap of 4 calls;
+  - 5 repetitions on each of 204 problems;
+  - a current API model.
+
+  We found no study with all of these, but our search was not systematic (`RELATED_WORK.md`).
 
 ## 3. What was seen before this registration
 
@@ -156,12 +162,15 @@ attempt.
   - verifier timeouts;
   - attempts invalidated by a served-model mismatch (they carry no proof).
 - **Rerun:** infrastructure failures (`unavailable`: no answer from the API, for reasons unrelated
-  to the configuration) are not outcomes. The protocol runs them again.
+  to the configuration) are not outcomes. One stops the phase, and on resuming (section 8) the cell
+  runs again.
 
 ## 6. Analysis (`analyze.py`, committed with this registration)
 
-**What counts as the result.** The registered results are `analyze.py`'s output. The protocol's own
-`results.json` and report (frozen and comparators against the baseline) are descriptive.
+**What counts as the result.** The registered results are the output of
+`python studies/2026-11-math-feedback-haiku/analyze.py`: its printed summary and the full
+`analysis.json` it writes. The protocol's own `results.json` and report (frozen and comparators
+against the baseline) are descriptive.
 
 **Blinding.** None is needed: outcomes are machine-verified, and `analyze.py` runs unchanged on the
 records.
@@ -169,15 +178,18 @@ records.
 ### 6.1 Data and missing cells
 
 1. **Resuming.** A stopped held-out phase is resumed, under section 8's rules, until every cell has
-   a valid record.
+   a valid record. The exception is a cell that is `unavailable` or a harness error on 3 separate
+   runs: it is recorded as missing.
 2. **Matched repetitions.** If cells remain missing, a problem's rates use the repetitions that have
    a valid record in all four arms. Problems with no such repetition are left out and listed. On a
    complete run this uses all 5 repetitions of all 204 problems.
-3. **Why this is safe.** The cell order is a seeded random permutation, so which cells are missing
-   does not depend on arm or outcome.
+3. **Why this is safe after a cap stop.** For a phase stopped by the cap, the cells left are a
+   random suffix of the seeded order, so which cells are missing does not depend on arm or outcome.
+   A cell that keeps failing for its own reasons need not be random, so missing cells are reported
+   by arm.
 4. **Reporting.** The report gives:
    - the number of usable and complete problems;
-   - every missing cell;
+   - every missing cell, with its arm;
    - a complete-case analysis (6.6).
 
 ### 6.2 Primary (H1)
@@ -206,11 +218,16 @@ records.
 
 - **Method.** The same estimate, intervals and sign-flip test as the primary. Holm's correction is
   applied across the two, at familywise α = 0.05, with a missing p counted as 1.
-- **Reading.** Each secondary takes the same three-way reading as H1, using its Holm-adjusted p.
-- **Attribution rule.** A claim that Lean's report itself helps requires H2 "difference". If H1 is
-  "difference" and H2 is not, the report says the gain over fresh tries is not attributed to Lean's
-  report; it may come from seeing the failed attempt (H3). H2 has no power claim, so "inconclusive"
-  is a likely outcome for it.
+- **Reading.** Each secondary takes the same three-way reading as H1, with two changes:
+  - it uses its Holm-adjusted p;
+  - its "no difference" part needs the 95% interval within (−0.03, +0.03), which is α/2 per test.
+- **Attribution rule.**
+  - A claim that Lean's report itself helps requires both H1 and H2 to read "difference" with F
+    above (F above R4, and F above P).
+  - If H1 reads "difference" with F above R4 and H2 does not, the report says the gain over fresh
+    tries is not attributed to Lean's report; it may come from seeing the failed attempt (H3).
+  - In every other pattern, the three readings are reported and nothing is attributed.
+  - H2 has no power claim, so "inconclusive" is a likely outcome for it.
 
 ### 6.4 Descriptive
 
@@ -219,7 +236,8 @@ records.
 - **F − R4 within strata of B's verified rate:** 1, between 0 and 1, and 0. B's attempts are
   independent of F's and R4's, so the strata are not selected on their outcomes.
 - **Headroom-scaled effect:** (rate_F − rate_R4) / (1 − rate_R4), with a 95% percentile bootstrap
-  over problems (10,000, seed 20261125).
+  over problems (10,000, seed 20261125). In this and every other bootstrap of a ratio or share,
+  resamples where the statistic is undefined are left out, and the number used is reported.
 - **Post-first-call gain:** F − R4 on each problem's verified rate minus its round-1 pass rate.
   This removes the first-call noise that F and R4 share by design.
 
@@ -237,8 +255,11 @@ records.
      differ only by chance.
    - This statistic reuses H1's attempts, so it is not a separate test. Pooled over attempts, it
      weighs problems with many first-call failures more.
-   - It is also split by why round 1 failed: no proof, timeout, an unknown name (identifier or
-     constant), or another Lean error or rejection.
+   - It is also split by why round 1 failed:
+     - no proof, including a round 1 ended by an API error or a cap;
+     - timeout;
+     - an unknown name (identifier or constant);
+     - another Lean error or rejection.
 3. **Drift.** The verified share per arm in four equal-count quarters of all valid records, in
    order of start time.
 4. **Integrity, by arm, over all valid records:**
@@ -272,7 +293,8 @@ All are reported. None replaces the primary.
 - **By arm,** over matched repetitions:
   - total cost, cost per attempt and cost per verified proof;
   - calls per attempt and output tokens.
-- **F/R4 ratio** of cost per verified proof, with a 95% percentile bootstrap over problems.
+- **F/R4 ratio** of cost per verified proof, with a 95% percentile bootstrap over problems (10,000
+  resamples, seed 20261125).
 - **Prices.** Costs are each attempt's recorded charge, at the prices in `pricing.py`, checked
   against the live page in `price_check.md`. A call of unknown cost is charged its worst case.
 - **Total spend** across all phases is reported twice: from the records alone, and with interrupted
@@ -319,8 +341,8 @@ All are reported. None replaces the primary.
 
 - **Cost.** Projected from the pilot's measured Haiku costs per attempt (B $0.0020, F $0.0037,
   R4 $0.0042; P priced as F):
-  - held-out phase: about $14, with a range of about $9–19;
-  - smoke test: about $0.05;
+  - held-out phase: about $14. A 95% bootstrap over the pilot's 40 problems' costs gives about $5–27.
+  - smoke test: about $0.04;
   - setup check: about $0.40.
 - **Cap.** The protocol stops every phase at the study cap: `budget.max_cost_usd`, $35 for all
   phases together. Of that, $30 is a held-out reserve the smoke test and setup check may not spend.
@@ -345,10 +367,11 @@ All are reported. None replaces the primary.
   - Each one is committed, with its reason, to `DEVIATIONS.md` before the phase it affects.
   - Each one is reported with the results.
 - **Allowed before the freeze, as deviations:** only changes that make an arm run as section 5.2
-  describes. Examples are a crash, a harness error, a wrong price, or a cap that stops an arm from
-  making its calls.
-- **Not allowed on the basis of smoke or setup outcomes:** changes to the prompts, the placebo
-  sentence, the knobs, the timeouts or the caps.
+  describes. Examples are a crash, a harness error, or a wrong price.
+- **Per-attempt caps (calls, time, cost) and timeouts** change only if they stop an arm from making
+  its calls, and never on the basis of verified rates. The budget cap changes only under section 8.
+- **Never changed on the basis of smoke or setup outcomes:** the prompts, the placebo sentence and
+  the knobs.
 - **Integrity checks.** The freeze and the held-out phase refuse to start if any of these changed
   after the freeze:
   - the held-out split;
@@ -372,11 +395,43 @@ All are reported. None replaces the primary.
 
 ## 11. Files and hashes
 
-The registered files are listed below with their SHA-256 at registration. The code is the
-registration commit, whose hash `RUNLOG.md` records in the next commit. It is on branch
-`claude/bold-goldberg-ir2hpm` of the Harness Lab repository, which is a secondary pointer only.
+**Registered files**, with their SHA-256 at registration:
+- in `studies/2026-11-math-feedback-haiku/`: `study.yaml`, `split.json`, `select_tasks.py`,
+  `analyze.py`, `power.py`, `project_cost.py` and `RELATED_WORK.md`;
+- the code they depend on:
+  - `src/harnesslab/study/stats.py`, `spec.py`, `protocol.py` and `store.py`;
+  - `src/harnesslab/domains/lean/adapter.py`, `prover.py`, `prompts.py`, `verifier.py`, `llm.py`
+    and `pricing.py`.
 
-<!-- HASHES -->
+The code as a whole is the registration commit, whose hash `RUNLOG.md` records in the next commit.
+It is on branch `claude/bold-goldberg-ir2hpm` of the Harness Lab repository, which is a secondary
+pointer only.
+
+| File | SHA-256 |
+|---|---|
+| `studies/2026-11-math-feedback-haiku/study.yaml` | `072259a19ed480090f1034f263643e425cdd0c3cdce47cd34bbc05c0b0c0c643` |
+| `studies/2026-11-math-feedback-haiku/split.json` | `00306a9df3130d6fdfa71c64a1296f0838e1f90915d509d3f61a49e7cc6dc6c2` |
+| `studies/2026-11-math-feedback-haiku/select_tasks.py` | `e1f835924db58bf7bebcb76782418924b17a6ad44c94fbc9302e56751a7a6d25` |
+| `studies/2026-11-math-feedback-haiku/analyze.py` | `824c3b9e649d2b5d9d0bdb9d3a027112cacf9c8488d2fe9884de6faf637c33d4` |
+| `studies/2026-11-math-feedback-haiku/power.py` | `2452c61389177050222f8bc83cc316f87928ffda293fdea309cc05bb1d1f8aca` |
+| `studies/2026-11-math-feedback-haiku/project_cost.py` | `f934f559a47f1f1c17eb27d6665906f177c753571d3c4e71343611fbd090647a` |
+| `studies/2026-11-math-feedback-haiku/RELATED_WORK.md` | `5f49ad3ff277f0f1e421abb220b2e1b111f5e37fbfdde50af2f7bb7e01590fc7` |
+| `src/harnesslab/study/stats.py` | `060ea80df396e279b485b2f58ff3ef6549e9fd102f5d5e17d0f5b37271d38011` |
+| `src/harnesslab/study/spec.py` | `cb3b1fd60deb22fb13fa390f8f220f48447a7993293ae36e6e4b979cebcffd4b` |
+| `src/harnesslab/study/protocol.py` | `506fc7e43ed33b258a31c256e842d2bfc90399d5bc3f153dc7b286bcf558c0c5` |
+| `src/harnesslab/study/store.py` | `c8add8857e5f9c742de9f7b107a7758bd6b64c8d4fa027ff6a3f925e6742a72e` |
+| `src/harnesslab/domains/lean/adapter.py` | `109d1856d22432abae92f74b4e60ad242789718b0f408e6661273477ea0d2e5f` |
+| `src/harnesslab/domains/lean/prover.py` | `c6aaf14a3e0e57a6a36862def6dffbce6e807d2441d9b5fc10b196f750f25882` |
+| `src/harnesslab/domains/lean/prompts.py` | `058de45a5ce86d3617e110f469c1227bafd2cceb92e38a617621a89351cdad57` |
+| `src/harnesslab/domains/lean/verifier.py` | `1ecfd9dfae496c91359210fdf33419ceee3aff8a928149e1d2f769b7668109d5` |
+| `src/harnesslab/domains/lean/llm.py` | `c905c7079854edb98750f2a0701a4e818807933b3c167e12882fb28c2e70589e` |
+| `src/harnesslab/domains/lean/pricing.py` | `b15a468b82a1dce0f26493fbfff9ddaab679d0281ea228fdccbeeaee6eb965ed` |
+
+| Also fixed | SHA-256 |
+|---|---|
+| the 204 held-out IDs, as the JSON list `split.held_out` gives them (what the freeze checks) | `d1c836d199f7a0419f538351e08628633d1f63a25d02352ed67753c1674a5ef4` |
+| the placebo sentence `Lean did not accept this proof.` | `13f99f5612962d10cc8ce66e3ba59f664e52b3c0ced5ac54b11baaae9a6ef2f6` |
+| the fixed prompt texts (`prompts_sha256` in the adapter's provenance) | `d32a2516f0b136b96b7ee7d8ccb1823261ecf2771d69da66cf652bc03f5e2453` |
 
 The owner may also lodge this file on OSF (osf.io), with an embargo if wanted, before the held-out
 phase. That gives the registration an independent timestamp.

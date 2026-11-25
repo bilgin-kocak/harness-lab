@@ -2,10 +2,11 @@
 
 Written and committed before any held-out data exists. Usage::
 
-    python studies/2026-11-math-feedback-haiku/analyze.py [--out analysis.json] [--study-dir DIR]
+    python studies/2026-11-math-feedback-haiku/analyze.py [--study-dir DIR] [--out FILE]
 
-Reads the held-out records, ``freeze.json`` and ``split.json``. It calls nothing and changes
-nothing.
+Reads the held-out records, ``freeze.json`` and ``split.json``, prints a summary and writes the
+full output to ``<study-dir>/analysis.json`` (or ``--out``). It calls nothing and changes nothing
+else.
 
 **Arms** (labels from the freeze):
 
@@ -88,7 +89,7 @@ def _round1_failure_class(r: dict) -> str:
     """Why round 1 did not pass in the loop (identical first request in F, R4 and P)."""
     first = _round1(r)
     if first.get("outcome") != "proof":
-        return "no proof"
+        return "no proof"  # includes a round 1 ended by an API error or a cap
     reason = str((first.get("inloop") or {}).get("reason") or "").lower()
     if reason == "timeout":
         return "timeout"
@@ -130,22 +131,24 @@ def holm(pvals: dict[str, float]) -> dict[str, float]:
     return out
 
 
-def three_way(p: float, ci90: list[float] | None, estimate: float | None) -> str:
-    """The registered reading (REGISTRATION.md 6.2), on a given (possibly adjusted) p-value."""
-    if estimate is None or ci90 is None:
+def three_way(p: float, interval: list[float] | None, estimate: float | None) -> str:
+    """The registered reading (REGISTRATION.md 6.2-6.3): a (Holm-adjusted for H2/H3) p-value, and
+    the interval for the equivalence part (90% for H1, 95% for H2/H3)."""
+    if estimate is None or interval is None:
         return "no data"
     if p < ALPHA:
         return f"difference ({'positive' if estimate > 0 else 'negative'})"
-    if -SESOI < ci90[0] and ci90[1] < SESOI:
+    if -SESOI < interval[0] and interval[1] < SESOI:
         return f"no difference of {SESOI:.2f} or more in the overall verified rate"
     return "inconclusive"
 
 
-def _cluster_boot(tasks: list[str], stat) -> list[float]:
-    """95% percentile bootstrap over problems (10,000 resamples, seed 20261125); resamples where
-    the statistic is undefined are left out."""
+def _cluster_boot(tasks: list[str], stat) -> dict:
+    """95% percentile bootstrap over problems (10,000 resamples, seed 20261125). Resamples where
+    the statistic is undefined are left out, and the number used is reported. The percentile
+    indices are those of ``bootstrap_mean_diff``."""
     if not tasks:
-        return [float("nan"), float("nan")]
+        return {"ci95": None, "resamples_used": 0}
     rng = random.Random(SEED)
     vals = []
     for _ in range(BOOT):
@@ -155,8 +158,10 @@ def _cluster_boot(tasks: list[str], stat) -> list[float]:
             vals.append(v)
     vals.sort()
     if not vals:
-        return [float("nan"), float("nan")]
-    return [vals[int(0.025 * len(vals))], vals[min(len(vals) - 1, int(0.975 * len(vals)))]]
+        return {"ci95": None, "resamples_used": 0}
+    low = vals[max(0, math.floor(0.025 * len(vals)))]
+    high = vals[min(len(vals) - 1, math.ceil(0.975 * len(vals)) - 1)]
+    return {"ci95": [low, high], "resamples_used": len(vals)}
 
 
 def _contrast(name: str, rates: dict, a: str, b: str, tasks: list[str], role: str) -> dict:
@@ -172,6 +177,7 @@ def _contrast(name: str, rates: dict, a: str, b: str, tasks: list[str], role: st
         "n_problems": len(tasks),
         "rate_a": statistics.fmean(rates[a][t] for t in tasks) if tasks else None,
         "rate_b": statistics.fmean(rates[b][t] for t in tasks) if tasks else None,
+        "unverified_share_a": 1 - statistics.fmean(rates[a][t] for t in tasks) if tasks else None,
         "estimate": ci95.estimate if ci95 else None,
         "ci95": [ci95.low, ci95.high] if ci95 else None,
         "ci90": [ci90.low, ci90.high] if ci90 else None,
@@ -184,12 +190,14 @@ def _contrast(name: str, rates: dict, a: str, b: str, tasks: list[str], role: st
             if abs(rates[b][t] - rates[a][t]) > TOL
         ),
     }
-    if tasks:
+    if not tasks:
+        print(f"{name} [{role}]: no problems")
+    else:
         print(
             f"{name} [{role}]: n={len(tasks)} rates {out['rate_a']:.4f} -> {out['rate_b']:.4f}, "
             f"{out['estimate']:+.4f} 95% [{ci95.low:+.4f}, {ci95.high:+.4f}] 90% "
             f"[{ci90.low:+.4f}, {ci90.high:+.4f}], {wins}/{losses}/{len(d) - wins - losses}, "
-            f"sign-flip p = {out['sign_flip_p']:.6f}"
+            f"sign-flip p = {out['sign_flip_p']:.6f}, exact sign test p = {out['sign_test_p']}"
         )
     return out
 
@@ -258,36 +266,45 @@ def data_section(d: Data) -> dict:
     return out
 
 
-def hypotheses(d: Data, rates: dict) -> tuple[dict, dict, str]:
+def hypotheses(d: Data, rates: dict, flags: dict) -> tuple[dict, dict, str]:
     primary = _contrast("H1 F - R4", rates, "R4", "F", d.usable, "primary")
     primary["reading"] = three_way(primary["sign_flip_p"], primary["ci90"], primary["estimate"])
-    primary["r4_unverified_share"] = (
-        1 - primary["rate_a"] if primary["rate_a"] is not None else None
-    )
+    primary["flags"] = flags["H1"]
     print(
-        f"  H1 reading: {primary['reading']}; R4 unverified share {primary['r4_unverified_share']}"
+        f"  H1 reading: {primary['reading']}; R4 unverified share "
+        f"{primary['unverified_share_a']}; flags: {primary['flags']}"
     )
     sec = {
         "H2 F - P": _contrast("H2 F - P", rates, "P", "F", d.usable, "secondary"),
         "H3 P - R4": _contrast("H3 P - R4", rates, "R4", "P", d.usable, "secondary"),
     }
-    adjusted = holm({k: (v["sign_flip_p"] if v["sign_flip_p"] is not None else 1.0)
-                     for k, v in sec.items()})  # fmt: skip
+    raw = {k: (v["sign_flip_p"] if v["sign_flip_p"] is not None else 1.0) for k, v in sec.items()}
+    adjusted = holm(raw)
     for k, v in sec.items():
         v["holm_p"] = adjusted[k]
-        v["reading"] = three_way(adjusted[k], v["ci90"], v["estimate"])
-        print(f"  {k}: Holm p = {adjusted[k]:.6f}, reading: {v['reading']}")
-    h1 = primary["reading"].startswith("difference")
-    h2 = sec["H2 F - P"]["reading"].startswith("difference")
-    if h1 and not h2:
+        # the equivalence part of a secondary reading uses the 95% interval (alpha/2 per test)
+        v["reading"] = three_way(adjusted[k], v["ci95"], v["estimate"])
+        v["flags"] = flags["H2"] if k.startswith("H2") else flags["H3"]
+        print(
+            f"  {k}: Holm p = {adjusted[k]:.6f}, reading: {v['reading']}; unverified share of "
+            f"the comparison arm {v['unverified_share_a']}; flags: {v['flags']}"
+        )
+    h1, h2 = primary["reading"], sec["H2 F - P"]["reading"]
+    positive = "difference (positive)"
+    if h1 == positive and h2 == positive:
         attribution = (
-            "H1 shows a difference and H2 does not: the difference from fresh tries is not "
+            "H1 and H2 are both 'difference (positive)': F is above fresh tries, and Lean's "
+            "report itself adds to the effect (F above P)."
+        )
+    elif h1 == positive:
+        attribution = (
+            "H1 is 'difference (positive)' and H2 is not: the difference from fresh tries is not "
             "attributed to Lean's report; it may come from seeing the failed attempt (H3)."
         )
-    elif h1:
-        attribution = "H1 and H2 both show a difference: Lean's report itself adds to the effect."
     else:
-        attribution = "H1 shows no difference at alpha 0.05: nothing is attributed."
+        attribution = (
+            f"No attribution (6.3): H1 '{h1}', H2 '{h2}', H3 '{sec['H3 P - R4']['reading']}'."
+        )
     print(f"  attribution rule: {attribution}")
     return primary, sec, attribution
 
@@ -318,7 +335,7 @@ def descriptive(d: Data, rates: dict) -> dict:
         },
         "headroom_scaled F - R4": {
             "estimate": headroom(d.usable) if d.usable else None,
-            "ci95": _cluster_boot(d.usable, headroom),
+            **_cluster_boot(d.usable, headroom),
         },
         "post_first_call_gain F - R4": _contrast(
             "post-first-call gain F - R4", post, "R4", "F", d.usable, "descriptive"
@@ -374,7 +391,7 @@ def rescue(d: Data) -> dict:
 
         out[f"{b} - {a}"] = {
             "estimate": diff(d.usable) if d.usable else None,
-            "ci95": _cluster_boot(d.usable, diff),
+            **_cluster_boot(d.usable, diff),
         }
     print(f"rescue after a failed first call: {json.dumps(out)}")
     return out
@@ -389,6 +406,7 @@ def drift(d: Data) -> dict:
         for a in ARMS:
             xs = [_verified(r) for r in chunk if d.labels[r["config_hash"]] == a]
             out[f"q{q + 1}"][a] = statistics.fmean(xs) if xs else None
+    print(f"verified share by time quarter (equal-count, by start time): {out}")
     return out
 
 
@@ -430,13 +448,24 @@ def integrity(d: Data) -> tuple[dict, list[str]]:
         }
         row["per_attempt"] = {k: row[k] / n for k in PER_ATTEMPT_KEYS}
         out[a] = row
-    asym = []
+    asym: dict[str, list[str]] = {}
     for x, y in (("F", "R4"), ("F", "P")):
+        asym[f"{x} - {y}"] = []
         for key in PER_ATTEMPT_KEYS:
             vx, vy = out[x]["per_attempt"][key], out[y]["per_attempt"][key]
             if abs(vx - vy) > 0.01:
-                asym.append(f"{key}: {x} {vx:.4f} vs {y} {vy:.4f}")
-    print(f"integrity asymmetries over 1 point (reported next to H1/H2): {asym or 'none'}")
+                asym[f"{x} - {y}"].append(f"{key}: {x} {vx:.4f} vs {y} {vy:.4f}")
+    for a in ARMS:
+        row = out[a]
+        print(
+            f"integrity {a}: {row['valid_records']} records, status {row['status']}, stop "
+            f"{row['stop']}, refusals {row['refusals']}, token-cap stops "
+            f"{row['max_tokens_stops']}, served by another model "
+            f"{row['calls_served_by_another_model']}, calls without response "
+            f"{row['calls_without_response']}, in-loop timeouts {row['inloop_timeouts']}, "
+            f"verifier timeouts {row['verifier_timeouts']}, dropped-context rounds "
+            f"{row['rounds_with_dropped_context']}, harness errors {row['harness_error_records']}"
+        )
     return out, asym
 
 
@@ -506,7 +535,7 @@ def cost(d: Data) -> dict:
 
     out["F/R4 cost per verified proof"] = {
         "estimate": ratio(d.usable) if d.usable else None,
-        "ci95": _cluster_boot(d.usable, ratio),
+        **_cluster_boot(d.usable, ratio),
     }
     phases = ("smoke", "dev", "held_out")
     spent = sum(_cost(r) for ph in phases for r in d.store.records(ph))
@@ -526,17 +555,26 @@ def main() -> int:
     out: dict = {"study": d.split["study"], "freeze_sha256": d.freeze["freeze_sha256"]}
     out["data"] = data_section(d)
     rates = d.rates()
-    out["primary"], out["secondary"], out["attribution"] = hypotheses(d, rates)
-    out["descriptive"] = descriptive(d, rates)
+    # diagnostics first, so that their flags stand next to the readings (6.5)
     out["first_call_parity"] = parity(d)
+    out["integrity"], out["integrity_asymmetries_over_1_point"] = integrity(d)
+    pf = out["first_call_parity"]["flag"]
+    asym = out["integrity_asymmetries_over_1_point"]
+    flags = {
+        "H1": {"first_call_parity": pf, "integrity_asymmetries": asym["F - R4"]},
+        "H2": {"first_call_parity": pf, "integrity_asymmetries": asym["F - P"]},
+        "H3": {"first_call_parity": pf},
+    }
+    out["primary"], out["secondary"], out["attribution"] = hypotheses(d, rates, flags)
+    out["descriptive"] = descriptive(d, rates)
+    print(f"headroom-scaled F - R4: {out['descriptive']['headroom_scaled F - R4']}")
     out["rescue_after_failed_first_call"] = rescue(d)
     out["drift_by_time_quarter"] = drift(d)
-    out["integrity"], out["integrity_asymmetries_over_1_point"] = integrity(d)
     out["sensitivity"] = sensitivity(d, rates, out["primary"])
     out["cost"] = cost(d)
-    if args.out:
-        args.out.write_text(json.dumps(out, indent=2) + "\n", encoding="utf-8")
-        print(f"wrote {args.out}")
+    target = args.out or args.study_dir / "analysis.json"
+    target.write_text(json.dumps(out, indent=2) + "\n", encoding="utf-8")
+    print(f"wrote {target}")
     return 0
 
 

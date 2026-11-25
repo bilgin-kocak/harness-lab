@@ -1,8 +1,9 @@
-# Pre-registered confirmatory study: does Lean's error feedback beat fresh tries, for Claude Haiku 5.5
-# on miniF2F? Registration: studies/2026-11-math-feedback-haiku/REGISTRATION.md (it fixes the
+# Pre-registered confirmatory study: does showing a failed proof with Lean's report beat fresh tries,
+# for Claude Haiku 5.5 on miniF2F at a cap of 4 calls? Registration: studies/2026-11-math-feedback-haiku/REGISTRATION.md (it fixes the
 # hypotheses and the analysis; this spec fixes what runs).
 # Order: check -> smoke (stop; the owner sees the cost) -> dev (setup check, no selection) ->
-# freeze (fixed_frozen: no ranking) -> commit the freeze -> held-out once -> analyze.py.
+# freeze (fixed_frozen: no ranking) -> commit the freeze -> held-out once -> analyze.py
+# (writes analysis.json).
 name: 2026-11-math-feedback-haiku
 adapter: lean-minif2f
 adapter_options:
@@ -31,7 +32,7 @@ parallelism: 4
 search:
   seed: 20261125
   stages:
-    # Smoke test (paid, about $0.05): 3 dev problems, every arm, 1 repetition.
+    # Smoke test (paid, about $0.04): 3 dev problems, every arm, 1 repetition.
     # mathd_numbertheory_30: the math study's Opus baseline proved it 3/3.
     # amc12a_2008_p15, amc12a_2019_p21: that baseline failed 3/3 and 2/3, so later rounds run.
     - name: smoke

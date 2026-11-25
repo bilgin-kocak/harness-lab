@@ -7,7 +7,8 @@ Usage: python studies/2026-11-math-feedback-haiku/power.py [studies per row, def
 * **The test:** two-sided paired sign-flip test on per-problem rate differences
   d = rate_F - rate_R4, over 204 problems, at alpha 0.05.
 * **How p is computed:** the null distribution of sum(d) is approximated by a normal with variance
-  sum(d^2). 200 studies per row are also tested with 20,000 exact random flips, as a check.
+  sum(d^2). As a check, 200 studies per row are also tested with 20,000 random sign flips (the
+  'flips' column).
 * **Per-problem truths** come from the pilot's 40 Haiku (R4 count, F count) pairs, in one of two
   ways:
   * plug-in (p = k/3);
@@ -60,7 +61,7 @@ def main() -> None:
     gap = (pairs[:, 1] - pairs[:, 0]).sum() / 120 * 100
     print(f"pilot Haiku F-R4 {gap:+.1f} points; prior Beta({a:.2f}, {b:.2f}); {sims} studies/row")
     print(
-        f"{'scenario':26s}{'reps':>5}{'true effect':>12}{'informative':>12}{'power':>7}{'exact':>7}"
+        f"{'scenario':26s}{'reps':>5}{'true effect':>12}{'informative':>12}{'power':>7}{'flips':>7}"
     )
     rows = (
         ("plugin", 1.0, "plug-in"),

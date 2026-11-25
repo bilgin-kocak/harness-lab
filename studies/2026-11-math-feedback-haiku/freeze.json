@@ -1,0 +1,444 @@
+{
+  "adapter": {
+    "name": "lean-minif2f",
+    "options_sha256": "9c3a2d7e2f17db9aad60e0c56c37f15c16990f955eae214f5340edb049f2f437",
+    "provenance": {
+      "adapter": "lean-minif2f",
+      "adapter_version": "1",
+      "anthropic_sdk": "2.12.0",
+      "api_base_url": "https://api.anthropic.com",
+      "api_unavailable_statuses": [
+        401,
+        403,
+        404,
+        408,
+        409,
+        429,
+        "5xx",
+        "no status"
+      ],
+      "effort": "medium",
+      "feedback_knob": {
+        "levels": [
+          "lean",
+          "placebo"
+        ],
+        "placebo_feedback": "Lean did not accept this proof."
+      },
+      "index": {
+        "entries": 233022,
+        "mathlib_rev": "f897ebcf72cd16f89ab4577d0c826cd14afaafc7",
+        "sha256": "a2c6e6704bc51dc0f3e4365b1db663a0f5f75ceea0c328b84c9918ff29960680"
+      },
+      "lean_runner": "lake env lean --json",
+      "lean_toolchain": "leanprover/lean4:v4.24.0",
+      "lean_version": "4.24.0",
+      "limits": {
+        "inloop_timeout_s": 120.0,
+        "lean_workers": 3,
+        "max_attempt_seconds": 1200.0,
+        "max_calls_per_attempt": 12,
+        "max_tool_calls_per_round": 4,
+        "tool_timeout_s": 60.0
+      },
+      "llm_client": "AnthropicMessagesClient",
+      "mathlib_rev": "f897ebcf72cd16f89ab4577d0c826cd14afaafc7",
+      "max_tokens": 32000,
+      "minif2f_commit": "5746b7d6c47855ce1294bed87329618ff7f1bc31",
+      "minif2f_repo": "https://github.com/yangky11/miniF2F-lean4",
+      "model": "claude-haiku-5-5",
+      "prices": {
+        "as_of": "2026-11-24",
+        "long_prompt": {
+          "threshold_prompt_tokens": 100000,
+          "usd_per_million_tokens": {
+            "cache_read": 0.05,
+            "cache_write_5m": 0.625,
+            "input": 0.5,
+            "output": 2.5
+          }
+        },
+        "model": "claude-haiku-5-5",
+        "note": "Prompts over 100,000 tokens (uncached input, cache reads and cache writes together) pay the long-prompt prices on every token of the request. Re-check against the live pricing page before the first paid run.",
+        "source": "live pricing page https://platform.claude.com/docs/en/about-claude/pricing, read 2026-11-24 (claude.com/pricing agrees)",
+        "usd_per_million_tokens": {
+          "cache_read": 0.01,
+          "cache_write_5m": 0.125,
+          "input": 0.1,
+          "output": 0.5
+        }
+      },
+      "prompt_caching": "automatic (top-level cache_control ephemeral)",
+      "prompts_sha256": "d32a2516f0b136b96b7ee7d8ccb1823261ecf2771d69da66cf652bc03f5e2453",
+      "split_sha256": "00306a9df3130d6fdfa71c64a1296f0838e1f90915d509d3f61a49e7cc6dc6c2",
+      "thinking": "adaptive",
+      "verifier": {
+        "allowed_axioms": [
+          "propext",
+          "Classical.choice",
+          "Quot.sound"
+        ],
+        "checker": "lean 4.24.0 kernel, mathlib f897ebc, axioms<= {propext, Classical.choice, Quot.sound}",
+        "denied_commands": [
+          "#eval",
+          "#exit",
+          "#print",
+          "#guard_msgs"
+        ],
+        "denied_words": [
+          "sorry",
+          "sorryAx",
+          "admit",
+          "axiom",
+          "run_tac",
+          "run_cmd",
+          "run_elab",
+          "run_meta",
+          "by_elab",
+          "elab",
+          "elab_rules",
+          "macro",
+          "macro_rules",
+          "syntax",
+          "declare_syntax_cat",
+          "initialize",
+          "builtin_initialize",
+          "simproc",
+          "dsimproc",
+          "simproc_decl",
+          "dsimproc_decl",
+          "unsafe",
+          "implemented_by",
+          "extern",
+          "addDecl",
+          "addAndCompile",
+          "modifyEnv",
+          "setEnv",
+          "include_str"
+        ],
+        "set_option_allowed": [
+          "maxHeartbeats",
+          "maxRecDepth",
+          "synthInstance.maxHeartbeats",
+          "synthInstance.maxSize",
+          "exponentiation.threshold"
+        ],
+        "timeout_s": 300.0
+      }
+    },
+    "version": "1"
+  },
+  "baseline": {
+    "config": {
+      "context_limit_tokens": 12000,
+      "feedback_content": "lean",
+      "feedback_rounds": 0,
+      "planning": false,
+      "retries": 1,
+      "retrieval": "none",
+      "tactic_tools": "none"
+    },
+    "config_hash": "993d6730d926ebc731c14c0292c67a1b95e94a43e1cd935cc062b1439551bf16",
+    "label": "baseline"
+  },
+  "comparators": [
+    {
+      "config": {
+        "context_limit_tokens": 12000,
+        "feedback_content": "lean",
+        "feedback_rounds": 0,
+        "planning": false,
+        "retries": 4,
+        "retrieval": "none",
+        "tactic_tools": "none"
+      },
+      "config_hash": "40ca2d6a9288fc1d181d0473be3efa4224251cbc9b42c53346804e1f10b3b551",
+      "label": "R4"
+    },
+    {
+      "config": {
+        "context_limit_tokens": 12000,
+        "feedback_content": "placebo",
+        "feedback_rounds": 3,
+        "planning": false,
+        "retries": 1,
+        "retrieval": "none",
+        "tactic_tools": "none"
+      },
+      "config_hash": "59eb7f95143b9fcfb6ed55261eb29b51a7bb9f44f5188f603a0fca17c5704807",
+      "label": "P"
+    }
+  ],
+  "dev": {
+    "configurations": 4,
+    "considered_tasks": [
+      "aimeII_2020_p6",
+      "mathd_numbertheory_30",
+      "imo_1964_p1_2",
+      "mathd_algebra_405",
+      "amc12b_2002_p3",
+      "induction_ineq_nsqlefactn",
+      "induction_sum_1oktkp1",
+      "mathd_algebra_73",
+      "algebra_sqineq_2at2pclta2c2p41pc",
+      "aime_1987_p8",
+      "mathd_algebra_493",
+      "mathd_numbertheory_92",
+      "aime_1996_p5",
+      "mathd_numbertheory_284",
+      "amc12a_2019_p21",
+      "mathd_algebra_327",
+      "mathd_numbertheory_32",
+      "mathd_algebra_126",
+      "imo_1961_p1",
+      "mathd_algebra_109",
+      "mathd_algebra_185",
+      "mathd_numbertheory_43",
+      "mathd_numbertheory_252",
+      "amc12a_2008_p15",
+      "mathd_numbertheory_461",
+      "mathd_algebra_31",
+      "algebra_manipexpr_apbeq2cceqiacpbceqm2",
+      "mathd_algebra_455",
+      "imo_2006_p3",
+      "mathd_numbertheory_709"
+    ],
+    "cost_usd": 0.270118965,
+    "dropped_tasks": {},
+    "eligible": null,
+    "interrupted": {
+      "cells": 0,
+      "charged_usd": 0,
+      "without_record": []
+    },
+    "ranking_top": [
+      {
+        "complete": true,
+        "config_hash": "8fadd8740a416895ef13cf487e9d99db140b538c8e7b71371f5c52e2f7b7ed28",
+        "cost_per_pass_usd": 0.0022146258333333333,
+        "feasible": true,
+        "label": "F",
+        "mean_cost_usd": 0.0022146258333333333,
+        "medians": {},
+        "n_records": 30,
+        "pass_rate": 1.0,
+        "passes": 30,
+        "rank": 1,
+        "ratios": {},
+        "reason": "",
+        "tasks_covered": 30,
+        "values": {
+          "context_limit_tokens": 12000,
+          "feedback_content": "lean",
+          "feedback_rounds": 3,
+          "planning": false,
+          "retries": 1,
+          "retrieval": "none",
+          "tactic_tools": "none"
+        }
+      },
+      {
+        "complete": true,
+        "config_hash": "993d6730d926ebc731c14c0292c67a1b95e94a43e1cd935cc062b1439551bf16",
+        "cost_per_pass_usd": 0.0016109419642857143,
+        "feasible": true,
+        "label": "baseline",
+        "mean_cost_usd": 0.0015035458333333333,
+        "medians": {},
+        "n_records": 30,
+        "pass_rate": 0.9333333333333333,
+        "passes": 28,
+        "rank": 2,
+        "ratios": {},
+        "reason": "",
+        "tasks_covered": 30,
+        "values": {
+          "context_limit_tokens": 12000,
+          "feedback_content": "lean",
+          "feedback_rounds": 0,
+          "planning": false,
+          "retries": 1,
+          "retrieval": "none",
+          "tactic_tools": "none"
+        }
+      },
+      {
+        "complete": true,
+        "config_hash": "40ca2d6a9288fc1d181d0473be3efa4224251cbc9b42c53346804e1f10b3b551",
+        "cost_per_pass_usd": 0.0026140446428571428,
+        "feasible": true,
+        "label": "R4",
+        "mean_cost_usd": 0.002439775,
+        "medians": {},
+        "n_records": 30,
+        "pass_rate": 0.9333333333333333,
+        "passes": 28,
+        "rank": 3,
+        "ratios": {},
+        "reason": "",
+        "tasks_covered": 30,
+        "values": {
+          "context_limit_tokens": 12000,
+          "feedback_content": "lean",
+          "feedback_rounds": 0,
+          "planning": false,
+          "retries": 4,
+          "retrieval": "none",
+          "tactic_tools": "none"
+        }
+      },
+      {
+        "complete": true,
+        "config_hash": "59eb7f95143b9fcfb6ed55261eb29b51a7bb9f44f5188f603a0fca17c5704807",
+        "cost_per_pass_usd": 0.0030493058928571424,
+        "feasible": true,
+        "label": "P",
+        "mean_cost_usd": 0.002846018833333333,
+        "medians": {},
+        "n_records": 30,
+        "pass_rate": 0.9333333333333333,
+        "passes": 28,
+        "rank": 4,
+        "ratios": {},
+        "reason": "",
+        "tasks_covered": 30,
+        "values": {
+          "context_limit_tokens": 12000,
+          "feedback_content": "placebo",
+          "feedback_rounds": 3,
+          "planning": false,
+          "retries": 1,
+          "retrieval": "none",
+          "tactic_tools": "none"
+        }
+      }
+    ],
+    "records": 120,
+    "records_per_stage": {
+      "setup": 120
+    },
+    "records_sha256": "9d44d8e861ca4be9caddcd9e742e4080c0a2161e75e95db03b2531370ca96257"
+  },
+  "freeze_sha256": "53b8f9bbef4c9bf8bf033fccfcfeb42cca6a6d9e9a01ba13eef2901ec9a6d973",
+  "frozen": {
+    "chosen_by": "held_out.fixed_frozen",
+    "config": {
+      "context_limit_tokens": 12000,
+      "feedback_content": "lean",
+      "feedback_rounds": 3,
+      "planning": false,
+      "retries": 1,
+      "retrieval": "none",
+      "tactic_tools": "none"
+    },
+    "config_hash": "8fadd8740a416895ef13cf487e9d99db140b538c8e7b71371f5c52e2f7b7ed28",
+    "label": "F",
+    "same_as_baseline": false
+  },
+  "frozen_at": "2026-11-25T14:39:02+00:00",
+  "git_head": "d3deb77fd88f0d5beb6eae8c8491f03665524415",
+  "harnesslab_version": "0.3.0",
+  "held_out_spec": {
+    "comparators": [
+      {
+        "base": "baseline",
+        "label": "R4",
+        "set": {
+          "retries": 4
+        }
+      },
+      {
+        "base": "baseline",
+        "label": "P",
+        "set": {
+          "feedback_content": "placebo",
+          "feedback_rounds": 3
+        }
+      }
+    ],
+    "fixed_frozen": {
+      "label": "F",
+      "set": {
+        "feedback_rounds": 3
+      }
+    },
+    "order_seed": 20261125,
+    "repetitions": 5,
+    "require_committed_freeze": true,
+    "robustness": null
+  },
+  "objective": {
+    "cost_cap_multiple": null,
+    "drop_tasks_where_baseline_unverified": true,
+    "kind": "pass_rate",
+    "metrics": [],
+    "offset": 1.0,
+    "then": [],
+    "tie_tolerance": 0.0
+  },
+  "sealed_sections": {
+    "held_out": {
+      "comparators": [
+        {
+          "base": "baseline",
+          "label": "R4",
+          "set": {
+            "retries": 4
+          }
+        },
+        {
+          "base": "baseline",
+          "label": "P",
+          "set": {
+            "feedback_content": "placebo",
+            "feedback_rounds": 3
+          }
+        }
+      ],
+      "fixed_frozen": {
+        "label": "F",
+        "set": {
+          "feedback_rounds": 3
+        }
+      },
+      "order_seed": 20261125,
+      "repetitions": 5,
+      "require_committed_freeze": true
+    },
+    "objective": {
+      "kind": "pass_rate"
+    },
+    "stats": {
+      "level": 0.95,
+      "report_metrics": [
+        "cost_usd",
+        "llm_calls",
+        "wall_time_s"
+      ],
+      "resamples": 10000,
+      "seed": 20261125
+    }
+  },
+  "sealed_sections_of": "written",
+  "spec_sha256": "072259a19ed480090f1034f263643e425cdd0c3cdce47cd34bbc05c0b0c0c643",
+  "split": {
+    "dev_ids_sha256": "e8ad717914afa1b3702bd5c24f2a59053813e26fbcd7ab72c5185739319eb73f",
+    "file_sha256": "00306a9df3130d6fdfa71c64a1296f0838e1f90915d509d3f61a49e7cc6dc6c2",
+    "held_out_ids_sha256": "d1c836d199f7a0419f538351e08628633d1f63a25d02352ed67753c1674a5ef4",
+    "n_dev": 30,
+    "n_held_out": 204
+  },
+  "stats": {
+    "higher_is_better": [],
+    "level": 0.95,
+    "report_metrics": [
+      "cost_usd",
+      "llm_calls",
+      "wall_time_s"
+    ],
+    "resamples": 10000,
+    "seed": 20261125,
+    "tag_groups": []
+  },
+  "study": "2026-11-math-feedback-haiku"
+}

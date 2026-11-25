@@ -215,3 +215,38 @@ def test_float_noise_is_a_tie_not_a_win():
     result = paired_comparison(samples, "A", "B", metric="score", min_tasks=1)
     assert (result.wins, result.losses, result.ties) == (0, 0, 3)
     assert result.verdict == "no evidence"
+
+
+# --------------------------------------------------------------------------- sign-flip test
+
+
+def test_sign_flip_test_exact_small_cases():
+    from harnesslab.study.stats import sign_flip_test
+
+    # three equal positive differences: only all-plus and all-minus reach |sum| = 3 of 8 patterns
+    assert sign_flip_test([1.0, 1.0, 1.0]) == pytest.approx(2 / 8)
+    # ties are dropped; one +1 and one -1 cancel: every pattern is at least as extreme
+    assert sign_flip_test([1.0, -1.0, 0.0, 1e-12]) == pytest.approx(1.0)
+    assert sign_flip_test([0.0, 0.0]) is None and sign_flip_test([]) is None
+    # magnitudes count: two large wins and a small loss; 4 of the 8 patterns reach |sum| >= 1.8
+    # (the sign test, which sees 2 wins and 1 loss, gives 1.0)
+    assert sign_flip_test([1.0, 1.0, -0.2]) == pytest.approx(4 / 8)
+    assert exact_sign_test(2, 1) == pytest.approx(1.0)
+    # thirds of repetitions that sum to an exact tie on paper are still ties
+    assert sign_flip_test([1 / 3, 1 / 3, 1 / 3, -1.0]) == pytest.approx(1.0)
+
+
+def test_sign_flip_test_monte_carlo_is_seeded_and_close_to_exact():
+    import math
+
+    from harnesslab.study.stats import sign_flip_test
+
+    diffs = [0.2, 0.4, -0.2, 0.6, 0.2, 0.2, -0.4, 0.8, 0.2, 0.4] * 3  # 30 nonzero: Monte Carlo
+    a = sign_flip_test(diffs, resamples=20_000, seed=7)
+    b = sign_flip_test(diffs, resamples=20_000, seed=7)
+    assert a == b and 0 < a < 1
+    # normal approximation of the sign-flip null: sum ~ N(0, sum d^2)
+    z = abs(math.fsum(diffs)) / math.sqrt(math.fsum(x * x for x in diffs))
+    assert a == pytest.approx(math.erfc(z / math.sqrt(2)), abs=0.01)
+    # the p-value of a Monte Carlo test is never 0
+    assert sign_flip_test([1.0] * 40, resamples=1000, seed=1) == pytest.approx(1 / 1001)

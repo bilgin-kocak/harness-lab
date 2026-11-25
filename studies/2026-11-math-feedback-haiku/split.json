@@ -1,0 +1,1212 @@
+{
+  "study": "2026-11-math-feedback-haiku",
+  "dataset": {
+    "repo": "https://github.com/yangky11/miniF2F-lean4",
+    "commit": "5746b7d6c47855ce1294bed87329618ff7f1bc31",
+    "license": "MIT (Copyright (c) Meta Platforms, Inc. and affiliates)",
+    "lean_toolchain": "leanprover/lean4:v4.24.0",
+    "mathlib": "v4.24.0 (f897ebcf72cd16f89ab4577d0c826cd14afaafc7)",
+    "valid_size": 244,
+    "test_size": 244
+  },
+  "selection": {
+    "held_out": "ranks 41-244 (in rank order) of the math study's ranking: every test problem ranked by sha256(f'20261122:test:{id}'); ranks 1-40 were its held-out problems",
+    "dev": "the math study's 30 dev problems (already used there); setup checks only",
+    "source_split": {
+      "file": "studies/2026-11-math-minif2f/split.json",
+      "file_sha256": "52af3cad57fff625f1fffda84f88e1937e31503616361239a13d1645107df9aa"
+    }
+  },
+  "dev": [
+    {
+      "id": "aimeII_2020_p6",
+      "file": "MiniF2F/Valid/aimeII_2020_p6.lean",
+      "sha256": "8df162b83ff2ad8c4907f08e6cdba75d0a35e8f36e76fc09300d394d01fab4aa"
+    },
+    {
+      "id": "mathd_numbertheory_30",
+      "file": "MiniF2F/Valid/mathd_numbertheory_30.lean",
+      "sha256": "de280c8718dd8e407a6a3a20836ee0d9a8f193892c412ab0112dcd360055a0e2"
+    },
+    {
+      "id": "imo_1964_p1_2",
+      "file": "MiniF2F/Valid/imo_1964_p1_2.lean",
+      "sha256": "647887c0b7d911e9db59e4e3254277ee6500c351a8dea1e14b956f187a32f483"
+    },
+    {
+      "id": "mathd_algebra_405",
+      "file": "MiniF2F/Valid/mathd_algebra_405.lean",
+      "sha256": "df9be6ada5094f872669a29d7e74b8eca0112239c66eaf62c52fa3e549da66dc"
+    },
+    {
+      "id": "amc12b_2002_p3",
+      "file": "MiniF2F/Valid/amc12b_2002_p3.lean",
+      "sha256": "b0803125fe4c6ef0cdd37aae40fddcb8ed59ed620fd3d33c529195c2927dd03a"
+    },
+    {
+      "id": "induction_ineq_nsqlefactn",
+      "file": "MiniF2F/Valid/induction_ineq_nsqlefactn.lean",
+      "sha256": "dd993bfa5cc58e52735851522ad7677531b15b15b75bbdc690276b1bb2551bef"
+    },
+    {
+      "id": "induction_sum_1oktkp1",
+      "file": "MiniF2F/Valid/induction_sum_1oktkp1.lean",
+      "sha256": "28e1e0814c4cc31c480cc2b99df0fc53a43f5a2331e029bf33f465b04dbde0dd"
+    },
+    {
+      "id": "mathd_algebra_73",
+      "file": "MiniF2F/Valid/mathd_algebra_73.lean",
+      "sha256": "0014355bf11fdb6ce5a47de67bdabed9cd5f924eaf620d5e922411389f0365b2"
+    },
+    {
+      "id": "algebra_sqineq_2at2pclta2c2p41pc",
+      "file": "MiniF2F/Valid/algebra_sqineq_2at2pclta2c2p41pc.lean",
+      "sha256": "dea4f61899e9ad6d673ba7d64f5a95994b889e450c50b705a57b0604546d468d"
+    },
+    {
+      "id": "aime_1987_p8",
+      "file": "MiniF2F/Valid/aime_1987_p8.lean",
+      "sha256": "07f164ede90d63216f9ba650489fa28d4989f776434562939a0ebedf74b5e164"
+    },
+    {
+      "id": "mathd_algebra_493",
+      "file": "MiniF2F/Valid/mathd_algebra_493.lean",
+      "sha256": "95be49a1031e52011235f8f199df498eb97a23f8df971d655ea72e470139bd65"
+    },
+    {
+      "id": "mathd_numbertheory_92",
+      "file": "MiniF2F/Valid/mathd_numbertheory_92.lean",
+      "sha256": "99a34ca429fc35a1b110efaafcda7929a26d7d8aa1869085b03c1f9541e43e77"
+    },
+    {
+      "id": "aime_1996_p5",
+      "file": "MiniF2F/Valid/aime_1996_p5.lean",
+      "sha256": "0ae3010e35a280feee17133b322a3c2aced328e033d40deadc8357292ffb75fc"
+    },
+    {
+      "id": "mathd_numbertheory_284",
+      "file": "MiniF2F/Valid/mathd_numbertheory_284.lean",
+      "sha256": "4308de4c91499f6254e7cc62ae4b3d5b5335c56971de34da56ca5955bf951dc9"
+    },
+    {
+      "id": "amc12a_2019_p21",
+      "file": "MiniF2F/Valid/amc12a_2019_p21.lean",
+      "sha256": "2fff0c55e61e03fdebd88bb9bf5cc516a2f58dd9df7c519144f46572d222330d"
+    },
+    {
+      "id": "mathd_algebra_327",
+      "file": "MiniF2F/Valid/mathd_algebra_327.lean",
+      "sha256": "53f367006dae37d44441b967400d435a4f68c3761bc6f6f7e91331cde64aa59b"
+    },
+    {
+      "id": "mathd_numbertheory_32",
+      "file": "MiniF2F/Valid/mathd_numbertheory_32.lean",
+      "sha256": "7f57ae0f63cc90fbfd45a2c6a7510895fccce5069b120d2136b2c8140acd68c3"
+    },
+    {
+      "id": "mathd_algebra_126",
+      "file": "MiniF2F/Valid/mathd_algebra_126.lean",
+      "sha256": "aebd2630d97485f058fc8ad93841b65720659fe5818a138c354ae876006c735e"
+    },
+    {
+      "id": "imo_1961_p1",
+      "file": "MiniF2F/Valid/imo_1961_p1.lean",
+      "sha256": "e7e01ff3c4a0b7fdc8f94e49fd791734e1a7789e7215fd1eca85d9adf437c51c"
+    },
+    {
+      "id": "mathd_algebra_109",
+      "file": "MiniF2F/Valid/mathd_algebra_109.lean",
+      "sha256": "4f1c7162f6d0cabb23a4bfbc090c4f1e3205e62f6b639af4c8f5525b1fce8521"
+    },
+    {
+      "id": "mathd_algebra_185",
+      "file": "MiniF2F/Valid/mathd_algebra_185.lean",
+      "sha256": "3fad61016e87d74bb0a50892ca0e80158bd540b69f4477346220571a50a6894e"
+    },
+    {
+      "id": "mathd_numbertheory_43",
+      "file": "MiniF2F/Valid/mathd_numbertheory_43.lean",
+      "sha256": "467e6e8b8ec35330904a49ee177a1bec3cb77c7e8d09b02f0231612bdca2e639"
+    },
+    {
+      "id": "mathd_numbertheory_252",
+      "file": "MiniF2F/Valid/mathd_numbertheory_252.lean",
+      "sha256": "2e21eae1874bff0ef40024e711df004606f4fb523d7d89af8608160a3b83f929"
+    },
+    {
+      "id": "amc12a_2008_p15",
+      "file": "MiniF2F/Valid/amc12a_2008_p15.lean",
+      "sha256": "2f62e5a0d4baef5b3a8391786ae2f337ca6000a297b388920e125c0cbf0aca0d"
+    },
+    {
+      "id": "mathd_numbertheory_461",
+      "file": "MiniF2F/Valid/mathd_numbertheory_461.lean",
+      "sha256": "e8e4f19849d6a179bc65994520de86aefc09004043c61aeafea7604776592f45"
+    },
+    {
+      "id": "mathd_algebra_31",
+      "file": "MiniF2F/Valid/mathd_algebra_31.lean",
+      "sha256": "2292223b4e44e057c5a36b2bb0326c12b382a022739ab944bb2f1f31baa1abdb"
+    },
+    {
+      "id": "algebra_manipexpr_apbeq2cceqiacpbceqm2",
+      "file": "MiniF2F/Valid/algebra_manipexpr_apbeq2cceqiacpbceqm2.lean",
+      "sha256": "cdb0120a3dc03e7c377d32eb92b34a1e92c1afe862d14ccf3fbbea42b751aa79"
+    },
+    {
+      "id": "mathd_algebra_455",
+      "file": "MiniF2F/Valid/mathd_algebra_455.lean",
+      "sha256": "55ce7a2c738a0755c7fcd3239cd7d950ebbd92bf26c670fda9d3254d659fecf6"
+    },
+    {
+      "id": "imo_2006_p3",
+      "file": "MiniF2F/Valid/imo_2006_p3.lean",
+      "sha256": "187df0eab2e1c06cd487473a9e42729d382b31f31c84be1983d46c56e60fcea5"
+    },
+    {
+      "id": "mathd_numbertheory_709",
+      "file": "MiniF2F/Valid/mathd_numbertheory_709.lean",
+      "sha256": "d4c154bf855341308fc4c0a21c9bb54d50bf3fb6bdc4d8d74dc73be4ba131ba3"
+    }
+  ],
+  "held_out": [
+    {
+      "id": "amc12b_2002_p19",
+      "file": "MiniF2F/Test/amc12b_2002_p19.lean",
+      "sha256": "dd125956f37e54e053f31f563b49bf8caaa848352d69e800b47c4e96e4d182ad"
+    },
+    {
+      "id": "mathd_numbertheory_127",
+      "file": "MiniF2F/Test/mathd_numbertheory_127.lean",
+      "sha256": "32bc7c4b8a4934082c4bf07aaa468a71dac23811ca5035fdce5f3d6d77292799"
+    },
+    {
+      "id": "mathd_algebra_412",
+      "file": "MiniF2F/Test/mathd_algebra_412.lean",
+      "sha256": "5d6c30aba74d8d6151944d7c327d31622ca103edb96a376b64c9f36c74f89233"
+    },
+    {
+      "id": "imo_1960_p2",
+      "file": "MiniF2F/Test/imo_1960_p2.lean",
+      "sha256": "b787d3ca1ec7015ff1fb30956156da11986997870e159999c015c97020cda3e8"
+    },
+    {
+      "id": "mathd_algebra_156",
+      "file": "MiniF2F/Test/mathd_algebra_156.lean",
+      "sha256": "7511503e7f3b43b8714e7d7085a2a970dab7880482c70a14029d2173994051a5"
+    },
+    {
+      "id": "numbertheory_4x3m7y3neq2003",
+      "file": "MiniF2F/Test/numbertheory_4x3m7y3neq2003.lean",
+      "sha256": "47c5df8f183c5926e5327a3d09974d140a7e2ce64dbe75e5e855f6e57905540c"
+    },
+    {
+      "id": "numbertheory_fxeq4powxp6powxp9powx_f2powmdvdf2pown",
+      "file": "MiniF2F/Test/numbertheory_fxeq4powxp6powxp9powx_f2powmdvdf2pown.lean",
+      "sha256": "78dce7922509723b4910651bbcc6392285e82b71e3dd5842d8155553be2cb6aa"
+    },
+    {
+      "id": "algebra_sqineq_unitcircatbpamblt1",
+      "file": "MiniF2F/Test/algebra_sqineq_unitcircatbpamblt1.lean",
+      "sha256": "c667a08a20a43571ef45b5db2f2211c9f216d88771304ec6270ec0080a993055"
+    },
+    {
+      "id": "mathd_algebra_388",
+      "file": "MiniF2F/Test/mathd_algebra_388.lean",
+      "sha256": "42f14f4bf0323d75e09c48f0d1cf425f0d7dfbb9e330c1a21d73c1f4db2b8e53"
+    },
+    {
+      "id": "mathd_algebra_270",
+      "file": "MiniF2F/Test/mathd_algebra_270.lean",
+      "sha256": "c10c0fe62f3a906b17550b312318a8e8607cbad5bc05a7254c7d620ceef52bc5"
+    },
+    {
+      "id": "mathd_algebra_275",
+      "file": "MiniF2F/Test/mathd_algebra_275.lean",
+      "sha256": "1f0a76c6ba19b65576929415c800aa484ed27b1734540203832329228e13c173"
+    },
+    {
+      "id": "aime_1984_p7",
+      "file": "MiniF2F/Test/aime_1984_p7.lean",
+      "sha256": "a271681919403a9d83692c1b070dc2d50ba0fd2466ef4c40ed4810a8f722a005"
+    },
+    {
+      "id": "mathd_numbertheory_765",
+      "file": "MiniF2F/Test/mathd_numbertheory_765.lean",
+      "sha256": "978c606395b818864cfef594d6c19d61fb00f87f03c455a0b579ccaeca0520d8"
+    },
+    {
+      "id": "mathd_algebra_153",
+      "file": "MiniF2F/Test/mathd_algebra_153.lean",
+      "sha256": "f0b6ff6576308520bba933b43a4b4025f719732ba5b1d9f99932ce0b6344ce6c"
+    },
+    {
+      "id": "amc12b_2021_p9",
+      "file": "MiniF2F/Test/amc12b_2021_p9.lean",
+      "sha256": "b52eb27994d5c28d3c9109b6754e9e210c3473d228b4d946a71491c7e5baa3c9"
+    },
+    {
+      "id": "amc12_2000_p12",
+      "file": "MiniF2F/Test/amc12_2000_p12.lean",
+      "sha256": "ab3bc66aa3c5ce93ced1fb2573a856d0b93570de94b0f9c231bee8c6be03d6f9"
+    },
+    {
+      "id": "imo_1969_p2",
+      "file": "MiniF2F/Test/imo_1969_p2.lean",
+      "sha256": "99abef4185c6b2a12876da9a8137bb724681971923f409a44270de5833b9271e"
+    },
+    {
+      "id": "imo_2001_p6",
+      "file": "MiniF2F/Test/imo_2001_p6.lean",
+      "sha256": "c041cbb8ce14d936f72e7c8c45d5c087dd1ed35e213071329a46b85b48f8e843"
+    },
+    {
+      "id": "mathd_algebra_313",
+      "file": "MiniF2F/Test/mathd_algebra_313.lean",
+      "sha256": "bf9d63790c39fa44d130963eb68506d154137492ddf0c66f7eb9b41321e9f94d"
+    },
+    {
+      "id": "algebra_amgm_sumasqdivbgeqsuma",
+      "file": "MiniF2F/Test/algebra_amgm_sumasqdivbgeqsuma.lean",
+      "sha256": "da659cae846962ae001e374c0a3c1ba68cb1427c8a6e05e38819127b785a303b"
+    },
+    {
+      "id": "mathd_numbertheory_227",
+      "file": "MiniF2F/Test/mathd_numbertheory_227.lean",
+      "sha256": "4af7ac6ea402800caec5041fed6c4f6a3393aa409bf7fac3d1f59f00894d3831"
+    },
+    {
+      "id": "induction_11div10tonmn1ton",
+      "file": "MiniF2F/Test/induction_11div10tonmn1ton.lean",
+      "sha256": "a2b2a7cb72154fa297bb224d8e54a81a157579834dda9838dac8d2d4f5c79f59"
+    },
+    {
+      "id": "mathd_numbertheory_483",
+      "file": "MiniF2F/Test/mathd_numbertheory_483.lean",
+      "sha256": "635b888d2b743ed4cde8acaa3f79e39925ad6e5f1be36883d07b366b1dabc016"
+    },
+    {
+      "id": "mathd_numbertheory_212",
+      "file": "MiniF2F/Test/mathd_numbertheory_212.lean",
+      "sha256": "3708d0669e331c1e2315b94fc38d4c7f7b2418684e452641abb757ffc21ec9d7"
+    },
+    {
+      "id": "mathd_algebra_184",
+      "file": "MiniF2F/Test/mathd_algebra_184.lean",
+      "sha256": "1d3c7fe8a6498d1e31fd0bc13dc6ab6ac42690cf2acc3e3f8416a329848bcf5b"
+    },
+    {
+      "id": "mathd_numbertheory_3",
+      "file": "MiniF2F/Test/mathd_numbertheory_3.lean",
+      "sha256": "801b98611dbf40c33cc03cfd09cdbd9be111c9c3ab47bfd39f7c4cc5c2240e0d"
+    },
+    {
+      "id": "mathd_algebra_76",
+      "file": "MiniF2F/Test/mathd_algebra_76.lean",
+      "sha256": "2e6589433ffcf459b2250d06b3ca3699e69c6c6240971a8fcc7452d81cad6ff4"
+    },
+    {
+      "id": "mathd_numbertheory_495",
+      "file": "MiniF2F/Test/mathd_numbertheory_495.lean",
+      "sha256": "83c1b593ab55f976da6be2c997ac5513597c5a6ef78cad133e577a0c43b449a2"
+    },
+    {
+      "id": "amc12a_2021_p3",
+      "file": "MiniF2F/Test/amc12a_2021_p3.lean",
+      "sha256": "dad161d9e7e2aa9d085b8a55413c56120f9c3a0198f4a60325acef7f58b1c6f8"
+    },
+    {
+      "id": "mathd_numbertheory_447",
+      "file": "MiniF2F/Test/mathd_numbertheory_447.lean",
+      "sha256": "e076866dfbe04384528a5db0157dc818c605053c902234a538769dace2942dca"
+    },
+    {
+      "id": "imo_1981_p6",
+      "file": "MiniF2F/Test/imo_1981_p6.lean",
+      "sha256": "c365d726583a6b16d0b7e2730871145754c7e58e1971e46880a31d9b7bc1016f"
+    },
+    {
+      "id": "mathd_algebra_346",
+      "file": "MiniF2F/Test/mathd_algebra_346.lean",
+      "sha256": "a962d7552261553c4d2887815e02de702fc4b65be23348f9f23021c35ee60584"
+    },
+    {
+      "id": "mathd_numbertheory_299",
+      "file": "MiniF2F/Test/mathd_numbertheory_299.lean",
+      "sha256": "cafe5024c303c8f215562d789723947e53a023c78345fba173b35e45ba64297f"
+    },
+    {
+      "id": "mathd_algebra_171",
+      "file": "MiniF2F/Test/mathd_algebra_171.lean",
+      "sha256": "c0025a57040362047584da3f7baa7c0f1c09c4ebed3e9de29f90f79b15135756"
+    },
+    {
+      "id": "mathd_numbertheory_34",
+      "file": "MiniF2F/Test/mathd_numbertheory_34.lean",
+      "sha256": "734cdeb1307112128b0663aececbe7b668c1d2a285d71d04544ceddbea502dc8"
+    },
+    {
+      "id": "imo_1992_p1",
+      "file": "MiniF2F/Test/imo_1992_p1.lean",
+      "sha256": "0bdc91688d462f6350b425d67baf6e9f3050d1673f45e5f871038340681bebcf"
+    },
+    {
+      "id": "mathd_algebra_160",
+      "file": "MiniF2F/Test/mathd_algebra_160.lean",
+      "sha256": "a424156bc7f737cec8beecb0618b854436de7e5ffa75e23a4179f015a9284063"
+    },
+    {
+      "id": "mathd_algebra_24",
+      "file": "MiniF2F/Test/mathd_algebra_24.lean",
+      "sha256": "fde11aeecccd8066234e20fe7c7b0171edab9b05a205313848906d16e0915cf7"
+    },
+    {
+      "id": "algebra_2varlineareq_fp3zeq11_3tfm1m5zeqn68_feqn10_zeq7",
+      "file": "MiniF2F/Test/algebra_2varlineareq_fp3zeq11_3tfm1m5zeqn68_feqn10_zeq7.lean",
+      "sha256": "3febca7f4917d5ee57bb48d121ceffda634ca66296beb34dae2d390235717715"
+    },
+    {
+      "id": "mathd_algebra_143",
+      "file": "MiniF2F/Test/mathd_algebra_143.lean",
+      "sha256": "b6c39306f4ebb0e2fc2301a5581f34522b64ead899a3d633bdd5ca59f08a137f"
+    },
+    {
+      "id": "mathd_numbertheory_430",
+      "file": "MiniF2F/Test/mathd_numbertheory_430.lean",
+      "sha256": "155827c38c02f2e3d0f1899959af4670d626b648814beb8e0da2fe7508214a61"
+    },
+    {
+      "id": "amc12a_2021_p22",
+      "file": "MiniF2F/Test/amc12a_2021_p22.lean",
+      "sha256": "51a117316194ae9e790c032b843c5122050ab97cbb2c1e1a9445b1900a9e807d"
+    },
+    {
+      "id": "amc12a_2020_p25",
+      "file": "MiniF2F/Test/amc12a_2020_p25.lean",
+      "sha256": "30aecbbfe5ba48de5da1375d2e9f478247ca292aa7dd25773d2d2d46e22f5946"
+    },
+    {
+      "id": "induction_sumkexp3eqsumksq",
+      "file": "MiniF2F/Test/induction_sumkexp3eqsumksq.lean",
+      "sha256": "d5d2869282c2d4cf0452e68d1630244d822f81434d2858dfb432a3472301d712"
+    },
+    {
+      "id": "mathd_algebra_288",
+      "file": "MiniF2F/Test/mathd_algebra_288.lean",
+      "sha256": "e3ab023c0c2ca44081a981deb1627c9cc98ef56dfe2511711c4e3d61a6aeb302"
+    },
+    {
+      "id": "mathd_numbertheory_207",
+      "file": "MiniF2F/Test/mathd_numbertheory_207.lean",
+      "sha256": "d022a4c7727d6ef8fb5a3642444cb4ca3494a1f4ccb612bd8903fb77f2b14500"
+    },
+    {
+      "id": "imo_1974_p3",
+      "file": "MiniF2F/Test/imo_1974_p3.lean",
+      "sha256": "b771413df3c46077ee5ca1f2b5a3361c8764c866ac95c8828c7c9d61aa648a65"
+    },
+    {
+      "id": "mathd_algebra_329",
+      "file": "MiniF2F/Test/mathd_algebra_329.lean",
+      "sha256": "b0f8bc854b6fee353ef9c0e314b4a6aa5a2c1b22bcb5e7dac36cb5d56218de5c"
+    },
+    {
+      "id": "amc12b_2020_p22",
+      "file": "MiniF2F/Test/amc12b_2020_p22.lean",
+      "sha256": "0376878bc4c0ec932a51cd7e578935c183d7beb5d47793759a4d46418fe84e47"
+    },
+    {
+      "id": "amc12a_2020_p4",
+      "file": "MiniF2F/Test/amc12a_2020_p4.lean",
+      "sha256": "cc23411a8b54cf62ed6c8bc7c0cf69a9fb7f3262872a7f5dab5d3be4e4551d5e"
+    },
+    {
+      "id": "algebra_9onxpypzleqsum2onxpy",
+      "file": "MiniF2F/Test/algebra_9onxpypzleqsum2onxpy.lean",
+      "sha256": "688cfefc0701f794791eb4e495253b8f488d4c3e944ffda9f01683a8ff87ca1d"
+    },
+    {
+      "id": "aime_1987_p5",
+      "file": "MiniF2F/Test/aime_1987_p5.lean",
+      "sha256": "c19117377b451e62a5dc717ffd38e4f002421657548143f26b631c51c2317445"
+    },
+    {
+      "id": "mathd_numbertheory_521",
+      "file": "MiniF2F/Test/mathd_numbertheory_521.lean",
+      "sha256": "0c535645d14e39aab540d10c5bcb97cc3ee43a6192df465c855ffb0a846d0c21"
+    },
+    {
+      "id": "amc12a_2002_p13",
+      "file": "MiniF2F/Test/amc12a_2002_p13.lean",
+      "sha256": "c764f176efad53e4966c366ece4f871e9d77fb389eafa325a31896f8aff5c856"
+    },
+    {
+      "id": "mathd_algebra_459",
+      "file": "MiniF2F/Test/mathd_algebra_459.lean",
+      "sha256": "0663cd5569c5caf72bae4c7f990ee6e9ecb1869b620f254d8e385b255a4389d4"
+    },
+    {
+      "id": "mathd_numbertheory_66",
+      "file": "MiniF2F/Test/mathd_numbertheory_66.lean",
+      "sha256": "cf17e452ed2e728f6a8416a1abfea4c0757826c9469444367f89805c0ee1ca1e"
+    },
+    {
+      "id": "mathd_numbertheory_235",
+      "file": "MiniF2F/Test/mathd_numbertheory_235.lean",
+      "sha256": "0d4264cd3755614ef1f169715eef8e4c026d9db35a96a2f3755407aa8f46b6ef"
+    },
+    {
+      "id": "mathd_algebra_158",
+      "file": "MiniF2F/Test/mathd_algebra_158.lean",
+      "sha256": "aac16bba8775e098caa41eed4744e07f17c72d93007c210975cf9a1eacd5fcc0"
+    },
+    {
+      "id": "mathd_numbertheory_229",
+      "file": "MiniF2F/Test/mathd_numbertheory_229.lean",
+      "sha256": "0735c0cd7272115f60a6d760efa2c3ebd3925624cf07ed77c97336f527cb87ee"
+    },
+    {
+      "id": "amc12a_2020_p10",
+      "file": "MiniF2F/Test/amc12a_2020_p10.lean",
+      "sha256": "2973fe80baad248e2cbf355ce4a0f5666b3c522a6170ba2d19c509b7526fbd79"
+    },
+    {
+      "id": "mathd_algebra_246",
+      "file": "MiniF2F/Test/mathd_algebra_246.lean",
+      "sha256": "146f778e4aec676a229172b72056a5284591dffdb347d1642b21378a18c84662"
+    },
+    {
+      "id": "mathd_numbertheory_457",
+      "file": "MiniF2F/Test/mathd_numbertheory_457.lean",
+      "sha256": "3cf727bbcc8bc792fa2354f8794fbae11a0df8259c7b7f7d8333d15b41ef9d8b"
+    },
+    {
+      "id": "mathd_numbertheory_541",
+      "file": "MiniF2F/Test/mathd_numbertheory_541.lean",
+      "sha256": "8508f041eacdd43949968f0b8bae0853c0a62d2489344603c2dded165978ab46"
+    },
+    {
+      "id": "aime_1989_p8",
+      "file": "MiniF2F/Test/aime_1989_p8.lean",
+      "sha256": "d3d81c989ef4e840e4d9dba6f095a60ffde9f3f6e642d2adda10677b36301147"
+    },
+    {
+      "id": "induction_pord1p1on2powklt5on2",
+      "file": "MiniF2F/Test/induction_pord1p1on2powklt5on2.lean",
+      "sha256": "7e30f7d628764314ef356afc9e9bb0c5edd1bfdfc127d93f5eaec79d8424f63a"
+    },
+    {
+      "id": "mathd_algebra_33",
+      "file": "MiniF2F/Test/mathd_algebra_33.lean",
+      "sha256": "bf998fd99f22a0f0fb44c17d1c1f58b0227ea259135db0a9dab6b6c71e607676"
+    },
+    {
+      "id": "mathd_algebra_148",
+      "file": "MiniF2F/Test/mathd_algebra_148.lean",
+      "sha256": "d52f28e688baa3b425ea7f4c543d2a2dfb3a47b158bce53970b476bde19edc9a"
+    },
+    {
+      "id": "amc12a_2009_p7",
+      "file": "MiniF2F/Test/amc12a_2009_p7.lean",
+      "sha256": "5449196d4ce474680c5bad920e85027d31b5c9ff24feb8a43a3a75a4ed6a0ae2"
+    },
+    {
+      "id": "mathd_numbertheory_5",
+      "file": "MiniF2F/Test/mathd_numbertheory_5.lean",
+      "sha256": "01cd43c67b62a4be402b2b0c74474312ca9ad57ea10d13523cf1ea66841a7190"
+    },
+    {
+      "id": "mathd_algebra_114",
+      "file": "MiniF2F/Test/mathd_algebra_114.lean",
+      "sha256": "3d148034f4d77eec569a493f11ce3def0aa0b40dcc4862066ebc07aa47c27941"
+    },
+    {
+      "id": "mathd_numbertheory_239",
+      "file": "MiniF2F/Test/mathd_numbertheory_239.lean",
+      "sha256": "18c15591a370048d49b1df1a97235a59aa7163503db9e4e3b56c41ce836a045b"
+    },
+    {
+      "id": "induction_prod1p1onk3le3m1onn",
+      "file": "MiniF2F/Test/induction_prod1p1onk3le3m1onn.lean",
+      "sha256": "1bf2916a8c61fa9bd7203bdcd9f942189b328b99b8d38e4dbf7a691175814c78"
+    },
+    {
+      "id": "numbertheory_notEquiv2i2jasqbsqdiv8",
+      "file": "MiniF2F/Test/numbertheory_notEquiv2i2jasqbsqdiv8.lean",
+      "sha256": "f4bca3e67b092f334ea53603f68da9ba628c0302f128d464b882ed9d3eabd50c"
+    },
+    {
+      "id": "mathd_numbertheory_237",
+      "file": "MiniF2F/Test/mathd_numbertheory_237.lean",
+      "sha256": "81cbb566a3335d2d1070df8ec16151bd44d8b6bb6be1cc28d308523327366d54"
+    },
+    {
+      "id": "mathd_algebra_44",
+      "file": "MiniF2F/Test/mathd_algebra_44.lean",
+      "sha256": "9edd092fe49064ceb952fb11292ff7683102b89b0351f8b92310edc3b474d2d5"
+    },
+    {
+      "id": "amc12a_2020_p7",
+      "file": "MiniF2F/Test/amc12a_2020_p7.lean",
+      "sha256": "5636f8669f2bc1350ca975d51449fc78f0e14dfd5000fff9dcca73eafc097ad8"
+    },
+    {
+      "id": "mathd_numbertheory_552",
+      "file": "MiniF2F/Test/mathd_numbertheory_552.lean",
+      "sha256": "1939e47d805698cfe10f1f9f3217d3301504e3a6d1c3ae7d14e0289453bc4958"
+    },
+    {
+      "id": "aime_1997_p9",
+      "file": "MiniF2F/Test/aime_1997_p9.lean",
+      "sha256": "8ed10e1ad5cce1a5ecdff731b8fae93ede15c888f4b835d0b5022045c3892a73"
+    },
+    {
+      "id": "mathd_algebra_756",
+      "file": "MiniF2F/Test/mathd_algebra_756.lean",
+      "sha256": "32c21dd953e9a3853b8e39c5c9c68298a201d64d582941c1f1b82478de489dee"
+    },
+    {
+      "id": "aime_1988_p8",
+      "file": "MiniF2F/Test/aime_1988_p8.lean",
+      "sha256": "6dfa22eed6bbe168dff7628cea068894b937920c9f4afcc600a90658318e32da"
+    },
+    {
+      "id": "mathd_algebra_304",
+      "file": "MiniF2F/Test/mathd_algebra_304.lean",
+      "sha256": "8dc4adc1fa5b7b72dc3fd0404bc9c5c297bde9ca7d20ccea37a8e0493d4036a2"
+    },
+    {
+      "id": "mathd_algebra_17",
+      "file": "MiniF2F/Test/mathd_algebra_17.lean",
+      "sha256": "07e263a66bbb4e4f5794e1771dcb414d1ce47add41aca33fdb6e41e9353a7aa3"
+    },
+    {
+      "id": "aime_1999_p11",
+      "file": "MiniF2F/Test/aime_1999_p11.lean",
+      "sha256": "ba0b6bf79f45d29181a7f78772d95c670eb590e1cd8012b16e5a2b01bb497dec"
+    },
+    {
+      "id": "mathd_algebra_362",
+      "file": "MiniF2F/Test/mathd_algebra_362.lean",
+      "sha256": "efe3b61b48ddb28c606b569cf001e8eba7ba14c129e8227df83c34816b94ef07"
+    },
+    {
+      "id": "mathd_algebra_107",
+      "file": "MiniF2F/Test/mathd_algebra_107.lean",
+      "sha256": "8b266897a9476b9c5c61aa61803e27b6d52a63b1188d88e685c6cb0b41cf48f4"
+    },
+    {
+      "id": "mathd_numbertheory_728",
+      "file": "MiniF2F/Test/mathd_numbertheory_728.lean",
+      "sha256": "b8f39cbd7264633583d2f3755873edeb7108ea4dd536fed41102cb74d05683d4"
+    },
+    {
+      "id": "mathd_numbertheory_99",
+      "file": "MiniF2F/Test/mathd_numbertheory_99.lean",
+      "sha256": "15cc5ab80329cabe63709760f3a77989924ab9e7a8cfcf0e2ac9b925ff8a7495"
+    },
+    {
+      "id": "imo_1965_p2",
+      "file": "MiniF2F/Test/imo_1965_p2.lean",
+      "sha256": "b8d6dd5089aff6302f6cbadbb962a88fc5ae649a8019fadf75150c16220bf68c"
+    },
+    {
+      "id": "mathd_numbertheory_321",
+      "file": "MiniF2F/Test/mathd_numbertheory_321.lean",
+      "sha256": "e98f750003bc408ce1f68e9100d41b841d8c5250d9359010841586b49f271148"
+    },
+    {
+      "id": "amc12b_2020_p13",
+      "file": "MiniF2F/Test/amc12b_2020_p13.lean",
+      "sha256": "56b15466aac201d1b0f293e597e899fba8259c60b9f025d5774064668bd98fc7"
+    },
+    {
+      "id": "amc12a_2021_p14",
+      "file": "MiniF2F/Test/amc12a_2021_p14.lean",
+      "sha256": "36977178f794fab59ab5f2cc849f24a36b19f1b97794cb3532edbf386b73cbd2"
+    },
+    {
+      "id": "mathd_algebra_263",
+      "file": "MiniF2F/Test/mathd_algebra_263.lean",
+      "sha256": "98700c535a7af0210d867c25558e9bfaa0556dff3a6d221e3c9a38e95be3edba"
+    },
+    {
+      "id": "aime_1983_p1",
+      "file": "MiniF2F/Test/aime_1983_p1.lean",
+      "sha256": "6d46c58e94f64733a59a549c452756163ae2d3cd86ea59f87bf0a7723586c6aa"
+    },
+    {
+      "id": "imo_1982_p1",
+      "file": "MiniF2F/Test/imo_1982_p1.lean",
+      "sha256": "aa4b63c3f1b446428e7e4f52c91d5df1add153917cbd00d8e10ded4f102a7bd4"
+    },
+    {
+      "id": "imo_1964_p2",
+      "file": "MiniF2F/Test/imo_1964_p2.lean",
+      "sha256": "1a182ff35586a107306847cb05c5153522cc906c6d9a4853275e429e536eebd1"
+    },
+    {
+      "id": "aime_1983_p3",
+      "file": "MiniF2F/Test/aime_1983_p3.lean",
+      "sha256": "286270380c5ca3e829f65f4f086c3245a6038eba09bc5b57b3cf5792dcac73c4"
+    },
+    {
+      "id": "algebra_apbon2pownleqapownpbpowon2",
+      "file": "MiniF2F/Test/algebra_apbon2pownleqapownpbpowon2.lean",
+      "sha256": "85050f4adcbfb738c7ef9a2640ee969a50bfc4dd467cb29c3e8d2c05dbb2512e"
+    },
+    {
+      "id": "mathd_algebra_209",
+      "file": "MiniF2F/Test/mathd_algebra_209.lean",
+      "sha256": "a01ec2da6111d49eb77b55efe4cdf5308e0ce6cd398ab4f790bce6005d86649f"
+    },
+    {
+      "id": "algebra_amgm_sum1toneqn_prod1tonleq1",
+      "file": "MiniF2F/Test/algebra_amgm_sum1toneqn_prod1tonleq1.lean",
+      "sha256": "7512c3ec27350608bdefcc44a265e70028256b49e442af3dbfd69d1e4746ebe7"
+    },
+    {
+      "id": "mathd_algebra_276",
+      "file": "MiniF2F/Test/mathd_algebra_276.lean",
+      "sha256": "d8735c2ac35014aa7542b4d79546713a5a5c9e14d7be02ceb63275e29cf01d44"
+    },
+    {
+      "id": "mathd_algebra_513",
+      "file": "MiniF2F/Test/mathd_algebra_513.lean",
+      "sha256": "e872c81e950af3d0c5432936fd10533e819406b9a82200829b3f51aa78d9eca8"
+    },
+    {
+      "id": "mathd_algebra_400",
+      "file": "MiniF2F/Test/mathd_algebra_400.lean",
+      "sha256": "592e0834fbdc797f650c082d2734c0bf1cf5c1fd25e4f21fccdba66c15c58f72"
+    },
+    {
+      "id": "mathd_algebra_196",
+      "file": "MiniF2F/Test/mathd_algebra_196.lean",
+      "sha256": "45cb772b5f545b403bee561b2df84afc1283b3bb28831d784931cd924403d5e6"
+    },
+    {
+      "id": "mathd_numbertheory_254",
+      "file": "MiniF2F/Test/mathd_numbertheory_254.lean",
+      "sha256": "d123a49e5cb56e8f0272f138bc0a5ce6f1f03f27079d199b326e1189f8374f78"
+    },
+    {
+      "id": "aime_1995_p7",
+      "file": "MiniF2F/Test/aime_1995_p7.lean",
+      "sha256": "0baef49e6acd6965036cfb9dce9316422b6b184bcc2be8bdc5bad91cf1fe0faa"
+    },
+    {
+      "id": "mathd_algebra_452",
+      "file": "MiniF2F/Test/mathd_algebra_452.lean",
+      "sha256": "10a8825d5355a49c765b87966abb602aa96155b66e4b1b96ab982b256a8770a6"
+    },
+    {
+      "id": "imo_1977_p6",
+      "file": "MiniF2F/Test/imo_1977_p6.lean",
+      "sha256": "c3f48ab31d2660ba45fb3372a04e2de9980699c996a7ad9e17d0fd2d5940e89a"
+    },
+    {
+      "id": "aime_1983_p2",
+      "file": "MiniF2F/Test/aime_1983_p2.lean",
+      "sha256": "082acfed53aa3980fc1e08b8b8fde4538bccdeb62d9df0a3a5a4335c88088c7b"
+    },
+    {
+      "id": "mathd_algebra_441",
+      "file": "MiniF2F/Test/mathd_algebra_441.lean",
+      "sha256": "2cd7f2c4f5eac7cf15d0928cd1d7bd74d178522b92601fbac0e36561bfbbdc28"
+    },
+    {
+      "id": "numbertheory_x5neqy2p4",
+      "file": "MiniF2F/Test/numbertheory_x5neqy2p4.lean",
+      "sha256": "ca7d6b243faf77bf398577aae1d1cd7122a98f813a8110d311fef9ef86593d60"
+    },
+    {
+      "id": "mathd_numbertheory_711",
+      "file": "MiniF2F/Test/mathd_numbertheory_711.lean",
+      "sha256": "7051ffb80b751c865548d57661feea8eea05a6d205a087e41cf348b76bd3f508"
+    },
+    {
+      "id": "amc12a_2021_p9",
+      "file": "MiniF2F/Test/amc12a_2021_p9.lean",
+      "sha256": "42601f7aafa89d029cddc219a408bf1113e72b127bb5fee5bfe323b85dbb17e8"
+    },
+    {
+      "id": "algebra_cubrtrp1oncubrtreq3_rcubp1onrcubeq5778",
+      "file": "MiniF2F/Test/algebra_cubrtrp1oncubrtreq3_rcubp1onrcubeq5778.lean",
+      "sha256": "66b9f57ca9c18128429809653746c696b46ee97558f129ba8974794efbf200f4"
+    },
+    {
+      "id": "induction_1pxpownlt1pnx",
+      "file": "MiniF2F/Test/induction_1pxpownlt1pnx.lean",
+      "sha256": "aa01e47bbef4526acc3b08466d77313115ab9d932c9602fffeacb02d77458e3a"
+    },
+    {
+      "id": "mathd_algebra_342",
+      "file": "MiniF2F/Test/mathd_algebra_342.lean",
+      "sha256": "cfe9c19d048bbc6ee92a0634ebaec46a6185aab7e09367c13e4239060bc0b920"
+    },
+    {
+      "id": "amc12b_2020_p21",
+      "file": "MiniF2F/Test/amc12b_2020_p21.lean",
+      "sha256": "ce37c18b88c26b4247ac59a7c545c6c5e7850f3aab2793b6bfdcbb80eec5bebc"
+    },
+    {
+      "id": "algebra_sum1onsqrt2to1onsqrt10000lt198",
+      "file": "MiniF2F/Test/algebra_sum1onsqrt2to1onsqrt10000lt198.lean",
+      "sha256": "811ce07af457f0d225819e526ced2578e9147d62daf9abd52d2f649d43fc54f3"
+    },
+    {
+      "id": "numbertheory_3pow2pownm1mod2pownp3eq2pownp2",
+      "file": "MiniF2F/Test/numbertheory_3pow2pownm1mod2pownp3eq2pownp2.lean",
+      "sha256": "9b0be138c32c5392a2367a2e8af67ae4a77f5c39bcdfeb5bb1d405c635ad4d68"
+    },
+    {
+      "id": "imo_1985_p6",
+      "file": "MiniF2F/Test/imo_1985_p6.lean",
+      "sha256": "ff49b91be958c712a65897e57780f41ab25a061bfa5e6392baba93e4a04089a7"
+    },
+    {
+      "id": "mathd_numbertheory_345",
+      "file": "MiniF2F/Test/mathd_numbertheory_345.lean",
+      "sha256": "13a414220bd7277127b9cb460464c85ea9a3386975f3c9d03ebb1e51279aebe6"
+    },
+    {
+      "id": "amc12b_2020_p6",
+      "file": "MiniF2F/Test/amc12b_2020_p6.lean",
+      "sha256": "cc224c2bb31e56e12cc046f958ffad2fa46d44f5d9404a63c71f5bb3924ffb39"
+    },
+    {
+      "id": "amc12a_2021_p19",
+      "file": "MiniF2F/Test/amc12a_2021_p19.lean",
+      "sha256": "dde4d731aec2f183a0687f2247551688a8c3b6a5496e36ba487d2315f788e1a1"
+    },
+    {
+      "id": "mathd_algebra_208",
+      "file": "MiniF2F/Test/mathd_algebra_208.lean",
+      "sha256": "2326ec35b3f542a8c88f384a858f1c46b8122f8fd4bd915731bb7c67f286ddfc"
+    },
+    {
+      "id": "mathd_algebra_432",
+      "file": "MiniF2F/Test/mathd_algebra_432.lean",
+      "sha256": "a2498ec8137b692a212deb33bdef2c0ee6c00c6d454fed8323c05ff3c06be7df"
+    },
+    {
+      "id": "amc12a_2009_p6",
+      "file": "MiniF2F/Test/amc12a_2009_p6.lean",
+      "sha256": "2d20b7d53c80c71e2313e55b38806ea2d07ed51349b41732696c456a5d9e96b7"
+    },
+    {
+      "id": "amc12a_2021_p8",
+      "file": "MiniF2F/Test/amc12a_2021_p8.lean",
+      "sha256": "f823c110a51bbf1fe8939ac3d273994c4009b6b6b103a3feba9f517eff1e891a"
+    },
+    {
+      "id": "mathd_numbertheory_764",
+      "file": "MiniF2F/Test/mathd_numbertheory_764.lean",
+      "sha256": "683174fdf767dbb0413365c366c2e6273400d937274daf0f23cf3e852f8a1b7c"
+    },
+    {
+      "id": "amc12_2000_p20",
+      "file": "MiniF2F/Test/amc12_2000_p20.lean",
+      "sha256": "5204e015acf3881ea2613b44edb89fd88ba42779594e10ccd44f35f50ca29c66"
+    },
+    {
+      "id": "amc12a_2021_p12",
+      "file": "MiniF2F/Test/amc12a_2021_p12.lean",
+      "sha256": "111e0ddac6284b5b2709b8f37100caa2c124fee2c02cd5d09fa0ab9a27c3a859"
+    },
+    {
+      "id": "induction_nfactltnexpnm1ngt3",
+      "file": "MiniF2F/Test/induction_nfactltnexpnm1ngt3.lean",
+      "sha256": "a38a9443cdb4e006e78ce4f617da9967871e456ef43e3d2beab2ffacaa006d49"
+    },
+    {
+      "id": "amc12a_2003_p5",
+      "file": "MiniF2F/Test/amc12a_2003_p5.lean",
+      "sha256": "930e482b5d2c7953b2542d47349d992aaa34a7e52ef468fafd550dff5f4356b8"
+    },
+    {
+      "id": "mathd_numbertheory_427",
+      "file": "MiniF2F/Test/mathd_numbertheory_427.lean",
+      "sha256": "e29b830b1b1e5b0926bea2bec787bd8bfa43d1ec3b772b7d36eb40d4cd7fb153"
+    },
+    {
+      "id": "aime_1984_p1",
+      "file": "MiniF2F/Test/aime_1984_p1.lean",
+      "sha256": "b96cb9ab4bfa6d7f9a7f84dd793a0fe816256d374dc95279516f93a76917c172"
+    },
+    {
+      "id": "mathd_algebra_354",
+      "file": "MiniF2F/Test/mathd_algebra_354.lean",
+      "sha256": "d5e06e994a538546d1ecb564c3f49b6b3a62253e07d69bcc37b67bc45f255c8f"
+    },
+    {
+      "id": "aime_1990_p4",
+      "file": "MiniF2F/Test/aime_1990_p4.lean",
+      "sha256": "e0e88019135193e907284d149270941e27443b5e74e691ca6019cc939276a24d"
+    },
+    {
+      "id": "mathd_numbertheory_353",
+      "file": "MiniF2F/Test/mathd_numbertheory_353.lean",
+      "sha256": "897a43319c91f9f8649d8981cd218b25d62d7ae57be5a4b3519becca7977adac"
+    },
+    {
+      "id": "mathd_numbertheory_293",
+      "file": "MiniF2F/Test/mathd_numbertheory_293.lean",
+      "sha256": "6cf55039b23d3340a412d957fb25e3399fb71e05bc14b1878849b5fe11cc823b"
+    },
+    {
+      "id": "mathd_algebra_302",
+      "file": "MiniF2F/Test/mathd_algebra_302.lean",
+      "sha256": "4877663e5974c0b979deab2eb65961cbfe5863676af83be4911ee01f1d5510ab"
+    },
+    {
+      "id": "mathd_algebra_398",
+      "file": "MiniF2F/Test/mathd_algebra_398.lean",
+      "sha256": "bad59a817c0ed262c9c84ae1dd1e4fdbcdc181be1235871e697beaa0a22afa02"
+    },
+    {
+      "id": "mathd_numbertheory_769",
+      "file": "MiniF2F/Test/mathd_numbertheory_769.lean",
+      "sha256": "ecdf2447b2d04f0d2a4a639194ce3f64f39d56ae6697ae7b79d385129b35d282"
+    },
+    {
+      "id": "mathd_algebra_314",
+      "file": "MiniF2F/Test/mathd_algebra_314.lean",
+      "sha256": "4ba9b298ab557aabcfcd98c92385b39a5889e22145d76c4c8e548060af4f81b0"
+    },
+    {
+      "id": "algebra_sqineq_at2malt1",
+      "file": "MiniF2F/Test/algebra_sqineq_at2malt1.lean",
+      "sha256": "6ca4f1e46d1e0f21456ac8e859661438ed22ec61ce5b5f9ac53fe93baf1bbf97"
+    },
+    {
+      "id": "mathd_numbertheory_517",
+      "file": "MiniF2F/Test/mathd_numbertheory_517.lean",
+      "sha256": "d67f426615f5be5be0d59e954d890332707ab5258547208ef9a09988281b9aab"
+    },
+    {
+      "id": "imo_1959_p1",
+      "file": "MiniF2F/Test/imo_1959_p1.lean",
+      "sha256": "8c21b8de2c5dced23557ce4ca16b8b03e1b67e2fc336484023e8c70c96f9b7aa"
+    },
+    {
+      "id": "imo_1968_p5_1",
+      "file": "MiniF2F/Test/imo_1968_p5_1.lean",
+      "sha256": "0fc6d24a59313b087d966f84f9d6a28d1770d00e2dba671418832746ed7e0030"
+    },
+    {
+      "id": "numbertheory_aoddbdiv4asqpbsqmod8eq1",
+      "file": "MiniF2F/Test/numbertheory_aoddbdiv4asqpbsqmod8eq1.lean",
+      "sha256": "0cfb134567ec0de6cf3e7744b43f4cedd9837dd59e5edb99f649718592dbcf4b"
+    },
+    {
+      "id": "algebra_others_exirrpowirrrat",
+      "file": "MiniF2F/Test/algebra_others_exirrpowirrrat.lean",
+      "sha256": "4a2cba2314e73847ed6a92222954c504e49726a7e98aec5c37b341cfaa14a910"
+    },
+    {
+      "id": "mathd_numbertheory_1124",
+      "file": "MiniF2F/Test/mathd_numbertheory_1124.lean",
+      "sha256": "cb02e23e60f861779398c6371f9ba52a5b723193dc8ee9fd2970349b897ba429"
+    },
+    {
+      "id": "aime_1994_p3",
+      "file": "MiniF2F/Test/aime_1994_p3.lean",
+      "sha256": "fcdf430f4386d1746c1767ae1b0823c1b86412d532c6662998c3ed4fd525a4fc"
+    },
+    {
+      "id": "aime_1990_p15",
+      "file": "MiniF2F/Test/aime_1990_p15.lean",
+      "sha256": "1fa3087b5a6f505213bef58856d9193a71870dc71b7d9f97440c0d3587b05f5e"
+    },
+    {
+      "id": "mathd_numbertheory_451",
+      "file": "MiniF2F/Test/mathd_numbertheory_451.lean",
+      "sha256": "b79c1fe026a04fadb7301bdac90aa6d4e1a071949ebfbe697097fdc201a6d04d"
+    },
+    {
+      "id": "mathd_numbertheory_435",
+      "file": "MiniF2F/Test/mathd_numbertheory_435.lean",
+      "sha256": "3c2ac6a52c52da3350cf2c4d6d0067bda0317df34e666aaea8511d7b5d51e2a1"
+    },
+    {
+      "id": "amc12b_2021_p1",
+      "file": "MiniF2F/Test/amc12b_2021_p1.lean",
+      "sha256": "96694329656445c5960acc9edab3f9400a3ee7ab4bb9885bcec7c8eeb6d2e592"
+    },
+    {
+      "id": "induction_pprime_pdvdapowpma",
+      "file": "MiniF2F/Test/induction_pprime_pdvdapowpma.lean",
+      "sha256": "8d3da29556a6c79205b68540ee08f4792710065e922c46af543877e48f434c98"
+    },
+    {
+      "id": "algebra_apbmpcneq0_aeq0anbeq0anceq0",
+      "file": "MiniF2F/Test/algebra_apbmpcneq0_aeq0anbeq0anceq0.lean",
+      "sha256": "09ce74b6b6bd8d56506da96bdb6fa04c13b872c9465340e10fac406599068ecf"
+    },
+    {
+      "id": "amc12_2001_p21",
+      "file": "MiniF2F/Test/amc12_2001_p21.lean",
+      "sha256": "752263f6d42c89c36529bb97729654258e16f2251e3477a64552cae64de4fddb"
+    },
+    {
+      "id": "mathd_algebra_141",
+      "file": "MiniF2F/Test/mathd_algebra_141.lean",
+      "sha256": "5daabc8fa40bfa9c877a876419392ab639db953ec177f1b3d5d97b8267e6723c"
+    },
+    {
+      "id": "amc12a_2021_p25",
+      "file": "MiniF2F/Test/amc12a_2021_p25.lean",
+      "sha256": "7dc728c0c21a913d6fe40019bc2bfcd928412ed1044bac094de3e120ca3612ee"
+    },
+    {
+      "id": "mathd_numbertheory_100",
+      "file": "MiniF2F/Test/mathd_numbertheory_100.lean",
+      "sha256": "299122c0d8cc2675e2ccd647bb2232399d26e34ddb92ad0225ea95cb2963f485"
+    },
+    {
+      "id": "mathd_algebra_427",
+      "file": "MiniF2F/Test/mathd_algebra_427.lean",
+      "sha256": "6df34e03db3fc8389cf74192f65d41fa47145249c7e22ff190ddd3e1e199683a"
+    },
+    {
+      "id": "mathd_algebra_296",
+      "file": "MiniF2F/Test/mathd_algebra_296.lean",
+      "sha256": "1fc5c48db438e4e54f8eea5d26d4d8433e83c38c57ba8a3776317bced2106265"
+    },
+    {
+      "id": "mathd_numbertheory_234",
+      "file": "MiniF2F/Test/mathd_numbertheory_234.lean",
+      "sha256": "8663cc86602260baaa0b865ff2d904475465e867edd696901d767024d396dd01"
+    },
+    {
+      "id": "imo_2019_p1",
+      "file": "MiniF2F/Test/imo_2019_p1.lean",
+      "sha256": "996986c6c4ddee3ff2c2b2f8d3992254516008fa765f7c13c1dfa2a3f719a651"
+    },
+    {
+      "id": "mathd_algebra_338",
+      "file": "MiniF2F/Test/mathd_algebra_338.lean",
+      "sha256": "725bc8c05d7e3f8e9837bfb4c689355d46347fc84964af9842c3453145f23565"
+    },
+    {
+      "id": "mathd_numbertheory_343",
+      "file": "MiniF2F/Test/mathd_numbertheory_343.lean",
+      "sha256": "605116f8a47ceae5a0223857618783fb2e2cfcd0d12fb84f2c116095dc04c339"
+    },
+    {
+      "id": "imo_1984_p6",
+      "file": "MiniF2F/Test/imo_1984_p6.lean",
+      "sha256": "725856c347bd4c36410668f314917e4d9275f5199c00ac34bb7cd59e3b496850"
+    },
+    {
+      "id": "imo_1983_p6",
+      "file": "MiniF2F/Test/imo_1983_p6.lean",
+      "sha256": "b6f4637a346182d0ab7fbee3fe38a9e9bc640f79af0d9b26d686b2ab01998610"
+    },
+    {
+      "id": "mathd_numbertheory_247",
+      "file": "MiniF2F/Test/mathd_numbertheory_247.lean",
+      "sha256": "0d3b702bfb0577887be8783fc626f05c3a2fad2dfee0557d7f10f971cc0fb876"
+    },
+    {
+      "id": "algebra_apbpceq2_abpbcpcaeq1_aleq1on3anbleq1ancleq4on3",
+      "file": "MiniF2F/Test/algebra_apbpceq2_abpbcpcaeq1_aleq1on3anbleq1ancleq4on3.lean",
+      "sha256": "fc240e2eb7f58adea02d60cec6f8cf36c6f83b065131a0ebf7e8abad7f1e3bd2"
+    },
+    {
+      "id": "mathd_numbertheory_296",
+      "file": "MiniF2F/Test/mathd_numbertheory_296.lean",
+      "sha256": "8d3a6976f029fc80d0dba7de2880762d9aa376c6977790261267ca290bd8d74c"
+    },
+    {
+      "id": "amc12a_2008_p25",
+      "file": "MiniF2F/Test/amc12a_2008_p25.lean",
+      "sha256": "21952f1247484c3f0fa8a1174b24a87d3055959573ca9041871278cbb156a4ea"
+    },
+    {
+      "id": "amc12b_2021_p4",
+      "file": "MiniF2F/Test/amc12b_2021_p4.lean",
+      "sha256": "820ce5dd1a2f9f60d6b74a852030bc90b304b23b308a6122bea56bbb88e2be4e"
+    },
+    {
+      "id": "induction_12dvd4expnp1p20",
+      "file": "MiniF2F/Test/induction_12dvd4expnp1p20.lean",
+      "sha256": "8f998077a8e2020ef9e3c28e0b40a7cb8a7cdb86101034c48baf4d5aad5e6394"
+    },
+    {
+      "id": "mathd_algebra_113",
+      "file": "MiniF2F/Test/mathd_algebra_113.lean",
+      "sha256": "bce0050ae5a9dea02bee97512c6c91625339f2aa7f0f1d15048dde85771b3a34"
+    },
+    {
+      "id": "mathd_algebra_125",
+      "file": "MiniF2F/Test/mathd_algebra_125.lean",
+      "sha256": "c30b17372dcfd776da9d98ebf899ace1b081b4d5a09abc148f462b246a469c42"
+    },
+    {
+      "id": "mathd_numbertheory_342",
+      "file": "MiniF2F/Test/mathd_numbertheory_342.lean",
+      "sha256": "11743c0e9f6d3cd675191cd2c6aaedf265b3a6a648e19a7537ebc0fa31e84ac1"
+    },
+    {
+      "id": "algebra_bleqa_apbon2msqrtableqambsqon8b",
+      "file": "MiniF2F/Test/algebra_bleqa_apbon2msqrtableqambsqon8b.lean",
+      "sha256": "a893829a126383f95aa839bdbea55edc809bc616c7f390f8c324f8c8f53bd54b"
+    },
+    {
+      "id": "mathd_numbertheory_85",
+      "file": "MiniF2F/Test/mathd_numbertheory_85.lean",
+      "sha256": "922e7bef7ee098c3c612d86f4e3e1125c1373ffb2e08ab9be7520b43a9c21d1c"
+    },
+    {
+      "id": "amc12b_2002_p4",
+      "file": "MiniF2F/Test/amc12b_2002_p4.lean",
+      "sha256": "fad48e94e8c940212923ea10f478891c28a46d9aec8de5fb796c943ca27a3c21"
+    },
+    {
+      "id": "mathd_algebra_478",
+      "file": "MiniF2F/Test/mathd_algebra_478.lean",
+      "sha256": "70ab8c08867bc762a26b9515d02caddd9ff7835e1ae25dbacc39839bcf95e2a5"
+    },
+    {
+      "id": "amc12b_2020_p2",
+      "file": "MiniF2F/Test/amc12b_2020_p2.lean",
+      "sha256": "bfaf054ecf0404a04f5a672d7fade8084761dfd2e05848f4dbba151958f364f9"
+    },
+    {
+      "id": "amc12a_2002_p6",
+      "file": "MiniF2F/Test/amc12a_2002_p6.lean",
+      "sha256": "33b76054d1cc536a7a070bfbfb11173ed33f745d981988f7098b9e3e4c5ec114"
+    },
+    {
+      "id": "mathd_algebra_419",
+      "file": "MiniF2F/Test/mathd_algebra_419.lean",
+      "sha256": "1f739c2ac643c7e044f9c24f79ae4857a0e13d88525d7f4f30743c958a39f556"
+    },
+    {
+      "id": "mathd_algebra_487",
+      "file": "MiniF2F/Test/mathd_algebra_487.lean",
+      "sha256": "d0f4fbe4ae2c93fb631ff104b6dfd3e8554ee775632f653058c5b62aeb60e5f3"
+    },
+    {
+      "id": "amc12b_2021_p13",
+      "file": "MiniF2F/Test/amc12b_2021_p13.lean",
+      "sha256": "4d1b6c85b77dfb605222d3ad1bfc007f4a9cbf686c6e8fc60af6174869c0b416"
+    },
+    {
+      "id": "mathd_algebra_139",
+      "file": "MiniF2F/Test/mathd_algebra_139.lean",
+      "sha256": "2cfb978731518d82733cf8cca819a3b8be2e27c33ff03ddbfd0b036bb4f0a888"
+    },
+    {
+      "id": "mathd_algebra_129",
+      "file": "MiniF2F/Test/mathd_algebra_129.lean",
+      "sha256": "b9e894fd782035498c9ca93c66f0d663818deac20f2e41f46084a7327b6c6062"
+    },
+    {
+      "id": "numbertheory_exk2powkeqapb2mulbpa2_aeq1",
+      "file": "MiniF2F/Test/numbertheory_exk2powkeqapb2mulbpa2_aeq1.lean",
+      "sha256": "5401ff4c266e39fe9e0f7ba4463053fadee02be6094bd3095065e17cb2a80bcb"
+    },
+    {
+      "id": "amc12a_2020_p9",
+      "file": "MiniF2F/Test/amc12a_2020_p9.lean",
+      "sha256": "a87a548c90eee7acc12841f7d3b3f49e341b9fd79319c0e1cbf90cb141f6594b"
+    },
+    {
+      "id": "mathd_algebra_215",
+      "file": "MiniF2F/Test/mathd_algebra_215.lean",
+      "sha256": "0cfb6eade5c4af794e54e58d908b61ccce171a967cfb6b53d1540fad64ef8ce4"
+    },
+    {
+      "id": "mathd_numbertheory_185",
+      "file": "MiniF2F/Test/mathd_numbertheory_185.lean",
+      "sha256": "e1ff0fbee782af2d84c21146a8235efa46b805637cf576c09c915fde4c324cd3"
+    },
+    {
+      "id": "mathd_numbertheory_559",
+      "file": "MiniF2F/Test/mathd_numbertheory_559.lean",
+      "sha256": "712c0c72633861a622a13d7e77152e21ce2c2677ac571f43aaab114931b95cc8"
+    },
+    {
+      "id": "algebra_absxm1pabsxpabsxp1eqxp2_0leqxleq1",
+      "file": "MiniF2F/Test/algebra_absxm1pabsxpabsxp1eqxp2_0leqxleq1.lean",
+      "sha256": "29cb8e3a5277541b423c5d400920ffffff334a6c3d89c67bc9476b41ad1515f1"
+    },
+    {
+      "id": "amc12a_2003_p23",
+      "file": "MiniF2F/Test/amc12a_2003_p23.lean",
+      "sha256": "2b76311e701df4687f0be6a7218f2e77c93df8a7ffeca4415f8f7c777f4ce671"
+    },
+    {
+      "id": "amc12a_2019_p12",
+      "file": "MiniF2F/Test/amc12a_2019_p12.lean",
+      "sha256": "7f2229f58d0891059f0ab5ceb719fc571ab8502965674587d55f1f89993448dc"
+    },
+    {
+      "id": "mathd_algebra_392",
+      "file": "MiniF2F/Test/mathd_algebra_392.lean",
+      "sha256": "e856b6634a400728ae5615b05c308bfef279f270fbee039706ff2546a694829a"
+    },
+    {
+      "id": "amc12b_2002_p7",
+      "file": "MiniF2F/Test/amc12b_2002_p7.lean",
+      "sha256": "a60622ef3f5d1a09fc1ea7fa8a75e8821b3e1c669a51414f6e699d62df4aa189"
+    },
+    {
+      "id": "mathd_numbertheory_277",
+      "file": "MiniF2F/Test/mathd_numbertheory_277.lean",
+      "sha256": "aea37d794be9ecb2f57aa683f520839ada3b48b4d12c8a7fecd30a5ffbc71661"
+    },
+    {
+      "id": "amc12_2001_p5",
+      "file": "MiniF2F/Test/amc12_2001_p5.lean",
+      "sha256": "d893591246b588e9e12a9ff66decb87cc3ee2cd1635cf199135917cd823af5b9"
+    },
+    {
+      "id": "mathd_algebra_80",
+      "file": "MiniF2F/Test/mathd_algebra_80.lean",
+      "sha256": "bb2080a0b437ab7326d8b480e1830f1a9cb9a84804fab68db7a63b9d6055ade7"
+    },
+    {
+      "id": "amc12b_2002_p2",
+      "file": "MiniF2F/Test/amc12b_2002_p2.lean",
+      "sha256": "7a2ae90a291375d636b4b679b62dea382e3298e02884b5485c16bd8fb61375a4"
+    },
+    {
+      "id": "imo_1963_p5",
+      "file": "MiniF2F/Test/imo_1963_p5.lean",
+      "sha256": "ecbd6967bdb45e385801c7b7494fd9d6c7fc54131e6feee82c36ba44208d2d83"
+    },
+    {
+      "id": "algebra_ineq_nto1onlt2m1on",
+      "file": "MiniF2F/Test/algebra_ineq_nto1onlt2m1on.lean",
+      "sha256": "c81fe0b12f83c8a9a13df248b37ee3eb3d703b7a9ad32e7cfead020f0f3e18c3"
+    },
+    {
+      "id": "mathd_numbertheory_175",
+      "file": "MiniF2F/Test/mathd_numbertheory_175.lean",
+      "sha256": "22ff5b485695b9b23b867b4148a6e64c6e112740d3fa3b842d220c1b55cad380"
+    }
+  ],
+  "sensitivity_exclusions": {
+    "source": "https://huggingface.co/datasets/cat-searcher/minif2f-lean4/discussions/2",
+    "note": "flagged on another Lean 4 port; not checked against this port",
+    "ids": [
+      "aime_1994_p3",
+      "algebra_ineq_nto1onlt2m1on",
+      "amc12a_2020_p10",
+      "imo_1982_p1",
+      "imo_1983_p6",
+      "mathd_algebra_114",
+      "mathd_algebra_208",
+      "mathd_algebra_76"
+    ]
+  },
+  "checks": {
+    "shared_ids": [],
+    "dev_held_out_shared_statements": []
+  }
+}

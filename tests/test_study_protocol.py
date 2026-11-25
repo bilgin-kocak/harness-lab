@@ -576,3 +576,64 @@ def test_stages_can_skip_tasks_where_the_baseline_did_not_verify(tmp_path: Path)
     kept = study.rank().task_ids
     rest = {r["task_id"] for r in study.store.records("dev") if r["stage"] == "rest"}
     assert rest == set(kept) and "d0" not in rest and kept
+
+
+# --------------------------------------------------------------------------- fixed frozen
+
+
+def test_a_fixed_frozen_configuration_is_frozen_whatever_dev_ranks_best(tmp_path: Path):
+    """held_out.fixed_frozen makes a confirmatory study: the freeze takes the spec's configuration
+    (here power 1 / style b, which the grid does not rank first) and never re-ranks dev."""
+    held = {
+        "repetitions": 1,
+        "require_committed_freeze": False,
+        "order_seed": 3,
+        "fixed_frozen": {"label": "B", "set": {"style": "b"}},
+        "comparators": [{"label": "P3", "base": "baseline", "set": {"power": 3}}],
+    }
+    study = _study(tmp_path, held_out=held)
+    assert study.check() == []
+    asyncio.run(study.search())
+    assert study.rank().best.values != {"power": 1, "style": "b"}  # the ranking would differ
+    freeze = study.freeze()
+    assert freeze["frozen"]["config"] == {"power": 1, "style": "b"}
+    assert freeze["frozen"]["label"] == "B"
+    assert freeze["frozen"]["chosen_by"] == "held_out.fixed_frozen"
+    assert [c["label"] for c in freeze["comparators"]] == ["P3"]
+    assert study.freeze_problems(freeze) == []
+    summary = asyncio.run(study.held_out())
+    assert summary.ran == 3 * 6 * 1  # baseline, B and P3 on 6 held-out tasks
+
+
+def test_a_fixed_frozen_study_needs_no_dev_records(tmp_path: Path):
+    held = {"require_committed_freeze": False, "fixed_frozen": {"label": "B", "set": {"power": 2}}}
+    study = _study(tmp_path, held_out=held)
+    freeze = study.freeze()
+    assert freeze["frozen"]["config"] == {"power": 2, "style": "a"}
+    assert freeze["dev"]["records"] == 0
+
+
+def test_changing_the_fixed_frozen_configuration_after_the_freeze_is_refused(tmp_path: Path):
+    held = {"require_committed_freeze": False, "fixed_frozen": {"label": "B", "set": {"power": 2}}}
+    study = _study(tmp_path, held_out=held)
+    study.freeze()
+    study.spec.held_out.fixed_frozen.set["power"] = 3
+    with pytest.raises(ProtocolError, match="held_out section of the spec changed"):
+        asyncio.run(study.held_out())
+    assert not study.store.records("held_out")
+
+
+def test_an_invalid_fixed_frozen_configuration_is_reported_by_check_and_freeze(tmp_path: Path):
+    held = {"require_committed_freeze": False, "fixed_frozen": {"label": "X", "set": {"power": 9}}}
+    study = _study(tmp_path, held_out=held)
+    assert any(p.startswith("fixed_frozen:") for p in study.check())
+    with pytest.raises(ProtocolError, match="fixed_frozen is not valid"):
+        study.freeze()
+
+
+def test_without_fixed_frozen_the_freeze_is_unchanged(tmp_path: Path):
+    study = _study(tmp_path)
+    asyncio.run(study.search())
+    freeze = study.freeze()
+    assert "chosen_by" not in freeze["frozen"]
+    assert freeze["held_out_spec"]["fixed_frozen"] is None

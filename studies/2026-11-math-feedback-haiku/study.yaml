@@ -1,0 +1,80 @@
+# Pre-registered confirmatory study: does Lean's error feedback beat fresh tries, for Claude Haiku 5.5
+# on miniF2F? Registration: studies/2026-11-math-feedback-haiku/REGISTRATION.md (it fixes the
+# hypotheses and the analysis; this spec fixes what runs).
+# Order: check -> smoke (stop; the owner sees the cost) -> dev (setup check, no selection) ->
+# freeze (fixed_frozen: no ranking) -> commit the freeze -> held-out once -> analyze.py.
+name: 2026-11-math-feedback-haiku
+adapter: lean-minif2f
+adapter_options:
+  # The math study's and the pilot's options, with Claude Haiku 5.5 and the feedback knob on.
+  fetch: true
+  model: claude-haiku-5-5
+  effort: medium
+  max_tokens: 32000
+  verify_timeout_s: 300
+  inloop_timeout_s: 120
+  tool_timeout_s: 60
+  max_tool_calls_per_round: 4
+  max_calls_per_attempt: 12
+  max_attempt_seconds: 1200
+  lean_workers: 3
+  feedback_knob: true
+
+split:
+  file: split.json
+  dev: [dev]
+  held_out: [held_out]
+  hashes: [dev, held_out]
+
+parallelism: 4
+
+search:
+  seed: 20261125
+  stages:
+    # Smoke test (paid, about $0.05): 3 dev problems, every arm, 1 repetition.
+    # mathd_numbertheory_30: the math study's Opus baseline proved it 3/3.
+    # amc12a_2008_p15, amc12a_2019_p21: that baseline failed 3/3 and 2/3, so later rounds run.
+    - name: smoke
+      kind: explicit
+      phase: smoke
+      tasks: [mathd_numbertheory_30, amc12a_2008_p15, amc12a_2019_p21]
+      configs: &arms
+        - {label: baseline, set: {}}
+        - {label: F, set: {feedback_rounds: 3}}
+        - {label: R4, set: {retries: 4}}
+        - {label: P, set: {feedback_rounds: 3, feedback_content: placebo}}
+    # Setup check on all 30 dev problems, 1 repetition (about $0.40). It measures cost per attempt
+    # for the held-out reserve and shows that every arm runs. It selects nothing.
+    - name: setup
+      kind: explicit
+      configs: *arms
+
+objective:
+  # Not used to choose anything (held_out.fixed_frozen fixes F); a pass_rate objective keeps the
+  # spec complete and ranks the setup records for the record.
+  kind: pass_rate
+
+budget:
+  # Set before the smoke test from the pilot's measured Haiku costs: held-out projected at about
+  # $14 (range $9-19). The reserve is 1.5 x the high end; the owner approves the held-out budget
+  # after seeing the smoke and setup costs, and any change here is committed before it applies.
+  max_cost_usd: 45.0
+  cost_limit_per_attempt_usd: 10.0
+  held_out_reserve_usd: 30.0
+
+held_out:
+  # 4 arms x 204 problems x 5 repetitions = 4,080 cells, in one seeded random order (arms
+  # interleaved in time).
+  repetitions: 5
+  order_seed: 20261125
+  require_committed_freeze: true
+  fixed_frozen: {label: F, set: {feedback_rounds: 3}}
+  comparators:
+    - {label: R4, base: baseline, set: {retries: 4}}
+    - {label: P, base: baseline, set: {feedback_rounds: 3, feedback_content: placebo}}
+
+stats:
+  resamples: 10000
+  seed: 20261125
+  level: 0.95
+  report_metrics: [cost_usd, llm_calls, wall_time_s]

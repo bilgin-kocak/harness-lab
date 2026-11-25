@@ -105,6 +105,9 @@ class ProverConfig:
     tactic_tools: str
     feedback_rounds: int
     retries: int
+    # what a failed in-loop check shows: Lean's report ("lean") or a fixed sentence ("placebo");
+    # optional, so configurations without the knob keep their values and hashes
+    feedback_content: str = "lean"
 
     @classmethod
     def from_values(cls, values: Mapping[str, Any]) -> ProverConfig:
@@ -117,7 +120,7 @@ class ProverConfig:
             "retries",
         )
         missing = [name for name in knobs if name not in values]
-        unknown = sorted(set(values) - set(knobs))
+        unknown = sorted(set(values) - set(knobs) - {"feedback_content"})
         if missing or unknown:
             raise ValueError(f"config: missing knobs {missing}, unknown knobs {unknown}")
         config = cls(
@@ -127,6 +130,7 @@ class ProverConfig:
             tactic_tools=values["tactic_tools"],
             feedback_rounds=values["feedback_rounds"],
             retries=values["retries"],
+            feedback_content=values.get("feedback_content", "lean"),
         )
         if not isinstance(config.planning, bool):
             raise ValueError("planning must be true or false")
@@ -134,6 +138,8 @@ class ProverConfig:
             raise ValueError(f"unknown retrieval level {config.retrieval!r}")
         if config.tactic_tools not in ("none", "probe"):
             raise ValueError(f"unknown tactic_tools level {config.tactic_tools!r}")
+        if config.feedback_content not in ("lean", "placebo"):
+            raise ValueError(f"unknown feedback_content level {config.feedback_content!r}")
         for name in ("context_limit_tokens", "feedback_rounds", "retries"):
             value = getattr(config, name)
             if isinstance(value, bool) or not isinstance(value, int):
@@ -315,7 +321,12 @@ class Prover:
                 if check.passed:
                     state.stop = "inloop_pass"
                     return
-                notes.append(prompts.AttemptNote(round_no, result.proof, feedback_text(check)))
+                shown = (
+                    feedback_text(check)
+                    if config.feedback_content == "lean"
+                    else prompts.PLACEBO_FEEDBACK
+                )
+                notes.append(prompts.AttemptNote(round_no, result.proof, shown))
         state.stop = "exhausted"
 
     async def _plan(self, state: _State, problem: Problem, try_no: int) -> str | None:
@@ -665,6 +676,7 @@ class Prover:
                 "tactic_tools": config.tactic_tools,
                 "feedback_rounds": config.feedback_rounds,
                 "retries": config.retries,
+                "feedback_content": config.feedback_content,
             },
             "model": self.model,
             "max_tokens": self.max_tokens,

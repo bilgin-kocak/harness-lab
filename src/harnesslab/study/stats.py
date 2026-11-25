@@ -7,6 +7,8 @@ per-task difference. The functions here take plain numbers keyed by task and ret
   differences (seeded, so a report can be reproduced exactly);
 * :func:`exact_sign_test`: a two-sided exact binomial test of wins against losses, ties dropped;
 * :func:`exact_mcnemar`: the same test on the discordant pairs of a paired binary outcome;
+* :func:`sign_flip_test`: a two-sided paired sign-flip (randomization) test of a zero mean
+  difference, which, unlike the sign test, weighs each task's difference by its size;
 * :func:`paired_numeric`: differences of a numeric metric (for example a gate count), with the
   direction that counts as better, intervals for the mean difference and the ratio, wins, losses,
   ties and the sign test;
@@ -82,6 +84,40 @@ def exact_sign_test(wins: int, losses: int) -> float | None:
     k = min(wins, losses)
     tail = sum(math.comb(n, i) for i in range(k + 1)) / 2**n
     return min(1.0, 2.0 * tail)
+
+
+EXACT_SIGN_FLIP_MAX = 16  # nonzero differences up to which every sign pattern is enumerated
+
+
+def sign_flip_test(
+    diffs: Sequence[float], *, resamples: int = 100_000, seed: int = 0
+) -> float | None:
+    """Two-sided p-value of a paired sign-flip test that the mean of ``diffs`` is zero.
+
+    Under the null, each task's difference is as likely to have either sign. The statistic is
+    the absolute sum of the differences. Ties (differences within :data:`TIE_TOLERANCE` of zero)
+    change no sum and are dropped. Up to :data:`EXACT_SIGN_FLIP_MAX` nonzero differences, every
+    sign pattern is enumerated (exact). Beyond that, ``resamples`` random patterns are drawn with
+    a seeded generator, and the p-value is ``(1 + hits) / (1 + resamples)``, which is never 0.
+    ``None`` when no difference is nonzero.
+    """
+    d = [x for x in (_snap(float(v)) for v in diffs) if x != 0.0]
+    if not d:
+        return None
+    observed = abs(math.fsum(d))
+    slack = TIE_TOLERANCE * len(d)  # a pattern equal to the observed sum on paper counts
+    if len(d) <= EXACT_SIGN_FLIP_MAX:
+        hits = 0
+        for mask in range(2 ** len(d)):
+            total = math.fsum(-x if mask >> i & 1 else x for i, x in enumerate(d))
+            hits += abs(total) >= observed - slack
+        return hits / 2 ** len(d)
+    rng = random.Random(seed)
+    hits = 0
+    for _ in range(max(1, resamples)):
+        total = math.fsum(x if rng.random() < 0.5 else -x for x in d)
+        hits += abs(total) >= observed - slack
+    return (1 + hits) / (1 + max(1, resamples))
 
 
 def exact_mcnemar(only_b: int, only_a: int) -> float | None:

@@ -857,6 +857,69 @@ async def test_four_fresh_tries_leave_the_last_proof_to_the_verifier(tmp_path):
     assert len(lean.sources) == 3  # tries 1-3 checked in-loop; the last one by the verifier
 
 
+def test_the_feedback_knob_is_off_by_default_and_changes_nothing(tmp_path):
+    adapter, _, _ = make_adapter(tmp_path)
+    assert "feedback_content" not in adapter.search_space().names
+    assert "feedback_content" not in adapter.baseline_config().values
+    assert "feedback_knob" not in adapter.provenance()
+
+
+def test_the_feedback_knob_adds_lean_and_placebo_levels(tmp_path):
+    adapter, _, _ = make_adapter(tmp_path, feedback_knob=True)
+    space = adapter.search_space()
+    assert space.knob("feedback_content").levels == ("lean", "placebo")
+    assert adapter.baseline_config().values["feedback_content"] == "lean"
+    assert adapter.provenance()["feedback_knob"] == {
+        "levels": ["lean", "placebo"],
+        "placebo_feedback": prompts.PLACEBO_FEEDBACK,
+    }
+    with pytest.raises(ValueError, match="feedback_knob"):
+        make_adapter(tmp_path, feedback_knob="yes")
+
+
+async def test_placebo_feedback_shows_the_failed_proof_but_not_leans_report(tmp_path):
+    """P: the same rounds as F (the earlier proof, 'did not check'), but a fixed sentence where F
+    shows Lean's errors."""
+    runs = {}
+    for content in ("lean", "placebo"):
+        lean = FakeLeanRunner([_error_output, clean_lean_output])
+        adapter, client, _ = make_adapter(
+            tmp_path / content,
+            script=[proof_reply("linarith"), proof_reply("nlinarith [h₀]")],
+            lean=lean,
+            feedback_knob=True,
+        )
+        task = adapter.load_tasks(["fixture_dev_one"])[0]
+        config = adapter.baseline_config().replace(feedback_rounds=3, feedback_content=content)
+        adapter.search_space().validate_config(config)
+        attempt = await adapter.run(task, config, run_ctx(tmp_path / content))
+        assert attempt.output["inloop_passed"] is True and attempt.usage.llm_calls == 2
+        assert attempt.details["config"]["feedback_content"] == content
+        runs[content] = client.requests[1]["messages"][0]["content"]
+    lean_text, placebo_text = runs["lean"], runs["placebo"]
+    for text in (lean_text, placebo_text):
+        assert "Earlier proof attempt 1 did not check" in text and "```lean\nlinarith\n```" in text
+    assert "linarith failed to find a contradiction" in lean_text
+    assert "linarith failed" not in placebo_text and prompts.PLACEBO_FEEDBACK in placebo_text
+    assert prompts.PLACEBO_FEEDBACK not in lean_text
+
+
+def test_an_unknown_feedback_content_level_is_rejected():
+    from harnesslab.domains.lean.prover import ProverConfig
+
+    values = {
+        "planning": False,
+        "retrieval": "none",
+        "context_limit_tokens": 12000,
+        "tactic_tools": "none",
+        "feedback_rounds": 3,
+        "retries": 1,
+    }
+    assert ProverConfig.from_values(values).feedback_content == "lean"
+    with pytest.raises(ValueError, match="feedback_content"):
+        ProverConfig.from_values({**values, "feedback_content": "silent"})
+
+
 async def test_planning_adds_one_call_per_try_and_the_plan_reaches_every_round(tmp_path):
     plan = "Subtract one, then divide by two."
     lean = FakeLeanRunner([_error_output, clean_lean_output])

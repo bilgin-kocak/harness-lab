@@ -202,12 +202,27 @@ class RobustnessSpec(_Strict):
     )
 
 
+class FixedFrozenSpec(_Strict):
+    """A frozen configuration fixed before any data: the baseline with ``set``."""
+
+    label: str
+    set: dict[str, Any] = Field(default_factory=dict)
+
+
 class HeldOutSpec(_Strict):
+    """The one held-out comparison.
+
+    ``fixed_frozen`` makes the study confirmatory: the freeze takes this configuration instead of
+    ranking the dev records, which then only check the setup. Without it, the freeze takes the best
+    configuration on dev, as before.
+    """
+
     repetitions: int = Field(default=1, ge=1)
     comparators: list[ComparatorSpec] = Field(default_factory=list)
     robustness: RobustnessSpec | None = None
     order_seed: int = 0
     require_committed_freeze: bool = True
+    fixed_frozen: FixedFrozenSpec | None = None
 
 
 class StatsSpec(_Strict):

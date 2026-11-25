@@ -22,6 +22,10 @@ Options (all optional; unknown options are an error):
 - ``lean_workers`` (``3``): at most this many Lean processes at once, across all attempts.
 - ``lean_selfcheck`` (``true``): before Lean is first used, compile a known-good proof (this also
   warms the file cache); if it fails, ``verify`` raises, because the verifier cannot be trusted.
+- ``feedback_knob`` (``false``): add the knob ``feedback_content`` (``lean``, ``placebo``; baseline
+  ``lean``). ``placebo`` shows a failed in-loop check as the fixed sentence
+  :data:`.prompts.PLACEBO_FEEDBACK` instead of Lean's report. Off, the search space, the baseline
+  and the provenance are exactly as before the knob existed.
 
 ``run`` executes the prover (:mod:`.prover`); ``verify`` runs the independent verifier
 (:mod:`.verifier`) on ``output["proof"]`` in a fresh Lean process; ``metrics`` reports cost, tokens,
@@ -116,6 +120,7 @@ OPTIONS = frozenset(
         "max_attempt_seconds",
         "lean_workers",
         "lean_selfcheck",
+        "feedback_knob",
     }
 )
 
@@ -218,6 +223,9 @@ class LeanAdapter(DomainAdapterBase):
         )
         self.lean_workers = _number(opts, "lean_workers", 3, int)
         self.lean_selfcheck = bool(opts.get("lean_selfcheck", True))
+        self.feedback_knob = opts.get("feedback_knob", False)
+        if not isinstance(self.feedback_knob, bool):
+            raise ValueError("option feedback_knob must be true or false")
         self.index_path = Path(opts.get("index_path") or default_index_path()).expanduser()
 
         # The dataset: the frozen split and the pinned checkout.
@@ -347,6 +355,18 @@ class LeanAdapter(DomainAdapterBase):
                     levels=(1, 2, 4),
                     description="independent tries from scratch",
                 ),
+                *(
+                    (
+                        Knob(
+                            name="feedback_content",
+                            levels=("lean", "placebo"),
+                            description="what a failed in-loop check shows in later rounds: "
+                            "Lean's report, or a fixed sentence saying the proof was not accepted",
+                        ),
+                    )
+                    if self.feedback_knob
+                    else ()
+                ),
             )
         )
 
@@ -359,6 +379,7 @@ class LeanAdapter(DomainAdapterBase):
                 "tactic_tools": "none",
                 "feedback_rounds": 0,
                 "retries": 1,
+                **({"feedback_content": "lean"} if self.feedback_knob else {}),
             },
             label="baseline",
         )
@@ -532,7 +553,10 @@ class LeanAdapter(DomainAdapterBase):
         name_patterns = {
             name: re.compile(rf"(?<![\w.']){re.escape(name)}(?![\w'])") for name in names
         }
-        for label, text in prompts.static_texts().items():
+        texts = dict(prompts.static_texts())
+        if self.feedback_knob:
+            texts["placebo_feedback"] = prompts.PLACEBO_FEEDBACK
+        for label, text in texts.items():
             flat = " ".join(text.split())
             for name, pattern in name_patterns.items():
                 if pattern.search(text):
@@ -614,6 +638,16 @@ class LeanAdapter(DomainAdapterBase):
                 }
                 if meta
                 else None
+            ),
+            **(
+                {
+                    "feedback_knob": {
+                        "levels": ["lean", "placebo"],
+                        "placebo_feedback": prompts.PLACEBO_FEEDBACK,
+                    }
+                }
+                if self.feedback_knob
+                else {}
             ),
         }
 

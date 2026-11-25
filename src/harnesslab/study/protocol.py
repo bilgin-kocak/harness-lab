@@ -292,15 +292,21 @@ class Study:
             if stage.kind == "combine" and stage.reference not in known:
                 problems.append(f"stage {stage.name}: unknown reference {stage.reference!r}")
         problems += self.orphaned_plans()
+        stand_in = self.baseline
+        if self.spec.held_out.fixed_frozen is not None:
+            try:
+                stand_in = self._fixed_frozen()
+            except ConfigError as exc:
+                problems.append(f"fixed_frozen: {exc}")
         # The held-out configurations, built as the freeze builds them (the baseline stands in
-        # for the frozen configuration, which is some point of the search space).
+        # for a frozen configuration the search will choose, which is some point of the space).
         for comp in self.spec.held_out.comparators:
             unknown = [k for k in comp.set if k not in self.space.names]
             for k in unknown:
                 problems.append(f"comparator {comp.label}: unknown knob {k!r}")
             if not unknown:
                 try:
-                    self._comparator(comp, self.baseline)
+                    self._comparator(comp, stand_in)
                 except ConfigError as exc:
                     problems.append(f"comparator {comp.label}: {exc}")
         rob = self.spec.held_out.robustness
@@ -686,6 +692,15 @@ class Study:
         return None
 
     # -- freeze ----------------------------------------------------------------
+    def _fixed_frozen(self) -> Config:
+        """The frozen configuration the spec fixes (:class:`ConfigError` if it is not valid)."""
+        fixed = self.spec.held_out.fixed_frozen
+        if fixed is None:
+            raise ConfigError("the spec fixes no frozen configuration")
+        cfg = self.baseline.replace(label=fixed.label, **fixed.set)
+        self.space.validate_config(cfg)
+        return cfg
+
     def _comparator(self, comp: ComparatorSpec, frozen: Config) -> Config:
         base = frozen if comp.base == "frozen" else self.baseline
         cfg = base.replace(label=comp.label, **comp.set)
@@ -771,10 +786,19 @@ class Study:
                 raise ProtocolError("cannot freeze:\n- " + "\n- ".join(problems))
             eligible = self.freeze_eligible()
             ranking = self.rank(eligible=eligible)
-            best = ranking.best
-            if best is None:
-                raise ProtocolError("no configuration is feasible on dev: nothing to freeze")
-            frozen = Config(values=best.values, label=best.label or "frozen")
+            fixed = self.spec.held_out.fixed_frozen is not None
+            if fixed:
+                try:
+                    frozen = self._fixed_frozen()
+                except ConfigError as exc:
+                    raise ProtocolError(
+                        f"cannot freeze: fixed_frozen is not valid ({exc})"
+                    ) from exc
+            else:
+                best = ranking.best
+                if best is None:
+                    raise ProtocolError("no configuration is feasible on dev: nothing to freeze")
+                frozen = Config(values=best.values, label=best.label or "frozen")
             try:
                 comparators = self._comparators(frozen)
             except ConfigError as exc:
@@ -816,6 +840,7 @@ class Study:
                     "config": frozen.values,
                     "config_hash": frozen.config_hash,
                     "same_as_baseline": frozen.config_hash == self.baseline.config_hash,
+                    **({"chosen_by": "held_out.fixed_frozen"} if fixed else {}),
                 },
                 "comparators": [
                     {"label": c.label, "config": c.values, "config_hash": c.config_hash}
@@ -900,15 +925,24 @@ class Study:
             "records_sha256"
         ] != self.store.records_sha256("dev"):
             problems.append("the dev records changed since the freeze")
-        try:
-            eligible = set(dev["eligible"]) if dev.get("eligible") is not None else None
-            best = self.rank(eligible=eligible).best
-            if best is None or best.config_hash != freeze["frozen"]["config_hash"]:
-                problems.append(
-                    "ranking the dev records again does not give the frozen configuration"
-                )
-        except Exception as exc:  # a broken record set is itself a problem to report
-            problems.append(f"the dev records cannot be ranked: {exc}")
+        if freeze.get("frozen", {}).get("chosen_by") == "held_out.fixed_frozen":
+            try:
+                fixed_hash = self._fixed_frozen().config_hash
+            except ConfigError as exc:
+                fixed_hash = None
+                problems.append(f"the spec's fixed_frozen is no longer valid: {exc}")
+            if fixed_hash is not None and fixed_hash != freeze["frozen"]["config_hash"]:
+                problems.append("the spec's fixed_frozen differs from the frozen configuration")
+        else:
+            try:
+                eligible = set(dev["eligible"]) if dev.get("eligible") is not None else None
+                best = self.rank(eligible=eligible).best
+                if best is None or best.config_hash != freeze["frozen"]["config_hash"]:
+                    problems.append(
+                        "ranking the dev records again does not give the frozen configuration"
+                    )
+            except Exception as exc:  # a broken record set is itself a problem to report
+                problems.append(f"the dev records cannot be ranked: {exc}")
         if self.spec.held_out.require_committed_freeze:
             reason = committed_and_clean(self.store.freeze_path)
             if reason:

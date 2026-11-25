@@ -88,6 +88,11 @@ Proof:
 
 NO_PROOF_BLOCK = """Earlier reply {number} gave no proof: {feedback}"""
 
+# What a failed in-loop check shows under ``feedback_content: placebo``, in place of Lean's report.
+# Kept out of :func:`static_texts`: that hash is in the frozen provenance of earlier studies; an
+# adapter with the feedback knob adds this text to its provenance and audit itself.
+PLACEBO_FEEDBACK = "Lean did not accept this proof."
+
 CLOSING = "Reply with the complete proof in a ```lean code block at the end of your answer."
 
 TOOL_CAP_MESSAGE = """Tool call limit reached for this reply ({max_calls} calls). Do not call \

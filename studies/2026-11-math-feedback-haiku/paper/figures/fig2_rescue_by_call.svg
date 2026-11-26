@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="620" height="300" viewBox="0 0 620 300" role="img" font-family="Inter, 'DejaVu Sans', Helvetica, Arial, sans-serif">
-<title>Figure 3. Attempts whose first call failed: share verified at each later call</title><desc>Exploratory (not registered). Grouped bars by call number for F, R4 and P.</desc>
+<title>Figure 2. Attempts whose first call failed: share verified at each later call</title><desc>Exploratory (not registered). Grouped bars by call number for F, R4 and P.</desc>
 <rect width="620" height="300" fill="#ffffff"/>
 <text x="10.0" y="20.0" font-size="13" fill="#191919" text-anchor="start" font-weight="600">Attempts whose first call failed: share verified at call 2, 3 or 4</text>
 <text x="10.0" y="37.0" font-size="10.5" fill="#666666" text-anchor="start" font-weight="normal">Exploratory (not registered). Failed first calls: F 185, R4 169, P 169.</text>

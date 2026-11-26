@@ -1,16 +1,16 @@
 """Make the paper's figures from the study's data (standard library only; writes SVG).
 
-Figure 1 and Figure 2 read `analysis.json` (the registered output) and, for the pilot and the
+Figure 1 and Figure 3 read `analysis.json` (the registered output) and, for the pilot and the
 earlier math study, the numbers printed in their reports (`../../2026-11-math-pilot/REPORT.md`,
-`../../../docs/results/2026-11-23-math.md`), copied below with their source line. Figure 3 is
+`../../../docs/results/2026-11-23-math.md`), copied below with their source line. Figure 2 is
 EXPLORATORY (not registered): it is computed from `held_out/attempts.jsonl.gz`.
 
 Usage (repository root)::
 
     python studies/2026-11-math-feedback-haiku/paper/make_figures.py
 
-Writes `figures/fig1_contrasts.svg`, `figures/fig2_pilot_and_earlier.svg` and
-`figures/fig3_rescue_by_call.svg` next to this script, and prints the numbers each figure shows.
+Writes `figures/fig1_contrasts.svg`, `figures/fig2_rescue_by_call.svg` (exploratory) and
+`figures/fig3_pilot_and_earlier.svg` next to this script, and prints the numbers each figure shows.
 """
 
 from __future__ import annotations
@@ -148,7 +148,7 @@ def figure1(a: dict) -> dict:
     ]
     svg = Svg(900, 230, "Figure 1. Registered contrasts and contrasts with one call",
               "Left: H1-H3 with the 3-point margin. Right: descriptive contrasts with B.")
-    forest(svg, 10, 6, 470, rows_a, -4, 4, 1, "(a) Registered contrasts (H1–H3)", band=3,
+    forest(svg, 10, 6, 470, rows_a, -4, 4, 1, "(a) Registered contrasts (H1–H3)", band=3, label_w=165,
            note="Readings: no difference of 3 points or more (all three).")
     forest(svg, 500, 6, 390, rows_b, 0, 14, 2, "(b) Against one call (descriptive)", label_w=110,
            note="Arms capped at 4 calls against B (1 call).")
@@ -162,28 +162,28 @@ def figure2(a: dict) -> dict:
     # Pilot: 2026-11-math-pilot/REPORT.md, "Contrasts" table (Haiku and Opus columns).
     # Earlier study: docs/results/2026-11-23-math.md, "frozen vs baseline" row (+0.125 [+0.0417, +0.225]).
     rows_a = [
-        dict(label="Pilot, Haiku 5.5", sub="40 reused problems × 3; arms in separate blocks",
+        dict(label="Pilot, Haiku 5.5", sub="exploratory; 40 reused × 3; separate blocks",
              est=5.8, ci95=[0.8, 12.5], color=PAST),
-        dict(label="Pilot, Opus 5.5", sub="40 × 3; F and R4 run a day apart",
+        dict(label="Pilot, Opus 5.5", sub="exploratory; 40 × 3; a day apart",
              est=5.8, ci95=[0.0, 12.5], color=PAST),
         dict(label="This study, Haiku 5.5", sub="204 new problems × 5; interleaved",
              est=100 * p["estimate"], ci95=pts(p["ci95"]), color=SERIES[0], bold=True),
     ]
     rows_b = [
-        dict(label="Earlier study, Opus: F − B", sub="40 × 3", est=12.5, ci95=[4.2, 22.5], color=PAST),
-        dict(label="Pilot, Opus: R4 − B", sub="40 × 3; a day apart", est=6.7, ci95=[0.8, 14.2], color=PAST),
-        dict(label="Pilot, Haiku: F − B", sub="40 × 3", est=13.3, ci95=[5.8, 21.7], color=PAST),
-        dict(label="Pilot, Haiku: R4 − B", sub="40 × 3", est=7.5, ci95=[2.5, 14.2], color=PAST),
+        dict(label="Earlier study, Opus: F − B", sub="40 × 3; one seeded order", est=12.5, ci95=[4.2, 22.5], color=PAST),
+        dict(label="Pilot, Opus: R4 − B", sub="exploratory; 40 × 3; a day apart", est=6.7, ci95=[0.8, 14.2], color=PAST),
+        dict(label="Pilot, Haiku: F − B", sub="exploratory; 40 × 3; separate blocks", est=13.3, ci95=[5.8, 21.7], color=PAST),
+        dict(label="Pilot, Haiku: R4 − B", sub="exploratory; 40 × 3; separate blocks", est=7.5, ci95=[2.5, 14.2], color=PAST),
     ] + [
-        dict(label=f"This study: {n.split(' - ')[0]} − B", sub="204 × 5", est=100 * vb[n]["estimate"],
+        dict(label=f"This study: {n.split(' - ')[0]} − B", sub="204 × 5; interleaved", est=100 * vb[n]["estimate"],
              ci95=pts(vb[n]["ci95"]), color=SERIES[0], bold=True)
         for n in ("F - baseline", "R4 - baseline", "P - baseline")
     ]
-    svg = Svg(940, 360, "Figure 2. The pilot and the earlier study against this study",
+    svg = Svg(940, 360, "Figure 3. The pilot and the earlier study against this study",
               "Estimates with 95% bootstrap intervals. No p-values, no pooled estimate.")
     forest(svg, 10, 6, 470, rows_a, -2, 14, 2, "(a) F − R4", label_w=215)
     forest(svg, 490, 6, 445, rows_b, 0, 24, 4, "(b) Gain over one call (B)", label_w=190)
-    svg.save(OUT / "fig2_pilot_and_earlier.svg")
+    svg.save(OUT / "fig3_pilot_and_earlier.svg")
     return {"a": rows_a, "b": rows_b}
 
 
@@ -208,7 +208,7 @@ def figure3() -> dict:
     calls = (2, 3, 4)
     data = {k: {c: at[k][c] / failed[k] for c in calls} for k in arms}
     w, h = 620, 300
-    svg = Svg(w, h, "Figure 3. Attempts whose first call failed: share verified at each later call",
+    svg = Svg(w, h, "Figure 2. Attempts whose first call failed: share verified at each later call",
               "Exploratory (not registered). Grouped bars by call number for F, R4 and P.")
     x0, top, ph, pw = 60, 64, 170, 530
     ymax = 0.6
@@ -248,13 +248,13 @@ def figure3() -> dict:
     svg.text(10, Y(0) + 42, "Numbers on the bars: attempts verified at that call. Cumulative after call 4: "
              f"F {sum(at['F'].values())}/{failed['F']}, R4 {sum(at['R4'].values())}/{failed['R4']}, "
              f"P {sum(at['P'].values())}/{failed['P']}.", size=10, color=TEXT2)
-    svg.save(OUT / "fig3_rescue_by_call.svg")
+    svg.save(OUT / "fig2_rescue_by_call.svg")
     return {"failed": dict(failed), "verified_at_call": {k: dict(at[k]) for k in arms}}
 
 
 def main() -> int:
     a = json.loads((STUDY / "analysis.json").read_text(encoding="utf-8"))
-    out = {"figure1": figure1(a), "figure2": figure2(a), "figure3_exploratory": figure3()}
+    out = {"figure1": figure1(a), "figure2_exploratory": figure3(), "figure3": figure2(a)}
     print(json.dumps(out, indent=1, default=lambda v: round(v, 3)))
     return 0
 

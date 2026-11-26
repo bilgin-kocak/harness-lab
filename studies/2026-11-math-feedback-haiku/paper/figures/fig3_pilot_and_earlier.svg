@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="940" height="360" viewBox="0 0 940 360" role="img" font-family="Inter, 'DejaVu Sans', Helvetica, Arial, sans-serif">
-<title>Figure 2. The pilot and the earlier study against this study</title><desc>Estimates with 95% bootstrap intervals. No p-values, no pooled estimate.</desc>
+<title>Figure 3. The pilot and the earlier study against this study</title><desc>Estimates with 95% bootstrap intervals. No p-values, no pooled estimate.</desc>
 <rect width="940" height="360" fill="#ffffff"/>
 <text x="10.0" y="20.0" font-size="13" fill="#191919" text-anchor="start" font-weight="600">(a) F − R4</text>
 <line x1="225.0" y1="42.0" x2="225.0" y2="152.0" stroke="#e6e6e6" stroke-width="1" stroke-linecap="butt"/>
@@ -22,12 +22,12 @@
 <text x="470.0" y="168.0" font-size="10.5" fill="#666666" text-anchor="middle" font-weight="normal">+14</text>
 <text x="347.5" y="185.0" font-size="11" fill="#666666" text-anchor="middle" font-weight="normal">difference in verified rate (points)</text>
 <text x="10.0" y="66.0" font-size="12" fill="#191919" text-anchor="start" font-weight="normal">Pilot, Haiku 5.5</text>
-<text x="10.0" y="79.0" font-size="10" fill="#666666" text-anchor="start" font-weight="normal">40 reused problems × 3; arms in separate blocks</text>
+<text x="10.0" y="79.0" font-size="10" fill="#666666" text-anchor="start" font-weight="normal">exploratory; 40 reused × 3; separate blocks</text>
 <line x1="267.9" y1="67.0" x2="447.0" y2="67.0" stroke="#8c8c8c" stroke-width="2" stroke-linecap="round"/>
 <circle cx="344.4" cy="67.0" r="5" fill="#8c8c8c" stroke="#ffffff" stroke-width="2"/>
 <text x="344.4" y="57.0" font-size="10.5" fill="#191919" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">+5.8</text>
 <text x="10.0" y="100.0" font-size="12" fill="#191919" text-anchor="start" font-weight="normal">Pilot, Opus 5.5</text>
-<text x="10.0" y="113.0" font-size="10" fill="#666666" text-anchor="start" font-weight="normal">40 × 3; F and R4 run a day apart</text>
+<text x="10.0" y="113.0" font-size="10" fill="#666666" text-anchor="start" font-weight="normal">exploratory; 40 × 3; a day apart</text>
 <line x1="255.6" y1="101.0" x2="447.0" y2="101.0" stroke="#8c8c8c" stroke-width="2" stroke-linecap="round"/>
 <circle cx="344.4" cy="101.0" r="5" fill="#8c8c8c" stroke="#ffffff" stroke-width="2"/>
 <text x="344.4" y="91.0" font-size="10.5" fill="#191919" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">+5.8</text>
@@ -53,37 +53,37 @@
 <text x="925.0" y="304.0" font-size="10.5" fill="#666666" text-anchor="middle" font-weight="normal">+24</text>
 <text x="802.5" y="321.0" font-size="11" fill="#666666" text-anchor="middle" font-weight="normal">difference in verified rate (points)</text>
 <text x="490.0" y="66.0" font-size="12" fill="#191919" text-anchor="start" font-weight="normal">Earlier study, Opus: F − B</text>
-<text x="490.0" y="79.0" font-size="10" fill="#666666" text-anchor="start" font-weight="normal">40 × 3</text>
+<text x="490.0" y="79.0" font-size="10" fill="#666666" text-anchor="start" font-weight="normal">40 × 3; one seeded order</text>
 <line x1="722.9" y1="67.0" x2="909.7" y2="67.0" stroke="#8c8c8c" stroke-width="2" stroke-linecap="round"/>
 <circle cx="807.6" cy="67.0" r="5" fill="#8c8c8c" stroke="#ffffff" stroke-width="2"/>
 <text x="807.6" y="57.0" font-size="10.5" fill="#191919" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">+12.5</text>
 <text x="490.0" y="100.0" font-size="12" fill="#191919" text-anchor="start" font-weight="normal">Pilot, Opus: R4 − B</text>
-<text x="490.0" y="113.0" font-size="10" fill="#666666" text-anchor="start" font-weight="normal">40 × 3; a day apart</text>
+<text x="490.0" y="113.0" font-size="10" fill="#666666" text-anchor="start" font-weight="normal">exploratory; 40 × 3; a day apart</text>
 <line x1="688.2" y1="101.0" x2="825.0" y2="101.0" stroke="#8c8c8c" stroke-width="2" stroke-linecap="round"/>
 <circle cx="748.4" cy="101.0" r="5" fill="#8c8c8c" stroke="#ffffff" stroke-width="2"/>
 <text x="748.4" y="91.0" font-size="10.5" fill="#191919" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">+6.7</text>
 <text x="490.0" y="134.0" font-size="12" fill="#191919" text-anchor="start" font-weight="normal">Pilot, Haiku: F − B</text>
-<text x="490.0" y="147.0" font-size="10" fill="#666666" text-anchor="start" font-weight="normal">40 × 3</text>
+<text x="490.0" y="147.0" font-size="10" fill="#666666" text-anchor="start" font-weight="normal">exploratory; 40 × 3; separate blocks</text>
 <line x1="739.2" y1="135.0" x2="901.5" y2="135.0" stroke="#8c8c8c" stroke-width="2" stroke-linecap="round"/>
 <circle cx="815.8" cy="135.0" r="5" fill="#8c8c8c" stroke="#ffffff" stroke-width="2"/>
 <text x="815.8" y="125.0" font-size="10.5" fill="#191919" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">+13.3</text>
 <text x="490.0" y="168.0" font-size="12" fill="#191919" text-anchor="start" font-weight="normal">Pilot, Haiku: R4 − B</text>
-<text x="490.0" y="181.0" font-size="10" fill="#666666" text-anchor="start" font-weight="normal">40 × 3</text>
+<text x="490.0" y="181.0" font-size="10" fill="#666666" text-anchor="start" font-weight="normal">exploratory; 40 × 3; separate blocks</text>
 <line x1="705.5" y1="169.0" x2="825.0" y2="169.0" stroke="#8c8c8c" stroke-width="2" stroke-linecap="round"/>
 <circle cx="756.6" cy="169.0" r="5" fill="#8c8c8c" stroke="#ffffff" stroke-width="2"/>
 <text x="756.6" y="159.0" font-size="10.5" fill="#191919" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">+7.5</text>
 <text x="490.0" y="202.0" font-size="12" fill="#191919" text-anchor="start" font-weight="600">This study: F − B</text>
-<text x="490.0" y="215.0" font-size="10" fill="#666666" text-anchor="start" font-weight="normal">204 × 5</text>
+<text x="490.0" y="215.0" font-size="10" fill="#666666" text-anchor="start" font-weight="normal">204 × 5; interleaved</text>
 <line x1="751.1" y1="203.0" x2="807.1" y2="203.0" stroke="#257de0" stroke-width="2" stroke-linecap="round"/>
 <circle cx="778.1" cy="203.0" r="5" fill="#257de0" stroke="#ffffff" stroke-width="2"/>
 <text x="778.1" y="193.0" font-size="10.5" fill="#191919" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">+9.6</text>
 <text x="490.0" y="236.0" font-size="12" fill="#191919" text-anchor="start" font-weight="600">This study: R4 − B</text>
-<text x="490.0" y="249.0" font-size="10" fill="#666666" text-anchor="start" font-weight="normal">204 × 5</text>
+<text x="490.0" y="249.0" font-size="10" fill="#666666" text-anchor="start" font-weight="normal">204 × 5; interleaved</text>
 <line x1="742.1" y1="237.0" x2="788.1" y2="237.0" stroke="#257de0" stroke-width="2" stroke-linecap="round"/>
 <circle cx="764.1" cy="237.0" r="5" fill="#257de0" stroke="#ffffff" stroke-width="2"/>
 <text x="764.1" y="227.0" font-size="10.5" fill="#191919" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">+8.2</text>
 <text x="490.0" y="270.0" font-size="12" fill="#191919" text-anchor="start" font-weight="600">This study: P − B</text>
-<text x="490.0" y="283.0" font-size="10" fill="#666666" text-anchor="start" font-weight="normal">204 × 5</text>
+<text x="490.0" y="283.0" font-size="10" fill="#666666" text-anchor="start" font-weight="normal">204 × 5; interleaved</text>
 <line x1="742.1" y1="271.0" x2="788.1" y2="271.0" stroke="#257de0" stroke-width="2" stroke-linecap="round"/>
 <circle cx="764.1" cy="271.0" r="5" fill="#257de0" stroke="#ffffff" stroke-width="2"/>
 <text x="764.1" y="261.0" font-size="10.5" fill="#191919" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="3" stroke-linejoin="round">+8.2</text>

@@ -16,9 +16,9 @@ Showing a language model its failed proof with the proof checker's error message
 LLM theorem proving, but its gain is not always separated from that of simply trying again. We ask
 whether Lean's report helps beyond fresh attempts at the same cap of calls. In a pre-registered
 study, Claude Haiku 5.5 attempted 204 miniF2F problems in Lean 4, five times each, in four
-interleaved arms: one call (B); up to four calls showing the failed proof and Lean's report (F); up
-to four fresh tries (R4); and a placebo showing the failed proof with a fixed rejection sentence
-(P). F verified 93.43% of attempts and R4 92.06%: +1.4 points (90% CI +0.20 to +2.65; sign-flip
+interleaved arms: one call (B); up to four calls, each after the first showing the attempt's earlier
+failed proofs with Lean's report on each (F); up to four fresh tries (R4); and a placebo like F with
+Lean's report replaced by a fixed rejection sentence (P). F verified 93.43% of attempts and R4 92.06%: +1.4 points (90% CI +0.20 to +2.65; sign-flip
 p = 0.093), which the registered rule reads as no difference of 3 points or more in the overall
 verified rate; descriptively, F's unverified share was about 17% smaller than R4's (95% CI 1% to
 38%; not a test). F versus P (+1.4, Holm p = 0.125) and P versus R4 (0.0) read the same way. Arms capped at four calls (1.3 to
@@ -59,7 +59,7 @@ one current API model, Claude Haiku 5.5, on the 204 miniF2F test problems we had
 Our contributions are:
 
 1. **A pre-registered comparison at a matched cap of four calls, with a placebo arm.** Four arms
-   (one call; feedback; fresh tries; the failed proof with a fixed rejection sentence) ran on 204
+   (one call; feedback; fresh tries; the earlier failed proofs with a fixed rejection sentence) ran on 204
    problems with five repetitions each: 4,080 attempts in one seeded, interleaved order. The
    hypotheses, estimands, analysis script and reading rules were committed before any paid call,
    and the analysis is exact where it can be.
@@ -156,10 +156,13 @@ been missed.
 
 **Model and settings.** All calls went to `claude-haiku-5-5` through the Anthropic Messages API,
 with effort `medium`, adaptive thinking, `max_tokens` 32,000, automatic prompt caching and no
-fallback model. Each round is a fresh request; thinking never carries across rounds, and a prompt
-is capped at 12,000 tokens (estimated as characters / 4). The served model of every call was
-recorded: all 5,159 calls were served by Claude Haiku 5.5, and none was refused. The model had no
-tools and no planning step.
+fallback model. Each round is a fresh request; thinking never carries across rounds. A prompt is
+capped at 12,000 tokens (estimated as characters / 4): above the cap the oldest earlier attempts
+would be left out whole, never the instructions or the problem. The cap never bound; no round left
+anything out (Appendix B). The served model of every call was
+recorded: all 5,159 calls in the records, and the 8 further calls that the 4 attempts interrupted by
+the crash wrote to their transcripts (Section 6), were served by Claude Haiku 5.5, and none was
+refused. The model had no tools and no planning step.
 
 **Problems.** The 204 miniF2F test problems (Zheng et al., 2022) that our earlier studies had not
 run: ranks 41 to 244 of a seeded hash ranking of the 244 test problems, whose ranks 1 to 40 were the
@@ -174,9 +177,15 @@ it is the attempt's last round; a pass ends the attempt.
 | Arm | Call cap | What later rounds show |
 |---|---|---|
 | B (baseline) | 1 | – |
-| F (feedback) | 4 | each failed proof, "did not check", and Lean's report: its first 3 errors, the timeout, or the rejection reason |
+| F (feedback) | 4 | each earlier failed proof, "did not check", and Lean's report: its first 3 errors, the timeout, or the rejection reason; for a round that gave no proof, a note saying why (the reply hit the output token limit, or had no `lean` block) |
 | R4 (fresh tries) | 4 | nothing: each try is the first request again |
-| P (placebo) | 4 | as F, with Lean's report replaced by the fixed sentence "Lean did not accept this proof." |
+| P (placebo) | 4 | as F, including the notes on rounds that gave no proof, with Lean's report replaced by the fixed sentence "Lean did not accept this proof." |
+
+From the third call on, F and P show every earlier round of the attempt, oldest first; below,
+"showing the failed proof" is short for this. The placebo replaces only Lean's report: a note on a
+round that gave no proof states the true reason in both F and P. When the first call gave no proof
+(51 of F's 185 failed first calls and 46 of P's 169; Appendix B), the second request in both arms
+carried only that note and no failed proof, while R4 sent the first request again.
 
 F, R4 and P share a cap of four calls and 1,200 s per attempt. They are matched on that cap, not
 on the calls they used (F 1.33, R4 1.36 and P 1.36 per attempt), nor on tokens or cost, which we
@@ -207,8 +216,8 @@ Every registered file matched its recorded hash when the analysis ran.
 
 **Hypotheses.** The estimand of each contrast is the mean, over problems, of the per-problem
 difference in verified rate (verified attempts out of 5). H1, the primary, is F − R4: with the same
-cap of four calls, does showing the failed proof and Lean's report change the verified rate,
-compared with fresh tries? H2 (F − P) asks whether Lean's report matters beyond showing the failed
+cap of four calls, does showing the try's history (its earlier failed proofs and Lean's report on
+each) change the verified rate, compared with fresh tries? H2 (F − P) asks whether Lean's report matters beyond showing the failed
 proof with a fixed rejection sentence; H3 (P − R4) whether showing the failed proof without Lean's
 report changes the rate. All tests are two-sided.
 
@@ -323,12 +332,12 @@ the first call failed, F's extra rescues were mostly in the "other Lean error or
 memorized proof written for an older Mathlib, was 16 of F's 185 failed first calls (Appendix B).
 
 **Exploratory (not registered): when the rescues happened.** F's advantage after a failed first call
-is concentrated in its second call (Figure 3): F's second call verified 100 of its 185 failed
+is concentrated in its second call (Figure 2): F's second call verified 100 of its 185 failed
 attempts, R4's and P's 60 of 169 each. Calls three and four added 19 for F, 28 for R4 and 28 for P.
 
-![Figure 3](figures/fig3_rescue_by_call.svg)
+![Figure 2](figures/fig2_rescue_by_call.svg)
 
-**Figure 3 (exploratory, not registered).** Attempts whose first call failed in the loop: the share
+**Figure 2 (exploratory, not registered).** Attempts whose first call failed in the loop: the share
 verified at call 2, 3 or 4, by arm. Numbers on the bars count attempts. Source: the records
 (`make_figures.py`).
 
@@ -360,7 +369,7 @@ tries (H3: 0.0 points, 7 problems higher and 9 lower).
 
 The descriptive statistics on attempts whose first call failed suggest where the small positive
 estimate comes from: when the first call fails, F's second call succeeds more often than a fresh try
-or the placebo (Figure 3, exploratory). That advantage moves the overall rate little because most
+or the placebo (Figure 2, exploratory). That advantage moves the overall rate little because most
 problems are solved by every arm every time (138 of 204; B alone solved 139 every time), and only
 12 problems differ between F and R4. The registered test cannot tell such a small effect from noise, and it was not
 designed to: it was powered for +4.1 points.
@@ -476,11 +485,12 @@ Before this study we ran an exploratory pilot on the 40 problems our earlier stu
 three repetitions each, with the arms run one after another in separate time blocks (Haiku), or a
 day apart (Opus R4 against the earlier study's Opus F).
 
-![Figure 2](figures/fig2_pilot_and_earlier.svg)
+![Figure 3](figures/fig3_pilot_and_earlier.svg)
 
-**Figure 2.** Estimates with 95% bootstrap intervals; no p-values, no pooled estimate. (a) F − R4 in
-the pilot and in this study. (b) Gain over one call in the earlier study, the pilot and this study.
-Sources: the pilot's report, the earlier study's report, and `analysis.json`.
+**Figure 3.** Estimates with 95% bootstrap intervals; no p-values, no pooled estimate. Grey rows:
+the pilot (exploratory, not registered; 40 reused problems, arms not interleaved) and the earlier
+study, each from its own report. Blue rows: this study (`analysis.json`). (a) F − R4 in the pilot
+and in this study. (b) Gain over one call in the earlier study, the pilot and this study.
 
 The pilot put F 5.8 points above R4 for both models (Haiku: 95% interval +0.8 to +12.5; Opus: 0.0 to
 +12.5). This study estimates +1.4, and its 90% interval (+0.20 to +2.65) excludes both the pilot's
@@ -511,6 +521,11 @@ feedback's +9.6 points over one call (descriptive). We do not re-estimate the ea
   unknown lemma name, for example), which fresh tries cannot do. "Unknown name" failures were 16 of
   F's 185 failed first calls; F rescued 11 of them, R4 6 of its 12.
 - **The placebo is one sentence.** P controls for Lean's report only with its one fixed sentence.
+- **The loop arms show more than failed proofs.** F and P, unlike R4, also tell the model when an
+  earlier reply gave no proof and why, usually that it hit the output token limit. The first call
+  gave no proof in 51 of F's and 46 of P's attempts that went on to a second call (Appendix B), so
+  in those the second call showed only that note. H1 and H3 therefore also compare that note with a
+  fresh request.
 - **What "no difference" covers.** The reading concerns the overall verified rate at this cap. It
   does not show that feedback never helps.
 - **Saturation.** B solved 139 of the 204 problems in every attempt, and only 12 problems differ
@@ -526,7 +541,9 @@ feedback's +9.6 points over one call (descriptive). We do not re-estimate the ea
 We release, with the paper, the code, the registration and its hashes, every record, the transcripts
 of prompts and outputs, the kernel's out-of-memory logs, and the analysis and re-check scripts.
 [Owner: the transcripts are in `held_out/artifacts/`, which git ignores; they must be packaged for
-release.] Registration section 12 commits us to releasing the code, records, transcripts and
+release. The transcript files of the 4 interrupted cells begin with the interrupted attempt's calls
+(8 in all), which have no record, followed by the re-run's calls; `RUNLOG.md` gives the byte offset
+where each first attempt ends. Say so in the release notes.] Registration section 12 commits us to releasing the code, records, transcripts and
 analysis with the results, whatever they show; we release the kernel logs and re-check scripts as
 well. The study's total spend was $17.33 from the records, $20.54 including the $3.20 charged
 for the 4 attempts the crash interrupted, against a cap of $35.
@@ -752,10 +769,15 @@ Proof:
 {feedback}
 ````
 
-or, for a round that gave no proof, `Earlier reply {n} gave no proof: {reason}`. In F, `{feedback}`
-is Lean's report: "Lean reported:" followed by its first 3 errors, with line numbers relative to the
-proof; or "Lean did not finish checking the proof within {t} s."; or the reason the checker rejected
-the proof without compiling it. In P it is always the fixed sentence `Lean did not accept this
+or, for a round that gave no proof, `Earlier reply {n} gave no proof: {reason}`, where `{reason}`
+was "the reply hit the output token limit." or "the reply had no ```lean code block.", the same in
+F and P. The blocks come in round order, oldest first. In F, `{feedback}` is Lean's report: "Lean
+reported:" followed by its first 3 errors, each on a new line as "error at proof line {l}, column
+{c}: {message}", with positions relative to the proof as the model wrote it; an error that Lean
+places before the proof, such as unsolved goals at the `by`, is shown as "error at the statement or
+its `by`: {message}"; each message is cut after 1,500 characters, and a last line "({k} more
+messages not shown)" follows when there were more than 3. Otherwise `{feedback}` is "Lean did not
+finish checking the proof within 120 s." or "The proof was rejected before compiling: {reason}." In P it is always the fixed sentence `Lean did not accept this
 proof.` The prompts' SHA-256 (`d32a2516…`) and the placebo sentence's (`13f99f56…`) were registered.
 
 ## Appendix D. The out-of-memory kills (exploratory, not registered, except where marked)

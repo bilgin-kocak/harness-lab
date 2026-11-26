@@ -1,0 +1,75 @@
+REGISTERED ANALYSIS (REGISTRATION.md 6). data: {'expected_cells': 4080, 'valid_records': 4080, 'harness_error_records': 0, 'usable_problems': 204, 'complete_problems': 204, 'problems_without_a_matched_repetition': []}
+first-call parity: {'round1_pass_rate': {'F': 0.8186274509803921, 'R4': 0.834313725490196, 'P': 0.834313725490196}, 'pairs': {'F - R4': {'mean': -0.015686274509803925, 'sign_flip_p': 0.20320145574261791, 'holm_p': 0.6096043672278537}, 'F - P': {'mean': -0.015686274509803925, 'sign_flip_p': 0.2162492295922147, 'holm_p': 0.6096043672278537}, 'P - R4': {'mean': 8.163404592832033e-19, 'sign_flip_p': 1.0, 'holm_p': 1.0}}, 'flag': False, 'rule': 'the flag changes no reading of H1-H3; it is reported next to them'}
+integrity baseline: 1020 records, status {'completed': 1020}, stop {'exhausted': 1020}, refusals 0, token-cap stops 44, served by another model 0, calls without response 0, in-loop timeouts 0, verifier timeouts 6, dropped-context rounds 0, harness errors 0
+integrity F: 1020 records, status {'completed': 1020}, stop {'inloop_pass': 949, 'exhausted': 71}, refusals 0, token-cap stops 155, served by another model 0, calls without response 0, in-loop timeouts 17, verifier timeouts 1, dropped-context rounds 0, harness errors 0
+integrity R4: 1020 records, status {'completed': 1020}, stop {'inloop_pass': 930, 'exhausted': 90}, refusals 0, token-cap stops 161, served by another model 0, calls without response 0, in-loop timeouts 22, verifier timeouts 2, dropped-context rounds 0, harness errors 0
+integrity P: 1020 records, status {'completed': 1020}, stop {'inloop_pass': 928, 'exhausted': 92}, refusals 0, token-cap stops 137, served by another model 0, calls without response 0, in-loop timeouts 18, verifier timeouts 1, dropped-context rounds 0, harness errors 0
+H1 F - R4 [primary]: n=204 rates 0.9206 -> 0.9343, +0.0137 95% [+0.0010, +0.0294] 90% [+0.0020, +0.0265], 8/4/192, sign-flip p = 0.092773, exact sign test p = 0.3876953125
+  H1 reading: no difference of 0.03 or more in the overall verified rate; R4 unverified share 0.07941176470588229; flags: {'first_call_parity': False, 'integrity_asymmetries': []}
+H2 F - P [secondary]: n=204 rates 0.9206 -> 0.9343, +0.0137 95% [+0.0010, +0.0275] 90% [+0.0029, +0.0255], 11/4/189, sign-flip p = 0.062378, exact sign test p = 0.11846923828125
+H3 P - R4 [secondary]: n=204 rates 0.9206 -> 0.9206, +0.0000 95% [-0.0118, +0.0137] 90% [-0.0098, +0.0108], 7/9/188, sign-flip p = 1.000000, exact sign test p = 0.803619384765625
+  H2 F - P: Holm p = 0.124756, reading: no difference of 0.03 or more in the overall verified rate; unverified share of the comparison arm 0.07941176470588229; flags: {'first_call_parity': False, 'integrity_asymmetries': []}
+  H3 P - R4: Holm p = 1.000000, reading: no difference of 0.03 or more in the overall verified rate; unverified share of the comparison arm 0.07941176470588229; flags: {'first_call_parity': False}
+  attribution rule: No attribution (6.3): H1 'no difference of 0.03 or more in the overall verified rate', H2 'no difference of 0.03 or more in the overall verified rate', H3 'no difference of 0.03 or more in the overall verified rate'.
+R4 - baseline [descriptive]: n=204 rates 0.8382 -> 0.9206, +0.0824 95% [+0.0608, +0.1059] 90% [+0.0637, +0.1020], 52/0/152, sign-flip p = 0.000000, exact sign test p = 4.440892098500626e-16
+F - baseline [descriptive]: n=204 rates 0.8382 -> 0.9343, +0.0961 95% [+0.0696, +0.1245] 90% [+0.0735, +0.1196], 52/0/152, sign-flip p = 0.000000, exact sign test p = 4.440892098500626e-16
+P - baseline [descriptive]: n=204 rates 0.8382 -> 0.9206, +0.0824 95% [+0.0608, +0.1059] 90% [+0.0637, +0.1020], 53/1/150, sign-flip p = 0.000000, exact sign test p = 6.106226635438361e-15
+F - R4 where baseline 1 [descriptive]: n=139 rates 1.0000 -> 1.0000, +0.0000 95% [+0.0000, +0.0000] 90% [+0.0000, +0.0000], 0/0/139, sign-flip p = 1.000000, exact sign test p = None
+F - R4 where baseline between [descriptive]: n=49 rates 0.9714 -> 0.9918, +0.0204 95% [-0.0082, +0.0531] 90% [-0.0041, +0.0449], 4/2/43, sign-flip p = 0.312500, exact sign test p = 0.6875
+F - R4 where baseline 0 [descriptive]: n=16 rates 0.0750 -> 0.1875, +0.1125 95% [-0.0250, +0.2875] 90% [-0.0125, +0.2500], 4/2/10, sign-flip p = 0.343750, exact sign test p = 0.6875
+post-first-call gain F - R4 [descriptive]: n=204 rates 0.0863 -> 0.1157, +0.0294 95% [+0.0029, +0.0569] 90% [+0.0069, +0.0520], 35/29/140, sign-flip p = 0.038007, exact sign test p = 0.5323087760278421
+headroom-scaled F - R4: {'estimate': 0.17283950617283902, 'ci95': [0.011904761904763205, 0.3750000000000014], 'resamples_used': 10000}
+rescue after a failed first call: {"F": {"failed_first_call": 185, "verified_after": 119, "share": 0.6432432432432432, "by_failure_class": {"no proof": {"failed": 51, "verified_after": 6}, "other Lean error or rejection": {"failed": 111, "verified_after": 100}, "timeout": {"failed": 7, "verified_after": 2}, "unknown name": {"failed": 16, "verified_after": 11}}}, "R4": {"failed_first_call": 169, "verified_after": 88, "share": 0.5207100591715976, "by_failure_class": {"no proof": {"failed": 50, "verified_after": 6}, "other Lean error or rejection": {"failed": 98, "verified_after": 72}, "timeout": {"failed": 9, "verified_after": 4}, "unknown name": {"failed": 12, "verified_after": 6}}}, "P": {"failed_first_call": 169, "verified_after": 88, "share": 0.5207100591715976, "by_failure_class": {"no proof": {"failed": 46, "verified_after": 4}, "other Lean error or rejection": {"failed": 102, "verified_after": 75}, "timeout": {"failed": 7, "verified_after": 3}, "unknown name": {"failed": 14, "verified_after": 6}}}, "F - R4": {"estimate": 0.1225331840716456, "ci95": [0.032681624702402434, 0.21743177491009102], "resamples_used": 10000}, "F - P": {"estimate": 0.1225331840716456, "ci95": [0.03862951807228915, 0.21004709576138147], "resamples_used": 10000}}
+verified share by time quarter (equal-count, by start time): {'q1': {'baseline': 0.8683127572016461, 'F': 0.9176470588235294, 'R4': 0.8992537313432836, 'P': 0.952755905511811}, 'q2': {'baseline': 0.8181818181818182, 'F': 0.9398496240601504, 'R4': 0.9076305220883534, 'P': 0.9315589353612167}, 'q3': {'baseline': 0.8333333333333334, 'F': 0.9377431906614786, 'R4': 0.9367588932806324, 'P': 0.9017094017094017}, 'q4': {'baseline': 0.833976833976834, 'F': 0.9421487603305785, 'R4': 0.94, 'P': 0.895910780669145}}
+H1 without the defect-list problems [sensitivity]: n=196 rates 0.9224 -> 0.9367, +0.0143 95% [+0.0010, +0.0306] 90% [+0.0031, +0.0276], 8/4/184, sign-flip p = 0.092773, exact sign test p = 0.3876953125
+H1 without problems with a verifier timeout [sensitivity]: n=199 rates 0.9256 -> 0.9387, +0.0131 95% [+0.0000, +0.0291] 90% [+0.0020, +0.0261], 7/3/189, sign-flip p = 0.109375, exact sign test p = 0.34375
+H1 on complete problems only [sensitivity]: n=204 rates 0.9206 -> 0.9343, +0.0137 95% [+0.0010, +0.0294] 90% [+0.0020, +0.0265], 8/4/192, sign-flip p = 0.092773, exact sign test p = 0.3876953125
+cost: {
+ "baseline": {
+  "usd": 2.45198,
+  "attempts": 1020,
+  "verified": 855,
+  "output_tokens": 4691582,
+  "usd_per_attempt": 0.002403901661764706,
+  "usd_per_verified": 0.0028678125087719295,
+  "calls_per_attempt": 1.0
+ },
+ "F": {
+  "usd": 4.719061,
+  "attempts": 1020,
+  "verified": 953,
+  "output_tokens": 9091452,
+  "usd_per_attempt": 0.004626530519607843,
+  "usd_per_verified": 0.004951795519412382,
+  "calls_per_attempt": 1.334313725490196
+ },
+ "R4": {
+  "usd": 5.010791,
+  "attempts": 1020,
+  "verified": 939,
+  "output_tokens": 9800558,
+  "usd_per_attempt": 0.004912540446078431,
+  "usd_per_verified": 0.005336305915867944,
+  "calls_per_attempt": 1.3607843137254902
+ },
+ "P": {
+  "usd": 4.82832,
+  "attempts": 1020,
+  "verified": 939,
+  "output_tokens": 9281213,
+  "usd_per_attempt": 0.0047336469362745095,
+  "usd_per_verified": 0.005141980697550586,
+  "calls_per_attempt": 1.3627450980392157
+ },
+ "F/R4 cost per verified proof": {
+  "estimate": 0.9279444614837038,
+  "ci95": [
+   0.8593235226218815,
+   0.9917545607593555
+  ],
+  "resamples_used": 10000
+ },
+ "spend_records_usd": 17.334864845,
+ "spend_with_interrupted_cells_usd": 20.538704844999998
+}
+wrote /home/user/harness-lab/.claude/worktrees/paper/studies/2026-11-math-feedback-haiku/analysis.json

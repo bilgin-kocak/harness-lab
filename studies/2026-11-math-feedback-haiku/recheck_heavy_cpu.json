@@ -1,0 +1,405 @@
+{
+  "rows": [
+    {
+      "arm": "F",
+      "repetition": 0,
+      "proof_sha256": "c14653b84d315e8b49f6461c64d39535b9055617a76d42da671ad673e1643a0b",
+      "candidate_sha256": "a659c32fb7f2918b0b58f5c1796254013a1753750fe19c7aa0d8ffcefae9896b",
+      "recorded_reason": "lean exited with code 137",
+      "recorded_lean_s": 185.269,
+      "verdict_if_ended": null,
+      "returncode": -9,
+      "stopped": "one Lean thread passed 330 s of user CPU without the check ending",
+      "wall_s": 908.5,
+      "max_thread_user_s": 330.1,
+      "that_thread_system_s": 225.6,
+      "user_s_when_memory_passed_14gb": 145.2,
+      "total_cpu_s": 564.0,
+      "threads_over_5s_cpu": 2,
+      "peak_rss_gb": 14.12,
+      "peak_rss_plus_swap_gb": 21.96,
+      "samples_wall_s_thread_user_s_mem_gb": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          60.0,
+          40.0,
+          9.88
+        ],
+        [
+          120.1,
+          94.3,
+          13.83
+        ],
+        [
+          180.1,
+          148.8,
+          14.22
+        ],
+        [
+          240.3,
+          188.6,
+          16.02
+        ],
+        [
+          300.4,
+          211.5,
+          17.12
+        ],
+        [
+          360.5,
+          226.7,
+          17.81
+        ],
+        [
+          420.6,
+          240.5,
+          18.41
+        ],
+        [
+          480.7,
+          253.4,
+          18.99
+        ],
+        [
+          540.8,
+          266.1,
+          19.5
+        ],
+        [
+          600.9,
+          275.7,
+          19.88
+        ],
+        [
+          661.0,
+          287.3,
+          20.33
+        ],
+        [
+          721.1,
+          299.2,
+          20.78
+        ],
+        [
+          781.3,
+          308.0,
+          21.11
+        ],
+        [
+          841.5,
+          318.7,
+          21.51
+        ],
+        [
+          901.5,
+          329.3,
+          21.93
+        ]
+      ],
+      "stderr_tail": ""
+    },
+    {
+      "arm": "F",
+      "repetition": 2,
+      "proof_sha256": "67052bb33e665e3435de7bbd01bd66ed212c093bedcecc8ce760dc32d9627291",
+      "candidate_sha256": "1728c9b5e57386c0a50da1c90071a896997ef55d5920e95435e9ba42d81775e2",
+      "recorded_reason": "lean exited with code 137",
+      "recorded_lean_s": 156.118,
+      "verdict_if_ended": null,
+      "returncode": -9,
+      "stopped": "one Lean thread passed 330 s of user CPU without the check ending",
+      "wall_s": 925.8,
+      "max_thread_user_s": 330.1,
+      "that_thread_system_s": 223.8,
+      "user_s_when_memory_passed_14gb": 141.4,
+      "total_cpu_s": 562.1,
+      "threads_over_5s_cpu": 2,
+      "peak_rss_gb": 14.12,
+      "peak_rss_plus_swap_gb": 22.42,
+      "samples_wall_s_thread_user_s_mem_gb": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          60.1,
+          37.5,
+          9.74
+        ],
+        [
+          120.2,
+          92.3,
+          13.95
+        ],
+        [
+          182.2,
+          148.8,
+          14.32
+        ],
+        [
+          242.4,
+          185.1,
+          16.14
+        ],
+        [
+          302.6,
+          207.7,
+          17.27
+        ],
+        [
+          362.7,
+          223.1,
+          18.01
+        ],
+        [
+          422.8,
+          237.4,
+          18.69
+        ],
+        [
+          482.9,
+          251.7,
+          19.34
+        ],
+        [
+          543.0,
+          265.2,
+          19.86
+        ],
+        [
+          603.1,
+          277.2,
+          20.34
+        ],
+        [
+          664.2,
+          284.8,
+          20.62
+        ],
+        [
+          724.4,
+          293.8,
+          20.97
+        ],
+        [
+          784.6,
+          304.4,
+          21.42
+        ],
+        [
+          844.8,
+          314.4,
+          21.81
+        ],
+        [
+          904.9,
+          325.9,
+          22.25
+        ]
+      ],
+      "stderr_tail": ""
+    },
+    {
+      "arm": "F",
+      "repetition": 3,
+      "proof_sha256": "5c47e7a3868828e53329665b4ab91361e98ba3bea91eb060aacee7a4db40b7e6",
+      "candidate_sha256": "360018737f760c816476926aa37f1013267d4c2a40ddcae28b8579ab83614f87",
+      "recorded_reason": "lean exited with code 137",
+      "recorded_lean_s": 250.836,
+      "verdict_if_ended": null,
+      "returncode": -9,
+      "stopped": "one Lean thread passed 330 s of user CPU without the check ending",
+      "wall_s": 850.6,
+      "max_thread_user_s": 330.3,
+      "that_thread_system_s": 212.6,
+      "user_s_when_memory_passed_14gb": 140.6,
+      "total_cpu_s": 551.0,
+      "threads_over_5s_cpu": 2,
+      "peak_rss_gb": 14.12,
+      "peak_rss_plus_swap_gb": 22.3,
+      "samples_wall_s_thread_user_s_mem_gb": [
+        [
+          0.1,
+          0.0,
+          0.0
+        ],
+        [
+          60.2,
+          39.6,
+          10.08
+        ],
+        [
+          120.2,
+          91.2,
+          13.91
+        ],
+        [
+          180.3,
+          146.1,
+          14.35
+        ],
+        [
+          240.4,
+          184.2,
+          16.21
+        ],
+        [
+          300.5,
+          205.5,
+          17.24
+        ],
+        [
+          360.6,
+          222.0,
+          18.04
+        ],
+        [
+          420.7,
+          237.1,
+          18.72
+        ],
+        [
+          480.8,
+          252.1,
+          19.36
+        ],
+        [
+          541.1,
+          266.7,
+          19.94
+        ],
+        [
+          601.2,
+          279.5,
+          20.38
+        ],
+        [
+          661.3,
+          291.9,
+          20.82
+        ],
+        [
+          721.4,
+          304.7,
+          21.3
+        ],
+        [
+          781.5,
+          316.8,
+          21.8
+        ],
+        [
+          841.6,
+          328.1,
+          22.22
+        ]
+      ],
+      "stderr_tail": ""
+    },
+    {
+      "arm": "F",
+      "repetition": 4,
+      "proof_sha256": "25636859bc7d8fc72c01a055acf414c7b17f39cd28f15aacb9d5ddd285f0a48c",
+      "candidate_sha256": "f19b3fac494a8df2dab156b4878eddbfd4f26664205722123c5f51f37a9fedbd",
+      "recorded_reason": "lean exited with code 137",
+      "recorded_lean_s": 251.658,
+      "verdict_if_ended": null,
+      "returncode": -9,
+      "stopped": "one Lean thread passed 330 s of user CPU without the check ending",
+      "wall_s": 887.1,
+      "max_thread_user_s": 330.3,
+      "that_thread_system_s": 218.4,
+      "user_s_when_memory_passed_14gb": 145.7,
+      "total_cpu_s": 557.4,
+      "threads_over_5s_cpu": 2,
+      "peak_rss_gb": 14.12,
+      "peak_rss_plus_swap_gb": 21.69,
+      "samples_wall_s_thread_user_s_mem_gb": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          60.2,
+          36.0,
+          9.4
+        ],
+        [
+          120.2,
+          87.9,
+          13.96
+        ],
+        [
+          180.3,
+          140.3,
+          13.96
+        ],
+        [
+          240.4,
+          184.9,
+          15.85
+        ],
+        [
+          300.6,
+          208.6,
+          16.87
+        ],
+        [
+          360.7,
+          223.2,
+          17.55
+        ],
+        [
+          420.9,
+          235.9,
+          18.16
+        ],
+        [
+          481.1,
+          247.3,
+          18.68
+        ],
+        [
+          541.2,
+          260.2,
+          19.22
+        ],
+        [
+          601.2,
+          272.9,
+          19.66
+        ],
+        [
+          661.7,
+          284.5,
+          20.04
+        ],
+        [
+          721.8,
+          296.7,
+          20.51
+        ],
+        [
+          781.9,
+          311.2,
+          21.01
+        ],
+        [
+          842.1,
+          322.2,
+          21.4
+        ]
+      ],
+      "stderr_tail": ""
+    }
+  ],
+  "label": "exploratory (not registered); written after the held-out phase ended",
+  "cpu": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+  "method": "How much computation do F's proofs of mathd_numbertheory_451 need? (memory limit lifted by swap)\n\nEXPLORATORY (NOT REGISTERED). Written after the held-out phase, 2026-11-26, to settle a question\n`RESULTS.md` left open: would any of F's killed proofs of `mathd_numbertheory_451` check within\nthe registered 300 s if Lean had enough memory? No machine with more than 16 GB was available, so\nswap is added and Lean runs with no memory limit but very slowly. Wall-clock time then means\nnothing, but CPU time still measures the computation:\n\n* a thread cannot use more CPU time than wall-clock time passes, so if one Lean thread spends\n  more than 300 s computing in user mode before the check ends, the check would take more than\n  300 s of wall-clock time on a CPU like this one, and the registered verifier would time it out;\n* only user time counts: under swap, system time includes the kernel's paging work, which a\n  machine with enough memory would not do (a first version that counted user plus system time was\n  stopped and discarded for that reason);\n* if the check ends, its verdict (judged by the registered rule) and its CPU time are reported.\n\nThe result holds for this CPU (recorded below); a faster CPU could take less time. Each run stops\nwhen one thread's user time passes ``--thread-cpu-cap`` (default 330 s) without the check ending,\nor after ``--wall-cap`` seconds. The candidate file is rebuilt with the\nregistered verifier's code, and its SHA-256 must equal the one in the record. No model is called."
+}

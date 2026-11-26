@@ -1,0 +1,91 @@
+{
+  "rows": [
+    {
+      "arm": "F",
+      "repetition": 0,
+      "proof_sha256": "c14653b84d315e8b49f6461c64d39535b9055617a76d42da671ad673e1643a0b",
+      "candidate_sha256": "a659c32fb7f2918b0b58f5c1796254013a1753750fe19c7aa0d8ffcefae9896b",
+      "recorded_reason": "lean exited with code 137",
+      "recorded_lean_s": 185.269,
+      "verdict_if_ended": null,
+      "returncode": -9,
+      "stopped": "one Lean thread passed 330 s of CPU without the check ending",
+      "wall_s": 773.8,
+      "max_thread_cpu_s": 330.4,
+      "total_cpu_s": 339.3,
+      "threads_over_5s_cpu": 2,
+      "peak_rss_gb": 14.12,
+      "peak_rss_plus_swap_gb": 18.8,
+      "samples_wall_s_threadcpu_s_mem_gb": [
+        [
+          0.1,
+          0.0,
+          0.0
+        ],
+        [
+          62.1,
+          0.0,
+          0.0
+        ],
+        [
+          122.2,
+          0.7,
+          0.24
+        ],
+        [
+          184.2,
+          1.3,
+          0.28
+        ],
+        [
+          244.2,
+          5.8,
+          4.85
+        ],
+        [
+          304.3,
+          55.7,
+          10.9
+        ],
+        [
+          366.3,
+          117.2,
+          13.77
+        ],
+        [
+          426.4,
+          175.9,
+          14.98
+        ],
+        [
+          486.5,
+          214.6,
+          16.21
+        ],
+        [
+          546.7,
+          249.0,
+          17.17
+        ],
+        [
+          607.3,
+          269.8,
+          17.61
+        ],
+        [
+          667.5,
+          290.3,
+          17.99
+        ],
+        [
+          727.6,
+          310.2,
+          18.36
+        ]
+      ],
+      "stderr_tail": ""
+    }
+  ],
+  "label": "exploratory (not registered); written after the held-out phase ended",
+  "method": "How much computation do F's proofs of mathd_numbertheory_451 need? (memory limit lifted by swap)\n\nEXPLORATORY (NOT REGISTERED). Written after the held-out phase, 2026-11-26, to settle a question\n`RESULTS.md` left open: would any of F's killed proofs of `mathd_numbertheory_451` check within\nthe registered 300 s if Lean had enough memory? No machine with more than 16 GB was available, so\nswap is added and Lean runs with no memory limit but very slowly. Wall-clock time then means\nnothing, but CPU time still measures the computation:\n\n* a thread cannot use more CPU time than wall-clock time passes, so if one Lean thread uses more\n  than 300 s of CPU before the check ends, the check would take more than 300 s of wall-clock\n  time on any machine, and the registered verifier would time it out;\n* if the check ends, its verdict (judged by the registered rule) and its CPU time are reported.\n\nEach run stops when one thread's CPU time passes ``--thread-cpu-cap`` (default 330 s) without\nthe check ending, or after ``--wall-cap`` seconds. The candidate file is rebuilt with the\nregistered verifier's code, and its SHA-256 must equal the one in the record. No model is called."
+}

@@ -164,11 +164,17 @@ of `oom_kernel_log.txt`.
   with the whole 14.3 GB limit available, they exceeded it within 300 s. The 17th, F's repetition
   1, ran its full 300 s without reaching the limit and timed out, a definite "not verified". In the
   run, two further checks of this problem that were not killed also ran out the 300 s, and 42 of
-  the 45 in-loop checks of its proofs ran out their 120 s. No check of any proof of this problem
-  has ever passed. Whether any of the 16 would check within 300 s with more memory is not known;
-  nothing seen suggests one would.
+  the 45 in-loop checks of its proofs ran out their 120 s.
+- **F's other 4 could not have passed within 300 s either** (`recheck_heavy_cpu.py`, 12:21-13:43Z;
+  exploratory). With the memory limit lifted by a 24 GB swap file, each passed 330 s of user CPU in
+  one thread without finishing (memory still growing, 21.7-22.4 GB when stopped). User time cannot
+  exceed wall-clock time and leaves out the paging (system time, 213-226 s per run), so on the CPU
+  measured (Intel Xeon, 2.1 GHz) each would have needed more than 300 s even with enough memory.
+  Caveats: user time may include some slowdown from memory pressure, and a much faster CPU could
+  take less time. A first version that counted user plus system time was stopped and discarded
+  (`recheck_heavy_cpu_v1_discarded.json`). No check of any proof of this problem has ever passed
+  (0 of 86: 45 in-loop, 20 final, 17 re-checks, 4 CPU measurements).
 - **What the exploratory readings rest on.** The registered readings stand whatever these show.
-  If none of F's proofs of `mathd_numbertheory_451` at repetitions 0, 2, 3 and 4 would pass, every
-  exploratory reading is the same as the registered one, with the two artifacts counted either
-  way. If one of them would pass (with `aime_1990_p15` counted as verified), H1 would read
-  "difference (positive)", p = 0.043.
+  The recounts that change a reading need one of F's proofs of `mathd_numbertheory_451` to pass;
+  none could within the registered 300 s. Counted as the re-checks show (the two artifacts as
+  passes), every reading is the same as the registered one.

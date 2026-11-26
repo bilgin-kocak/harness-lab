@@ -22,7 +22,7 @@
 
 Option 1 is the most accurate; option 3 leads with the method story.
 
-## Abstract (draft, about 255 words without the bracket; trim to the venue's limit)
+## Abstract (draft, about 255 words; trim to the venue's limit)
 
 > Showing a language model its failed proof with the proof checker's error messages is common in
 > LLM theorem proving, but its gain is not always separated from that of simply trying again. We
@@ -37,13 +37,14 @@ Option 1 is the most accurate; option 3 leads with the method story.
 > four calls (1.3 to 1.4 used on average) verified 8 to 10 points more than one call. An exploratory
 > pilot had estimated +5.8 points for F over R4; our 90% interval excludes it and the +4.1 points
 > the study was powered for. Out-of-memory events ended 19 of the 4,080 final checks, 17 of them on
-> one problem no arm proved; under the registered rule every reading stands, and we report which
-> recounts would change them [and what a CPU-time measurement shows]. Code, records, transcripts
-> and analysis are released.
+> one problem no arm proved; under the registered rule every reading stands, and re-checks show
+> that no recount that would change a reading can occur. Code, records, transcripts and analysis
+> are released.
 
 **Words that need care:** "removed about 17% of the failures" is the registered headroom-scaled
-descriptive, not a test; "1.3 to 1.4 calls" (F 1.33, R4 1.36, P 1.36); the bracket is filled in
-from `../recheck_heavy_cpu.json`. Trim to the venue's limit.
+descriptive, not a test; "1.3 to 1.4 calls" (F 1.33, R4 1.36, P 1.36); "no recount that would
+change a reading can occur" rests on the exploratory re-checks and the CPU-time measurement
+(section 6), on the CPU measured. Trim to the venue's limit.
 
 ## Outline
 
@@ -161,11 +162,15 @@ from `../recheck_heavy_cpu.json`. Trim to the venue's limit.
 - D1's promised analyses: H1-H3 without `mathd_numbertheory_451` (unchanged); H1 without the 476
   exposed (problem, repetition) pairs (+1.6, 90% +0.1 to +3.3: inconclusive, on 53% of the data);
   exposure by arm.
-- The open recount (exploratory): re-checks alone did not settle it (16 of 17 killed again at
-  14.0 GB, 1 timed out). A CPU-time measurement with swap, counting user time only, on this
-  machine's CPU: [fill in from `../recheck_heavy_cpu.json`, and say whether it settles the
-  question; if not, the re-check that would: the registered verifier on a machine with more than
-  16 GB].
+- The open recount, settled (exploratory): re-checks alone showed 16 of the 17 proofs killed
+  again at 14.0 GB and 1 timing out at 300 s. With the memory limit lifted by swap, each of F's
+  other 4 passed 330 s of user CPU in one thread without finishing (memory still growing, 21.7-22.4
+  GB; the paging, 213-226 s of system time per run, left out). On the CPU measured, none could have
+  checked within 300 s, so the recounts that change a reading do not occur; counting the two known
+  artifacts as passes, every reading equals the registered one (H1 p = 0.062). Caveats: user time
+  may include some slowdown from memory pressure; a much faster CPU could take less time; a first
+  version that counted system time was discarded. No check of any proof of this problem has ever
+  passed (0 of 86).
 - Lessons for harness builders: cap each check's memory, time checks outside the process being
   timed, keep the kernel's evidence, decide in advance what a killed check means.
 

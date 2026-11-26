@@ -132,3 +132,16 @@ No deviation.
 - **Spend:** no paid call after 09:08:30Z. Total $17.33 in records, $20.54 with the interrupted
   cells, against the $35 cap.
 - **Results:** `RESULTS.md`, a draft for the owner. Nothing is published.
+- **12:16:57.** The session's machine restarted (a new container; the kernel log from the run is
+  gone, but its out-of-memory reports were already saved in the study directory).
+- **12:21-13:43.** Owner's go-ahead ("do your step 1"): would F's 4 unsettled proofs of
+  `mathd_numbertheory_451` check within 300 s with enough memory? No machine with more than 16 GB
+  was available, so a temporary 24 GB swap file was added and `recheck_heavy_cpu.py` measured CPU
+  time, one proof at a time. A first version stopped on user plus system time; it was stopped after
+  F's repetition 0 and discarded (`recheck_heavy_cpu_v1_discarded.json`), because under swap system
+  time includes paging. The second counted user time only: each of the 4 passed 330 s of user CPU
+  without finishing (`recheck_heavy_cpu.json`). The independent review of the paper outline
+  (12:30-12:50) ran during the first version. The swap was turned off afterwards; the swap file
+  (`/swapfile-recheck`, 24 GB) is still on the container's disk.
+- **Paper:** `paper/OUTLINE.md`, an outline and abstract for the owner, reviewed independently.
+  Nothing is published.

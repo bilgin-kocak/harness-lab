@@ -26,7 +26,7 @@ verified rate; descriptively, F's unverified share was about 17% smaller than R4
 38%; not a test). F versus P (+1.4, Holm p = 0.125) and P versus R4 (0.0) read the same way. Arms capped at four calls (1.3 to
 1.4 used on average) verified 8 to 10 points more than one call (descriptive). An exploratory pilot had estimated
 +5.8 points for F over R4; our 90% interval excludes it and the +4.1 points the study was powered
-for. Out-of-memory events ended 19 of the 4,080 final checks, 17 of them on one problem no arm
+for. Out-of-memory events ended the final checks of 19 of the 4,080 attempts, 17 of them on one problem no arm
 proved; under the registered rule every reading stands. A reading would change only if one of F's
 proofs of that problem had passed, and exploratory re-checks indicate that very likely none could have
 within the registered 300 s limit, even with enough memory. Code, records, transcripts and
@@ -127,15 +127,20 @@ pre-registrations held in the author's own version control or by the author, not
 Closest to our design, Verma (2026) keeps the failed program, replaces the test output with a fixed
 content-free notice, and compares each repair arm with blind resampling at the same cap of eight
 retries. Execution feedback never beat that placebo (0.0 to +2.6 pass@1 points, not significant),
-and both arms that showed the failed program trailed blind resampling at 1.5B and 3B parameters
-(placebo − resampling −6.1 and −6.9 points), with all arms tied at 7B. İşcan (2026a) found that
-adding executed failing-test assertions to the failed code beat a same-code placebo of generic
-requirement bullets, but only tied blind resampling at four generations per arm (26 against 26
-unlocks among 290 unsolved tasks, a comparison outside the pre-registered family). İşcan (2026b) did
-not confirm an advantage of error content over form-matched placebos, in prompts or in fine-tuned
-adapters, on 40 tasks, and does not read this as equivalence. With a larger model and a different
-task, our P read "no difference of 3 points or more" against fresh tries (H3), where Verma's placebo
-trailed blind resampling at the two smaller sizes.
+and the placebo and feedback arms both trailed blind resampling on Qwen2.5-Coder at 1.5B and 3B
+parameters (placebo − resampling −6.1 and −6.9 points), with all arms tied at 7B; in a replication
+on DeepSeek-Coder the placebo also trailed at 1.3B and 6.7B (−13.8 and −4.5 points), and the author
+finds that the size of this penalty tracks the model's first-attempt success rate rather than its
+size. İşcan (2026a) found that adding executed failing-test assertions to the failed code beat a
+same-code placebo of generic requirement bullets, but only tied blind resampling at four generations
+per arm (26 against 26 unlocks among 290 task–model units, covering 202 distinct tasks, on which none
+of eight cached candidates had passed the public tests; a comparison outside the pre-registered
+family); the placebo contrast reversed (net −2) in a separate sensitivity sample of 60 units, which
+the author reads as limiting its external stability. İşcan (2026b) did not confirm an advantage of
+error content over form-matched placebos, in prompts or in fine-tuned adapters, on 40 task–model
+units, and does not read this as equivalence. With a different model and a different task, our P
+read "no difference of 3 points or more" against fresh tries (H3), where Verma's placebo trailed
+blind resampling at every model size he tested except 7B.
 
 **Self-correction and repeated sampling.** Huang et al. (2024) find that intrinsic self-correction,
 with no external feedback, does not improve and often lowers reasoning accuracy, separate this from
@@ -170,22 +175,24 @@ committed with its hashes and pushed to GitHub before any paid call [owner: "and
 
 **What is new here.** Neither pre-registration nor a placebo arm is new: Li and Li (2026)
 pre-registered their primary endpoint, and the three studies of code models above used placebo arms
-and internal pre-registrations. Our registration's background (Appendix A), written before we read
-these papers, listed pre-registration among what this study adds. What this study adds is the
+and internal pre-registrations. Our registration's background (Appendix A) cites Li and Li but was written before we read that
+they had pre-registered their primary endpoint, and before we found the three studies of code
+models; it listed pre-registration among what this study adds. What this study adds is the
 combination, in Lean theorem proving, of a current API model, a multi-round cap of four calls with
 the identical first request in every arm, a placebo arm, five repetitions on each of 204 problems,
 arms interleaved in time, a registration committed with its hashes and pushed before any paid call,
 and an exact paired test with a reading rule fixed in advance. Our search was not systematic: research agents searched the web and
-arXiv on 2026-11-24 and the queries were not logged (`RELATED_WORK.md`), so relevant work may have
-been missed.
+arXiv on 2026-11-24 and the queries were not logged (`RELATED_WORK.md`). That search did not find the
+three studies of code models above; they are cited by Li and Li (2026) and were added only after a
+review of this draft, so other relevant work may also have been missed.
 
 ## 3. Setup
 
 **Terms.** An *attempt* is one arm's run on one problem in one repetition, one *cell* of the design:
 4 arms × 204 problems × 5 repetitions = 4,080 attempts. An attempt is a sequence of *rounds*, each one
 model call: one round in B, up to four in F, R4 and P. R4's rounds are called *tries*. Every round's
-proof except the attempt's last is checked in the loop by the verifier's own code with a 120 s limit,
-and a pass ends the attempt. The attempt's *final proof* is the proof of its latest round that gave
+proof is checked in the loop by the verifier's own code with a 120 s limit, except in the last round
+the call cap allows (B's only round; the fourth in F, R4 and P), and a pass ends the attempt. The attempt's *final proof* is the proof of its latest round that gave
 one. It gets the final check described under Verifier, and the attempt is *verified* if that check
 passes. An attempt in which no round gave a proof is not verified.
 
@@ -261,7 +268,7 @@ The held-out phase ran once. Every registered file matched its recorded hash whe
 
 **Hypotheses.** The estimand of each contrast is the mean, over problems, of the per-problem
 difference in verified rate (verified attempts out of 5). H1, the primary, is F − R4: with the same
-cap of four calls, does showing the try's history (its earlier failed proofs and Lean's report on
+cap of four calls, does showing the attempt's history (its earlier failed proofs and Lean's report on
 each) change the verified rate, compared with fresh tries? H2 (F − P) asks whether Lean's report matters beyond showing the failed
 proof with a fixed rejection sentence; H3 (P − R4) whether showing the failed proof without Lean's
 report changes the rate. All tests are two-sided.
@@ -375,7 +382,7 @@ problems B never proved, it is +11.3 points (−2.5 to +28.8): F 18.8% against R
 problems to say whether feedback helps more on hard problems.
 
 **Scaled by the room left.** Divided by R4's unverified share, F − R4 is 17% (95% interval 1% to
-38%): F's unverified share (6.57%) was about a sixth smaller than R4's (7.94%). This is a
+38%): F's unverified share (6.57%) was about 17% smaller than R4's (7.94%). This is a
 descriptive ratio, not a test.
 
 **After the first call.** On each problem's verified rate minus its first-round pass rate, F − R4 is
@@ -411,8 +418,8 @@ and verified 14 more attempts.
 ### 5.3 Exploratory analyses (not registered)
 
 **When the rescues happened.** F's advantage after a failed first call
-is concentrated in its second call (Figure 2): F's second call verified 100 of its 185 failed
-attempts, R4's and P's 60 of 169 each. Calls three and four added 19 for F, 28 for R4 and 28 for P.
+is concentrated in its second call (Figure 2): F's second call verified 100 of the 185 attempts whose first
+call failed, R4's and P's 60 of 169 each. Calls three and four added 19 for F, 28 for R4 and 28 for P.
 
 ![Figure 2](figures/fig2_rescue_by_call.svg)
 
@@ -429,8 +436,8 @@ both, +0.5; leaving out any single problem gives +0.9 to +1.5.
 
 For Claude Haiku 5.5 at a cap of four calls on these problems, showing the failed proof with Lean's
 report did not change the overall verified rate by 3 points or more, compared with fresh tries. The
-estimate is small in points and positive; relative to the room left it is about a sixth of R4's
-failures (descriptive, Section 5.2). Most of what a loop of four calls adds over one call, in this setup,
+estimate is small in points and positive; descriptively, F's unverified share was about 17%
+smaller than R4's (Section 5.2). Most of what a loop of four calls adds over one call, in this setup,
 is available from fresh tries alone: R4 gained +8.2 of F's +9.6 points over one call (descriptive).
 Showing the failed proof with a bare rejection sentence (P) also read "no difference of 3 points or
 more" against fresh tries; in this sample both verified 939 of 1,020 attempts (H3: 0.0 points, 95%
@@ -612,7 +619,7 @@ feedback's +9.6 points over one call (descriptive). We do not re-estimate the ea
   between F and R4, so the test says little about hard problems. On the 16 problems B never solved,
   F − R4 was +11.3 points (−2.5 to +28.8; descriptive, too few problems): a hypothesis for a new
   pre-registered study, not a finding.
-- **The memory events.** One problem's checks grew past the machine's memory; the registered 300 s
+- **The memory events.** One problem's checks outgrew the 14.3 GB memory limit the study's processes shared; the registered 300 s
   timeout fired late in 3 checks during memory stalls; and the deviation that resumed the run was
   committed mid-phase (Sections 4 and 6).
 

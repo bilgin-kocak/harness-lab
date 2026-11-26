@@ -174,3 +174,15 @@ No deviation.
   combine the smallest per-check ratio with the swap threshold (the reviewers found that spread
   to be noise from the short checks) and to count 5 measurements instead of 9; neither was
   applied.
+- **17:4x-18:5x. Paper draft** (owner: "ok, draft the full paper from the outline"). `paper/PAPER.md`
+  written from `paper/OUTLINE.md` and the sources it names; `paper/make_figures.py` (standard library,
+  SVG) and `paper/build.py` (inlines the registration from git, checked against its SHA-256, and
+  `DEVIATIONS.md`; renders HTML with pandoc into the git-ignored `paper/build/`). First draft
+  516c835 (17:58). Every citation was located and quoted by one agent and re-checked by a second
+  (`paper/REFERENCES_CHECK.md`); the check found that Li and Li (2026) had pre-registered their
+  primary endpoint, so the paper no longer counts pre-registration as new. Seven reviewers (numbers
+  twice, registration fidelity, claim strength, referee, figures, prompts) reviewed the draft, each
+  finding checked by a refuter; the confirmed findings are applied in 6ab2cdc through 519558a. Two
+  of them also corrected `RESULTS.md`, `d1_report.md` and the post-phase note in `DEVIATIONS.md`
+  (wording only; no record or number changed). No model call of the study was made; nothing is
+  published.

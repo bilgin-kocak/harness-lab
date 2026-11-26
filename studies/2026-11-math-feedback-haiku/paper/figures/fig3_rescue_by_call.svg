@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="620" height="300" viewBox="0 0 620 300" role="img" font-family="Inter, 'DejaVu Sans', Helvetica, Arial, sans-serif">
+<title>Figure 3. Attempts whose first call failed: share verified at each later call</title><desc>Exploratory (not registered). Grouped bars by call number for F, R4 and P.</desc>
+<rect width="620" height="300" fill="#ffffff"/>
+<text x="10.0" y="20.0" font-size="13" fill="#191919" text-anchor="start" font-weight="600">Attempts whose first call failed: share verified at call 2, 3 or 4</text>
+<text x="10.0" y="37.0" font-size="10.5" fill="#666666" text-anchor="start" font-weight="normal">Exploratory (not registered). Failed first calls: F 185, R4 169, P 169.</text>
+<line x1="60.0" y1="234.0" x2="590.0" y2="234.0" stroke="#666666" stroke-width="1" stroke-linecap="butt"/>
+<text x="52.0" y="238.0" font-size="10.5" fill="#666666" text-anchor="end" font-weight="normal">0%</text>
+<line x1="60.0" y1="205.7" x2="590.0" y2="205.7" stroke="#e6e6e6" stroke-width="1" stroke-linecap="butt"/>
+<text x="52.0" y="209.7" font-size="10.5" fill="#666666" text-anchor="end" font-weight="normal">10%</text>
+<line x1="60.0" y1="177.3" x2="590.0" y2="177.3" stroke="#e6e6e6" stroke-width="1" stroke-linecap="butt"/>
+<text x="52.0" y="181.3" font-size="10.5" fill="#666666" text-anchor="end" font-weight="normal">20%</text>
+<line x1="60.0" y1="149.0" x2="590.0" y2="149.0" stroke="#e6e6e6" stroke-width="1" stroke-linecap="butt"/>
+<text x="52.0" y="153.0" font-size="10.5" fill="#666666" text-anchor="end" font-weight="normal">30%</text>
+<line x1="60.0" y1="120.7" x2="590.0" y2="120.7" stroke="#e6e6e6" stroke-width="1" stroke-linecap="butt"/>
+<text x="52.0" y="124.7" font-size="10.5" fill="#666666" text-anchor="end" font-weight="normal">40%</text>
+<line x1="60.0" y1="92.3" x2="590.0" y2="92.3" stroke="#e6e6e6" stroke-width="1" stroke-linecap="butt"/>
+<text x="52.0" y="96.3" font-size="10.5" fill="#666666" text-anchor="end" font-weight="normal">50%</text>
+<line x1="60.0" y1="64.0" x2="590.0" y2="64.0" stroke="#e6e6e6" stroke-width="1" stroke-linecap="butt"/>
+<text x="52.0" y="68.0" font-size="10.5" fill="#666666" text-anchor="end" font-weight="normal">60%</text>
+<path d="M110.3,234.0 V84.8 Q110.3,80.8 114.3,80.8 H130.3 Q134.3,80.8 134.3,84.8 V234.0 Z" fill="#257de0"/>
+<text x="122.3" y="75.8" font-size="10" fill="#191919" text-anchor="middle" font-weight="normal">100</text>
+<path d="M136.3,234.0 V137.4 Q136.3,133.4 140.3,133.4 H156.3 Q160.3,133.4 160.3,137.4 V234.0 Z" fill="#f47230"/>
+<text x="148.3" y="128.4" font-size="10" fill="#191919" text-anchor="middle" font-weight="normal">60</text>
+<path d="M162.3,234.0 V137.4 Q162.3,133.4 166.3,133.4 H182.3 Q186.3,133.4 186.3,137.4 V234.0 Z" fill="#00b894"/>
+<text x="174.3" y="128.4" font-size="10" fill="#191919" text-anchor="middle" font-weight="normal">60</text>
+<text x="148.3" y="252.0" font-size="11.5" fill="#191919" text-anchor="middle" font-weight="normal">call 2</text>
+<path d="M287.0,234.0 V216.6 Q287.0,212.6 291.0,212.6 H307.0 Q311.0,212.6 311.0,216.6 V234.0 Z" fill="#257de0"/>
+<text x="299.0" y="207.6" font-size="10" fill="#191919" text-anchor="middle" font-weight="normal">14</text>
+<path d="M313.0,234.0 V206.1 Q313.0,202.1 317.0,202.1 H333.0 Q337.0,202.1 337.0,206.1 V234.0 Z" fill="#f47230"/>
+<text x="325.0" y="197.1" font-size="10" fill="#191919" text-anchor="middle" font-weight="normal">19</text>
+<path d="M339.0,234.0 V209.5 Q339.0,205.5 343.0,205.5 H359.0 Q363.0,205.5 363.0,209.5 V234.0 Z" fill="#00b894"/>
+<text x="351.0" y="200.5" font-size="10" fill="#191919" text-anchor="middle" font-weight="normal">17</text>
+<text x="325.0" y="252.0" font-size="11.5" fill="#191919" text-anchor="middle" font-weight="normal">call 3</text>
+<path d="M463.7,234.0 V230.2 Q463.7,226.3 467.5,226.3 H483.8 Q487.7,226.3 487.7,230.2 V234.0 Z" fill="#257de0"/>
+<text x="475.7" y="221.3" font-size="10" fill="#191919" text-anchor="middle" font-weight="normal">5</text>
+<path d="M489.7,234.0 V222.9 Q489.7,218.9 493.7,218.9 H509.7 Q513.7,218.9 513.7,222.9 V234.0 Z" fill="#f47230"/>
+<text x="501.7" y="213.9" font-size="10" fill="#191919" text-anchor="middle" font-weight="normal">9</text>
+<path d="M515.7,234.0 V219.6 Q515.7,215.6 519.7,215.6 H535.7 Q539.7,215.6 539.7,219.6 V234.0 Z" fill="#00b894"/>
+<text x="527.7" y="210.6" font-size="10" fill="#191919" text-anchor="middle" font-weight="normal">11</text>
+<text x="501.7" y="252.0" font-size="11.5" fill="#191919" text-anchor="middle" font-weight="normal">call 4</text>
+<rect x="420.0" y="50" width="12" height="12" rx="2" fill="#257de0"/>
+<text x="437.0" y="60.0" font-size="11.5" fill="#191919" text-anchor="start" font-weight="normal">F</text>
+<rect x="478.0" y="50" width="12" height="12" rx="2" fill="#f47230"/>
+<text x="495.0" y="60.0" font-size="11.5" fill="#191919" text-anchor="start" font-weight="normal">R4</text>
+<rect x="536.0" y="50" width="12" height="12" rx="2" fill="#00b894"/>
+<text x="553.0" y="60.0" font-size="11.5" fill="#191919" text-anchor="start" font-weight="normal">P</text>
+<text x="10.0" y="276.0" font-size="10" fill="#666666" text-anchor="start" font-weight="normal">Numbers on the bars: attempts verified at that call. Cumulative after call 4: F 119/185, R4 88/169, P 88/169.</text>
+</svg>

@@ -1,0 +1,2655 @@
+{
+  "label": "exploratory (not registered); DEVIATIONS.md D1; written after the phase ended",
+  "kernel_kills": [
+    {
+      "time": "2026-11-25T17:39:58Z",
+      "kernel_s": 1451.965001,
+      "pid": 5173,
+      "process": "lean",
+      "anon_rss_bytes": 13948858368,
+      "bystander": false,
+      "boot_file": "kernel_oom_boot_2026-11-25T17-15-47.txt",
+      "anon_rss_gb": 13.949
+    },
+    {
+      "time": "2026-11-25T17:53:16Z",
+      "kernel_s": 2249.811799,
+      "pid": 8989,
+      "process": "lean",
+      "anon_rss_bytes": 13575249920,
+      "bystander": false,
+      "boot_file": "kernel_oom_boot_2026-11-25T17-15-47.txt",
+      "anon_rss_gb": 13.575
+    },
+    {
+      "time": "2026-11-25T18:41:10Z",
+      "kernel_s": 5123.542673,
+      "pid": 29443,
+      "process": "lean",
+      "anon_rss_bytes": 13535453184,
+      "bystander": false,
+      "boot_file": "kernel_oom_boot_2026-11-25T17-15-47.txt",
+      "anon_rss_gb": 13.535
+    },
+    {
+      "time": "2026-11-25T19:27:45Z",
+      "kernel_s": 7918.532172,
+      "pid": 17378,
+      "process": "lean",
+      "anon_rss_bytes": 13292679168,
+      "bystander": false,
+      "boot_file": "kernel_oom_boot_2026-11-25T17-15-47.txt",
+      "anon_rss_gb": 13.293
+    },
+    {
+      "time": "2026-11-25T21:11:20Z",
+      "kernel_s": 14133.23354,
+      "pid": 31696,
+      "process": "lean",
+      "anon_rss_bytes": 13211357184,
+      "bystander": false,
+      "boot_file": "kernel_oom_boot_2026-11-25T17-15-47.txt",
+      "anon_rss_gb": 13.211
+    },
+    {
+      "time": "2026-11-25T22:34:57Z",
+      "kernel_s": 19150.441462,
+      "pid": 7160,
+      "process": "lean",
+      "anon_rss_bytes": 13738668032,
+      "bystander": false,
+      "boot_file": "kernel_oom_boot_2026-11-25T17-15-47.txt",
+      "anon_rss_gb": 13.739
+    },
+    {
+      "time": "2026-11-25T22:44:31Z",
+      "kernel_s": 19724.186156,
+      "pid": 11250,
+      "process": "lean",
+      "anon_rss_bytes": 13935210496,
+      "bystander": false,
+      "boot_file": "kernel_oom_boot_2026-11-25T17-15-47.txt",
+      "anon_rss_gb": 13.935
+    },
+    {
+      "time": "2026-11-26T00:33:58Z",
+      "kernel_s": 26291.409901,
+      "pid": 28426,
+      "process": "lean",
+      "anon_rss_bytes": 13257732096,
+      "bystander": false,
+      "boot_file": "kernel_oom_boot_2026-11-25T17-15-47.txt",
+      "anon_rss_gb": 13.258
+    },
+    {
+      "time": "2026-11-26T01:06:13Z",
+      "kernel_s": 28226.822508,
+      "pid": 11401,
+      "process": "lean",
+      "anon_rss_bytes": 13203030016,
+      "bystander": false,
+      "boot_file": "kernel_oom_boot_2026-11-25T17-15-47.txt",
+      "anon_rss_gb": 13.203
+    },
+    {
+      "time": "2026-11-26T01:23:33Z",
+      "kernel_s": 29266.035756,
+      "pid": 19396,
+      "process": "lean",
+      "anon_rss_bytes": 13718192128,
+      "bystander": false,
+      "boot_file": "kernel_oom_boot_2026-11-25T17-15-47.txt",
+      "anon_rss_gb": 13.718
+    },
+    {
+      "time": "2026-11-26T01:23:33Z",
+      "kernel_s": 29266.039762,
+      "pid": 233,
+      "process": "python",
+      "anon_rss_bytes": 131993600,
+      "bystander": true,
+      "boot_file": "kernel_oom_boot_2026-11-25T17-15-47.txt",
+      "anon_rss_gb": 0.132
+    },
+    {
+      "time": "2026-11-26T01:23:33Z",
+      "kernel_s": 29266.043798,
+      "pid": 20484,
+      "process": "lean",
+      "anon_rss_bytes": 23502848,
+      "bystander": true,
+      "boot_file": "kernel_oom_boot_2026-11-25T17-15-47.txt",
+      "anon_rss_gb": 0.024
+    },
+    {
+      "time": "2026-11-26T02:26:25Z",
+      "kernel_s": 33038.641597,
+      "pid": 28347,
+      "process": "lean",
+      "anon_rss_bytes": 13464961024,
+      "bystander": false,
+      "boot_file": "kernel_oom_boot_2026-11-25T17-15-47.txt",
+      "anon_rss_gb": 13.465
+    },
+    {
+      "time": "2026-11-26T02:26:25Z",
+      "kernel_s": 33038.646357,
+      "pid": 29105,
+      "process": "lean",
+      "anon_rss_bytes": 183529472,
+      "bystander": true,
+      "boot_file": "kernel_oom_boot_2026-11-25T17-15-47.txt",
+      "anon_rss_gb": 0.184
+    },
+    {
+      "time": "2026-11-26T03:07:22Z",
+      "kernel_s": 35495.946165,
+      "pid": 15308,
+      "process": "lean",
+      "anon_rss_bytes": 13272559616,
+      "bystander": false,
+      "boot_file": "kernel_oom_boot_2026-11-25T17-15-47.txt",
+      "anon_rss_gb": 13.273
+    },
+    {
+      "time": "2026-11-26T03:48:50Z",
+      "kernel_s": 37983.464409,
+      "pid": 31269,
+      "process": "lean",
+      "anon_rss_bytes": 13313372160,
+      "bystander": false,
+      "boot_file": "kernel_oom_boot_2026-11-25T17-15-47.txt",
+      "anon_rss_gb": 13.313
+    },
+    {
+      "time": "2026-11-26T04:04:17Z",
+      "kernel_s": 38910.081429,
+      "pid": 3934,
+      "process": "lean",
+      "anon_rss_bytes": 13481635840,
+      "bystander": false,
+      "boot_file": "kernel_oom_boot_2026-11-25T17-15-47.txt",
+      "anon_rss_gb": 13.482
+    },
+    {
+      "time": "2026-11-26T04:04:17Z",
+      "kernel_s": 38910.088848,
+      "pid": 4635,
+      "process": "lean",
+      "anon_rss_bytes": 166559744,
+      "bystander": true,
+      "boot_file": "kernel_oom_boot_2026-11-25T17-15-47.txt",
+      "anon_rss_gb": 0.167
+    },
+    {
+      "time": "2026-11-26T04:50:26Z",
+      "kernel_s": 41679.367079,
+      "pid": 24922,
+      "process": "lean",
+      "anon_rss_bytes": 13565362176,
+      "bystander": false,
+      "boot_file": "kernel_oom_boot_2026-11-25T17-15-47.txt",
+      "anon_rss_gb": 13.565
+    },
+    {
+      "time": "2026-11-26T05:46:57Z",
+      "kernel_s": 45070.833172,
+      "pid": 19247,
+      "process": "lean",
+      "anon_rss_bytes": 13674164224,
+      "bystander": false,
+      "boot_file": "kernel_oom_boot_2026-11-25T17-15-47.txt",
+      "anon_rss_gb": 13.674
+    },
+    {
+      "time": "2026-11-26T07:04:11Z",
+      "kernel_s": 49704.191382,
+      "pid": 25606,
+      "process": "lean",
+      "anon_rss_bytes": 13542686720,
+      "bystander": false,
+      "boot_file": "kernel_oom_boot_2026-11-25T17-15-47.txt",
+      "anon_rss_gb": 13.543
+    },
+    {
+      "time": "2026-11-26T08:00:21Z",
+      "kernel_s": 53074.898744,
+      "pid": 16110,
+      "process": "lean",
+      "anon_rss_bytes": 13375393792,
+      "bystander": false,
+      "boot_file": "kernel_oom_boot_2026-11-25T17-15-47.txt",
+      "anon_rss_gb": 13.375
+    }
+  ],
+  "final_check_matches_time_rule": [
+    {
+      "kind": "final",
+      "kill_time": "2026-11-25T17:39:58Z",
+      "kill_pid": 5173,
+      "kill_anon_rss_gb": 13.949,
+      "bystander": false,
+      "arm": "R4",
+      "task_id": "mathd_numbertheory_451",
+      "repetition": 2,
+      "started_at": "2026-11-25T17:24:16+00:00",
+      "finished_at": "2026-11-25T17:39:59+00:00",
+      "verified": false,
+      "verdict_reason": "timeout",
+      "exit_code": -9,
+      "timed_out": true,
+      "lean_s": 487.476
+    },
+    {
+      "kind": "final",
+      "kill_time": "2026-11-25T17:53:16Z",
+      "kill_pid": 8989,
+      "kill_anon_rss_gb": 13.575,
+      "bystander": false,
+      "arm": "P",
+      "task_id": "mathd_numbertheory_451",
+      "repetition": 3,
+      "started_at": "2026-11-25T17:42:22+00:00",
+      "finished_at": "2026-11-25T17:53:17+00:00",
+      "verified": false,
+      "verdict_reason": "lean exited with code 137",
+      "exit_code": 137,
+      "timed_out": false,
+      "lean_s": 175.188
+    },
+    {
+      "kind": "final",
+      "kill_time": "2026-11-25T18:41:10Z",
+      "kill_pid": 29443,
+      "kill_anon_rss_gb": 13.535,
+      "bystander": false,
+      "arm": "F",
+      "task_id": "mathd_numbertheory_451",
+      "repetition": 4,
+      "started_at": "2026-11-25T18:29:52+00:00",
+      "finished_at": "2026-11-25T18:41:11+00:00",
+      "verified": false,
+      "verdict_reason": "lean exited with code 137",
+      "exit_code": 137,
+      "timed_out": false,
+      "lean_s": 251.658
+    },
+    {
+      "kind": "final",
+      "kill_time": "2026-11-25T19:27:45Z",
+      "kill_pid": 17378,
+      "kill_anon_rss_gb": 13.293,
+      "bystander": false,
+      "arm": "R4",
+      "task_id": "mathd_numbertheory_451",
+      "repetition": 4,
+      "started_at": "2026-11-25T19:16:47+00:00",
+      "finished_at": "2026-11-25T19:27:46+00:00",
+      "verified": false,
+      "verdict_reason": "lean exited with code 137",
+      "exit_code": 137,
+      "timed_out": false,
+      "lean_s": 222.767
+    },
+    {
+      "kind": "final",
+      "kill_time": "2026-11-25T21:11:20Z",
+      "kill_pid": 31696,
+      "kill_anon_rss_gb": 13.211,
+      "bystander": false,
+      "arm": "F",
+      "task_id": "mathd_numbertheory_451",
+      "repetition": 2,
+      "started_at": "2026-11-25T21:01:34+00:00",
+      "finished_at": "2026-11-25T21:11:21+00:00",
+      "verified": false,
+      "verdict_reason": "lean exited with code 137",
+      "exit_code": 137,
+      "timed_out": false,
+      "lean_s": 156.118
+    },
+    {
+      "kind": "final",
+      "kill_time": "2026-11-25T22:34:57Z",
+      "kill_pid": 7160,
+      "kill_anon_rss_gb": 13.739,
+      "bystander": false,
+      "arm": "R4",
+      "task_id": "mathd_numbertheory_451",
+      "repetition": 1,
+      "started_at": "2026-11-25T22:23:15+00:00",
+      "finished_at": "2026-11-25T22:34:58+00:00",
+      "verified": false,
+      "verdict_reason": "lean exited with code 137",
+      "exit_code": 137,
+      "timed_out": false,
+      "lean_s": 255.485
+    },
+    {
+      "kind": "final",
+      "kill_time": "2026-11-25T22:44:31Z",
+      "kill_pid": 11250,
+      "kill_anon_rss_gb": 13.935,
+      "bystander": false,
+      "arm": "baseline",
+      "task_id": "mathd_numbertheory_451",
+      "repetition": 3,
+      "started_at": "2026-11-25T22:41:09+00:00",
+      "finished_at": "2026-11-25T22:44:32+00:00",
+      "verified": false,
+      "verdict_reason": "lean exited with code 137",
+      "exit_code": 137,
+      "timed_out": false,
+      "lean_s": 181.227
+    },
+    {
+      "kind": "final",
+      "kill_time": "2026-11-26T00:33:58Z",
+      "kill_pid": 28426,
+      "kill_anon_rss_gb": 13.258,
+      "bystander": false,
+      "arm": "baseline",
+      "task_id": "mathd_numbertheory_451",
+      "repetition": 4,
+      "started_at": "2026-11-26T00:29:06+00:00",
+      "finished_at": "2026-11-26T00:33:59+00:00",
+      "verified": false,
+      "verdict_reason": "lean exited with code 137",
+      "exit_code": 137,
+      "timed_out": false,
+      "lean_s": 272.639
+    },
+    {
+      "kind": "final",
+      "kill_time": "2026-11-26T01:06:13Z",
+      "kill_pid": 11401,
+      "kill_anon_rss_gb": 13.203,
+      "bystander": false,
+      "arm": "F",
+      "task_id": "mathd_numbertheory_451",
+      "repetition": 1,
+      "started_at": "2026-11-26T00:54:48+00:00",
+      "finished_at": "2026-11-26T01:06:14+00:00",
+      "verified": false,
+      "verdict_reason": "lean exited with code 137",
+      "exit_code": 137,
+      "timed_out": false,
+      "lean_s": 251.174
+    },
+    {
+      "kind": "final",
+      "kill_time": "2026-11-26T02:26:25Z",
+      "kill_pid": 28347,
+      "kill_anon_rss_gb": 13.465,
+      "bystander": false,
+      "arm": "P",
+      "task_id": "mathd_numbertheory_451",
+      "repetition": 4,
+      "started_at": "2026-11-26T02:15:34+00:00",
+      "finished_at": "2026-11-26T02:26:26+00:00",
+      "verified": false,
+      "verdict_reason": "lean exited with code 137",
+      "exit_code": 137,
+      "timed_out": false,
+      "lean_s": 179.311
+    },
+    {
+      "kind": "final",
+      "kill_time": "2026-11-26T02:26:25Z",
+      "kill_pid": 29105,
+      "kill_anon_rss_gb": 0.184,
+      "bystander": true,
+      "arm": "P",
+      "task_id": "mathd_numbertheory_451",
+      "repetition": 4,
+      "started_at": "2026-11-26T02:15:34+00:00",
+      "finished_at": "2026-11-26T02:26:26+00:00",
+      "verified": false,
+      "verdict_reason": "lean exited with code 137",
+      "exit_code": 137,
+      "timed_out": false,
+      "lean_s": 179.311
+    },
+    {
+      "kind": "final",
+      "kill_time": "2026-11-26T03:07:22Z",
+      "kill_pid": 15308,
+      "kill_anon_rss_gb": 13.273,
+      "bystander": false,
+      "arm": "F",
+      "task_id": "mathd_numbertheory_451",
+      "repetition": 0,
+      "started_at": "2026-11-26T02:56:24+00:00",
+      "finished_at": "2026-11-26T03:07:23+00:00",
+      "verified": false,
+      "verdict_reason": "lean exited with code 137",
+      "exit_code": 137,
+      "timed_out": false,
+      "lean_s": 185.269
+    },
+    {
+      "kind": "final",
+      "kill_time": "2026-11-26T03:48:50Z",
+      "kill_pid": 31269,
+      "kill_anon_rss_gb": 13.313,
+      "bystander": false,
+      "arm": "baseline",
+      "task_id": "mathd_numbertheory_451",
+      "repetition": 2,
+      "started_at": "2026-11-26T03:45:28+00:00",
+      "finished_at": "2026-11-26T03:48:51+00:00",
+      "verified": false,
+      "verdict_reason": "lean exited with code 137",
+      "exit_code": 137,
+      "timed_out": false,
+      "lean_s": 173.097
+    },
+    {
+      "kind": "final",
+      "kill_time": "2026-11-26T04:04:17Z",
+      "kill_pid": 3934,
+      "kill_anon_rss_gb": 13.482,
+      "bystander": false,
+      "arm": "baseline",
+      "task_id": "imo_2019_p1",
+      "repetition": 1,
+      "started_at": "2026-11-26T04:00:56+00:00",
+      "finished_at": "2026-11-26T04:04:17+00:00",
+      "verified": false,
+      "verdict_reason": "lean exited with code 137",
+      "exit_code": 137,
+      "timed_out": false,
+      "lean_s": 126.747
+    },
+    {
+      "kind": "final",
+      "kill_time": "2026-11-26T04:04:17Z",
+      "kill_pid": 3934,
+      "kill_anon_rss_gb": 13.482,
+      "bystander": false,
+      "arm": "P",
+      "task_id": "mathd_numbertheory_451",
+      "repetition": 0,
+      "started_at": "2026-11-26T03:52:49+00:00",
+      "finished_at": "2026-11-26T04:04:17+00:00",
+      "verified": false,
+      "verdict_reason": "lean exited with code 137",
+      "exit_code": 137,
+      "timed_out": false,
+      "lean_s": 250.811
+    },
+    {
+      "kind": "final",
+      "kill_time": "2026-11-26T04:04:17Z",
+      "kill_pid": 4635,
+      "kill_anon_rss_gb": 0.167,
+      "bystander": true,
+      "arm": "baseline",
+      "task_id": "imo_2019_p1",
+      "repetition": 1,
+      "started_at": "2026-11-26T04:00:56+00:00",
+      "finished_at": "2026-11-26T04:04:17+00:00",
+      "verified": false,
+      "verdict_reason": "lean exited with code 137",
+      "exit_code": 137,
+      "timed_out": false,
+      "lean_s": 126.747
+    },
+    {
+      "kind": "final",
+      "kill_time": "2026-11-26T04:04:17Z",
+      "kill_pid": 4635,
+      "kill_anon_rss_gb": 0.167,
+      "bystander": true,
+      "arm": "P",
+      "task_id": "mathd_numbertheory_451",
+      "repetition": 0,
+      "started_at": "2026-11-26T03:52:49+00:00",
+      "finished_at": "2026-11-26T04:04:17+00:00",
+      "verified": false,
+      "verdict_reason": "lean exited with code 137",
+      "exit_code": 137,
+      "timed_out": false,
+      "lean_s": 250.811
+    },
+    {
+      "kind": "final",
+      "kill_time": "2026-11-26T04:50:26Z",
+      "kill_pid": 24922,
+      "kill_anon_rss_gb": 13.565,
+      "bystander": false,
+      "arm": "F",
+      "task_id": "aime_1990_p15",
+      "repetition": 3,
+      "started_at": "2026-11-26T04:40:10+00:00",
+      "finished_at": "2026-11-26T04:50:27+00:00",
+      "verified": false,
+      "verdict_reason": "timeout",
+      "exit_code": -9,
+      "timed_out": true,
+      "lean_s": 571.763
+    },
+    {
+      "kind": "final",
+      "kill_time": "2026-11-26T04:50:26Z",
+      "kill_pid": 24922,
+      "kill_anon_rss_gb": 13.565,
+      "bystander": false,
+      "arm": "baseline",
+      "task_id": "mathd_numbertheory_451",
+      "repetition": 0,
+      "started_at": "2026-11-26T04:37:58+00:00",
+      "finished_at": "2026-11-26T04:50:27+00:00",
+      "verified": false,
+      "verdict_reason": "timeout",
+      "exit_code": -9,
+      "timed_out": true,
+      "lean_s": 720.661
+    },
+    {
+      "kind": "final",
+      "kill_time": "2026-11-26T05:46:57Z",
+      "kill_pid": 19247,
+      "kill_anon_rss_gb": 13.674,
+      "bystander": false,
+      "arm": "F",
+      "task_id": "mathd_numbertheory_451",
+      "repetition": 3,
+      "started_at": "2026-11-26T05:35:32+00:00",
+      "finished_at": "2026-11-26T05:46:58+00:00",
+      "verified": false,
+      "verdict_reason": "lean exited with code 137",
+      "exit_code": 137,
+      "timed_out": false,
+      "lean_s": 250.836
+    },
+    {
+      "kind": "final",
+      "kill_time": "2026-11-26T07:04:11Z",
+      "kill_pid": 25606,
+      "kill_anon_rss_gb": 13.543,
+      "bystander": false,
+      "arm": "R4",
+      "task_id": "mathd_numbertheory_451",
+      "repetition": 0,
+      "started_at": "2026-11-26T06:53:33+00:00",
+      "finished_at": "2026-11-26T07:04:12+00:00",
+      "verified": false,
+      "verdict_reason": "lean exited with code 137",
+      "exit_code": 137,
+      "timed_out": false,
+      "lean_s": 263.091
+    },
+    {
+      "kind": "final",
+      "kill_time": "2026-11-26T08:00:21Z",
+      "kill_pid": 16110,
+      "kill_anon_rss_gb": 13.375,
+      "bystander": false,
+      "arm": "baseline",
+      "task_id": "mathd_numbertheory_451",
+      "repetition": 1,
+      "started_at": "2026-11-26T07:55:01+00:00",
+      "finished_at": "2026-11-26T08:00:22+00:00",
+      "verified": false,
+      "verdict_reason": "timeout",
+      "exit_code": -9,
+      "timed_out": true,
+      "lean_s": 300.035
+    }
+  ],
+  "inloop_check_matches_time_rule": [
+    {
+      "kind": "in-loop",
+      "kill_time": "2026-11-26T02:26:25Z",
+      "kill_pid": 28347,
+      "kill_anon_rss_gb": 13.465,
+      "bystander": false,
+      "arm": "R4",
+      "task_id": "mathd_numbertheory_234",
+      "repetition": 1,
+      "started_at": "2026-11-26T02:25:15+00:00",
+      "finished_at": "2026-11-26T02:27:02+00:00",
+      "verified": true,
+      "verdict_reason": "kernel-checked; axioms: propext, Quot.sound",
+      "exit_code": 0,
+      "timed_out": false,
+      "lean_s": 6.115,
+      "rounds": [
+        1
+      ]
+    },
+    {
+      "kind": "in-loop",
+      "kill_time": "2026-11-26T02:26:25Z",
+      "kill_pid": 29105,
+      "kill_anon_rss_gb": 0.184,
+      "bystander": true,
+      "arm": "R4",
+      "task_id": "mathd_numbertheory_234",
+      "repetition": 1,
+      "started_at": "2026-11-26T02:25:15+00:00",
+      "finished_at": "2026-11-26T02:27:02+00:00",
+      "verified": true,
+      "verdict_reason": "kernel-checked; axioms: propext, Quot.sound",
+      "exit_code": 0,
+      "timed_out": false,
+      "lean_s": 6.115,
+      "rounds": [
+        1
+      ]
+    }
+  ],
+  "assigned_one_to_one": [
+    {
+      "kind": "final",
+      "kill_time": "2026-11-25T17:39:58Z",
+      "kill_pid": 5173,
+      "kill_anon_rss_gb": 13.949,
+      "bystander": false,
+      "arm": "R4",
+      "task_id": "mathd_numbertheory_451",
+      "repetition": 2,
+      "started_at": "2026-11-25T17:24:16+00:00",
+      "finished_at": "2026-11-25T17:39:59+00:00",
+      "verified": false,
+      "verdict_reason": "timeout",
+      "exit_code": -9,
+      "timed_out": true,
+      "lean_s": 487.476,
+      "assigned_by": "only candidate"
+    },
+    {
+      "kind": "final",
+      "kill_time": "2026-11-25T17:53:16Z",
+      "kill_pid": 8989,
+      "kill_anon_rss_gb": 13.575,
+      "bystander": false,
+      "arm": "P",
+      "task_id": "mathd_numbertheory_451",
+      "repetition": 3,
+      "started_at": "2026-11-25T17:42:22+00:00",
+      "finished_at": "2026-11-25T17:53:17+00:00",
+      "verified": false,
+      "verdict_reason": "lean exited with code 137",
+      "exit_code": 137,
+      "timed_out": false,
+      "lean_s": 175.188,
+      "assigned_by": "only candidate"
+    },
+    {
+      "kind": "final",
+      "kill_time": "2026-11-25T18:41:10Z",
+      "kill_pid": 29443,
+      "kill_anon_rss_gb": 13.535,
+      "bystander": false,
+      "arm": "F",
+      "task_id": "mathd_numbertheory_451",
+      "repetition": 4,
+      "started_at": "2026-11-25T18:29:52+00:00",
+      "finished_at": "2026-11-25T18:41:11+00:00",
+      "verified": false,
+      "verdict_reason": "lean exited with code 137",
+      "exit_code": 137,
+      "timed_out": false,
+      "lean_s": 251.658,
+      "assigned_by": "only candidate"
+    },
+    {
+      "kind": "final",
+      "kill_time": "2026-11-25T19:27:45Z",
+      "kill_pid": 17378,
+      "kill_anon_rss_gb": 13.293,
+      "bystander": false,
+      "arm": "R4",
+      "task_id": "mathd_numbertheory_451",
+      "repetition": 4,
+      "started_at": "2026-11-25T19:16:47+00:00",
+      "finished_at": "2026-11-25T19:27:46+00:00",
+      "verified": false,
+      "verdict_reason": "lean exited with code 137",
+      "exit_code": 137,
+      "timed_out": false,
+      "lean_s": 222.767,
+      "assigned_by": "only candidate"
+    },
+    {
+      "kind": "final",
+      "kill_time": "2026-11-25T21:11:20Z",
+      "kill_pid": 31696,
+      "kill_anon_rss_gb": 13.211,
+      "bystander": false,
+      "arm": "F",
+      "task_id": "mathd_numbertheory_451",
+      "repetition": 2,
+      "started_at": "2026-11-25T21:01:34+00:00",
+      "finished_at": "2026-11-25T21:11:21+00:00",
+      "verified": false,
+      "verdict_reason": "lean exited with code 137",
+      "exit_code": 137,
+      "timed_out": false,
+      "lean_s": 156.118,
+      "assigned_by": "only candidate"
+    },
+    {
+      "kind": "final",
+      "kill_time": "2026-11-25T22:34:57Z",
+      "kill_pid": 7160,
+      "kill_anon_rss_gb": 13.739,
+      "bystander": false,
+      "arm": "R4",
+      "task_id": "mathd_numbertheory_451",
+      "repetition": 1,
+      "started_at": "2026-11-25T22:23:15+00:00",
+      "finished_at": "2026-11-25T22:34:58+00:00",
+      "verified": false,
+      "verdict_reason": "lean exited with code 137",
+      "exit_code": 137,
+      "timed_out": false,
+      "lean_s": 255.485,
+      "assigned_by": "only candidate"
+    },
+    {
+      "kind": "final",
+      "kill_time": "2026-11-25T22:44:31Z",
+      "kill_pid": 11250,
+      "kill_anon_rss_gb": 13.935,
+      "bystander": false,
+      "arm": "baseline",
+      "task_id": "mathd_numbertheory_451",
+      "repetition": 3,
+      "started_at": "2026-11-25T22:41:09+00:00",
+      "finished_at": "2026-11-25T22:44:32+00:00",
+      "verified": false,
+      "verdict_reason": "lean exited with code 137",
+      "exit_code": 137,
+      "timed_out": false,
+      "lean_s": 181.227,
+      "assigned_by": "only candidate"
+    },
+    {
+      "kind": "final",
+      "kill_time": "2026-11-26T00:33:58Z",
+      "kill_pid": 28426,
+      "kill_anon_rss_gb": 13.258,
+      "bystander": false,
+      "arm": "baseline",
+      "task_id": "mathd_numbertheory_451",
+      "repetition": 4,
+      "started_at": "2026-11-26T00:29:06+00:00",
+      "finished_at": "2026-11-26T00:33:59+00:00",
+      "verified": false,
+      "verdict_reason": "lean exited with code 137",
+      "exit_code": 137,
+      "timed_out": false,
+      "lean_s": 272.639,
+      "assigned_by": "only candidate"
+    },
+    {
+      "kind": "final",
+      "kill_time": "2026-11-26T01:06:13Z",
+      "kill_pid": 11401,
+      "kill_anon_rss_gb": 13.203,
+      "bystander": false,
+      "arm": "F",
+      "task_id": "mathd_numbertheory_451",
+      "repetition": 1,
+      "started_at": "2026-11-26T00:54:48+00:00",
+      "finished_at": "2026-11-26T01:06:14+00:00",
+      "verified": false,
+      "verdict_reason": "lean exited with code 137",
+      "exit_code": 137,
+      "timed_out": false,
+      "lean_s": 251.174,
+      "assigned_by": "only candidate"
+    },
+    {
+      "kind": "final",
+      "kill_time": "2026-11-26T02:26:25Z",
+      "kill_pid": 28347,
+      "kill_anon_rss_gb": 13.465,
+      "bystander": false,
+      "arm": "P",
+      "task_id": "mathd_numbertheory_451",
+      "repetition": 4,
+      "started_at": "2026-11-26T02:15:34+00:00",
+      "finished_at": "2026-11-26T02:26:26+00:00",
+      "verified": false,
+      "verdict_reason": "lean exited with code 137",
+      "exit_code": 137,
+      "timed_out": false,
+      "lean_s": 179.311,
+      "assigned_by": "13.46 GB: the candidate check of mathd_numbertheory_451"
+    },
+    {
+      "kind": "in-loop",
+      "kill_time": "2026-11-26T02:26:25Z",
+      "kill_pid": 29105,
+      "kill_anon_rss_gb": 0.184,
+      "bystander": true,
+      "arm": "R4",
+      "task_id": "mathd_numbertheory_234",
+      "repetition": 1,
+      "started_at": "2026-11-26T02:25:15+00:00",
+      "finished_at": "2026-11-26T02:27:02+00:00",
+      "verified": true,
+      "verdict_reason": "kernel-checked; axioms: propext, Quot.sound",
+      "exit_code": 0,
+      "timed_out": false,
+      "lean_s": 6.115,
+      "rounds": [
+        1
+      ],
+      "assigned_by": "under 1 GB: the candidate not of mathd_numbertheory_451 that ended with code 137"
+    },
+    {
+      "kind": "final",
+      "kill_time": "2026-11-26T03:07:22Z",
+      "kill_pid": 15308,
+      "kill_anon_rss_gb": 13.273,
+      "bystander": false,
+      "arm": "F",
+      "task_id": "mathd_numbertheory_451",
+      "repetition": 0,
+      "started_at": "2026-11-26T02:56:24+00:00",
+      "finished_at": "2026-11-26T03:07:23+00:00",
+      "verified": false,
+      "verdict_reason": "lean exited with code 137",
+      "exit_code": 137,
+      "timed_out": false,
+      "lean_s": 185.269,
+      "assigned_by": "only candidate"
+    },
+    {
+      "kind": "final",
+      "kill_time": "2026-11-26T03:48:50Z",
+      "kill_pid": 31269,
+      "kill_anon_rss_gb": 13.313,
+      "bystander": false,
+      "arm": "baseline",
+      "task_id": "mathd_numbertheory_451",
+      "repetition": 2,
+      "started_at": "2026-11-26T03:45:28+00:00",
+      "finished_at": "2026-11-26T03:48:51+00:00",
+      "verified": false,
+      "verdict_reason": "lean exited with code 137",
+      "exit_code": 137,
+      "timed_out": false,
+      "lean_s": 173.097,
+      "assigned_by": "only candidate"
+    },
+    {
+      "kind": "final",
+      "kill_time": "2026-11-26T04:04:17Z",
+      "kill_pid": 3934,
+      "kill_anon_rss_gb": 13.482,
+      "bystander": false,
+      "arm": "P",
+      "task_id": "mathd_numbertheory_451",
+      "repetition": 0,
+      "started_at": "2026-11-26T03:52:49+00:00",
+      "finished_at": "2026-11-26T04:04:17+00:00",
+      "verified": false,
+      "verdict_reason": "lean exited with code 137",
+      "exit_code": 137,
+      "timed_out": false,
+      "lean_s": 250.811,
+      "assigned_by": "13.48 GB: the candidate check of mathd_numbertheory_451"
+    },
+    {
+      "kind": "final",
+      "kill_time": "2026-11-26T04:04:17Z",
+      "kill_pid": 4635,
+      "kill_anon_rss_gb": 0.167,
+      "bystander": true,
+      "arm": "baseline",
+      "task_id": "imo_2019_p1",
+      "repetition": 1,
+      "started_at": "2026-11-26T04:00:56+00:00",
+      "finished_at": "2026-11-26T04:04:17+00:00",
+      "verified": false,
+      "verdict_reason": "lean exited with code 137",
+      "exit_code": 137,
+      "timed_out": false,
+      "lean_s": 126.747,
+      "assigned_by": "under 1 GB: the candidate not of mathd_numbertheory_451 that ended with code 137"
+    },
+    {
+      "kind": "final",
+      "kill_time": "2026-11-26T04:50:26Z",
+      "kill_pid": 24922,
+      "kill_anon_rss_gb": 13.565,
+      "bystander": false,
+      "arm": "baseline",
+      "task_id": "mathd_numbertheory_451",
+      "repetition": 0,
+      "started_at": "2026-11-26T04:37:58+00:00",
+      "finished_at": "2026-11-26T04:50:27+00:00",
+      "verified": false,
+      "verdict_reason": "timeout",
+      "exit_code": -9,
+      "timed_out": true,
+      "lean_s": 720.661,
+      "assigned_by": "13.57 GB: the candidate check of mathd_numbertheory_451"
+    },
+    {
+      "kind": "final",
+      "kill_time": "2026-11-26T05:46:57Z",
+      "kill_pid": 19247,
+      "kill_anon_rss_gb": 13.674,
+      "bystander": false,
+      "arm": "F",
+      "task_id": "mathd_numbertheory_451",
+      "repetition": 3,
+      "started_at": "2026-11-26T05:35:32+00:00",
+      "finished_at": "2026-11-26T05:46:58+00:00",
+      "verified": false,
+      "verdict_reason": "lean exited with code 137",
+      "exit_code": 137,
+      "timed_out": false,
+      "lean_s": 250.836,
+      "assigned_by": "only candidate"
+    },
+    {
+      "kind": "final",
+      "kill_time": "2026-11-26T07:04:11Z",
+      "kill_pid": 25606,
+      "kill_anon_rss_gb": 13.543,
+      "bystander": false,
+      "arm": "R4",
+      "task_id": "mathd_numbertheory_451",
+      "repetition": 0,
+      "started_at": "2026-11-26T06:53:33+00:00",
+      "finished_at": "2026-11-26T07:04:12+00:00",
+      "verified": false,
+      "verdict_reason": "lean exited with code 137",
+      "exit_code": 137,
+      "timed_out": false,
+      "lean_s": 263.091,
+      "assigned_by": "only candidate"
+    },
+    {
+      "kind": "final",
+      "kill_time": "2026-11-26T08:00:21Z",
+      "kill_pid": 16110,
+      "kill_anon_rss_gb": 13.375,
+      "bystander": false,
+      "arm": "baseline",
+      "task_id": "mathd_numbertheory_451",
+      "repetition": 1,
+      "started_at": "2026-11-26T07:55:01+00:00",
+      "finished_at": "2026-11-26T08:00:22+00:00",
+      "verified": false,
+      "verdict_reason": "timeout",
+      "exit_code": -9,
+      "timed_out": true,
+      "lean_s": 300.035,
+      "assigned_by": "only candidate"
+    }
+  ],
+  "matched_by_time_only": [
+    {
+      "kind": "final",
+      "kill_time": null,
+      "kill_pid": null,
+      "kill_anon_rss_gb": null,
+      "bystander": null,
+      "arm": "F",
+      "task_id": "aime_1990_p15",
+      "repetition": 3,
+      "started_at": "2026-11-26T04:40:10+00:00",
+      "finished_at": "2026-11-26T04:50:27+00:00",
+      "verified": false,
+      "verdict_reason": "timeout",
+      "exit_code": -9,
+      "timed_out": true,
+      "lean_s": 571.763
+    }
+  ],
+  "ambiguous_kills": [],
+  "killed_checks_by_arm_and_problem": {
+    "final check": {
+      "F mathd_numbertheory_451": 5,
+      "P mathd_numbertheory_451": 3,
+      "R4 mathd_numbertheory_451": 4,
+      "baseline imo_2019_p1": 1,
+      "baseline mathd_numbertheory_451": 5
+    },
+    "in-loop check": {
+      "R4 mathd_numbertheory_234": 1
+    }
+  },
+  "unmatched_kills": [
+    {
+      "kill_time": "2026-11-26T01:23:33Z",
+      "kill_pid": 19396,
+      "process": "lean",
+      "anon_rss_gb": 13.718,
+      "bystander": false,
+      "cells_in_progress": [
+        "P mathd_numbertheory_451 rep 4 (interrupted, no record)",
+        "F aime_1999_p11 rep 4 (interrupted, no record)",
+        "R4 imo_1969_p2 rep 4 (interrupted, no record)",
+        "P amc12_2001_p5 rep 2 (interrupted, no record)"
+      ]
+    },
+    {
+      "kill_time": "2026-11-26T01:23:33Z",
+      "kill_pid": 233,
+      "process": "python",
+      "anon_rss_gb": 0.132,
+      "bystander": true,
+      "cells_in_progress": [
+        "P mathd_numbertheory_451 rep 4 (interrupted, no record)",
+        "F aime_1999_p11 rep 4 (interrupted, no record)",
+        "R4 imo_1969_p2 rep 4 (interrupted, no record)",
+        "P amc12_2001_p5 rep 2 (interrupted, no record)"
+      ]
+    },
+    {
+      "kill_time": "2026-11-26T01:23:33Z",
+      "kill_pid": 20484,
+      "process": "lean",
+      "anon_rss_gb": 0.024,
+      "bystander": true,
+      "cells_in_progress": []
+    }
+  ],
+  "interrupted_cells": [
+    {
+      "arm": "P",
+      "task_id": "mathd_numbertheory_451",
+      "repetition": 4,
+      "reserved_at": "2026-11-26T01:11:38+00:00",
+      "charged_usd": 0.80096,
+      "kill": "held-out process killed by the kernel at 2026-11-26T01:23:33Z"
+    },
+    {
+      "arm": "F",
+      "task_id": "aime_1999_p11",
+      "repetition": 4,
+      "reserved_at": "2026-11-26T01:19:41+00:00",
+      "charged_usd": 0.80096,
+      "kill": "held-out process killed by the kernel at 2026-11-26T01:23:33Z"
+    },
+    {
+      "arm": "R4",
+      "task_id": "imo_1969_p2",
+      "repetition": 4,
+      "reserved_at": "2026-11-26T01:20:09+00:00",
+      "charged_usd": 0.80096,
+      "kill": "held-out process killed by the kernel at 2026-11-26T01:23:33Z"
+    },
+    {
+      "arm": "P",
+      "task_id": "amc12_2001_p5",
+      "repetition": 2,
+      "reserved_at": "2026-11-26T01:21:07+00:00",
+      "charged_usd": 0.80096,
+      "kill": "held-out process killed by the kernel at 2026-11-26T01:23:33Z"
+    }
+  ],
+  "heavy_windows": [
+    [
+      "record 2026-11-25T17:39:59+00:00",
+      "2026-11-25T17:24:16Z",
+      "2026-11-25T17:39:59Z"
+    ],
+    [
+      "record 2026-11-25T17:53:17+00:00",
+      "2026-11-25T17:42:22Z",
+      "2026-11-25T17:53:17Z"
+    ],
+    [
+      "record 2026-11-25T18:41:11+00:00",
+      "2026-11-25T18:29:52Z",
+      "2026-11-25T18:41:11Z"
+    ],
+    [
+      "record 2026-11-25T19:27:46+00:00",
+      "2026-11-25T19:16:47Z",
+      "2026-11-25T19:27:46Z"
+    ],
+    [
+      "record 2026-11-25T19:34:36+00:00",
+      "2026-11-25T19:30:59Z",
+      "2026-11-25T19:34:36Z"
+    ],
+    [
+      "record 2026-11-25T21:11:21+00:00",
+      "2026-11-25T21:01:34Z",
+      "2026-11-25T21:11:21Z"
+    ],
+    [
+      "record 2026-11-25T22:34:58+00:00",
+      "2026-11-25T22:23:15Z",
+      "2026-11-25T22:34:58Z"
+    ],
+    [
+      "record 2026-11-25T22:44:32+00:00",
+      "2026-11-25T22:41:09Z",
+      "2026-11-25T22:44:32Z"
+    ],
+    [
+      "record 2026-11-25T22:58:07+00:00",
+      "2026-11-25T22:45:41Z",
+      "2026-11-25T22:58:07Z"
+    ],
+    [
+      "record 2026-11-26T00:33:59+00:00",
+      "2026-11-26T00:29:06Z",
+      "2026-11-26T00:33:59Z"
+    ],
+    [
+      "record 2026-11-26T01:06:14+00:00",
+      "2026-11-26T00:54:48Z",
+      "2026-11-26T01:06:14Z"
+    ],
+    [
+      "record 2026-11-26T02:26:26+00:00",
+      "2026-11-26T02:15:34Z",
+      "2026-11-26T02:26:26Z"
+    ],
+    [
+      "record 2026-11-26T03:07:23+00:00",
+      "2026-11-26T02:56:24Z",
+      "2026-11-26T03:07:23Z"
+    ],
+    [
+      "record 2026-11-26T03:48:51+00:00",
+      "2026-11-26T03:45:28Z",
+      "2026-11-26T03:48:51Z"
+    ],
+    [
+      "record 2026-11-26T04:04:17+00:00",
+      "2026-11-26T03:52:49Z",
+      "2026-11-26T04:04:17Z"
+    ],
+    [
+      "record 2026-11-26T04:50:27+00:00",
+      "2026-11-26T04:37:58Z",
+      "2026-11-26T04:50:27Z"
+    ],
+    [
+      "record 2026-11-26T05:46:58+00:00",
+      "2026-11-26T05:35:32Z",
+      "2026-11-26T05:46:58Z"
+    ],
+    [
+      "record 2026-11-26T07:04:12+00:00",
+      "2026-11-26T06:53:33Z",
+      "2026-11-26T07:04:12Z"
+    ],
+    [
+      "record 2026-11-26T08:00:22+00:00",
+      "2026-11-26T07:55:01Z",
+      "2026-11-26T08:00:22Z"
+    ],
+    [
+      "record 2026-11-26T08:44:18+00:00",
+      "2026-11-26T08:31:58Z",
+      "2026-11-26T08:44:18Z"
+    ],
+    [
+      "interrupted, reserved 2026-11-26T01:11:38+00:00",
+      "2026-11-26T01:11:38Z",
+      "2026-11-26T01:23:33Z"
+    ]
+  ],
+  "exposure": {
+    "baseline": {
+      "exposed": {
+        "cells": 156,
+        "inloop_timeouts": 0,
+        "verifier_timeouts": 3,
+        "time_cap_stops": 0,
+        "final_check_waits_over_60s": 2,
+        "max_final_check_wait_s": 173.6,
+        "verified_share_exploratory": 0.8397435897435898
+      },
+      "unexposed": {
+        "cells": 864,
+        "inloop_timeouts": 0,
+        "verifier_timeouts": 3,
+        "time_cap_stops": 0,
+        "final_check_waits_over_60s": 0,
+        "max_final_check_wait_s": 4.2,
+        "verified_share_exploratory": 0.8379629629629629
+      }
+    },
+    "F": {
+      "exposed": {
+        "cells": 141,
+        "inloop_timeouts": 2,
+        "verifier_timeouts": 1,
+        "time_cap_stops": 0,
+        "final_check_waits_over_60s": 2,
+        "max_final_check_wait_s": 118.7,
+        "verified_share_exploratory": 0.9361702127659575
+      },
+      "unexposed": {
+        "cells": 879,
+        "inloop_timeouts": 15,
+        "verifier_timeouts": 0,
+        "time_cap_stops": 0,
+        "final_check_waits_over_60s": 0,
+        "max_final_check_wait_s": 7.3,
+        "verified_share_exploratory": 0.9340159271899886
+      }
+    },
+    "R4": {
+      "exposed": {
+        "cells": 156,
+        "inloop_timeouts": 4,
+        "verifier_timeouts": 0,
+        "time_cap_stops": 0,
+        "final_check_waits_over_60s": 0,
+        "max_final_check_wait_s": 27.0,
+        "verified_share_exploratory": 0.9551282051282052
+      },
+      "unexposed": {
+        "cells": 864,
+        "inloop_timeouts": 18,
+        "verifier_timeouts": 2,
+        "time_cap_stops": 0,
+        "final_check_waits_over_60s": 0,
+        "max_final_check_wait_s": 7.9,
+        "verified_share_exploratory": 0.9143518518518519
+      }
+    },
+    "P": {
+      "exposed": {
+        "cells": 149,
+        "inloop_timeouts": 4,
+        "verifier_timeouts": 0,
+        "time_cap_stops": 0,
+        "final_check_waits_over_60s": 1,
+        "max_final_check_wait_s": 136.1,
+        "verified_share_exploratory": 0.912751677852349
+      },
+      "unexposed": {
+        "cells": 871,
+        "inloop_timeouts": 14,
+        "verifier_timeouts": 1,
+        "time_cap_stops": 0,
+        "final_check_waits_over_60s": 0,
+        "max_final_check_wait_s": 6.8,
+        "verified_share_exploratory": 0.9219288174512055
+      }
+    }
+  },
+  "exposed_pairs": 476,
+  "exploratory": {
+    "without_mathd_numbertheory_451": {
+      "H1": {
+        "contrast": "H1 F - R4, without mathd_numbertheory_451",
+        "role": "exploratory",
+        "n_problems": 203,
+        "rate_a": 0.9251231527093596,
+        "rate_b": 0.9389162561576354,
+        "unverified_share_a": 0.07487684729064037,
+        "estimate": 0.013793103448275864,
+        "ci95": [
+          0.000985221674876847,
+          0.029556650246305417
+        ],
+        "ci90": [
+          0.002955665024630541,
+          0.026600985221674877
+        ],
+        "wins_losses_ties": [
+          8,
+          4,
+          191
+        ],
+        "sign_flip_p": 0.0927734375,
+        "sign_test_p": 0.3876953125,
+        "differing": [
+          [
+            "aime_1987_p5",
+            0.6,
+            1.0
+          ],
+          [
+            "aime_1990_p15",
+            1.0,
+            0.8
+          ],
+          [
+            "aime_1999_p11",
+            0.8,
+            1.0
+          ],
+          [
+            "amc12a_2020_p9",
+            0.2,
+            0.0
+          ],
+          [
+            "amc12a_2021_p14",
+            0.0,
+            0.8
+          ],
+          [
+            "imo_1974_p3",
+            0.0,
+            0.2
+          ],
+          [
+            "imo_1977_p6",
+            1.0,
+            0.8
+          ],
+          [
+            "imo_2001_p6",
+            0.2,
+            0.0
+          ],
+          [
+            "mathd_algebra_184",
+            0.6,
+            1.0
+          ],
+          [
+            "mathd_numbertheory_175",
+            0.0,
+            1.0
+          ],
+          [
+            "mathd_numbertheory_427",
+            0.6,
+            1.0
+          ],
+          [
+            "mathd_numbertheory_711",
+            0.8,
+            1.0
+          ]
+        ],
+        "reading_if_registered_rule": "no difference of 0.03 or more in the overall verified rate"
+      },
+      "H2": {
+        "contrast": "H2 F - P, without mathd_numbertheory_451",
+        "role": "exploratory",
+        "n_problems": 203,
+        "rate_a": 0.9251231527093596,
+        "rate_b": 0.9389162561576354,
+        "unverified_share_a": 0.07487684729064037,
+        "estimate": 0.013793103448275862,
+        "ci95": [
+          0.0019704433497536927,
+          0.027586206896551727
+        ],
+        "ci90": [
+          0.0029556650246305416,
+          0.02561576354679803
+        ],
+        "wins_losses_ties": [
+          11,
+          4,
+          188
+        ],
+        "sign_flip_p": 0.0623779296875,
+        "sign_test_p": 0.11846923828125,
+        "differing": [
+          [
+            "aime_1983_p3",
+            0.8,
+            1.0
+          ],
+          [
+            "aime_1987_p5",
+            0.8,
+            1.0
+          ],
+          [
+            "aime_1988_p8",
+            0.6,
+            1.0
+          ],
+          [
+            "aime_1990_p15",
+            1.0,
+            0.8
+          ],
+          [
+            "aime_1999_p11",
+            0.6,
+            1.0
+          ],
+          [
+            "amc12_2001_p21",
+            0.6,
+            1.0
+          ],
+          [
+            "amc12_2001_p5",
+            0.8,
+            1.0
+          ],
+          [
+            "amc12a_2021_p14",
+            0.0,
+            0.8
+          ],
+          [
+            "imo_1977_p6",
+            1.0,
+            0.8
+          ],
+          [
+            "imo_1981_p6",
+            0.8,
+            1.0
+          ],
+          [
+            "imo_1992_p1",
+            0.8,
+            1.0
+          ],
+          [
+            "imo_2001_p6",
+            0.4,
+            0.0
+          ],
+          [
+            "mathd_algebra_184",
+            0.4,
+            1.0
+          ],
+          [
+            "mathd_numbertheory_175",
+            0.8,
+            1.0
+          ],
+          [
+            "mathd_numbertheory_353",
+            0.2,
+            0.0
+          ]
+        ],
+        "holm_p": 0.124755859375,
+        "reading_if_registered_rule": "no difference of 0.03 or more in the overall verified rate"
+      },
+      "H3": {
+        "contrast": "H3 P - R4, without mathd_numbertheory_451",
+        "role": "exploratory",
+        "n_problems": 203,
+        "rate_a": 0.9251231527093596,
+        "rate_b": 0.9251231527093596,
+        "unverified_share_a": 0.07487684729064037,
+        "estimate": 1.093815787808036e-18,
+        "ci95": [
+          -0.011822660098522165,
+          0.012807881773399017
+        ],
+        "ci90": [
+          -0.009852216748768471,
+          0.010837438423645322
+        ],
+        "wins_losses_ties": [
+          7,
+          9,
+          187
+        ],
+        "sign_flip_p": 1.0,
+        "sign_test_p": 0.803619384765625,
+        "differing": [
+          [
+            "aime_1983_p3",
+            1.0,
+            0.8
+          ],
+          [
+            "aime_1987_p5",
+            0.6,
+            0.8
+          ],
+          [
+            "aime_1988_p8",
+            1.0,
+            0.6
+          ],
+          [
+            "aime_1999_p11",
+            0.8,
+            0.6
+          ],
+          [
+            "amc12_2001_p21",
+            1.0,
+            0.6
+          ],
+          [
+            "amc12_2001_p5",
+            1.0,
+            0.8
+          ],
+          [
+            "amc12a_2020_p9",
+            0.2,
+            0.0
+          ],
+          [
+            "imo_1974_p3",
+            0.0,
+            0.2
+          ],
+          [
+            "imo_1981_p6",
+            1.0,
+            0.8
+          ],
+          [
+            "imo_1992_p1",
+            1.0,
+            0.8
+          ],
+          [
+            "imo_2001_p6",
+            0.2,
+            0.4
+          ],
+          [
+            "mathd_algebra_184",
+            0.6,
+            0.4
+          ],
+          [
+            "mathd_numbertheory_175",
+            0.0,
+            0.8
+          ],
+          [
+            "mathd_numbertheory_353",
+            0.0,
+            0.2
+          ],
+          [
+            "mathd_numbertheory_427",
+            0.6,
+            1.0
+          ],
+          [
+            "mathd_numbertheory_711",
+            0.8,
+            1.0
+          ]
+        ],
+        "holm_p": 1.0,
+        "reading_if_registered_rule": "no difference of 0.03 or more in the overall verified rate"
+      }
+    },
+    "h1_without_exposed_pairs": {
+      "contrast": "H1 F - R4, without (problem, repetition) pairs with an exposed cell",
+      "role": "exploratory",
+      "n_problems": 197,
+      "rate_a": 0.9170896785109982,
+      "rate_b": 0.9331641285956007,
+      "unverified_share_a": 0.08291032148900179,
+      "estimate": 0.016074450084602367,
+      "ci95": [
+        -0.001692047377326565,
+        0.03722504230118443
+      ],
+      "ci90": [
+        0.0008460236886632827,
+        0.03341793570219966
+      ],
+      "wins_losses_ties": [
+        7,
+        3,
+        187
+      ],
+      "sign_flip_p": 0.1171875,
+      "sign_test_p": 0.34375,
+      "differing": [
+        [
+          "aime_1987_p5",
+          0.0,
+          1.0
+        ],
+        [
+          "amc12a_2020_p9",
+          0.5,
+          0.0
+        ],
+        [
+          "amc12a_2021_p14",
+          0.0,
+          0.75
+        ],
+        [
+          "imo_1974_p3",
+          0.0,
+          0.3333
+        ],
+        [
+          "imo_1977_p6",
+          1.0,
+          0.75
+        ],
+        [
+          "imo_2001_p6",
+          0.5,
+          0.0
+        ],
+        [
+          "mathd_algebra_184",
+          0.5,
+          1.0
+        ],
+        [
+          "mathd_numbertheory_175",
+          0.0,
+          1.0
+        ],
+        [
+          "mathd_numbertheory_427",
+          0.5,
+          1.0
+        ],
+        [
+          "mathd_numbertheory_711",
+          0.6667,
+          1.0
+        ]
+      ],
+      "reading_if_registered_rule": "inconclusive",
+      "pairs_dropped": 476,
+      "problems_dropped_entirely": [
+        "amc12b_2020_p13",
+        "induction_1pxpownlt1pnx",
+        "induction_prod1p1onk3le3m1onn",
+        "mathd_algebra_342",
+        "mathd_numbertheory_1124",
+        "mathd_numbertheory_239",
+        "mathd_numbertheory_343"
+      ]
+    },
+    "h1_without_kill_matched_pairs": {
+      "contrast": "H1 F - R4, without (problem, repetition) pairs with a kernel-matched check (added after the phase: D1 did not name it)",
+      "role": "exploratory",
+      "n_problems": 203,
+      "rate_a": 0.9251231527093596,
+      "rate_b": 0.9399014778325123,
+      "unverified_share_a": 0.07487684729064037,
+      "estimate": 0.014778325123152709,
+      "ci95": [
+        0.0019704433497536944,
+        0.030541871921182268
+      ],
+      "ci90": [
+        0.003940886699507389,
+        0.027586206896551727
+      ],
+      "wins_losses_ties": [
+        8,
+        3,
+        192
+      ],
+      "sign_flip_p": 0.0615234375,
+      "sign_test_p": 0.2265625,
+      "differing": [
+        [
+          "aime_1987_p5",
+          0.6,
+          1.0
+        ],
+        [
+          "aime_1999_p11",
+          0.8,
+          1.0
+        ],
+        [
+          "amc12a_2020_p9",
+          0.2,
+          0.0
+        ],
+        [
+          "amc12a_2021_p14",
+          0.0,
+          0.8
+        ],
+        [
+          "imo_1974_p3",
+          0.0,
+          0.2
+        ],
+        [
+          "imo_1977_p6",
+          1.0,
+          0.8
+        ],
+        [
+          "imo_2001_p6",
+          0.2,
+          0.0
+        ],
+        [
+          "mathd_algebra_184",
+          0.6,
+          1.0
+        ],
+        [
+          "mathd_numbertheory_175",
+          0.0,
+          1.0
+        ],
+        [
+          "mathd_numbertheory_427",
+          0.6,
+          1.0
+        ],
+        [
+          "mathd_numbertheory_711",
+          0.8,
+          1.0
+        ]
+      ],
+      "reading_if_registered_rule": "no difference of 0.03 or more in the overall verified rate",
+      "pairs_dropped": 8,
+      "problems_dropped_entirely": [
+        "mathd_numbertheory_451"
+      ]
+    }
+  },
+  "counterfactual_readings": {
+    "F's kill-ended cells pass": {
+      "cells_flipped": [
+        [
+          "F",
+          "mathd_numbertheory_451",
+          0
+        ],
+        [
+          "F",
+          "mathd_numbertheory_451",
+          1
+        ],
+        [
+          "F",
+          "mathd_numbertheory_451",
+          2
+        ],
+        [
+          "F",
+          "mathd_numbertheory_451",
+          3
+        ],
+        [
+          "F",
+          "mathd_numbertheory_451",
+          4
+        ]
+      ],
+      "H1": {
+        "estimate": 0.018627450980392157,
+        "ci95": [
+          0.0029411764705882357,
+          0.038235294117647055
+        ],
+        "ci90": [
+          0.004901960784313726,
+          0.03431372549019608
+        ],
+        "wins_losses_ties": [
+          9,
+          4,
+          191
+        ],
+        "sign_flip_p": 0.04638671875,
+        "holm_p": null,
+        "reading_if_registered_rule": "difference (positive)"
+      },
+      "H2": {
+        "estimate": 0.018627450980392157,
+        "ci95": [
+          0.0039215686274509795,
+          0.036274509803921565
+        ],
+        "ci90": [
+          0.00588235294117647,
+          0.03235294117647059
+        ],
+        "wins_losses_ties": [
+          12,
+          4,
+          188
+        ],
+        "sign_flip_p": 0.031219482421875,
+        "holm_p": 0.06243896484375,
+        "reading_if_registered_rule": "inconclusive"
+      },
+      "H3": {
+        "estimate": 1.0884539457109378e-18,
+        "ci95": [
+          -0.01176470588235294,
+          0.013725490196078431
+        ],
+        "ci90": [
+          -0.009803921568627449,
+          0.010784313725490198
+        ],
+        "wins_losses_ties": [
+          7,
+          9,
+          188
+        ],
+        "sign_flip_p": 1.0,
+        "holm_p": 1.0,
+        "reading_if_registered_rule": "no difference of 0.03 or more in the overall verified rate"
+      }
+    },
+    "F's kill-ended and late-timeout cells pass": {
+      "cells_flipped": [
+        [
+          "F",
+          "aime_1990_p15",
+          3
+        ],
+        [
+          "F",
+          "mathd_numbertheory_451",
+          0
+        ],
+        [
+          "F",
+          "mathd_numbertheory_451",
+          1
+        ],
+        [
+          "F",
+          "mathd_numbertheory_451",
+          2
+        ],
+        [
+          "F",
+          "mathd_numbertheory_451",
+          3
+        ],
+        [
+          "F",
+          "mathd_numbertheory_451",
+          4
+        ]
+      ],
+      "H1": {
+        "estimate": 0.0196078431372549,
+        "ci95": [
+          0.00392156862745098,
+          0.0392156862745098
+        ],
+        "ci90": [
+          0.005882352941176471,
+          0.03529411764705882
+        ],
+        "wins_losses_ties": [
+          9,
+          3,
+          192
+        ],
+        "sign_flip_p": 0.03076171875,
+        "holm_p": null,
+        "reading_if_registered_rule": "difference (positive)"
+      },
+      "H2": {
+        "estimate": 0.0196078431372549,
+        "ci95": [
+          0.0049019607843137246,
+          0.03725490196078431
+        ],
+        "ci90": [
+          0.006862745098039216,
+          0.03333333333333333
+        ],
+        "wins_losses_ties": [
+          12,
+          3,
+          189
+        ],
+        "sign_flip_p": 0.01995849609375,
+        "holm_p": 0.0399169921875,
+        "reading_if_registered_rule": "difference (positive)"
+      },
+      "H3": {
+        "estimate": 1.0884539457109378e-18,
+        "ci95": [
+          -0.01176470588235294,
+          0.013725490196078431
+        ],
+        "ci90": [
+          -0.009803921568627449,
+          0.010784313725490198
+        ],
+        "wins_losses_ties": [
+          7,
+          9,
+          188
+        ],
+        "sign_flip_p": 1.0,
+        "holm_p": 1.0,
+        "reading_if_registered_rule": "no difference of 0.03 or more in the overall verified rate"
+      }
+    },
+    "R4's kill-ended cells pass": {
+      "cells_flipped": [
+        [
+          "R4",
+          "mathd_numbertheory_451",
+          0
+        ],
+        [
+          "R4",
+          "mathd_numbertheory_451",
+          1
+        ],
+        [
+          "R4",
+          "mathd_numbertheory_451",
+          2
+        ],
+        [
+          "R4",
+          "mathd_numbertheory_451",
+          4
+        ]
+      ],
+      "H1": {
+        "estimate": 0.00980392156862745,
+        "ci95": [
+          -0.005882352941176471,
+          0.027450980392156862
+        ],
+        "ci90": [
+          -0.0039215686274509795,
+          0.024509803921568627
+        ],
+        "wins_losses_ties": [
+          8,
+          5,
+          191
+        ],
+        "sign_flip_p": 0.31787109375,
+        "holm_p": null,
+        "reading_if_registered_rule": "no difference of 0.03 or more in the overall verified rate"
+      },
+      "H2": {
+        "estimate": 0.013725490196078431,
+        "ci95": [
+          0.0009803921568627447,
+          0.027450980392156862
+        ],
+        "ci90": [
+          0.002941176470588235,
+          0.025490196078431372
+        ],
+        "wins_losses_ties": [
+          11,
+          4,
+          189
+        ],
+        "sign_flip_p": 0.0623779296875,
+        "holm_p": 0.124755859375,
+        "reading_if_registered_rule": "no difference of 0.03 or more in the overall verified rate"
+      },
+      "H3": {
+        "estimate": -0.0039215686274509795,
+        "ci95": [
+          -0.018627450980392157,
+          0.010784313725490198
+        ],
+        "ci90": [
+          -0.01568627450980392,
+          0.007843137254901962
+        ],
+        "wins_losses_ties": [
+          7,
+          10,
+          187
+        ],
+        "sign_flip_p": 0.70062255859375,
+        "holm_p": 0.70062255859375,
+        "reading_if_registered_rule": "no difference of 0.03 or more in the overall verified rate"
+      }
+    },
+    "P's kill-ended cells pass": {
+      "cells_flipped": [
+        [
+          "P",
+          "mathd_numbertheory_451",
+          0
+        ],
+        [
+          "P",
+          "mathd_numbertheory_451",
+          3
+        ],
+        [
+          "P",
+          "mathd_numbertheory_451",
+          4
+        ]
+      ],
+      "H1": {
+        "estimate": 0.013725490196078433,
+        "ci95": [
+          0.0009803921568627449,
+          0.029411764705882353
+        ],
+        "ci90": [
+          0.001960784313725491,
+          0.02647058823529412
+        ],
+        "wins_losses_ties": [
+          8,
+          4,
+          192
+        ],
+        "sign_flip_p": 0.0927734375,
+        "holm_p": null,
+        "reading_if_registered_rule": "no difference of 0.03 or more in the overall verified rate"
+      },
+      "H2": {
+        "estimate": 0.010784313725490194,
+        "ci95": [
+          -0.0039215686274509795,
+          0.026470588235294114
+        ],
+        "ci90": [
+          -0.000980392156862746,
+          0.023529411764705882
+        ],
+        "wins_losses_ties": [
+          11,
+          5,
+          188
+        ],
+        "sign_flip_p": 0.199462890625,
+        "holm_p": 0.39892578125,
+        "reading_if_registered_rule": "no difference of 0.03 or more in the overall verified rate"
+      },
+      "H3": {
+        "estimate": 0.002941176470588236,
+        "ci95": [
+          -0.009803921568627449,
+          0.01764705882352941
+        ],
+        "ci90": [
+          -0.00784313725490196,
+          0.014705882352941178
+        ],
+        "wins_losses_ties": [
+          8,
+          9,
+          187
+        ],
+        "sign_flip_p": 0.784759521484375,
+        "holm_p": 0.784759521484375,
+        "reading_if_registered_rule": "no difference of 0.03 or more in the overall verified rate"
+      }
+    },
+    "every kill-ended cell passes": {
+      "cells_flipped": [
+        [
+          "F",
+          "mathd_numbertheory_451",
+          0
+        ],
+        [
+          "F",
+          "mathd_numbertheory_451",
+          1
+        ],
+        [
+          "F",
+          "mathd_numbertheory_451",
+          2
+        ],
+        [
+          "F",
+          "mathd_numbertheory_451",
+          3
+        ],
+        [
+          "F",
+          "mathd_numbertheory_451",
+          4
+        ],
+        [
+          "P",
+          "mathd_numbertheory_451",
+          0
+        ],
+        [
+          "P",
+          "mathd_numbertheory_451",
+          3
+        ],
+        [
+          "P",
+          "mathd_numbertheory_451",
+          4
+        ],
+        [
+          "R4",
+          "mathd_numbertheory_451",
+          0
+        ],
+        [
+          "R4",
+          "mathd_numbertheory_451",
+          1
+        ],
+        [
+          "R4",
+          "mathd_numbertheory_451",
+          2
+        ],
+        [
+          "R4",
+          "mathd_numbertheory_451",
+          4
+        ],
+        [
+          "baseline",
+          "imo_2019_p1",
+          1
+        ],
+        [
+          "baseline",
+          "mathd_numbertheory_451",
+          0
+        ],
+        [
+          "baseline",
+          "mathd_numbertheory_451",
+          1
+        ],
+        [
+          "baseline",
+          "mathd_numbertheory_451",
+          2
+        ],
+        [
+          "baseline",
+          "mathd_numbertheory_451",
+          3
+        ],
+        [
+          "baseline",
+          "mathd_numbertheory_451",
+          4
+        ]
+      ],
+      "H1": {
+        "estimate": 0.014705882352941176,
+        "ci95": [
+          0.0019607843137254897,
+          0.03137254901960784
+        ],
+        "ci90": [
+          0.0029411764705882357,
+          0.027450980392156866
+        ],
+        "wins_losses_ties": [
+          9,
+          4,
+          191
+        ],
+        "sign_flip_p": 0.06787109375,
+        "holm_p": null,
+        "reading_if_registered_rule": "no difference of 0.03 or more in the overall verified rate"
+      },
+      "H2": {
+        "estimate": 0.01568627450980392,
+        "ci95": [
+          0.002941176470588234,
+          0.030392156862745098
+        ],
+        "ci90": [
+          0.004901960784313724,
+          0.027450980392156862
+        ],
+        "wins_losses_ties": [
+          12,
+          4,
+          188
+        ],
+        "sign_flip_p": 0.036407470703125,
+        "holm_p": 0.07281494140625,
+        "reading_if_registered_rule": "inconclusive"
+      },
+      "H3": {
+        "estimate": -0.0009803921568627444,
+        "ci95": [
+          -0.012745098039215684,
+          0.012745098039215686
+        ],
+        "ci90": [
+          -0.010784313725490198,
+          0.00980392156862745
+        ],
+        "wins_losses_ties": [
+          7,
+          10,
+          187
+        ],
+        "sign_flip_p": 1.0,
+        "holm_p": 1.0,
+        "reading_if_registered_rule": "no difference of 0.03 or more in the overall verified rate"
+      }
+    },
+    "every kill-ended and late-timeout cell passes": {
+      "cells_flipped": [
+        [
+          "F",
+          "aime_1990_p15",
+          3
+        ],
+        [
+          "F",
+          "mathd_numbertheory_451",
+          0
+        ],
+        [
+          "F",
+          "mathd_numbertheory_451",
+          1
+        ],
+        [
+          "F",
+          "mathd_numbertheory_451",
+          2
+        ],
+        [
+          "F",
+          "mathd_numbertheory_451",
+          3
+        ],
+        [
+          "F",
+          "mathd_numbertheory_451",
+          4
+        ],
+        [
+          "P",
+          "mathd_numbertheory_451",
+          0
+        ],
+        [
+          "P",
+          "mathd_numbertheory_451",
+          3
+        ],
+        [
+          "P",
+          "mathd_numbertheory_451",
+          4
+        ],
+        [
+          "R4",
+          "mathd_numbertheory_451",
+          0
+        ],
+        [
+          "R4",
+          "mathd_numbertheory_451",
+          1
+        ],
+        [
+          "R4",
+          "mathd_numbertheory_451",
+          2
+        ],
+        [
+          "R4",
+          "mathd_numbertheory_451",
+          4
+        ],
+        [
+          "baseline",
+          "imo_2019_p1",
+          1
+        ],
+        [
+          "baseline",
+          "mathd_numbertheory_451",
+          0
+        ],
+        [
+          "baseline",
+          "mathd_numbertheory_451",
+          1
+        ],
+        [
+          "baseline",
+          "mathd_numbertheory_451",
+          2
+        ],
+        [
+          "baseline",
+          "mathd_numbertheory_451",
+          3
+        ],
+        [
+          "baseline",
+          "mathd_numbertheory_451",
+          4
+        ]
+      ],
+      "H1": {
+        "estimate": 0.01568627450980392,
+        "ci95": [
+          0.002941176470588235,
+          0.03137254901960784
+        ],
+        "ci90": [
+          0.003921568627450982,
+          0.028431372549019607
+        ],
+        "wins_losses_ties": [
+          9,
+          3,
+          192
+        ],
+        "sign_flip_p": 0.04296875,
+        "holm_p": null,
+        "reading_if_registered_rule": "difference (positive)"
+      },
+      "H2": {
+        "estimate": 0.016666666666666666,
+        "ci95": [
+          0.0039215686274509795,
+          0.03137254901960784
+        ],
+        "ci90": [
+          0.00588235294117647,
+          0.028431372549019607
+        ],
+        "wins_losses_ties": [
+          12,
+          3,
+          189
+        ],
+        "sign_flip_p": 0.0224609375,
+        "holm_p": 0.044921875,
+        "reading_if_registered_rule": "difference (positive)"
+      },
+      "H3": {
+        "estimate": -0.0009803921568627444,
+        "ci95": [
+          -0.012745098039215684,
+          0.012745098039215686
+        ],
+        "ci90": [
+          -0.010784313725490198,
+          0.00980392156862745
+        ],
+        "wins_losses_ties": [
+          7,
+          10,
+          187
+        ],
+        "sign_flip_p": 1.0,
+        "holm_p": 1.0,
+        "reading_if_registered_rule": "no difference of 0.03 or more in the overall verified rate"
+      }
+    }
+  },
+  "bounds_assigned_kills": {
+    "per_cell_points": 0.098,
+    "unverified_cells_by_arm": {
+      "F": 5,
+      "P": 3,
+      "R4": 4,
+      "baseline": 6
+    },
+    "cells": [
+      [
+        "F",
+        "mathd_numbertheory_451",
+        0
+      ],
+      [
+        "F",
+        "mathd_numbertheory_451",
+        1
+      ],
+      [
+        "F",
+        "mathd_numbertheory_451",
+        2
+      ],
+      [
+        "F",
+        "mathd_numbertheory_451",
+        3
+      ],
+      [
+        "F",
+        "mathd_numbertheory_451",
+        4
+      ],
+      [
+        "P",
+        "mathd_numbertheory_451",
+        0
+      ],
+      [
+        "P",
+        "mathd_numbertheory_451",
+        3
+      ],
+      [
+        "P",
+        "mathd_numbertheory_451",
+        4
+      ],
+      [
+        "R4",
+        "mathd_numbertheory_451",
+        0
+      ],
+      [
+        "R4",
+        "mathd_numbertheory_451",
+        1
+      ],
+      [
+        "R4",
+        "mathd_numbertheory_451",
+        2
+      ],
+      [
+        "R4",
+        "mathd_numbertheory_451",
+        4
+      ],
+      [
+        "baseline",
+        "imo_2019_p1",
+        1
+      ],
+      [
+        "baseline",
+        "mathd_numbertheory_451",
+        0
+      ],
+      [
+        "baseline",
+        "mathd_numbertheory_451",
+        1
+      ],
+      [
+        "baseline",
+        "mathd_numbertheory_451",
+        2
+      ],
+      [
+        "baseline",
+        "mathd_numbertheory_451",
+        3
+      ],
+      [
+        "baseline",
+        "mathd_numbertheory_451",
+        4
+      ]
+    ],
+    "H1 F - R4": {
+      "could_rise_by_points": 0.49,
+      "could_fall_by_points": 0.392
+    },
+    "H2 F - P": {
+      "could_rise_by_points": 0.49,
+      "could_fall_by_points": 0.294
+    },
+    "H3 P - R4": {
+      "could_rise_by_points": 0.294,
+      "could_fall_by_points": 0.392
+    },
+    "R4 - baseline": {
+      "could_rise_by_points": 0.392,
+      "could_fall_by_points": 0.588
+    },
+    "F - baseline": {
+      "could_rise_by_points": 0.49,
+      "could_fall_by_points": 0.588
+    },
+    "P - baseline": {
+      "could_rise_by_points": 0.294,
+      "could_fall_by_points": 0.588
+    }
+  },
+  "bounds_assigned_kills_and_time_only": {
+    "per_cell_points": 0.098,
+    "unverified_cells_by_arm": {
+      "F": 6,
+      "P": 3,
+      "R4": 4,
+      "baseline": 6
+    },
+    "cells": [
+      [
+        "F",
+        "aime_1990_p15",
+        3
+      ],
+      [
+        "F",
+        "mathd_numbertheory_451",
+        0
+      ],
+      [
+        "F",
+        "mathd_numbertheory_451",
+        1
+      ],
+      [
+        "F",
+        "mathd_numbertheory_451",
+        2
+      ],
+      [
+        "F",
+        "mathd_numbertheory_451",
+        3
+      ],
+      [
+        "F",
+        "mathd_numbertheory_451",
+        4
+      ],
+      [
+        "P",
+        "mathd_numbertheory_451",
+        0
+      ],
+      [
+        "P",
+        "mathd_numbertheory_451",
+        3
+      ],
+      [
+        "P",
+        "mathd_numbertheory_451",
+        4
+      ],
+      [
+        "R4",
+        "mathd_numbertheory_451",
+        0
+      ],
+      [
+        "R4",
+        "mathd_numbertheory_451",
+        1
+      ],
+      [
+        "R4",
+        "mathd_numbertheory_451",
+        2
+      ],
+      [
+        "R4",
+        "mathd_numbertheory_451",
+        4
+      ],
+      [
+        "baseline",
+        "imo_2019_p1",
+        1
+      ],
+      [
+        "baseline",
+        "mathd_numbertheory_451",
+        0
+      ],
+      [
+        "baseline",
+        "mathd_numbertheory_451",
+        1
+      ],
+      [
+        "baseline",
+        "mathd_numbertheory_451",
+        2
+      ],
+      [
+        "baseline",
+        "mathd_numbertheory_451",
+        3
+      ],
+      [
+        "baseline",
+        "mathd_numbertheory_451",
+        4
+      ]
+    ],
+    "H1 F - R4": {
+      "could_rise_by_points": 0.588,
+      "could_fall_by_points": 0.392
+    },
+    "H2 F - P": {
+      "could_rise_by_points": 0.588,
+      "could_fall_by_points": 0.294
+    },
+    "H3 P - R4": {
+      "could_rise_by_points": 0.294,
+      "could_fall_by_points": 0.392
+    },
+    "R4 - baseline": {
+      "could_rise_by_points": 0.392,
+      "could_fall_by_points": 0.588
+    },
+    "F - baseline": {
+      "could_rise_by_points": 0.588,
+      "could_fall_by_points": 0.588
+    },
+    "P - baseline": {
+      "could_rise_by_points": 0.294,
+      "could_fall_by_points": 0.588
+    }
+  }
+}

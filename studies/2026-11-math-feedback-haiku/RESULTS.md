@@ -351,8 +351,8 @@ records where D1's expectations were wrong.
     wall-clock time and 369-390 s of system time), its memory still growing (25.8-26.5 GB when
     stopped; it had passed 14 GB after 143-151 s of user CPU). So on the CPU measured (Intel Xeon,
     2.1 GHz, in a new container after the restart) each would very likely have needed more than
-    300 s even with enough memory, and the registered rule would have counted a timeout: it would
-    not only if running under swap inflated its user time by about half (below).
+    300 s even with enough memory, and the registered rule would have counted a timeout,
+    unless running under swap inflated its user time by about half (below).
     - *Was the run's machine faster?* Its CPU was not recorded. `recheck_speed.py` re-timed here,
       one at a time, 72 of the run's final checks (20 s or more of Lean time, not of this problem,
       not overlapping a check of it; the rule was written in the script, 15:59:42Z, before it
@@ -364,7 +364,7 @@ records where D1's expectations were wrong.
       the closest in length to this one, had ratios of 0.97 to 1.07. So the run's machine was
       about as fast on ordinary checks (on the median check about 1% faster), far from 1.5 times
       as fast; even at the smallest ratio, 450 s here would be about 380 s there. The 72 checks use
-      ordinary amounts of memory, while this proof's work grows past 26 GB; it could scale
+      ordinary amounts of memory, while this proof's work grows past 25 GB; it could scale
       differently between machines, so applying the ratio to it is an assumption. (The script's
       description of the run, "3 Lean workers at once", is the configured cap, not the observed
       load.)

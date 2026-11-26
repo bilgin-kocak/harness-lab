@@ -36,14 +36,14 @@
     +1.5 points, p = 0.062). H1 would read "difference (positive)" only if, besides them, one of
     F's 5 killed proofs of `mathd_numbertheory_451` also passed (p = 0.043), or three of them
     without the artifacts (p = 0.048).
-  - Very likely none of F's 5 could have passed within the registered 300 s (exploratory).
-    Re-checked as the only Lean process (light session commands were also running), the fifth ran
-    its full 300 s and timed out. With the memory limit lifted by swap, each of the other 4 computed
-    for more than 330 s of user CPU without finishing, its memory still growing past 21 GB. Unless
-    memory pressure added about 10% to that user time, or the run's CPU (not recorded) was about 10%
-    faster per thread, each would have needed more than 300 s even with enough memory, and the
-    registered rule would have counted a timeout. So the recounts that change a reading are very
-    unlikely. [A longer measurement, to 450 s, is running.]
+  - Very likely none of F's 5 could have passed within the registered 300 s, even with enough
+    memory (exploratory). With the memory limit lifted by swap, each of the 5 computed for more
+    than 450 s of user CPU, 1.5 times the limit, without finishing, its memory still growing past
+    25 GB. In the run, 72 ordinary checks took a median of ⟦MED⟧ times as long as when re-timed
+    one at a time on the machine measured, so the run's machine was not faster per check. Each would
+    therefore have needed more than 300 s, and the registered rule would have counted a timeout,
+    unless running under swap inflated that user time by half (section 8). So the recounts that
+    change a reading are very unlikely.
 - **The run.** 4,080 of 4,080 cells have valid records: 0 harness errors, 0 refusals, every call
   served by `claude-haiku-5-5`. One deviation (D1) resumed the run after the kernel's
   out-of-memory killer stopped it; it changed only the run procedure, and was committed in the
@@ -306,7 +306,8 @@ records where D1's expectations were wrong.
   174 s, against at most 8 s otherwise). Tables by arm are in `d1_report.md`.
 - **Evidence:** `oom_kernel_log.txt`, `held_out_snapshot/kernel_oom_boot_2026-11-25T17-15-47.txt`,
   `held_out_run_log_1.txt`, `held_out_run_log_2.txt`, `d1_report.py`, `d1_report.json`,
-  `d1_report.md`, `recheck_killed.json`, `recheck_kernel_oom.txt`, `recheck_heavy_cpu.json`.
+  `d1_report.md`, `recheck_killed.json`, `recheck_kernel_oom.txt`, `recheck_heavy_cpu.json`,
+  `recheck_heavy_cpu_450.json`, `recheck_speed.json`.
 
 ## 8. Verification after the run (exploratory checks, not registered)
 
@@ -338,25 +339,38 @@ records where D1's expectations were wrong.
     being killed, and 42 of its 45 in-loop checks ran out their 120 s. During the first heavy
     checks, until about 10:20, light commands also ran in this session (`d1_report.py`, file edits,
     a commit, progress checks); after that nothing else ran.
-  - **Would F's other 4 proofs of `mathd_numbertheory_451` (repetitions 0, 2, 3, 4) check within
-    300 s with enough memory?** No machine with more than 16 GB was available, so a 24 GB swap file
-    lifted the memory limit and `recheck_heavy_cpu.py` measured CPU time instead (12:21-13:43Z, one
-    proof at a time; `recheck_heavy_cpu.json`). A thread's user time cannot exceed the wall-clock
-    time that passes, and it leaves out the paging work, which counts as system time (213-226 s per
-    run). Each of the 4 passed 330 s of user CPU in one thread without finishing (after 851-926 s of
-    wall-clock time), with its memory still growing (21.7-22.4 GB when stopped; it had passed 14 GB
-    after 141-146 s of user CPU). So on the CPU measured (Intel Xeon, 2.1 GHz, in a new container
-    after the restart; the run's own CPU was not recorded) each would very likely have needed more
-    than 300 s even with enough memory, and the registered rule would have counted a timeout. The
-    margin is small: the runs stopped at 330 s, so the conclusion fails if memory pressure added
-    about 30 s of user time (about 10%), or if the run's CPU was about 10% faster per thread. The
-    samples do not exclude an inflation of that order. [A longer measurement, to 450 s of user CPU
-    and including F's repetition 1, is running.] A first version of the measurement, which counted
-    user plus system time, was stopped and discarded (`recheck_heavy_cpu_v1_discarded.json`).
-    Corroborating it, weakly: the fifth proof ran out the 300 s in a wall-clock re-check; and no
-    check of any proof of this problem has ever passed: 0 of 82 checks that reached a verdict (45
-    in-loop with a 120 s limit, 20 final, 17 re-checks; at most 54 distinct proofs), plus the 4
-    measurements stopped unfinished.
+  - **Would F's 5 proofs of `mathd_numbertheory_451` check within 300 s with enough memory?** No
+    machine with more than 16 GB was available, so a 24 GB swap file lifted the memory limit and
+    `recheck_heavy_cpu.py` measured CPU time instead, one proof at a time. A thread's user time
+    cannot exceed the wall-clock time that passes, and it leaves out the paging work, which counts
+    as system time. A first measurement (12:43-13:43Z, `recheck_heavy_cpu.json`) stopped
+    repetitions 0, 2, 3 and 4 at 330 s of user CPU; a fact-check found that 10% margin too small,
+    so a second (13:58-15:59Z, `recheck_heavy_cpu_450.json`) ran all 5 to 450 s, 1.5 times the
+    limit. None finished: each passed 450 s of user CPU in one thread (after 1,372-1,496 s of
+    wall-clock time and 369-390 s of system time), its memory still growing (25.8-26.5 GB when
+    stopped; it had passed 14 GB after 143-151 s of user CPU). So on the CPU measured (Intel Xeon,
+    2.1 GHz, in a new container after the restart) each would have needed more than 300 s even
+    with enough memory, and the registered rule would have counted a timeout.
+    - *Was the run's machine faster?* Its CPU was not recorded. `recheck_speed.py` re-timed here,
+      one at a time, 72 of the run's final checks (20 s or more of Lean time, not of this problem,
+      not overlapping a check of it; the rule was written in the script, 15:59:42Z, before it
+      started, 15:59:51Z, and committed unchanged in 229b64f before any result was looked at). The
+      run, with three Lean checks at a time, took a median of ⟦MED⟧ times as long as this machine
+      checking alone (10th to 90th percentile ⟦P10⟧ to ⟦P90⟧; smallest ⟦MIN⟧), and all ⟦SAME⟧
+      verdicts repeated (`recheck_speed.json`). So the run's machine was not faster per check;
+      even at the smallest ratio, 450 s here would be about ⟦WORST⟧ s there.
+    - *Could swap have inflated the user time?* Under paging, cache and TLB misses can add user
+      time; the samples cannot exclude some inflation. The conclusion needs an inflation by half.
+      Paging became heavy only after memory passed about 14 GB: once the imports had loaded, user
+      time grew 0.8-0.9 s per wall-clock second while memory stayed under it, then fell within
+      minutes to 0.1-0.3 s. By that point 143-151 s of user CPU had passed, so the rest would
+      have to be inflated about twofold.
+    - A first version of the measurement, which counted user plus system time, was stopped and
+      discarded (`recheck_heavy_cpu_v1_discarded.json`). Corroborating it, weakly: on the machine
+      before the restart, F's repetition 1 ran out the 300 s in a wall-clock re-check; and no
+      check of any proof of this problem has ever passed: 0 of 82 checks that reached a verdict
+      (45 in-loop with a 120 s limit, 20 final, 17 re-checks; at most 54 distinct proofs), plus
+      9 measurements of F's 5 proofs stopped unfinished.
 
 ## 9. What this study cannot show (registration section 10)
 

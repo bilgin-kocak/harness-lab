@@ -145,7 +145,15 @@ No deviation.
   (`/swapfile-recheck`, 24 GB) is still on the container's disk.
 - **Paper:** `paper/OUTLINE.md`, an outline and abstract for the owner, reviewed independently.
   Nothing is published.
-- **13:58-.** A fact-check of the new text found its conclusion stated too firmly: the runs stopped
-  at 330 s against a 300 s limit, a margin of about 10% that an inflation of user time by memory
-  pressure, or a faster CPU, could void. The text now says "very likely", and a longer measurement
-  runs (to 450 s of user CPU, F's repetitions 0-4, `recheck_heavy_cpu_450.json`).
+- **13:58-15:59.** A fact-check of the new text found its conclusion stated too firmly: the runs
+  stopped at 330 s against a 300 s limit, a margin of about 10% that an inflation of user time by
+  memory pressure, or a faster CPU, could void. The text was changed to "very likely", and the swap
+  file was turned on again for a longer measurement: F's repetitions 0-4, to 450 s of user CPU
+  (`recheck_heavy_cpu_450.json`). None finished: each passed 450 s of user CPU in one thread
+  (1,372-1,496 s of wall-clock time each), memory 25.8-26.5 GB and still growing when stopped.
+  While it ran, only light commands ran in the session (file edits, a commit, progress checks).
+  The swap was turned off at 15:59.
+- **15:59-.** Was the run's machine faster than the container measured? `recheck_speed.py`
+  re-times, one at a time, 72 of the run's final checks (20 s or more of Lean time, not of
+  `mathd_numbertheory_451`, not overlapping a check of it; the rule was written in the script
+  before it ran) and compares each with its recorded time (`recheck_speed.json`).

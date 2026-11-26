@@ -153,7 +153,11 @@ No deviation.
   (1,372-1,496 s of wall-clock time each), memory 25.8-26.5 GB and still growing when stopped.
   While it ran, only light commands ran in the session (file edits, a commit, progress checks).
   The swap was turned off at 15:59.
-- **15:59-.** Was the run's machine faster than the container measured? `recheck_speed.py`
-  re-times, one at a time, 72 of the run's final checks (20 s or more of Lean time, not of
+- **15:59-16:40.** Was the run's machine faster than the container measured? `recheck_speed.py`
+  re-timed, one at a time, 72 of the run's final checks (20 s or more of Lean time, not of
   `mathd_numbertheory_451`, not overlapping a check of it; the rule was written in the script
-  before it ran) and compares each with its recorded time (`recheck_speed.json`).
+  before it ran, and the script was committed unchanged in 229b64f before any result was looked
+  at) and compared each with its recorded time (`recheck_speed.json`). The run took a median of
+  0.99 times as long (10th to 90th percentile 0.93 to 1.13, smallest 0.84); all 72 verdicts
+  repeated. While it ran, only light commands ran in the session (file edits, a commit, progress
+  checks).

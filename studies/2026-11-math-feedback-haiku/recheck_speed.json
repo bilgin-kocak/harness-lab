@@ -1,0 +1,1742 @@
+{
+  "label": "exploratory (not registered); written after the held-out phase ended",
+  "method": "Was the machine of the held-out run faster than the one `recheck_heavy_cpu.py` measured on?\n\nEXPLORATORY (NOT REGISTERED). Written after the held-out phase, 2026-11-26, after the 450 s\nmeasurement (`recheck_heavy_cpu_450.json`) and before this script was run. That measurement ran in\na new container after the session's machine restarted, and the run's own CPU was not recorded. Its\nconclusion (F's proofs of `mathd_numbertheory_451` would have timed out under the registered 300 s\neven with enough memory) fails if the run delivered at least 1.5 times as much computation per\nsecond to one Lean check as this container does to a check running alone.\n\nThis script measures that ratio on proofs whose checks finished in the run. It re-times, on the\ncurrent container and one at a time, the final checks of the run that meet all of these (fixed\nbefore any was re-timed):\n\n* the recorded final check finished (pass or fail, not timed out) in 20 s or more of Lean time,\n  so that loading the imports is a small part of it;\n* the problem is not `mathd_numbertheory_451`, and the check is not one `d1_report.json` assigns\n  to a kernel kill or matches by time only;\n* the check, taken as the interval of its recorded Lean time ending at the record's\n  `finished_at`, does not overlap a check of `mathd_numbertheory_451` (`heavy_windows` in\n  `d1_report.json`), so the run's timing is not slowed by that problem's memory pressure.\n\nFor each, ratio = recorded Lean time in the run / Lean time now. A ratio below 1 means the run was\nfaster on that proof. Reported: the number of checks, the median ratio, the 10th and 90th\npercentiles, the share below 1, and the smallest ratio; and the verdicts, which should repeat.\nThe run checked with 3 Lean workers at once (`lean_workers: 3`, `parallelism: 4`), so its times\ninclude that load; this re-timing runs one check at a time with nothing else running, so it shows\nthe run's speed under its own load against this container's speed alone, which is the comparison\nthe 300 s question needs. No model is called.",
+  "cpu_now": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+  "checks": 72,
+  "same_status": 72,
+  "ratio_median": 0.988,
+  "ratio_p10": 0.928,
+  "ratio_p90": 1.132,
+  "ratio_min": 0.841,
+  "share_below_1": 0.556,
+  "rows": [
+    {
+      "arm": "F",
+      "task_id": "aime_1987_p5",
+      "repetition": 2,
+      "proof_sha256": "552da158493704536f363ec24433a1284c965b094877dce67c149eef2e05265f",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 25.134,
+        "wall_s": 72.376
+      },
+      "same_status": true,
+      "run_lean_s": 24.321,
+      "now_lean_s": 25.134,
+      "ratio_run_over_now": 0.9677
+    },
+    {
+      "arm": "P",
+      "task_id": "aime_1987_p5",
+      "repetition": 1,
+      "proof_sha256": "d0aa9b0aeba05d8cdbf70687252ba9cc3faab0a1510057374054360f036587b4",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 23.831,
+        "wall_s": 23.833
+      },
+      "same_status": true,
+      "run_lean_s": 20.033,
+      "now_lean_s": 23.831,
+      "ratio_run_over_now": 0.8406
+    },
+    {
+      "arm": "P",
+      "task_id": "aime_1987_p5",
+      "repetition": 2,
+      "proof_sha256": "cdc35cb43c9143fdb20159118a2dc37c08c795c9093cd1c4ed1d302e26492872",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 36.316,
+        "wall_s": 36.319
+      },
+      "same_status": true,
+      "run_lean_s": 34.79,
+      "now_lean_s": 36.316,
+      "ratio_run_over_now": 0.958
+    },
+    {
+      "arm": "P",
+      "task_id": "aime_1987_p5",
+      "repetition": 4,
+      "proof_sha256": "ff7911a7cb7119fe8e0c93dde57b7af4f7a9e528882541c24885fb44e2a6bfce",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 35.623,
+        "wall_s": 35.625
+      },
+      "same_status": true,
+      "run_lean_s": 31.653,
+      "now_lean_s": 35.623,
+      "ratio_run_over_now": 0.8886
+    },
+    {
+      "arm": "baseline",
+      "task_id": "aime_1987_p5",
+      "repetition": 0,
+      "proof_sha256": "571503a29be96419ebfcda0275a9ac4875313acc6eee8de1a4928ac76471a5c3",
+      "recorded": {
+        "status": "fail",
+        "reason": "Lean error at line 20, column 44: No goals to be solved",
+        "exit_code": 1,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "fail",
+        "reason": "Lean error at line 20, column 44: No goals to be solved",
+        "exit_code": 1,
+        "timed_out": false,
+        "lean_s": 23.008,
+        "wall_s": 23.01
+      },
+      "same_status": true,
+      "run_lean_s": 21.463,
+      "now_lean_s": 23.008,
+      "ratio_run_over_now": 0.9328
+    },
+    {
+      "arm": "baseline",
+      "task_id": "aime_1987_p5",
+      "repetition": 1,
+      "proof_sha256": "4ff6aff8a776efed9d1a28c07f52ed1103545dd6ff5325b2f7cccc82c01c044d",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 24.68,
+        "wall_s": 24.682
+      },
+      "same_status": true,
+      "run_lean_s": 22.862,
+      "now_lean_s": 24.68,
+      "ratio_run_over_now": 0.9263
+    },
+    {
+      "arm": "F",
+      "task_id": "aime_1994_p3",
+      "repetition": 3,
+      "proof_sha256": "0169968fed9373378d9eaef9bd41b218c9b501f184b8d8498fcb7674be0df4e9",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 28.821,
+        "wall_s": 28.826
+      },
+      "same_status": true,
+      "run_lean_s": 29.969,
+      "now_lean_s": 28.821,
+      "ratio_run_over_now": 1.0398
+    },
+    {
+      "arm": "F",
+      "task_id": "aime_1995_p7",
+      "repetition": 2,
+      "proof_sha256": "8832a5777f967b1d852408a622a1246881372e89c843c1dd7eee94c6612cdea6",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 22.574,
+        "wall_s": 22.579
+      },
+      "same_status": true,
+      "run_lean_s": 25.45,
+      "now_lean_s": 22.574,
+      "ratio_run_over_now": 1.1274
+    },
+    {
+      "arm": "F",
+      "task_id": "aime_1995_p7",
+      "repetition": 4,
+      "proof_sha256": "55fccad1a0cfa2bbeff76a83f49b458161c1836cd994557862d15c9bfecbe660",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 22.476,
+        "wall_s": 22.481
+      },
+      "same_status": true,
+      "run_lean_s": 23.434,
+      "now_lean_s": 22.476,
+      "ratio_run_over_now": 1.0426
+    },
+    {
+      "arm": "P",
+      "task_id": "aime_1995_p7",
+      "repetition": 0,
+      "proof_sha256": "57c0473de079e73f92144a2915bb7dad26cef36b87f0d983c420280a33ab2fb4",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 23.29,
+        "wall_s": 23.294
+      },
+      "same_status": true,
+      "run_lean_s": 20.966,
+      "now_lean_s": 23.29,
+      "ratio_run_over_now": 0.9002
+    },
+    {
+      "arm": "P",
+      "task_id": "aime_1995_p7",
+      "repetition": 3,
+      "proof_sha256": "3f1a4393c5c93728f0e6d277bcffce17d298e0dc2b1a6d3926c27777b9d17dd8",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 24.892,
+        "wall_s": 24.897
+      },
+      "same_status": true,
+      "run_lean_s": 22.01,
+      "now_lean_s": 24.892,
+      "ratio_run_over_now": 0.8842
+    },
+    {
+      "arm": "R4",
+      "task_id": "aime_1995_p7",
+      "repetition": 2,
+      "proof_sha256": "a0bcae1c4bf8e487bc4dced880f8a487f63bf727878540b3c25cbc5039e3729a",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 19.17,
+        "wall_s": 19.174
+      },
+      "same_status": true,
+      "run_lean_s": 20.106,
+      "now_lean_s": 19.17,
+      "ratio_run_over_now": 1.0488
+    },
+    {
+      "arm": "baseline",
+      "task_id": "aime_1995_p7",
+      "repetition": 1,
+      "proof_sha256": "ed0898ff8ee33cfed050dac4cecbe7b4656d039d98fd05a8ebb7f0959627a6f0",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 19.984,
+        "wall_s": 19.988
+      },
+      "same_status": true,
+      "run_lean_s": 22.521,
+      "now_lean_s": 19.984,
+      "ratio_run_over_now": 1.127
+    },
+    {
+      "arm": "P",
+      "task_id": "algebra_apbpceq2_abpbcpcaeq1_aleq1on3anbleq1ancleq4on3",
+      "repetition": 2,
+      "proof_sha256": "bb6b97158b0e8b2134e95355b0d41644e649fdb93471f78bf2fa2241a0013bae",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 22.339,
+        "wall_s": 22.343
+      },
+      "same_status": true,
+      "run_lean_s": 24.792,
+      "now_lean_s": 22.339,
+      "ratio_run_over_now": 1.1098
+    },
+    {
+      "arm": "baseline",
+      "task_id": "algebra_apbpceq2_abpbcpcaeq1_aleq1on3anbleq1ancleq4on3",
+      "repetition": 3,
+      "proof_sha256": "b9649dc46cd5f53ed926eb99277cc25ae3cf3eaaf19d329130e00357b6d09d84",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 110.988,
+        "wall_s": 110.996
+      },
+      "same_status": true,
+      "run_lean_s": 118.468,
+      "now_lean_s": 110.988,
+      "ratio_run_over_now": 1.0674
+    },
+    {
+      "arm": "F",
+      "task_id": "amc12_2000_p20",
+      "repetition": 4,
+      "proof_sha256": "763710d162fc9c9eec7c397af207eda2612ae1a7c1e525344aa61c083a19db59",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 19.871,
+        "wall_s": 19.874
+      },
+      "same_status": true,
+      "run_lean_s": 20.454,
+      "now_lean_s": 19.871,
+      "ratio_run_over_now": 1.0293
+    },
+    {
+      "arm": "F",
+      "task_id": "amc12_2001_p21",
+      "repetition": 1,
+      "proof_sha256": "9f7f94a9da9e560cf47dd2d9e3700ee44680f15de71e9f10de1de7e4e23888cb",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 23.882,
+        "wall_s": 23.884
+      },
+      "same_status": true,
+      "run_lean_s": 24.036,
+      "now_lean_s": 23.882,
+      "ratio_run_over_now": 1.0064
+    },
+    {
+      "arm": "P",
+      "task_id": "amc12a_2020_p4",
+      "repetition": 2,
+      "proof_sha256": "559572c66b8d8d9fa8ef5ec4783f634393d8e57c3d81bdd1e641fc956944dd3c",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 20.092,
+        "wall_s": 20.095
+      },
+      "same_status": true,
+      "run_lean_s": 23.627,
+      "now_lean_s": 20.092,
+      "ratio_run_over_now": 1.1759
+    },
+    {
+      "arm": "F",
+      "task_id": "amc12a_2021_p12",
+      "repetition": 4,
+      "proof_sha256": "ef47f1dc4c7fd8fb6a1ab87b596330b3f9aa192672134bfe91292e140d9b25b5",
+      "recorded": {
+        "status": "fail",
+        "reason": "Lean error at line 14, column 26: Unknown identifier `X`",
+        "exit_code": 1,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "fail",
+        "reason": "Lean error at line 14, column 26: Unknown identifier `X`",
+        "exit_code": 1,
+        "timed_out": false,
+        "lean_s": 78.114,
+        "wall_s": 78.117
+      },
+      "same_status": true,
+      "run_lean_s": 76.561,
+      "now_lean_s": 78.114,
+      "ratio_run_over_now": 0.9801
+    },
+    {
+      "arm": "F",
+      "task_id": "amc12a_2021_p22",
+      "repetition": 4,
+      "proof_sha256": "b870af3342feb7b22f35d156d2b0a00c8276a47a56e40cb8ac57e13337963cb8",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 22.862,
+        "wall_s": 22.87
+      },
+      "same_status": true,
+      "run_lean_s": 21.539,
+      "now_lean_s": 22.862,
+      "ratio_run_over_now": 0.9421
+    },
+    {
+      "arm": "F",
+      "task_id": "imo_1964_p2",
+      "repetition": 0,
+      "proof_sha256": "b3d5b2bbf66a1197c76fa306e68421a64761b7a1e5b25e410e9eb25c9c2248c3",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 26.798,
+        "wall_s": 26.801
+      },
+      "same_status": true,
+      "run_lean_s": 27.316,
+      "now_lean_s": 26.798,
+      "ratio_run_over_now": 1.0193
+    },
+    {
+      "arm": "F",
+      "task_id": "imo_1964_p2",
+      "repetition": 1,
+      "proof_sha256": "a178211b62c1157a6247fac8e468f2fbe51df36428ed0a5c6d9b3aad1d94bca0",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 23.208,
+        "wall_s": 23.211
+      },
+      "same_status": true,
+      "run_lean_s": 22.606,
+      "now_lean_s": 23.208,
+      "ratio_run_over_now": 0.9741
+    },
+    {
+      "arm": "F",
+      "task_id": "imo_1964_p2",
+      "repetition": 4,
+      "proof_sha256": "60a39d0cc4cf8d123af171d9d35e514a80933ff62ca7bf0e66b5b8a0c9afa837",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 18.154,
+        "wall_s": 18.156
+      },
+      "same_status": true,
+      "run_lean_s": 21.256,
+      "now_lean_s": 18.154,
+      "ratio_run_over_now": 1.1709
+    },
+    {
+      "arm": "P",
+      "task_id": "imo_1964_p2",
+      "repetition": 0,
+      "proof_sha256": "d67fa38000b09e267544eba3d2bc8b323cd7991e84e3e923055d915c1686a4f1",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 21.581,
+        "wall_s": 21.583
+      },
+      "same_status": true,
+      "run_lean_s": 24.449,
+      "now_lean_s": 21.581,
+      "ratio_run_over_now": 1.1329
+    },
+    {
+      "arm": "P",
+      "task_id": "imo_1964_p2",
+      "repetition": 1,
+      "proof_sha256": "cfe14500de3d1281234ea5da421a0015d1997bc450047102c3665022aa195f86",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 20.758,
+        "wall_s": 20.76
+      },
+      "same_status": true,
+      "run_lean_s": 24.411,
+      "now_lean_s": 20.758,
+      "ratio_run_over_now": 1.176
+    },
+    {
+      "arm": "P",
+      "task_id": "imo_1964_p2",
+      "repetition": 2,
+      "proof_sha256": "2e0e653842de3affc4d5da271f06886df492a002d2f13fad7cd80abe7aa7c7cf",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 20.843,
+        "wall_s": 20.845
+      },
+      "same_status": true,
+      "run_lean_s": 20.81,
+      "now_lean_s": 20.843,
+      "ratio_run_over_now": 0.9984
+    },
+    {
+      "arm": "P",
+      "task_id": "imo_1964_p2",
+      "repetition": 3,
+      "proof_sha256": "e603c12bfb5e7e0b3b8e0da49f4edaf2c40049f89104ee062c06f46b36eb3ed9",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 19.473,
+        "wall_s": 19.475
+      },
+      "same_status": true,
+      "run_lean_s": 20.342,
+      "now_lean_s": 19.473,
+      "ratio_run_over_now": 1.0446
+    },
+    {
+      "arm": "P",
+      "task_id": "imo_1964_p2",
+      "repetition": 4,
+      "proof_sha256": "de1c419ac12a6f9595cb351bc03f5944b9d82134ff4267064bf1133e92539ec4",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 30.803,
+        "wall_s": 30.805
+      },
+      "same_status": true,
+      "run_lean_s": 28.346,
+      "now_lean_s": 30.803,
+      "ratio_run_over_now": 0.9202
+    },
+    {
+      "arm": "R4",
+      "task_id": "imo_1964_p2",
+      "repetition": 0,
+      "proof_sha256": "439e45ca50e747c0c7b6bc9a0a7738697aaca7ba668287cc1bd13d86e67ee65a",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 24.536,
+        "wall_s": 24.538
+      },
+      "same_status": true,
+      "run_lean_s": 22.761,
+      "now_lean_s": 24.536,
+      "ratio_run_over_now": 0.9277
+    },
+    {
+      "arm": "baseline",
+      "task_id": "imo_1964_p2",
+      "repetition": 0,
+      "proof_sha256": "c3fcddf7d6f2691ef1c84506be559249b0de5454820027f5b11790fbe8757e55",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 21.295,
+        "wall_s": 21.297
+      },
+      "same_status": true,
+      "run_lean_s": 25.269,
+      "now_lean_s": 21.295,
+      "ratio_run_over_now": 1.1866
+    },
+    {
+      "arm": "baseline",
+      "task_id": "imo_1964_p2",
+      "repetition": 1,
+      "proof_sha256": "a0d76d34da00a6b881e15aac3c382761ab6a35dccc870e621f9306b578defe22",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 20.965,
+        "wall_s": 20.97
+      },
+      "same_status": true,
+      "run_lean_s": 20.685,
+      "now_lean_s": 20.965,
+      "ratio_run_over_now": 0.9866
+    },
+    {
+      "arm": "baseline",
+      "task_id": "imo_1964_p2",
+      "repetition": 2,
+      "proof_sha256": "828e0cf6ea6525e487bae40698ddf2a82c89426c0256d137bbcf6c6c40147cb9",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 26.128,
+        "wall_s": 26.13
+      },
+      "same_status": true,
+      "run_lean_s": 25.002,
+      "now_lean_s": 26.128,
+      "ratio_run_over_now": 0.9569
+    },
+    {
+      "arm": "P",
+      "task_id": "imo_1965_p2",
+      "repetition": 0,
+      "proof_sha256": "903c5a28571e9986c9171d825843ab906b8076b508ef8d0fe4babce7877b7522",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 32.134,
+        "wall_s": 32.139
+      },
+      "same_status": true,
+      "run_lean_s": 38.203,
+      "now_lean_s": 32.134,
+      "ratio_run_over_now": 1.1889
+    },
+    {
+      "arm": "P",
+      "task_id": "imo_1965_p2",
+      "repetition": 4,
+      "proof_sha256": "9df2b0166485ad890b9c5899e0180d794ab3da1fba35ede23aa9acaea6fde103",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 31.998,
+        "wall_s": 32.002
+      },
+      "same_status": true,
+      "run_lean_s": 30.381,
+      "now_lean_s": 31.998,
+      "ratio_run_over_now": 0.9495
+    },
+    {
+      "arm": "R4",
+      "task_id": "imo_1965_p2",
+      "repetition": 0,
+      "proof_sha256": "19c9bd7164e52d61da3e3a2b05883a9b705ce3b1005b7789d7e2f2c40c0f124b",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 27.526,
+        "wall_s": 27.531
+      },
+      "same_status": true,
+      "run_lean_s": 27.603,
+      "now_lean_s": 27.526,
+      "ratio_run_over_now": 1.0028
+    },
+    {
+      "arm": "R4",
+      "task_id": "imo_1965_p2",
+      "repetition": 3,
+      "proof_sha256": "96eee8c3adecffc599e3ffa5211e49a3db2ee416213f247ade26e4f9729c5e3b",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 24.489,
+        "wall_s": 24.494
+      },
+      "same_status": true,
+      "run_lean_s": 23.465,
+      "now_lean_s": 24.489,
+      "ratio_run_over_now": 0.9582
+    },
+    {
+      "arm": "baseline",
+      "task_id": "imo_1965_p2",
+      "repetition": 1,
+      "proof_sha256": "d46886be5ee005ed412a5f68b76671fdbc8db2dec671e5b8305e833dab22f891",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 20.249,
+        "wall_s": 20.253
+      },
+      "same_status": true,
+      "run_lean_s": 20.741,
+      "now_lean_s": 20.249,
+      "ratio_run_over_now": 1.0243
+    },
+    {
+      "arm": "F",
+      "task_id": "imo_1983_p6",
+      "repetition": 0,
+      "proof_sha256": "afcb10361e70d947e85bceb4d8e9f5162a4f46b56cbaaea463dd03b928c098dc",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 33.057,
+        "wall_s": 33.061
+      },
+      "same_status": true,
+      "run_lean_s": 31.486,
+      "now_lean_s": 33.057,
+      "ratio_run_over_now": 0.9525
+    },
+    {
+      "arm": "F",
+      "task_id": "imo_1983_p6",
+      "repetition": 1,
+      "proof_sha256": "01539e2e51b939b83ee4401fdcb75c62ab46a29778bb85985f139c81b927f98f",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 31.577,
+        "wall_s": 31.579
+      },
+      "same_status": true,
+      "run_lean_s": 30.388,
+      "now_lean_s": 31.577,
+      "ratio_run_over_now": 0.9623
+    },
+    {
+      "arm": "F",
+      "task_id": "imo_1983_p6",
+      "repetition": 3,
+      "proof_sha256": "b15bb55d7c0eb19670cf845a29f72168a01db2d917addb18fabc5085fec40d29",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 39.265,
+        "wall_s": 39.268
+      },
+      "same_status": true,
+      "run_lean_s": 39.64,
+      "now_lean_s": 39.265,
+      "ratio_run_over_now": 1.0096
+    },
+    {
+      "arm": "F",
+      "task_id": "imo_1983_p6",
+      "repetition": 4,
+      "proof_sha256": "0286008b01e88c65abad5cf743cc80c04fecd5fbb6c0527f5ee411abfa070cfc",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 22.546,
+        "wall_s": 22.548
+      },
+      "same_status": true,
+      "run_lean_s": 23.211,
+      "now_lean_s": 22.546,
+      "ratio_run_over_now": 1.0295
+    },
+    {
+      "arm": "P",
+      "task_id": "imo_1983_p6",
+      "repetition": 1,
+      "proof_sha256": "429e59d09ccdce2b911fa8d5bbf3d30bc8b12ebfecc23f20ec9c517993b5edf0",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 22.401,
+        "wall_s": 22.403
+      },
+      "same_status": true,
+      "run_lean_s": 22.99,
+      "now_lean_s": 22.401,
+      "ratio_run_over_now": 1.0263
+    },
+    {
+      "arm": "P",
+      "task_id": "imo_1983_p6",
+      "repetition": 2,
+      "proof_sha256": "e15cf0ec8bd33d2e8264a0d5014c17aa54baf1170f5b4b7b13b18a1f7975b435",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 104.706,
+        "wall_s": 104.71
+      },
+      "same_status": true,
+      "run_lean_s": 104.433,
+      "now_lean_s": 104.706,
+      "ratio_run_over_now": 0.9974
+    },
+    {
+      "arm": "P",
+      "task_id": "imo_1983_p6",
+      "repetition": 3,
+      "proof_sha256": "6be458546f07d4863adce93fafbdf28c6d3ee01f936b331251225a765313a077",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 25.802,
+        "wall_s": 25.804
+      },
+      "same_status": true,
+      "run_lean_s": 24.066,
+      "now_lean_s": 25.802,
+      "ratio_run_over_now": 0.9327
+    },
+    {
+      "arm": "P",
+      "task_id": "imo_1983_p6",
+      "repetition": 4,
+      "proof_sha256": "a0c205b4b3fb5d4222c69d7047e1970c4f4f0715deaf185730458b31b323d2c0",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 37.174,
+        "wall_s": 37.177
+      },
+      "same_status": true,
+      "run_lean_s": 37.779,
+      "now_lean_s": 37.174,
+      "ratio_run_over_now": 1.0163
+    },
+    {
+      "arm": "R4",
+      "task_id": "imo_1983_p6",
+      "repetition": 0,
+      "proof_sha256": "82be7eff4a948f9705a1cd060e023b99e364183b8464d845b71c875bae0f4ce8",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 25.553,
+        "wall_s": 25.555
+      },
+      "same_status": true,
+      "run_lean_s": 24.832,
+      "now_lean_s": 25.553,
+      "ratio_run_over_now": 0.9718
+    },
+    {
+      "arm": "R4",
+      "task_id": "imo_1983_p6",
+      "repetition": 3,
+      "proof_sha256": "ff0c526f3276c43142d10977cc1b175eba102182cca0cff063f3b8e0bea26d5b",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 19.296,
+        "wall_s": 19.298
+      },
+      "same_status": true,
+      "run_lean_s": 20.539,
+      "now_lean_s": 19.296,
+      "ratio_run_over_now": 1.0644
+    },
+    {
+      "arm": "R4",
+      "task_id": "imo_1983_p6",
+      "repetition": 4,
+      "proof_sha256": "20949acf67de258aaf7a784a52d753b20a2b1c85140b2ef07ffece03a7c5fd08",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 34.428,
+        "wall_s": 34.431
+      },
+      "same_status": true,
+      "run_lean_s": 33.614,
+      "now_lean_s": 34.428,
+      "ratio_run_over_now": 0.9764
+    },
+    {
+      "arm": "baseline",
+      "task_id": "imo_1983_p6",
+      "repetition": 2,
+      "proof_sha256": "ccd79c28429716efcee2ef9ceb90f5a28e983ebfc80d34312b0c8ed1449c6e00",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 22.707,
+        "wall_s": 22.71
+      },
+      "same_status": true,
+      "run_lean_s": 21.182,
+      "now_lean_s": 22.707,
+      "ratio_run_over_now": 0.9328
+    },
+    {
+      "arm": "baseline",
+      "task_id": "imo_1983_p6",
+      "repetition": 4,
+      "proof_sha256": "e7f2c299754f8cbd1fbc5f5d226a20ca3cd8c67e1acf717b94d96790d7fb4988",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 43.186,
+        "wall_s": 43.189
+      },
+      "same_status": true,
+      "run_lean_s": 43.191,
+      "now_lean_s": 43.186,
+      "ratio_run_over_now": 1.0001
+    },
+    {
+      "arm": "F",
+      "task_id": "imo_1992_p1",
+      "repetition": 3,
+      "proof_sha256": "6b6cf08cc3d9c571ef238618d0b00431bdbb1803dd4ab20e4b048ded8806a5b6",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 23.143,
+        "wall_s": 23.15
+      },
+      "same_status": true,
+      "run_lean_s": 21.592,
+      "now_lean_s": 23.143,
+      "ratio_run_over_now": 0.933
+    },
+    {
+      "arm": "P",
+      "task_id": "imo_1992_p1",
+      "repetition": 0,
+      "proof_sha256": "58045cbb3ce5d7bd34b88bac436c1f004d1c74ac54cb586cf1fb086130311770",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 24.219,
+        "wall_s": 24.224
+      },
+      "same_status": true,
+      "run_lean_s": 25.881,
+      "now_lean_s": 24.219,
+      "ratio_run_over_now": 1.0686
+    },
+    {
+      "arm": "R4",
+      "task_id": "imo_1992_p1",
+      "repetition": 1,
+      "proof_sha256": "2a4e512bf8a92578ba203e3b1cae85f1a60d58adb9aaed8c99fc2de866c9ae35",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 22.106,
+        "wall_s": 22.111
+      },
+      "same_status": true,
+      "run_lean_s": 22.567,
+      "now_lean_s": 22.106,
+      "ratio_run_over_now": 1.0209
+    },
+    {
+      "arm": "R4",
+      "task_id": "imo_1992_p1",
+      "repetition": 3,
+      "proof_sha256": "ff5d7f23b9f4887316e270e6a1a5ebe94286c9a7239769759c076f33d9b4e590",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 26.221,
+        "wall_s": 26.226
+      },
+      "same_status": true,
+      "run_lean_s": 32.615,
+      "now_lean_s": 26.221,
+      "ratio_run_over_now": 1.2439
+    },
+    {
+      "arm": "baseline",
+      "task_id": "imo_1992_p1",
+      "repetition": 3,
+      "proof_sha256": "10e52b088af817f84ef7f40ef46ddeb8453b71cb75fe4e5bf3903092684fe4cd",
+      "recorded": {
+        "status": "fail",
+        "reason": "Lean error at line 49, column 48: No goals to be solved",
+        "exit_code": 1,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "fail",
+        "reason": "Lean error at line 49, column 48: No goals to be solved",
+        "exit_code": 1,
+        "timed_out": false,
+        "lean_s": 24.268,
+        "wall_s": 24.274
+      },
+      "same_status": true,
+      "run_lean_s": 24.243,
+      "now_lean_s": 24.268,
+      "ratio_run_over_now": 0.999
+    },
+    {
+      "arm": "P",
+      "task_id": "imo_2001_p6",
+      "repetition": 4,
+      "proof_sha256": "f10fb9b3cd760c77959279f28191af87309f5ba717ba936bbc13ee4130709761",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 53.688,
+        "wall_s": 53.692
+      },
+      "same_status": true,
+      "run_lean_s": 53.099,
+      "now_lean_s": 53.688,
+      "ratio_run_over_now": 0.989
+    },
+    {
+      "arm": "R4",
+      "task_id": "imo_2001_p6",
+      "repetition": 3,
+      "proof_sha256": "1d11add7a898e51a41ded070f4b10074c2e65d8f833c6aaaa7bb0060de3546fd",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 114.983,
+        "wall_s": 114.988
+      },
+      "same_status": true,
+      "run_lean_s": 113.538,
+      "now_lean_s": 114.983,
+      "ratio_run_over_now": 0.9874
+    },
+    {
+      "arm": "baseline",
+      "task_id": "imo_2001_p6",
+      "repetition": 3,
+      "proof_sha256": "5d1d554507d80a897356f57c9dad79954a9748e04aaf787189f9bbef7113c90a",
+      "recorded": {
+        "status": "fail",
+        "reason": "Lean error at line 72, column 4: linarith failed to find a contradiction\ncase inr\na b c d : \u2115\nh\u2081 : d < c\nh\u2082 : c < b\nh\u2083 : b < a\nha : 0 < a\nhb : 0 < b\nhc : 0 < c\nhd : 0 < d\nhca : c \u2264 a\nhv0 : a \u2264 b + d + c\nu : \u2115\nhu : a = c + u\nv : \u2115\nh\u2084 : a * c + b * d = (2 * u + v) * v\nhv : b + d + c = a + v\ne1 : b + d + a - c = 2 * u + v\ne2 : b + d +... [614 more chars]",
+        "exit_code": 1,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "fail",
+        "reason": "Lean error at line 72, column 4: linarith failed to find a contradiction\ncase inr\na b c d : \u2115\nh\u2081 : d < c\nh\u2082 : c < b\nh\u2083 : b < a\nha : 0 < a\nhb : 0 < b\nhc : 0 < c\nhd : 0 < d\nhca : c \u2264 a\nhv0 : a \u2264 b + d + c\nu : \u2115\nhu : a = c + u\nv : \u2115\nh\u2084 : a * c + b * d = (2 * u + v) * v\nhv : b + d + c = a + v\ne1 : b + d + a - c = 2 * u + v\ne2 : b + d +... [614 more chars]",
+        "exit_code": 1,
+        "timed_out": false,
+        "lean_s": 72.642,
+        "wall_s": 72.647
+      },
+      "same_status": true,
+      "run_lean_s": 70.588,
+      "now_lean_s": 72.642,
+      "ratio_run_over_now": 0.9717
+    },
+    {
+      "arm": "F",
+      "task_id": "mathd_numbertheory_277",
+      "repetition": 4,
+      "proof_sha256": "792787f16166f77b65678fa4281cad7c04bb226ad5122a748bccd4ae8de6aade",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 23.379,
+        "wall_s": 23.381
+      },
+      "same_status": true,
+      "run_lean_s": 22.345,
+      "now_lean_s": 23.379,
+      "ratio_run_over_now": 0.9558
+    },
+    {
+      "arm": "F",
+      "task_id": "mathd_numbertheory_541",
+      "repetition": 0,
+      "proof_sha256": "396e748e1e321de626d8e429c3b076ab22d7b3c65ded435f99dd6c5dc28ae2f9",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 40.94,
+        "wall_s": 40.942
+      },
+      "same_status": true,
+      "run_lean_s": 38.779,
+      "now_lean_s": 40.94,
+      "ratio_run_over_now": 0.9472
+    },
+    {
+      "arm": "F",
+      "task_id": "mathd_numbertheory_541",
+      "repetition": 1,
+      "proof_sha256": "ebbd4c3c8629b7b8c529e0b6b07cfdb4d04918fde7d7b10216b69d7338ab6677",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 40.746,
+        "wall_s": 40.748
+      },
+      "same_status": true,
+      "run_lean_s": 38.024,
+      "now_lean_s": 40.746,
+      "ratio_run_over_now": 0.9332
+    },
+    {
+      "arm": "F",
+      "task_id": "mathd_numbertheory_541",
+      "repetition": 3,
+      "proof_sha256": "930706a3e8495fab2f2cae0c02727f4cf30b982fe42e65d69a83347b4c251be3",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 41.531,
+        "wall_s": 41.533
+      },
+      "same_status": true,
+      "run_lean_s": 39.711,
+      "now_lean_s": 41.531,
+      "ratio_run_over_now": 0.9562
+    },
+    {
+      "arm": "F",
+      "task_id": "mathd_numbertheory_541",
+      "repetition": 4,
+      "proof_sha256": "930706a3e8495fab2f2cae0c02727f4cf30b982fe42e65d69a83347b4c251be3",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 43.385,
+        "wall_s": 43.387
+      },
+      "same_status": true,
+      "run_lean_s": 39.645,
+      "now_lean_s": 43.385,
+      "ratio_run_over_now": 0.9138
+    },
+    {
+      "arm": "P",
+      "task_id": "mathd_numbertheory_541",
+      "repetition": 0,
+      "proof_sha256": "01f9a246ff1a82bccee59c62cdbcd377afa753183f9628ba3de438b808c44a4d",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 40.626,
+        "wall_s": 40.628
+      },
+      "same_status": true,
+      "run_lean_s": 41.018,
+      "now_lean_s": 40.626,
+      "ratio_run_over_now": 1.0096
+    },
+    {
+      "arm": "P",
+      "task_id": "mathd_numbertheory_541",
+      "repetition": 3,
+      "proof_sha256": "c3e9d0c6315737c734311f97c97ab23f62ef94204f563b427b8c77ab72c91467",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 22.588,
+        "wall_s": 22.59
+      },
+      "same_status": true,
+      "run_lean_s": 22.964,
+      "now_lean_s": 22.588,
+      "ratio_run_over_now": 1.0166
+    },
+    {
+      "arm": "R4",
+      "task_id": "mathd_numbertheory_541",
+      "repetition": 0,
+      "proof_sha256": "3c0dd67cb2cd80a996455f75a84f62e1ae56b33ddd9f2fd12ace5280c0e4b4f5",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 42.271,
+        "wall_s": 42.273
+      },
+      "same_status": true,
+      "run_lean_s": 41.221,
+      "now_lean_s": 42.271,
+      "ratio_run_over_now": 0.9752
+    },
+    {
+      "arm": "R4",
+      "task_id": "mathd_numbertheory_541",
+      "repetition": 3,
+      "proof_sha256": "01f9a246ff1a82bccee59c62cdbcd377afa753183f9628ba3de438b808c44a4d",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 41.421,
+        "wall_s": 41.423
+      },
+      "same_status": true,
+      "run_lean_s": 40.798,
+      "now_lean_s": 41.421,
+      "ratio_run_over_now": 0.985
+    },
+    {
+      "arm": "baseline",
+      "task_id": "mathd_numbertheory_541",
+      "repetition": 0,
+      "proof_sha256": "01f9a246ff1a82bccee59c62cdbcd377afa753183f9628ba3de438b808c44a4d",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 40.041,
+        "wall_s": 40.043
+      },
+      "same_status": true,
+      "run_lean_s": 43.687,
+      "now_lean_s": 40.041,
+      "ratio_run_over_now": 1.0911
+    },
+    {
+      "arm": "baseline",
+      "task_id": "mathd_numbertheory_541",
+      "repetition": 1,
+      "proof_sha256": "ebbd4c3c8629b7b8c529e0b6b07cfdb4d04918fde7d7b10216b69d7338ab6677",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 40.079,
+        "wall_s": 40.08
+      },
+      "same_status": true,
+      "run_lean_s": 38.106,
+      "now_lean_s": 40.079,
+      "ratio_run_over_now": 0.9508
+    },
+    {
+      "arm": "baseline",
+      "task_id": "mathd_numbertheory_541",
+      "repetition": 3,
+      "proof_sha256": "01f9a246ff1a82bccee59c62cdbcd377afa753183f9628ba3de438b808c44a4d",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 39.907,
+        "wall_s": 39.908
+      },
+      "same_status": true,
+      "run_lean_s": 38.704,
+      "now_lean_s": 39.907,
+      "ratio_run_over_now": 0.9699
+    },
+    {
+      "arm": "baseline",
+      "task_id": "mathd_numbertheory_541",
+      "repetition": 4,
+      "proof_sha256": "9e201056e887e4e28983c2d3fca6e1b4e72d9f19f4dc11f0c47536219cd18875",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 41.522,
+        "wall_s": 41.524
+      },
+      "same_status": true,
+      "run_lean_s": 40.224,
+      "now_lean_s": 41.522,
+      "ratio_run_over_now": 0.9687
+    },
+    {
+      "arm": "P",
+      "task_id": "mathd_numbertheory_711",
+      "repetition": 4,
+      "proof_sha256": "19460ddd8aa3e0f3c5977f81d2e2ca6d87b54b63345af3a1ebd81e0e44b6666b",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 30.106,
+        "wall_s": 30.108
+      },
+      "same_status": true,
+      "run_lean_s": 35.438,
+      "now_lean_s": 30.106,
+      "ratio_run_over_now": 1.1771
+    }
+  ]
+}

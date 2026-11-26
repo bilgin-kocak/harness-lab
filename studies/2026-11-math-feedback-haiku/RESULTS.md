@@ -36,14 +36,14 @@
     +1.5 points, p = 0.062). H1 would read "difference (positive)" only if, besides them, one of
     F's 5 killed proofs of `mathd_numbertheory_451` also passed (p = 0.043), or three of them
     without the artifacts (p = 0.048).
-  - Very likely none of F's 5 could have passed within the registered 300 s, even with enough
-    memory (exploratory). With the memory limit lifted by swap, each of the 5 computed for more
-    than 450 s of user CPU, 1.5 times the limit, without finishing, its memory still growing past
-    25 GB. In the run, 72 ordinary checks took a median of ⟦MED⟧ times as long as when re-timed
-    one at a time on the machine measured, so the run's machine was not faster per check. Each would
-    therefore have needed more than 300 s, and the registered rule would have counted a timeout,
-    unless running under swap inflated that user time by half (section 8). So the recounts that
-    change a reading are very unlikely.
+  - Very likely none of F's 5 could have passed within the registered 300 s, even with enough memory
+    (exploratory). With the memory limit lifted by swap, each of the 5 computed for more than 450 s
+    of user CPU, 1.5 times the limit, without finishing, its memory still growing past 25 GB. In the
+    run, 72 ordinary checks took a median of 0.99 times as long as when re-timed one at a time on
+    the machine measured, so the run's machine was about as fast per check, far from 1.5 times as
+    fast. Each would therefore have needed more than 300 s, and the registered rule would have
+    counted a timeout, unless running under swap inflated that user time by half (section 8). So the
+    recounts that change a reading are very unlikely.
 - **The run.** 4,080 of 4,080 cells have valid records: 0 harness errors, 0 refusals, every call
   served by `claude-haiku-5-5`. One deviation (D1) resumed the run after the kernel's
   out-of-memory killer stopped it; it changed only the run procedure, and was committed in the
@@ -355,10 +355,11 @@ records where D1's expectations were wrong.
       one at a time, 72 of the run's final checks (20 s or more of Lean time, not of this problem,
       not overlapping a check of it; the rule was written in the script, 15:59:42Z, before it
       started, 15:59:51Z, and committed unchanged in 229b64f before any result was looked at). The
-      run, with three Lean checks at a time, took a median of ⟦MED⟧ times as long as this machine
-      checking alone (10th to 90th percentile ⟦P10⟧ to ⟦P90⟧; smallest ⟦MIN⟧), and all ⟦SAME⟧
-      verdicts repeated (`recheck_speed.json`). So the run's machine was not faster per check;
-      even at the smallest ratio, 450 s here would be about ⟦WORST⟧ s there.
+      run, with three Lean checks at a time, took a median of 0.99 times as long as this machine
+      checking alone (10th to 90th percentile 0.93 to 1.13; smallest 0.84), and all 72
+      verdicts repeated (`recheck_speed.json`). So the run's machine was about as fast per check
+      (on the median check about 1% faster), far from 1.5 times as fast; even at the smallest
+      ratio, 450 s here would be about 380 s there.
     - *Could swap have inflated the user time?* Under paging, cache and TLB misses can add user
       time; the samples cannot exclude some inflation. The conclusion needs an inflation by half.
       Paging became heavy only after memory passed about 14 GB: once the imports had loaded, user

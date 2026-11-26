@@ -1,0 +1,1142 @@
+[ 1451.964341] python invoked oom-killer: gfp_mask=0x100cca(GFP_HIGHUSER_MOVABLE), order=0, oom_score_adj=0
+[ 1451.964375] CPU: 2 UID: 0 PID: 233 Comm: python Not tainted 6.18.44-fc-v880 #1 PREEMPT(none) 
+[ 1451.964380] Call Trace:
+[ 1451.964493]  <TASK>
+[ 1451.964495]  dump_stack_lvl+0x59/0x90
+[ 1451.964560]  dump_header+0x43/0x1c0
+[ 1451.964565]  oom_kill_process.cold+0x8/0x8a
+[ 1451.964568]  out_of_memory+0x214/0x500
+[ 1451.964610]  mem_cgroup_out_of_memory+0xe8/0x130
+[ 1451.964655]  try_charge_memcg+0x439/0x700
+[ 1451.964658]  charge_memcg+0x2f/0x90
+[ 1451.964661]  __mem_cgroup_charge+0x2c/0x90
+[ 1451.964664]  filemap_add_folio+0x5a/0x220
+[ 1451.964667]  ? alloc_pages_mpol+0x86/0x180
+[ 1451.964689]  __filemap_get_folio+0x1d9/0x5c0
+[ 1451.964691]  ? page_cache_ra_unbounded+0x1ac/0x280
+[ 1451.964697]  filemap_fault+0x10e/0x1700
+[ 1451.964699]  ? filemap_map_pages+0x53a/0x810
+[ 1451.964701]  ? folio_add_file_rmap_ptes+0x47/0x1f0
+[ 1451.964706]  __do_fault+0x34/0xd0
+[ 1451.964710]  do_fault+0x319/0x660
+[ 1451.964714]  ? ___pte_offset_map+0x17/0x100
+[ 1451.964716]  __handle_mm_fault+0x842/0xf80
+[ 1451.964720]  handle_mm_fault+0xd0/0x310
+[ 1451.964723]  exc_page_fault+0x176/0x770
+[ 1451.964766]  asm_exc_page_fault+0x22/0x30
+[ 1451.964789] RIP: 0033:0x578d8d
+[ 1451.964794] Code: Unable to access opcode bytes at 0x578d63.
+[ 1451.964795] RSP: 002b:00007ffda470b940 EFLAGS: 00010202
+[ 1451.964798] RAX: 0000000000b371a8 RBX: 0000000000000011 RCX: 0000000000000006
+[ 1451.964800] RDX: 00007f6731968b30 RSI: 00007f672cd5b5e8 RDI: 00007f6726fc6b10
+[ 1451.964801] RBP: 00007ffda470b9a0 R08: 000000000d9f8170 R09: 00007f672cd5b5e8
+[ 1451.964802] R10: 000000000000003c R11: a52ab3bb9722b5fc R12: 000000000000003f
+[ 1451.964804] R13: 00007f6731968b30 R14: a52ab3bb9722b5fc R15: 000000000d9f81b0
+[ 1451.964806]  </TASK>
+[ 1451.964807] memory: usage 14002292kB, limit 14002316kB, failcnt 66299092
+[ 1451.964812] memory+swap: usage 14002316kB, limit 9007199254740988kB, failcnt 0
+[ 1451.964814] kmem: usage 204912kB, limit 9007199254740988kB, failcnt 0
+[ 1451.964815] Memory cgroup stats for /process_api/<id>/claude-code-bash:
+[ 1451.964839] cache 262144
+[ 1451.964840] rss 14128279552
+[ 1451.964841] rss_huge 11165237248
+[ 1451.964842] shmem 0
+[ 1451.964843] mapped_file 118784
+[ 1451.964844] dirty 0
+[ 1451.964844] writeback 0
+[ 1451.964845] workingset_refault_anon 0
+[ 1451.964847] workingset_refault_file 87554569
+[ 1451.964847] swap 0
+[ 1451.964848] swapcached 0
+[ 1451.964849] pgpgin 94324243
+[ 1451.964850] pgpgout 94713548
+[ 1451.964851] pgfault 19464294
+[ 1451.964852] pgmajfault 3747427
+[ 1451.964852] inactive_anon 14128205824
+[ 1451.964853] active_anon 73728
+[ 1451.964854] inactive_file 81920
+[ 1451.964855] active_file 94208
+[ 1451.964856] unevictable 0
+[ 1451.964856] hierarchical_memory_limit 14338371584
+[ 1451.964857] hierarchical_memsw_limit 9223372036854771712
+[ 1451.964858] total_cache 262144
+[ 1451.964859] total_rss 14128279552
+[ 1451.964860] total_rss_huge 11165237248
+[ 1451.964861] total_shmem 0
+[ 1451.964861] total_mapped_file 118784
+[ 1451.964862] total_dirty 0
+[ 1451.964863] total_writeback 0
+[ 1451.964864] total_workingset_refault_anon 0
+[ 1451.964865] total_workingset_refault_file 87554569
+[ 1451.964866] total_swap 0
+[ 1451.964867] total_swapcached 0
+[ 1451.964868] total_pgpgin 94324243
+[ 1451.964869] total_pgpgout 94713548
+[ 1451.964870] total_pgfault 19464294
+[ 1451.964870] total_pgmajfault 3747427
+[ 1451.964871] total_inactive_anon 14128205824
+[ 1451.964872] total_active_anon 73728
+[ 1451.964873] total_inactive_file 81920
+[ 1451.964874] total_active_file 94208
+[ 1451.964875] total_unevictable 0
+[ 1451.964876] Tasks state (memory values in pages):
+[ 1451.964877] [  pid  ]   uid  tgid total_vm      rss rss_anon rss_file rss_shmem pgtables_bytes swapents oom_score_adj name
+[ 1451.964879] [    226]     0   226     1119      785       64      721         0    49152        0             0 bash
+[ 1451.964883] [    228]     0   228     1119      804       64      740         0    53248        0             0 bash
+[ 1451.964886] [    232]     0   232      679      394        0      394         0    45056        0             0 sleep
+[ 1451.964889] [    233]     0   233    89661    27863    27201      662         0   335872        0             0 python
+[ 1451.964892] [    278]     0   278     1119      839       96      743         0    45056        0             0 bash
+[ 1451.964895] [    279]     0   279     1118      790       64      726         0    49152        0             0 bash
+[ 1451.964897] [   5128]     0  5128   521128    16666    15992      674         0 18448384        0             0 lake
+[ 1451.964901] [   5173]     0  5173  5165415  3406064  3405483      581         0 127148032        0             0 lean
+[ 1451.964904] [   5835]     0  5835      679      394        0      394         0    45056        0             0 sleep
+[ 1451.964907] [   5839]     0  5839     2992       61       32       29         0    28672        0             0 lake
+[ 1451.964936] oom-kill:constraint=CONSTRAINT_MEMCG,nodemask=(null),cpuset=/,mems_allowed=0,oom_memcg=/process_api/<id>/claude-code-bash,task_memcg=/process_api/<id>/claude-code-bash,task=lean,pid=5173,uid=0
+[ 1451.965001] Memory cgroup out of memory: Killed process 5173 (lean) total-vm:20661660kB, anon-rss:13621932kB, file-rss:2196kB, shmem-rss:0kB, UID:0 pgtables:124168kB oom_score_adj:0
+[ 2249.811301] lean invoked oom-killer: gfp_mask=0x100cca(GFP_HIGHUSER_MOVABLE), order=0, oom_score_adj=0
+[ 2249.811309] CPU: 0 UID: 0 PID: 9901 Comm: lean Not tainted 6.18.44-fc-v880 #1 PREEMPT(none) 
+[ 2249.811313] Call Trace:
+[ 2249.811369]  <TASK>
+[ 2249.811371]  dump_stack_lvl+0x59/0x90
+[ 2249.811446]  dump_header+0x43/0x1c0
+[ 2249.811450]  oom_kill_process.cold+0x8/0x8a
+[ 2249.811453]  out_of_memory+0x214/0x500
+[ 2249.811492]  mem_cgroup_out_of_memory+0xe8/0x130
+[ 2249.811538]  try_charge_memcg+0x439/0x700
+[ 2249.811541]  charge_memcg+0x2f/0x90
+[ 2249.811542]  __mem_cgroup_charge+0x2c/0x90
+[ 2249.811545]  filemap_add_folio+0x5a/0x220
+[ 2249.811547]  ? alloc_pages_mpol+0x86/0x180
+[ 2249.811567]  __filemap_get_folio+0x1d9/0x5c0
+[ 2249.811569]  ? page_cache_ra_unbounded+0x1ac/0x280
+[ 2249.811573]  filemap_fault+0x10e/0x1700
+[ 2249.811591]  ? filemap_map_pages+0x53a/0x810
+[ 2249.811592]  ? folio_add_file_rmap_ptes+0x47/0x1f0
+[ 2249.811596]  __do_fault+0x34/0xd0
+[ 2249.811600]  do_fault+0x319/0x660
+[ 2249.811603]  ? ___pte_offset_map+0x17/0x100
+[ 2249.811604]  __handle_mm_fault+0x842/0xf80
+[ 2249.811607]  handle_mm_fault+0xd0/0x310
+[ 2249.811610]  exc_page_fault+0x176/0x770
+[ 2249.811655]  asm_exc_page_fault+0x22/0x30
+[ 2249.811674] RIP: 0033:0x7f66bb226119
+[ 2249.811676] Code: 06 48 8b 6c 24 18 49 89 ef 48 85 ed 0f 84 4c 09 00 00 4c 8b 74 24 10 4b 8b 5c fe f8 49 8d 6f ff 48 89 6c 24 18 f6 c3 01 75 dc <83> 3b 00 74 d2 c7 03 00 00 00 00 8b 43 04 89 c1 c1 e9 1a 83 f9 3c
+[ 2249.811677] RSP: 002b:00007f66b13fd400 EFLAGS: 00010246
+[ 2249.811679] RAX: 0000000000000001 RBX: 000058556956be70 RCX: 0000000000000000
+[ 2249.811680] RDX: 0000000000000000 RSI: 0000000001001000 RDI: 00007f66aa7fe000
+[ 2249.811681] RBP: 0000000000144eb6 R08: 0000000001001000 R09: 0000000000000000
+[ 2249.811682] R10: 0000000000000022 R11: 0000000000000207 R12: 0000038f7c866ed8
+[ 2249.811683] R13: 1fffffffffffffff R14: 00007f66a87fd010 R15: 0000000000144eb7
+[ 2249.811684]  </TASK>
+[ 2249.811685] memory: usage 14002316kB, limit 14002316kB, failcnt 78873147
+[ 2249.811689] memory+swap: usage 14002316kB, limit 9007199254740988kB, failcnt 0
+[ 2249.811690] kmem: usage 327412kB, limit 9007199254740988kB, failcnt 0
+[ 2249.811691] Memory cgroup stats for /process_api/<id>/claude-code-bash:
+[ 2249.811709] cache 356352
+[ 2249.811710] rss 14002745344
+[ 2249.811711] rss_huge 10957619200
+[ 2249.811712] shmem 0
+[ 2249.811713] mapped_file 323584
+[ 2249.811713] dirty 0
+[ 2249.811713] writeback 0
+[ 2249.811714] workingset_refault_anon 0
+[ 2249.811715] workingset_refault_file 108366662
+[ 2249.811715] swap 0
+[ 2249.811716] swapcached 0
+[ 2249.811716] pgpgin 118579998
+[ 2249.811717] pgpgout 119976536
+[ 2249.811717] pgfault 32338600
+[ 2249.811718] pgmajfault 4827698
+[ 2249.811718] inactive_anon 14002663424
+[ 2249.811719] active_anon 81920
+[ 2249.811719] inactive_file 0
+[ 2249.811719] active_file 0
+[ 2249.811720] unevictable 0
+[ 2249.811720] hierarchical_memory_limit 14338371584
+[ 2249.811721] hierarchical_memsw_limit 9223372036854771712
+[ 2249.811722] total_cache 356352
+[ 2249.811722] total_rss 14002745344
+[ 2249.811723] total_rss_huge 10957619200
+[ 2249.811723] total_shmem 0
+[ 2249.811724] total_mapped_file 323584
+[ 2249.811724] total_dirty 0
+[ 2249.811725] total_writeback 0
+[ 2249.811725] total_workingset_refault_anon 0
+[ 2249.811726] total_workingset_refault_file 108366662
+[ 2249.811726] total_swap 0
+[ 2249.811727] total_swapcached 0
+[ 2249.811727] total_pgpgin 118579998
+[ 2249.811728] total_pgpgout 119976536
+[ 2249.811728] total_pgfault 32338600
+[ 2249.811729] total_pgmajfault 4827698
+[ 2249.811729] total_inactive_anon 14002663424
+[ 2249.811730] total_active_anon 81920
+[ 2249.811730] total_inactive_file 0
+[ 2249.811731] total_active_file 0
+[ 2249.811731] total_unevictable 0
+[ 2249.811732] Tasks state (memory values in pages):
+[ 2249.811732] [  pid  ]   uid  tgid total_vm      rss rss_anon rss_file rss_shmem pgtables_bytes swapents oom_score_adj name
+[ 2249.811734] [    226]     0   226     1119      785       64      721         0    49152        0             0 bash
+[ 2249.811737] [    228]     0   228     1119      772       64      708         0    53248        0             0 bash
+[ 2249.811739] [    232]     0   232      679      394        0      394         0    45056        0             0 sleep
+[ 2249.811741] [    233]     0   233    89914    28207    27521      686         0   339968        0             0 python
+[ 2249.811743] [    278]     0   278     1119      807       96      711         0    45056        0             0 bash
+[ 2249.811745] [    279]     0   279     1118      758       64      694         0    49152        0             0 bash
+[ 2249.811746] [   8944]     0  8944   521128    16876    16222      654         0 18448384        0             0 lake
+[ 2249.811749] [   8989]     0  8989  5165415  3314819  3314270      549         0 126418944        0             0 lean
+[ 2249.811750] [   9853]     0  9853   521128    15902    15224      678         0 18456576        0             0 lake
+[ 2249.811752] [   9898]     0  9898  1875496    45502    44924      578         0 100134912        0             0 lean
+[ 2249.811754] [   9904]     0  9904      679      394        0      394         0    45056        0             0 sleep
+[ 2249.811755] oom-kill:constraint=CONSTRAINT_MEMCG,nodemask=(null),cpuset=/,mems_allowed=0,oom_memcg=/process_api/<id>/claude-code-bash,task_memcg=/process_api/<id>/claude-code-bash,task=lean,pid=8989,uid=0
+[ 2249.811799] Memory cgroup out of memory: Killed process 8989 (lean) total-vm:20661660kB, anon-rss:13257080kB, file-rss:2196kB, shmem-rss:0kB, UID:0 pgtables:123456kB oom_score_adj:0
+[ 5123.542145] lake invoked oom-killer: gfp_mask=0x100cca(GFP_HIGHUSER_MOVABLE), order=0, oom_score_adj=0
+[ 5123.542154] CPU: 0 UID: 0 PID: 30172 Comm: lake Not tainted 6.18.44-fc-v880 #1 PREEMPT(none) 
+[ 5123.542158] Call Trace:
+[ 5123.542214]  <TASK>
+[ 5123.542216]  dump_stack_lvl+0x59/0x90
+[ 5123.542285]  dump_header+0x43/0x1c0
+[ 5123.542290]  oom_kill_process.cold+0x8/0x8a
+[ 5123.542293]  out_of_memory+0x214/0x500
+[ 5123.542332]  mem_cgroup_out_of_memory+0xe8/0x130
+[ 5123.542392]  try_charge_memcg+0x439/0x700
+[ 5123.542395]  charge_memcg+0x2f/0x90
+[ 5123.542397]  __mem_cgroup_charge+0x2c/0x90
+[ 5123.542400]  filemap_add_folio+0x5a/0x220
+[ 5123.542406]  ? alloc_pages_mpol+0x86/0x180
+[ 5123.542426]  __filemap_get_folio+0x1d9/0x5c0
+[ 5123.542428]  ? page_cache_ra_unbounded+0x1ac/0x280
+[ 5123.542433]  filemap_fault+0x10e/0x1700
+[ 5123.542435]  ? filemap_map_pages+0x53a/0x810
+[ 5123.542437]  __do_fault+0x34/0xd0
+[ 5123.542440]  do_fault+0x319/0x660
+[ 5123.542443]  ? ___pte_offset_map+0x17/0x100
+[ 5123.542446]  __handle_mm_fault+0x842/0xf80
+[ 5123.542449]  handle_mm_fault+0xd0/0x310
+[ 5123.542451]  exc_page_fault+0x176/0x770
+[ 5123.542491]  asm_exc_page_fault+0x22/0x30
+[ 5123.542511] RIP: 0033:0x7fd9e4870ef0
+[ 5123.542514] Code: Unable to access opcode bytes at 0x7fd9e4870ec6.
+[ 5123.542515] RSP: 002b:00007ffcf91a63b8 EFLAGS: 00010206
+[ 5123.542517] RAX: 0000044ff2000de0 RBX: 0000044ff2000de0 RCX: 000000000000006c
+[ 5123.542518] RDX: 0000044ff2000de0 RSI: 00007fd9e4927ca0 RDI: 00007fd9e4928030
+[ 5123.542518] RBP: 0000000000000000 R08: 0000000000000000 R09: 0000000000008000
+[ 5123.542519] R10: 000000000000e000 R11: 000000000000c000 R12: 0000000000000000
+[ 5123.542520] R13: 00007fd9e49253c0 R14: 0000000000001d90 R15: 00007fd9e4927440
+[ 5123.542522]  </TASK>
+[ 5123.542553] memory: usage 14002316kB, limit 14002316kB, failcnt 102046027
+[ 5123.542555] memory+swap: usage 14002316kB, limit 9007199254740988kB, failcnt 0
+[ 5123.542556] kmem: usage 347184kB, limit 9007199254740988kB, failcnt 0
+[ 5123.542556] Memory cgroup stats for /process_api/<id>/claude-code-bash:
+[ 5123.542575] cache 393216
+[ 5123.542576] rss 13982461952
+[ 5123.542576] rss_huge 11043602432
+[ 5123.542577] shmem 0
+[ 5123.542577] mapped_file 184320
+[ 5123.542578] dirty 0
+[ 5123.542578] writeback 0
+[ 5123.542579] workingset_refault_anon 0
+[ 5123.542579] workingset_refault_file 146592239
+[ 5123.542580] swap 0
+[ 5123.542580] swapcached 0
+[ 5123.542581] pgpgin 168346642
+[ 5123.542581] pgpgout 170535467
+[ 5123.542582] pgfault 85244696
+[ 5123.542582] pgmajfault 6655638
+[ 5123.542583] inactive_anon 13982380032
+[ 5123.542583] active_anon 81920
+[ 5123.542584] inactive_file 335872
+[ 5123.542584] active_file 0
+[ 5123.542585] unevictable 0
+[ 5123.542585] hierarchical_memory_limit 14338371584
+[ 5123.542586] hierarchical_memsw_limit 9223372036854771712
+[ 5123.542586] total_cache 393216
+[ 5123.542587] total_rss 13982461952
+[ 5123.542587] total_rss_huge 11043602432
+[ 5123.542588] total_shmem 0
+[ 5123.542589] total_mapped_file 184320
+[ 5123.542589] total_dirty 0
+[ 5123.542590] total_writeback 0
+[ 5123.542590] total_workingset_refault_anon 0
+[ 5123.542591] total_workingset_refault_file 146592239
+[ 5123.542591] total_swap 0
+[ 5123.542592] total_swapcached 0
+[ 5123.542592] total_pgpgin 168346642
+[ 5123.542593] total_pgpgout 170535467
+[ 5123.542593] total_pgfault 85244696
+[ 5123.542594] total_pgmajfault 6655638
+[ 5123.542595] total_inactive_anon 13982380032
+[ 5123.542595] total_active_anon 81920
+[ 5123.542596] total_inactive_file 335872
+[ 5123.542596] total_active_file 0
+[ 5123.542597] total_unevictable 0
+[ 5123.542597] Tasks state (memory values in pages):
+[ 5123.542598] [  pid  ]   uid  tgid total_vm      rss rss_anon rss_file rss_shmem pgtables_bytes swapents oom_score_adj name
+[ 5123.542600] [    226]     0   226     1119      785       64      721         0    49152        0             0 bash
+[ 5123.542603] [    228]     0   228     1119      806       64      742         0    53248        0             0 bash
+[ 5123.542605] [    233]     0   233    90613    29107    28385      722         0   344064        0             0 python
+[ 5123.542607] [    278]     0   278     1119      807       96      711         0    45056        0             0 bash
+[ 5123.542609] [    279]     0   279     1118      758       64      694         0    49152        0             0 bash
+[ 5123.542610] [  22711]     0 22711      679      394        0      394         0    45056        0             0 sleep
+[ 5123.542612] [  29395]     0 29395   521128    16837    16163      674         0 18448384        0             0 lake
+[ 5123.542614] [  29443]     0 29443  5165415  3305162  3304554      608         0 126332928        0             0 lean
+[ 5123.542616] [  30047]     0 30047   521128    15915    15231      684         0 18448384        0             0 lake
+[ 5123.542617] [  30113]     0 30113  1867336    40415    39827      588         0 100081664        0             0 lean
+[ 5123.542619] [  30166]     0 30166      679      394        0      394         0    40960        0             0 sleep
+[ 5123.542620] [  30172]     0 30172   502284     9590     9013      577         0 18370560        0             0 lake
+[ 5123.542622] oom-kill:constraint=CONSTRAINT_MEMCG,nodemask=(null),cpuset=/,mems_allowed=0,oom_memcg=/process_api/<id>/claude-code-bash,task_memcg=/process_api/<id>/claude-code-bash,task=lean,pid=29443,uid=0
+[ 5123.542673] Memory cgroup out of memory: Killed process 29443 (lean) total-vm:20661660kB, anon-rss:13218216kB, file-rss:2432kB, shmem-rss:0kB, UID:0 pgtables:123372kB oom_score_adj:0
+[ 7918.531737] lean invoked oom-killer: gfp_mask=0x100cca(GFP_HIGHUSER_MOVABLE), order=0, oom_score_adj=0
+[ 7918.531745] CPU: 0 UID: 0 PID: 17412 Comm: lean Not tainted 6.18.44-fc-v880 #1 PREEMPT(none) 
+[ 7918.531749] Call Trace:
+[ 7918.531800]  <TASK>
+[ 7918.531801]  dump_stack_lvl+0x59/0x90
+[ 7918.531857]  dump_header+0x43/0x1c0
+[ 7918.531861]  oom_kill_process.cold+0x8/0x8a
+[ 7918.531864]  out_of_memory+0x214/0x500
+[ 7918.531900]  mem_cgroup_out_of_memory+0xe8/0x130
+[ 7918.531936]  try_charge_memcg+0x439/0x700
+[ 7918.531939]  charge_memcg+0x2f/0x90
+[ 7918.531940]  __mem_cgroup_charge+0x2c/0x90
+[ 7918.531943]  filemap_add_folio+0x5a/0x220
+[ 7918.531945]  ? alloc_pages_mpol+0x86/0x180
+[ 7918.531965]  __filemap_get_folio+0x1d9/0x5c0
+[ 7918.531967]  ? page_cache_ra_unbounded+0x1ac/0x280
+[ 7918.531972]  filemap_fault+0x10e/0x1700
+[ 7918.531973]  ? filemap_map_pages+0x53a/0x810
+[ 7918.531974]  ? folio_add_file_rmap_ptes+0x47/0x1f0
+[ 7918.531978]  __do_fault+0x34/0xd0
+[ 7918.531982]  do_fault+0x319/0x660
+[ 7918.531985]  ? ___pte_offset_map+0x17/0x100
+[ 7918.531986]  __handle_mm_fault+0x842/0xf80
+[ 7918.531989]  handle_mm_fault+0xd0/0x310
+[ 7918.531992]  exc_page_fault+0x176/0x770
+[ 7918.532027]  asm_exc_page_fault+0x22/0x30
+[ 7918.532046] RIP: 0033:0x7fa23a34e5c6
+[ 7918.532049] Code: Unable to access opcode bytes at 0x7fa23a34e59c.
+[ 7918.532050] RSP: 002b:00007fa22a69c600 EFLAGS: 00010206
+[ 7918.532052] RAX: 00007fa22a69c610 RBX: 00007fa22a69c698 RCX: 000031fc9d5ee280
+[ 7918.532053] RDX: 000031fc9d5ee280 RSI: 000031fc9d5ee238 RDI: 000031fc9d5ee238
+[ 7918.532053] RBP: 0000000000000001 R08: 0000000000000022 R09: 000000000000002f
+[ 7918.532054] R10: 000031fc9d5ee238 R11: 0000000000000004 R12: 00007fa22a69c8d0
+[ 7918.532055] R13: 00007fa22a69cb28 R14: 0000000000000004 R15: 000031fc9d5ee280
+[ 7918.532056]  </TASK>
+[ 7918.532057] memory: usage 14002316kB, limit 14002316kB, failcnt 121871190
+[ 7918.532060] memory+swap: usage 14002316kB, limit 9007199254740988kB, failcnt 0
+[ 7918.532061] kmem: usage 450080kB, limit 9007199254740988kB, failcnt 0
+[ 7918.532062] Memory cgroup stats for /process_api/<id>/claude-code-bash:
+[ 7918.532079] cache 372736
+[ 7918.532080] rss 13876920320
+[ 7918.532081] rss_huge 10919870464
+[ 7918.532081] shmem 0
+[ 7918.532082] mapped_file 221184
+[ 7918.532082] dirty 0
+[ 7918.532083] writeback 0
+[ 7918.532083] workingset_refault_anon 0
+[ 7918.532084] workingset_refault_file 179974930
+[ 7918.532084] swap 0
+[ 7918.532085] swapcached 0
+[ 7918.532085] pgpgin 212670212
+[ 7918.532086] pgpgout 215782234
+[ 7918.532086] pgfault 137951608
+[ 7918.532087] pgmajfault 8189821
+[ 7918.532087] inactive_anon 13876834304
+[ 7918.532088] active_anon 86016
+[ 7918.532088] inactive_file 102400
+[ 7918.532089] active_file 0
+[ 7918.532089] unevictable 0
+[ 7918.532090] hierarchical_memory_limit 14338371584
+[ 7918.532090] hierarchical_memsw_limit 9223372036854771712
+[ 7918.532091] total_cache 372736
+[ 7918.532091] total_rss 13876920320
+[ 7918.532092] total_rss_huge 10919870464
+[ 7918.532092] total_shmem 0
+[ 7918.532093] total_mapped_file 221184
+[ 7918.532093] total_dirty 0
+[ 7918.532108] total_writeback 0
+[ 7918.532109] total_workingset_refault_anon 0
+[ 7918.532109] total_workingset_refault_file 179974930
+[ 7918.532110] total_swap 0
+[ 7918.532110] total_swapcached 0
+[ 7918.532111] total_pgpgin 212670212
+[ 7918.532111] total_pgpgout 215782234
+[ 7918.532112] total_pgfault 137951608
+[ 7918.532112] total_pgmajfault 8189821
+[ 7918.532113] total_inactive_anon 13876834304
+[ 7918.532113] total_active_anon 86016
+[ 7918.532114] total_inactive_file 102400
+[ 7918.532114] total_active_file 0
+[ 7918.532115] total_unevictable 0
+[ 7918.532115] Tasks state (memory values in pages):
+[ 7918.532116] [  pid  ]   uid  tgid total_vm      rss rss_anon rss_file rss_shmem pgtables_bytes swapents oom_score_adj name
+[ 7918.532117] [    226]     0   226     1119      785       64      721         0    49152        0             0 bash
+[ 7918.532121] [    228]     0   228     1119      806       64      742         0    53248        0             0 bash
+[ 7918.532123] [    233]     0   233    91198    29450    28769      681         0   352256        0             0 python
+[ 7918.532124] [  11988]     0 11988     1119      839       96      743         0    53248        0             0 bash
+[ 7918.532126] [  11989]     0 11989     1118      793       64      729         0    49152        0             0 bash
+[ 7918.532128] [  14557]     0 14557      679      394        0      394         0    45056        0             0 sleep
+[ 7918.532130] [  17306]     0 17306   521128    16862    16215      647         0 18452480        0             0 lake
+[ 7918.532131] [  17378]     0 17378  5165415  3245905  3245283      622         0 125865984        0             0 lean
+[ 7918.532133] [  18006]     0 18006   521128    15860    15214      646         0 18456576        0             0 lake
+[ 7918.532135] [  18052]     0 18052  1875496    45332    44782      550         0 100126720        0             0 lean
+[ 7918.532136] [  18063]     0 18063   521128    15896    15226      670         0 18456576        0             0 lake
+[ 7918.532138] [  18109]     0 18109  1867303    22485    21885      600         0 99409920        0             0 lean
+[ 7918.532139] [  18115]     0 18115      679      394        0      394         0    45056        0             0 sleep
+[ 7918.532141] oom-kill:constraint=CONSTRAINT_MEMCG,nodemask=(null),cpuset=/,mems_allowed=0,oom_memcg=/process_api/<id>/claude-code-bash,task_memcg=/process_api/<id>/claude-code-bash,task=lean,pid=17378,uid=0
+[ 7918.532172] Memory cgroup out of memory: Killed process 17378 (lean) total-vm:20661660kB, anon-rss:12981132kB, file-rss:2488kB, shmem-rss:0kB, UID:0 pgtables:122916kB oom_score_adj:0
+[14133.233125] lean invoked oom-killer: gfp_mask=0x100cca(GFP_HIGHUSER_MOVABLE), order=0, oom_score_adj=0
+[14133.233135] CPU: 1 UID: 0 PID: 32764 Comm: lean Not tainted 6.18.44-fc-v880 #1 PREEMPT(none) 
+[14133.233139] Call Trace:
+[14133.233188]  <TASK>
+[14133.233190]  dump_stack_lvl+0x59/0x90
+[14133.233241]  dump_header+0x43/0x1c0
+[14133.233246]  oom_kill_process.cold+0x8/0x8a
+[14133.233248]  out_of_memory+0x214/0x500
+[14133.233278]  mem_cgroup_out_of_memory+0xe8/0x130
+[14133.233313]  try_charge_memcg+0x439/0x700
+[14133.233315]  charge_memcg+0x2f/0x90
+[14133.233317]  __mem_cgroup_charge+0x2c/0x90
+[14133.233319]  filemap_add_folio+0x5a/0x220
+[14133.233322]  ? alloc_pages_mpol+0x86/0x180
+[14133.233339]  __filemap_get_folio+0x1d9/0x5c0
+[14133.233341]  ? page_cache_ra_unbounded+0x1ac/0x280
+[14133.233345]  filemap_fault+0x10e/0x1700
+[14133.233347]  ? filemap_map_pages+0x53a/0x810
+[14133.233348]  ? folio_add_file_rmap_ptes+0x47/0x1f0
+[14133.233353]  __do_fault+0x34/0xd0
+[14133.233356]  do_fault+0x319/0x660
+[14133.233359]  ? ___pte_offset_map+0x17/0x100
+[14133.233360]  __handle_mm_fault+0x842/0xf80
+[14133.233363]  handle_mm_fault+0xd0/0x310
+[14133.233366]  exc_page_fault+0x176/0x770
+[14133.233399]  asm_exc_page_fault+0x22/0x30
+[14133.233416] RIP: 0033:0x7f2e73e4d4db
+[14133.233418] Code: 00 00 48 8b 44 24 18 4a 8b 7c f8 18 40 f6 c7 01 75 0e 8b 07 85 c0 0f 8e 6a 01 00 00 ff c0 89 07 48 8b 6f 08 40 f6 c5 01 75 10 <8b> 45 00 85 c0 0f 8e 5f 01 00 00 ff c0 89 45 00 4c 8b 6f 10 41 f6
+[14133.233420] RSP: 002b:00007f2e70dfd330 EFLAGS: 00010246
+[14133.233422] RAX: 0000000000000000 RBX: 00000296c02a1800 RCX: 0000000000000000
+[14133.233423] RDX: 00000296c01a44f0 RSI: 00000296c0000000 RDI: 00001e9028bf7370
+[14133.233424] RBP: 00001e9028a4af30 R08: 000000000000001a R09: 0000000000000000
+[14133.233425] R10: 0000000000000001 R11: 00007f2e718f5500 R12: 00000296c02c0ca0
+[14133.233426] R13: 00001e9028bccc18 R14: 00000000000003a9 R15: 000000000000001b
+[14133.233427]  </TASK>
+[14133.233428] memory: usage 14002316kB, limit 14002316kB, failcnt 132289547
+[14133.233432] memory+swap: usage 14002316kB, limit 9007199254740988kB, failcnt 0
+[14133.233433] kmem: usage 448188kB, limit 9007199254740988kB, failcnt 0
+[14133.233434] Memory cgroup stats for /process_api/<id>/claude-code-bash:
+[14133.233452] cache 278528
+[14133.233453] rss 13879148544
+[14133.233454] rss_huge 11035213824
+[14133.233454] shmem 0
+[14133.233455] mapped_file 303104
+[14133.233455] dirty 0
+[14133.233456] writeback 0
+[14133.233456] workingset_refault_anon 0
+[14133.233457] workingset_refault_file 200593534
+[14133.233457] swap 0
+[14133.233458] swapcached 0
+[14133.233458] pgpgin 257709145
+[14133.233459] pgpgout 261543820
+[14133.233459] pgfault 255115004
+[14133.233460] pgmajfault 9209027
+[14133.233460] inactive_anon 13879062528
+[14133.233461] active_anon 86016
+[14133.233461] inactive_file 0
+[14133.233462] active_file 0
+[14133.233462] unevictable 0
+[14133.233463] hierarchical_memory_limit 14338371584
+[14133.233463] hierarchical_memsw_limit 9223372036854771712
+[14133.233464] total_cache 278528
+[14133.233464] total_rss 13879148544
+[14133.233465] total_rss_huge 11035213824
+[14133.233465] total_shmem 0
+[14133.233466] total_mapped_file 303104
+[14133.233466] total_dirty 0
+[14133.233467] total_writeback 0
+[14133.233467] total_workingset_refault_anon 0
+[14133.233468] total_workingset_refault_file 200593534
+[14133.233468] total_swap 0
+[14133.233469] total_swapcached 0
+[14133.233469] total_pgpgin 257709145
+[14133.233470] total_pgpgout 261543820
+[14133.233470] total_pgfault 255115004
+[14133.233471] total_pgmajfault 9209027
+[14133.233471] total_inactive_anon 13879062528
+[14133.233472] total_active_anon 86016
+[14133.233472] total_inactive_file 0
+[14133.233473] total_active_file 0
+[14133.233473] total_unevictable 0
+[14133.233474] Tasks state (memory values in pages):
+[14133.233474] [  pid  ]   uid  tgid total_vm      rss rss_anon rss_file rss_shmem pgtables_bytes swapents oom_score_adj name
+[14133.233476] [    226]     0   226     1119      785       64      721         0    49152        0             0 bash
+[14133.233479] [    228]     0   228     1119      806       64      742         0    53248        0             0 bash
+[14133.233482] [    233]     0   233    92554    30912    30177      735         0   360448        0             0 python
+[14133.233483] [   8350]     0  8350      679      394        0      394         0    45056        0             0 sleep
+[14133.233485] [  31406]     0 31406     1119      831       96      735         0    49152        0             0 bash
+[14133.233487] [  31407]     0 31407     1118      786       64      722         0    53248        0             0 bash
+[14133.233489] [  31650]     0 31650   521128    16863    16216      647         0 18448384        0             0 lake
+[14133.233491] [  31696]     0 31696  5149031  3226005  3225429      576         0 125706240        0             0 lean
+[14133.233492] [  32660]     0 32660   521128    15844    15203      641         0 18456576        0             0 lake
+[14133.233494] [  32708]     0 32708  1875496    45393    44810      583         0 100130816        0             0 lean
+[14133.233496] [  32716]     0 32716   521128    15818    15181      637         0 18452480        0             0 lake
+[14133.233497] [  32761]     0 32761  1867303    41456    40901      555         0 100093952        0             0 lean
+[14133.233498] [    302]     0   302      679      394        0      394         0    49152        0             0 sleep
+[14133.233500] oom-kill:constraint=CONSTRAINT_MEMCG,nodemask=(null),cpuset=/,mems_allowed=0,oom_memcg=/process_api/<id>/claude-code-bash,task_memcg=/process_api/<id>/claude-code-bash,task=lean,pid=31696,uid=0
+[14133.233540] Memory cgroup out of memory: Killed process 31696 (lean) total-vm:20596124kB, anon-rss:12901716kB, file-rss:2304kB, shmem-rss:0kB, UID:0 pgtables:122760kB oom_score_adj:0
+[19150.440781] lean invoked oom-killer: gfp_mask=0x100cca(GFP_HIGHUSER_MOVABLE), order=0, oom_score_adj=0
+[19150.440795] CPU: 2 UID: 0 PID: 7993 Comm: lean Not tainted 6.18.44-fc-v880 #1 PREEMPT(none) 
+[19150.440800] Call Trace:
+[19150.440864]  <TASK>
+[19150.440867]  dump_stack_lvl+0x59/0x90
+[19150.440931]  dump_header+0x43/0x1c0
+[19150.440937]  oom_kill_process.cold+0x8/0x8a
+[19150.440940]  out_of_memory+0x214/0x500
+[19150.440996]  mem_cgroup_out_of_memory+0xe8/0x130
+[19150.441041]  try_charge_memcg+0x439/0x700
+[19150.441044]  charge_memcg+0x2f/0x90
+[19150.441046]  __mem_cgroup_charge+0x2c/0x90
+[19150.441049]  filemap_add_folio+0x5a/0x220
+[19150.441053]  ? alloc_pages_mpol+0x86/0x180
+[19150.441076]  __filemap_get_folio+0x1d9/0x5c0
+[19150.441079]  ? page_cache_ra_unbounded+0x1ac/0x280
+[19150.441085]  filemap_fault+0x10e/0x1700
+[19150.441087]  ? filemap_map_pages+0x53a/0x810
+[19150.441090]  ? __rseq_handle_notify_resume+0xa2/0x490
+[19150.441146]  __do_fault+0x34/0xd0
+[19150.441150]  do_fault+0x319/0x660
+[19150.441154]  ? ___pte_offset_map+0x17/0x100
+[19150.441157]  __handle_mm_fault+0x842/0xf80
+[19150.441162]  handle_mm_fault+0xd0/0x310
+[19150.441165]  exc_page_fault+0x176/0x770
+[19150.441208]  asm_exc_page_fault+0x22/0x30
+[19150.441231] RIP: 0033:0x7f8567502251
+[19150.441236] Code: Unable to access opcode bytes at 0x7f8567502227.
+[19150.441237] RSP: 002b:00007f855d9fd3a0 EFLAGS: 00010202
+[19150.441240] RAX: 000004e9ae0e8900 RBX: 0000000000000001 RCX: 0000000000000000
+[19150.441242] RDX: 000004e9ae020840 RSI: 000004e9ae000000 RDI: 0000000000000000
+[19150.441243] RBP: 0000000000000001 R08: f900000000000000 R09: 0000000000000001
+[19150.441244] R10: 00007f8550004e60 R11: 0000000000000246 R12: 000004e9ae2807c0
+[19150.441246] R13: 000004e9ae280680 R14: 000004e9acd50740 R15: 000004e9acd43a20
+[19150.441248]  </TASK>
+[19150.441261] memory: usage 14002204kB, limit 14002316kB, failcnt 157594509
+[19150.441268] memory+swap: usage 14002204kB, limit 9007199254740988kB, failcnt 0
+[19150.441270] kmem: usage 311988kB, limit 9007199254740988kB, failcnt 0
+[19150.441271] Memory cgroup stats for /process_api/<id>/claude-code-bash:
+[19150.441309] cache 417792
+[19150.441311] rss 14018379776
+[19150.441312] rss_huge 11173625856
+[19150.441314] shmem 0
+[19150.441314] mapped_file 229376
+[19150.441315] dirty 0
+[19150.441316] writeback 0
+[19150.441317] workingset_refault_anon 0
+[19150.441318] workingset_refault_file 243753134
+[19150.441319] swap 0
+[19150.441320] swapcached 0
+[19150.441321] pgpgin 324288362
+[19150.441322] pgpgout 329150959
+[19150.441323] pgfault 356822081
+[19150.441324] pgmajfault 11557192
+[19150.441325] inactive_anon 14018297856
+[19150.441326] active_anon 81920
+[19150.441327] inactive_file 61440
+[19150.441328] active_file 131072
+[19150.441329] unevictable 0
+[19150.441329] hierarchical_memory_limit 14338371584
+[19150.441330] hierarchical_memsw_limit 9223372036854771712
+[19150.441345] total_cache 417792
+[19150.441346] total_rss 14018379776
+[19150.441347] total_rss_huge 11173625856
+[19150.441348] total_shmem 0
+[19150.441349] total_mapped_file 229376
+[19150.441350] total_dirty 0
+[19150.441350] total_writeback 0
+[19150.441351] total_workingset_refault_anon 0
+[19150.441352] total_workingset_refault_file 243753134
+[19150.441353] total_swap 0
+[19150.441354] total_swapcached 0
+[19150.441355] total_pgpgin 324288362
+[19150.441356] total_pgpgout 329150959
+[19150.441357] total_pgfault 356822081
+[19150.441358] total_pgmajfault 11557192
+[19150.441359] total_inactive_anon 14018297856
+[19150.441360] total_active_anon 81920
+[19150.441361] total_inactive_file 61440
+[19150.441362] total_active_file 131072
+[19150.441363] total_unevictable 0
+[19150.441364] Tasks state (memory values in pages):
+[19150.441365] [  pid  ]   uid  tgid total_vm      rss rss_anon rss_file rss_shmem pgtables_bytes swapents oom_score_adj name
+[19150.441367] [    226]     0   226     1119      785       64      721         0    49152        0             0 bash
+[19150.441372] [    228]     0   228     1119      806       64      742         0    53248        0             0 bash
+[19150.441375] [    233]     0   233    93091    31576    30881      695         0   364544        0             0 python
+[19150.441378] [  31406]     0 31406     1119      831       96      735         0    49152        0             0 bash
+[19150.441381] [  31407]     0 31407     1118      786       64      722         0    53248        0             0 bash
+[19150.441384] [  31599]     0 31599      679      394        0      394         0    49152        0             0 sleep
+[19150.441387] [   7115]     0  7115   521128    16883    16216      667         0 18456576        0             0 lake
+[19150.441390] [   7160]     0  7160  5165415  3354768  3354167      601         0 126730240        0             0 lean
+[19150.441394] [   7945]     0  7945   521128    15888    15196      692         0 18456576        0             0 lake
+[19150.441396] [   7990]     0  7990  1794637     5963     5431      532         0 85913600        0             0 lean
+[19150.441399] [   8000]     0  8000      679      395        0      395         0    49152        0             0 sleep
+[19150.441401] oom-kill:constraint=CONSTRAINT_MEMCG,nodemask=(null),cpuset=/,mems_allowed=0,oom_memcg=/process_api/<id>/claude-code-bash,task_memcg=/process_api/<id>/claude-code-bash,task=lean,pid=7160,uid=0
+[19150.441462] Memory cgroup out of memory: Killed process 7160 (lean) total-vm:20661660kB, anon-rss:13416668kB, file-rss:2404kB, shmem-rss:0kB, UID:0 pgtables:123760kB oom_score_adj:0
+[19724.185659] lean invoked oom-killer: gfp_mask=0x100cca(GFP_HIGHUSER_MOVABLE), order=0, oom_score_adj=0
+[19724.185669] CPU: 3 UID: 0 PID: 11256 Comm: lean Not tainted 6.18.44-fc-v880 #1 PREEMPT(none) 
+[19724.185673] Call Trace:
+[19724.185723]  <TASK>
+[19724.185725]  dump_stack_lvl+0x59/0x90
+[19724.185786]  dump_header+0x43/0x1c0
+[19724.185791]  oom_kill_process.cold+0x8/0x8a
+[19724.185794]  out_of_memory+0x214/0x500
+[19724.185837]  mem_cgroup_out_of_memory+0xe8/0x130
+[19724.185884]  try_charge_memcg+0x439/0x700
+[19724.185887]  charge_memcg+0x2f/0x90
+[19724.185889]  __mem_cgroup_charge+0x2c/0x90
+[19724.185892]  filemap_add_folio+0x5a/0x220
+[19724.185896]  ? alloc_pages_mpol+0x86/0x180
+[19724.185921]  __filemap_get_folio+0x1d9/0x5c0
+[19724.185923]  ? page_cache_ra_unbounded+0x1ac/0x280
+[19724.185928]  filemap_fault+0x10e/0x1700
+[19724.185937]  ? filemap_map_pages+0x53a/0x810
+[19724.185940]  __do_fault+0x34/0xd0
+[19724.185944]  do_fault+0x319/0x660
+[19724.185948]  ? ___pte_offset_map+0x17/0x100
+[19724.185951]  __handle_mm_fault+0x842/0xf80
+[19724.185954]  handle_mm_fault+0xd0/0x310
+[19724.185957]  exc_page_fault+0x176/0x770
+[19724.185994]  asm_exc_page_fault+0x22/0x30
+[19724.186013] RIP: 0033:0x7ff8dbb486be
+[19724.186016] Code: 75 39 49 8b 76 10 48 39 f0 72 0f 48 01 f6 4c 89 f7 e8 56 19 00 00 49 8b 46 08 49 8b 16 49 8b 4f 10 48 89 0c c2 f6 c1 01 75 b6 <8b> 11 85 d2 7f ac 74 ae f0 ff 09 49 8b 46 08 eb a5 48 89 d8 5b 41
+[19724.186017] RSP: 002b:00007ff8c3ea6b80 EFLAGS: 00010246
+[19724.186020] RAX: 0000000000000000 RBX: 00007ff8c3ea6ce8 RCX: 000068a8a11541a0
+[19724.186021] RDX: 00007ff8c3ea6c18 RSI: 0000000000000010 RDI: 00007ff8c3ea6ce8
+[19724.186022] RBP: 0000000000000000 R08: 0000000000000000 R09: 0000000000000001
+[19724.186023] R10: 0000000000000004 R11: 0000000000000001 R12: 0000000000000000
+[19724.186023] R13: 00007ff8d4167fa6 R14: 00007ff8c3ea6c00 R15: 00007ff7c78077e0
+[19724.186024]  </TASK>
+[19724.186025] memory: usage 14002316kB, limit 14002316kB, failcnt 163298659
+[19724.186029] memory+swap: usage 14002316kB, limit 9007199254740988kB, failcnt 0
+[19724.186030] kmem: usage 203720kB, limit 9007199254740988kB, failcnt 0
+[19724.186031] Memory cgroup stats for /process_api/<id>/claude-code-bash:
+[19724.186049] cache 167936
+[19724.186050] rss 14129594368
+[19724.186051] rss_huge 11314135040
+[19724.186052] shmem 0
+[19724.186052] mapped_file 200704
+[19724.186053] dirty 0
+[19724.186053] writeback 0
+[19724.186054] workingset_refault_anon 0
+[19724.186054] workingset_refault_file 252404937
+[19724.186055] swap 0
+[19724.186055] swapcached 0
+[19724.186056] pgpgin 334980131
+[19724.186056] pgpgout 340153147
+[19724.186057] pgfault 366868374
+[19724.186057] pgmajfault 11977907
+[19724.186058] inactive_anon 14129524736
+[19724.186058] active_anon 69632
+[19724.186059] inactive_file 0
+[19724.186059] active_file 0
+[19724.186059] unevictable 0
+[19724.186060] hierarchical_memory_limit 14338371584
+[19724.186061] hierarchical_memsw_limit 9223372036854771712
+[19724.186061] total_cache 167936
+[19724.186062] total_rss 14129594368
+[19724.186062] total_rss_huge 11314135040
+[19724.186063] total_shmem 0
+[19724.186063] total_mapped_file 200704
+[19724.186064] total_dirty 0
+[19724.186064] total_writeback 0
+[19724.186065] total_workingset_refault_anon 0
+[19724.186065] total_workingset_refault_file 252404937
+[19724.186066] total_swap 0
+[19724.186066] total_swapcached 0
+[19724.186067] total_pgpgin 334980131
+[19724.186067] total_pgpgout 340153147
+[19724.186068] total_pgfault 366868374
+[19724.186068] total_pgmajfault 11977907
+[19724.186069] total_inactive_anon 14129524736
+[19724.186069] total_active_anon 69632
+[19724.186070] total_inactive_file 0
+[19724.186070] total_active_file 0
+[19724.186071] total_unevictable 0
+[19724.186071] Tasks state (memory values in pages):
+[19724.186072] [  pid  ]   uid  tgid total_vm      rss rss_anon rss_file rss_shmem pgtables_bytes swapents oom_score_adj name
+[19724.186073] [    226]     0   226     1119      785       64      721         0    49152        0             0 bash
+[19724.186078] [    228]     0   228     1119      806       64      742         0    53248        0             0 bash
+[19724.186081] [    233]     0   233    93387    31616    30945      671         0   368640        0             0 python
+[19724.186084] [  31406]     0 31406     1119      831       96      735         0    49152        0             0 bash
+[19724.186086] [  31407]     0 31407     1118      786       64      722         0    53248        0             0 bash
+[19724.186088] [  31599]     0 31599      679      394        0      394         0    49152        0             0 sleep
+[19724.186091] [  11205]     0 11205   521128    16665    15991      674         0 18444288        0             0 lake
+[19724.186093] [  11250]     0 11250  5165415  3402769  3402151      618         0 127111168        0             0 lean
+[19724.186096] [  11750]     0 11750      679      394        0      394         0    49152        0             0 sleep
+[19724.186099] oom-kill:constraint=CONSTRAINT_MEMCG,nodemask=(null),cpuset=/,mems_allowed=0,oom_memcg=/process_api/<id>/claude-code-bash,task_memcg=/process_api/<id>/claude-code-bash,task=lean,pid=11250,uid=0
+[19724.186156] Memory cgroup out of memory: Killed process 11250 (lean) total-vm:20661660kB, anon-rss:13608604kB, file-rss:2472kB, shmem-rss:0kB, UID:0 pgtables:124132kB oom_score_adj:0
+[26291.409668] lean invoked oom-killer: gfp_mask=0x100cca(GFP_HIGHUSER_MOVABLE), order=0, oom_score_adj=0
+[26291.409676] CPU: 1 UID: 0 PID: 29701 Comm: lean Not tainted 6.18.44-fc-v880 #1 PREEMPT(none) 
+[26291.409680] Call Trace:
+[26291.409698]  <TASK>
+[26291.409700]  dump_stack_lvl+0x59/0x90
+[26291.409721]  dump_header+0x43/0x1c0
+[26291.409725]  oom_kill_process.cold+0x8/0x8a
+[26291.409727]  out_of_memory+0x214/0x500
+[26291.409730]  mem_cgroup_out_of_memory+0xe8/0x130
+[26291.409735]  try_charge_memcg+0x439/0x700
+[26291.409738]  charge_memcg+0x2f/0x90
+[26291.409739]  __mem_cgroup_charge+0x2c/0x90
+[26291.409741]  filemap_add_folio+0x5a/0x220
+[26291.409743]  ? alloc_pages_mpol+0x86/0x180
+[26291.409747]  __filemap_get_folio+0x1d9/0x5c0
+[26291.409749]  ? page_cache_ra_unbounded+0x1ac/0x280
+[26291.409753]  filemap_fault+0x10e/0x1700
+[26291.409754]  ? filemap_map_pages+0x53a/0x810
+[26291.409756]  ? folio_add_file_rmap_ptes+0x47/0x1f0
+[26291.409760]  __do_fault+0x34/0xd0
+[26291.409762]  do_fault+0x319/0x660
+[26291.409765]  ? ___pte_offset_map+0x17/0x100
+[26291.409766]  __handle_mm_fault+0x842/0xf80
+[26291.409769]  handle_mm_fault+0xd0/0x310
+[26291.409772]  exc_page_fault+0x176/0x770
+[26291.409776]  asm_exc_page_fault+0x22/0x30
+[26291.409778] RIP: 0033:0x7f4dce14a660
+[26291.409780] Code: 48 89 da e8 32 03 00 00 84 c0 0f 85 f7 00 00 00 49 ff 44 24 10 49 8b 36 8b 46 04 c1 e8 18 83 f8 0b 0f 87 d1 02 00 00 41 ff c7 <49> 63 44 85 00 4c 01 e8 ff e0 4c 89 e7 44 89 fe e8 3b 04 00 00 49
+[26291.409781] RSP: 002b:00007f4dbfffe170 EFLAGS: 00010203
+[26291.409783] RAX: 0000000000000005 RBX: 000074f93fe28d28 RCX: 00007f4db8005800
+[26291.409784] RDX: 00007f4db8000801 RSI: 00000e14bba5bf30 RDI: 0000000000000011
+[26291.409785] RBP: 00000e14bb951901 R08: 0000000000000015 R09: 0000000000000061
+[26291.409786] R10: 00000e14bba5bf30 R11: 000074f93fe28c78 R12: 00007f4dbfffe2b0
+[26291.409787] R13: 00007f4dc678c19c R14: 00000e14bba5bfe0 R15: 000000000000000e
+[26291.409788]  </TASK>
+[26291.409789] memory: usage 14002316kB, limit 14002316kB, failcnt 220916460
+[26291.409792] memory+swap: usage 14002316kB, limit 9007199254740988kB, failcnt 0
+[26291.409793] kmem: usage 448072kB, limit 9007199254740988kB, failcnt 0
+[26291.409794] Memory cgroup stats for /process_api/<id>/claude-code-bash:
+[26291.409811] cache 315392
+[26291.409812] rss 13879054336
+[26291.409813] rss_huge 11049893888
+[26291.409813] shmem 0
+[26291.409814] mapped_file 225280
+[26291.409814] dirty 0
+[26291.409815] writeback 0
+[26291.409815] workingset_refault_anon 0
+[26291.409816] workingset_refault_file 345136120
+[26291.409816] swap 0
+[26291.409817] swapcached 0
+[26291.409817] pgpgin 454098341
+[26291.409818] pgpgout 460349306
+[26291.409818] pgfault 495114744
+[26291.409819] pgmajfault 15726011
+[26291.409819] inactive_anon 13878968320
+[26291.409820] active_anon 86016
+[26291.409820] inactive_file 0
+[26291.409821] active_file 0
+[26291.409821] unevictable 0
+[26291.409822] hierarchical_memory_limit 14338371584
+[26291.409822] hierarchical_memsw_limit 9223372036854771712
+[26291.409823] total_cache 315392
+[26291.409823] total_rss 13879054336
+[26291.409824] total_rss_huge 11049893888
+[26291.409824] total_shmem 0
+[26291.409825] total_mapped_file 225280
+[26291.409825] total_dirty 0
+[26291.409826] total_writeback 0
+[26291.409827] total_workingset_refault_anon 0
+[26291.409827] total_workingset_refault_file 345136120
+[26291.409828] total_swap 0
+[26291.409828] total_swapcached 0
+[26291.409829] total_pgpgin 454098341
+[26291.409829] total_pgpgout 460349306
+[26291.409830] total_pgfault 495114744
+[26291.409830] total_pgmajfault 15726011
+[26291.409831] total_inactive_anon 13878968320
+[26291.409831] total_active_anon 86016
+[26291.409832] total_inactive_file 0
+[26291.409832] total_active_file 0
+[26291.409833] total_unevictable 0
+[26291.409833] Tasks state (memory values in pages):
+[26291.409834] [  pid  ]   uid  tgid total_vm      rss rss_anon rss_file rss_shmem pgtables_bytes swapents oom_score_adj name
+[26291.409835] [    226]     0   226     1119      785       64      721         0    49152        0             0 bash
+[26291.409839] [    228]     0   228     1119      806       64      742         0    53248        0             0 bash
+[26291.409841] [    233]     0   233    94634    32937    32225      712         0   376832        0             0 python
+[26291.409843] [  18000]     0 18000     1119      842       96      746         0    49152        0             0 bash
+[26291.409845] [  18001]     0 18001     1118      776       64      712         0    45056        0             0 bash
+[26291.409846] [  18681]     0 18681      679      394        0      394         0    45056        0             0 sleep
+[26291.409848] [  28378]     0 28378   521128    16856    16222      634         0 18452480        0             0 lake
+[26291.409850] [  28426]     0 28426  5165438  3237316  3236751      565         0 125784064        0             0 lean
+[26291.409852] [  29597]     0 29597   521128    15875    15224      651         0 18448384        0             0 lake
+[26291.409853] [  29642]     0 29642  1875496    45349    44759      590         0 100130816        0             0 lean
+[26291.409855] [  29653]     0 29653   521128    15855    15213      642         0 18452480        0             0 lake
+[26291.409856] [  29698]     0 29698  1867303    28080    27479      601         0 99823616        0             0 lean
+[26291.409857] [  29719]     0 29719      679      427        0      427         0    45056        0             0 sleep
+[26291.409859] oom-kill:constraint=CONSTRAINT_MEMCG,nodemask=(null),cpuset=/,mems_allowed=0,oom_memcg=/process_api/<id>/claude-code-bash,task_memcg=/process_api/<id>/claude-code-bash,task=lean,pid=28426,uid=0
+[26291.409901] Memory cgroup out of memory: Killed process 28426 (lean) total-vm:20661752kB, anon-rss:12947004kB, file-rss:2260kB, shmem-rss:0kB, UID:0 pgtables:122836kB oom_score_adj:0
+[28226.822288] lean invoked oom-killer: gfp_mask=0x100cca(GFP_HIGHUSER_MOVABLE), order=0, oom_score_adj=0
+[28226.822298] CPU: 0 UID: 0 PID: 11410 Comm: lean Not tainted 6.18.44-fc-v880 #1 PREEMPT(none) 
+[28226.822301] Call Trace:
+[28226.822321]  <TASK>
+[28226.822323]  dump_stack_lvl+0x59/0x90
+[28226.822332]  dump_header+0x43/0x1c0
+[28226.822336]  oom_kill_process.cold+0x8/0x8a
+[28226.822339]  out_of_memory+0x214/0x500
+[28226.822342]  mem_cgroup_out_of_memory+0xe8/0x130
+[28226.822347]  try_charge_memcg+0x439/0x700
+[28226.822350]  charge_memcg+0x2f/0x90
+[28226.822351]  __mem_cgroup_charge+0x2c/0x90
+[28226.822353]  filemap_add_folio+0x5a/0x220
+[28226.822356]  ? alloc_pages_mpol+0x86/0x180
+[28226.822359]  __filemap_get_folio+0x1d9/0x5c0
+[28226.822361]  ? page_cache_ra_unbounded+0x1ac/0x280
+[28226.822365]  filemap_fault+0x10e/0x1700
+[28226.822368]  ? filemap_map_pages+0x53a/0x810
+[28226.822369]  ? folio_add_file_rmap_ptes+0x47/0x1f0
+[28226.822373]  __do_fault+0x34/0xd0
+[28226.822375]  do_fault+0x319/0x660
+[28226.822378]  ? ___pte_offset_map+0x17/0x100
+[28226.822379]  __handle_mm_fault+0x842/0xf80
+[28226.822382]  handle_mm_fault+0xd0/0x310
+[28226.822384]  exc_page_fault+0x176/0x770
+[28226.822389]  asm_exc_page_fault+0x22/0x30
+[28226.822392] RIP: 0033:0x7f63ba26b4e6
+[28226.822395] Code: Unable to access opcode bytes at 0x7f63ba26b4bc.
+[28226.822396] RSP: 002b:00007f63aae99080 EFLAGS: 00010202
+[28226.822398] RAX: 6022d88ff0392d54 RBX: 00007f623be24480 RCX: 0000000000000000
+[28226.822399] RDX: 00007f63aae990d0 RSI: 00007f623be24480 RDI: 000031fc9d50c720
+[28226.822399] RBP: 00007f623be24480 R08: 0000000000000000 R09: 0000000000000007
+[28226.822400] R10: 00007f639c005050 R11: 7e7d10ea6ea35f7e R12: 000031fc9d64f4e8
+[28226.822401] R13: 00007f623be23ab0 R14: 000031fc9d50c708 R15: 00007f63aae99220
+[28226.822402]  </TASK>
+[28226.822403] memory: usage 14002316kB, limit 14002316kB, failcnt 248408488
+[28226.822406] memory+swap: usage 14002316kB, limit 9007199254740988kB, failcnt 0
+[28226.822407] kmem: usage 448684kB, limit 9007199254740988kB, failcnt 0
+[28226.822408] Memory cgroup stats for /process_api/<id>/claude-code-bash:
+[28226.822424] cache 348160
+[28226.822425] rss 13878382592
+[28226.822426] rss_huge 11123294208
+[28226.822426] shmem 0
+[28226.822427] mapped_file 327680
+[28226.822427] dirty 0
+[28226.822428] writeback 0
+[28226.822428] workingset_refault_anon 0
+[28226.822429] workingset_refault_file 388392118
+[28226.822429] swap 0
+[28226.822430] swapcached 0
+[28226.822430] pgpgin 506530723
+[28226.822431] pgpgout 513737248
+[28226.822431] pgfault 536846690
+[28226.822432] pgmajfault 17798529
+[28226.822432] inactive_anon 13878288384
+[28226.822433] active_anon 94208
+[28226.822433] inactive_file 0
+[28226.822434] active_file 0
+[28226.822434] unevictable 0
+[28226.822435] hierarchical_memory_limit 14338371584
+[28226.822435] hierarchical_memsw_limit 9223372036854771712
+[28226.822436] total_cache 348160
+[28226.822436] total_rss 13878382592
+[28226.822437] total_rss_huge 11123294208
+[28226.822438] total_shmem 0
+[28226.822438] total_mapped_file 327680
+[28226.822439] total_dirty 0
+[28226.822439] total_writeback 0
+[28226.822440] total_workingset_refault_anon 0
+[28226.822440] total_workingset_refault_file 388392118
+[28226.822441] total_swap 0
+[28226.822441] total_swapcached 0
+[28226.822442] total_pgpgin 506530723
+[28226.822442] total_pgpgout 513737248
+[28226.822443] total_pgfault 536846690
+[28226.822443] total_pgmajfault 17798529
+[28226.822444] total_inactive_anon 13878288384
+[28226.822444] total_active_anon 94208
+[28226.822444] total_inactive_file 0
+[28226.822445] total_active_file 0
+[28226.822445] total_unevictable 0
+[28226.822446] Tasks state (memory values in pages):
+[28226.822446] [  pid  ]   uid  tgid total_vm      rss rss_anon rss_file rss_shmem pgtables_bytes swapents oom_score_adj name
+[28226.822448] [    226]     0   226     1119      785       64      721         0    49152        0             0 bash
+[28226.822451] [    228]     0   228     1119      806       64      742         0    53248        0             0 bash
+[28226.822453] [    233]     0   233    94634    32972    32225      747         0   376832        0             0 python
+[28226.822455] [  18681]     0 18681      679      394        0      394         0    45056        0             0 sleep
+[28226.822456] [   9930]     0  9930     1119      828       96      732         0    53248        0             0 bash
+[28226.822458] [   9931]     0  9931     1118      783       64      719         0    49152        0             0 bash
+[28226.822459] [  11328]     0 11328   521128    16825    16175      650         0 18456576        0             0 lake
+[28226.822461] [  11401]     0 11401  5149031  3223991  3223396      595         0 125689856        0             0 lean
+[28226.822463] [  12524]     0 12524   521128    15823    15191      632         0 18452480        0             0 lake
+[28226.822464] [  12569]     0 12569  1875496    45464    44850      614         0 100118528        0             0 lean
+[28226.822466] [  12581]     0 12581   521128    15818    15203      615         0 18448384        0             0 lake
+[28226.822467] [  12628]     0 12628  1867336    41277    40698      579         0 100093952        0             0 lean
+[28226.822469] [  12642]     0 12642      679      405        0      405         0    45056        0             0 sleep
+[28226.822470] oom-kill:constraint=CONSTRAINT_MEMCG,nodemask=(null),cpuset=/,mems_allowed=0,oom_memcg=/process_api/<id>/claude-code-bash,task_memcg=/process_api/<id>/claude-code-bash,task=lean,pid=11401,uid=0
+[28226.822508] Memory cgroup out of memory: Killed process 11401 (lean) total-vm:20596124kB, anon-rss:12893584kB, file-rss:2380kB, shmem-rss:0kB, UID:0 pgtables:122744kB oom_score_adj:0
+[29266.035452] lean invoked oom-killer: gfp_mask=0xcc0(GFP_KERNEL), order=0, oom_score_adj=0
+[29266.035461] CPU: 3 UID: 0 PID: 20487 Comm: lean Not tainted 6.18.44-fc-v880 #1 PREEMPT(none) 
+[29266.035464] Call Trace:
+[29266.035483]  <TASK>
+[29266.035485]  dump_stack_lvl+0x59/0x90
+[29266.035493]  dump_header+0x43/0x1c0
+[29266.035497]  oom_kill_process.cold+0x8/0x8a
+[29266.035500]  out_of_memory+0x214/0x500
+[29266.035503]  mem_cgroup_out_of_memory+0xe8/0x130
+[29266.035508]  try_charge_memcg+0x439/0x700
+[29266.035511]  charge_memcg+0x2f/0x90
+[29266.035512]  __mem_cgroup_charge+0x2c/0x90
+[29266.035515]  do_anonymous_page+0x220/0xaa0
+[29266.035519]  ? ___pte_offset_map+0x17/0x100
+[29266.035523]  __handle_mm_fault+0xa64/0xf80
+[29266.035526]  ? __pfx_sg_pool_free+0x10/0x10
+[29266.035531]  handle_mm_fault+0xd0/0x310
+[29266.035534]  exc_page_fault+0x176/0x770
+[29266.035539]  asm_exc_page_fault+0x22/0x30
+[29266.035542] RIP: 0033:0x7f806762e2b0
+[29266.035545] Code: 03 48 ff c6 48 89 f7 48 83 e7 fc 48 8d 0c f9 66 48 0f 6e c3 66 0f 70 c0 44 45 31 c0 66 66 66 66 66 2e 0f 1f 84 00 00 00 00 00 <f3> 42 0f 7f 44 c0 18 f3 42 0f 7f 44 c0 28 49 83 c0 04 4c 39 c7 75
+[29266.035547] RSP: 002b:00007f805d7fd4d0 EFLAGS: 00010212
+[29266.035550] RAX: 000002891a010000 RBX: 0000000000000001 RCX: 000002891b010018
+[29266.035552] RDX: 0000000001000000 RSI: 0000000000200000 RDI: 0000000000200000
+[29266.035553] RBP: 0000028918520000 R08: 00000000000143fc R09: 0000000000000000
+[29266.035554] R10: 0000000000010008 R11: 0000000000000001 R12: 00000000002d6c9b
+[29266.035555] R13: 00000000008845d1 R14: 0000000000200000 R15: 0000000000200000
+[29266.035557]  </TASK>
+[29266.035558] memory: usage 14002316kB, limit 14002316kB, failcnt 271183064
+[29266.035600] memory+swap: usage 14002316kB, limit 9007199254740988kB, failcnt 0
+[29266.035602] kmem: usage 325740kB, limit 9007199254740988kB, failcnt 0
+[29266.035603] Memory cgroup stats for /process_api/<id>/claude-code-bash:
+[29266.035622] cache 180224
+[29266.035623] rss 14004633600
+[29266.035624] rss_huge 11064573952
+[29266.035624] shmem 0
+[29266.035625] mapped_file 172032
+[29266.035625] dirty 0
+[29266.035626] writeback 0
+[29266.035626] workingset_refault_anon 0
+[29266.035627] workingset_refault_file 426528678
+[29266.035628] swap 0
+[29266.035628] swapcached 0
+[29266.035629] pgpgin 551368560
+[29266.035629] pgpgout 559590312
+[29266.035630] pgfault 560241942
+[29266.035630] pgmajfault 19844464
+[29266.035631] inactive_anon 14004482048
+[29266.035631] active_anon 81920
+[29266.035632] inactive_file 0
+[29266.035633] active_file 0
+[29266.035633] unevictable 0
+[29266.035634] hierarchical_memory_limit 14338371584
+[29266.035635] hierarchical_memsw_limit 9223372036854771712
+[29266.035635] total_cache 180224
+[29266.035636] total_rss 14004633600
+[29266.035636] total_rss_huge 11064573952
+[29266.035637] total_shmem 0
+[29266.035637] total_mapped_file 172032
+[29266.035638] total_dirty 0
+[29266.035638] total_writeback 0
+[29266.035639] total_workingset_refault_anon 0
+[29266.035639] total_workingset_refault_file 426528678
+[29266.035640] total_swap 0
+[29266.035640] total_swapcached 0
+[29266.035641] total_pgpgin 551368560
+[29266.035641] total_pgpgout 559590312
+[29266.035642] total_pgfault 560241942
+[29266.035642] total_pgmajfault 19844464
+[29266.035643] total_inactive_anon 14004482048
+[29266.035643] total_active_anon 81920
+[29266.035644] total_inactive_file 0
+[29266.035644] total_active_file 0
+[29266.035644] total_unevictable 0
+[29266.035645] Tasks state (memory values in pages):
+[29266.035645] [  pid  ]   uid  tgid total_vm      rss rss_anon rss_file rss_shmem pgtables_bytes swapents oom_score_adj name
+[29266.035647] [    226]     0   226     1119      785       64      721         0    49152        0             0 bash
+[29266.035650] [    228]     0   228     1119      806       64      742         0    53248        0             0 bash
+[29266.035653] [    233]     0   233    94634    32947    32225      722         0   376832        0             0 python
+[29266.035685] [   9930]     0  9930     1119      828       96      732         0    53248        0             0 bash
+[29266.035687] [   9931]     0  9931     1118      783       64      719         0    49152        0             0 bash
+[29266.035689] [  18594]     0 18594      679      394        0      394         0    49152        0             0 sleep
+[29266.035690] [  19348]     0 19348   521128    16854    16205      649         0 18452480        0             0 lake
+[29266.035692] [  19396]     0 19396  5165415  3349740  3349168      572         0 126681088        0             0 lean
+[29266.035694] [  20435]     0 20435   521128    15874    15208      666         0 18456576        0             0 lake
+[29266.035696] [  20441]     0 20441      679      394        0      394         0    49152        0             0 sleep
+[29266.035697] [  20484]     0 20484  1867303     6253     5738      515         0 99131392        0             0 lean
+[29266.035698] oom-kill:constraint=CONSTRAINT_MEMCG,nodemask=(null),cpuset=/,mems_allowed=0,oom_memcg=/process_api/<id>/claude-code-bash,task_memcg=/process_api/<id>/claude-code-bash,task=lean,pid=19396,uid=0
+[29266.035756] Memory cgroup out of memory: Killed process 19396 (lean) total-vm:20661660kB, anon-rss:13396672kB, file-rss:2288kB, shmem-rss:0kB, UID:0 pgtables:123712kB oom_score_adj:0
+[29266.039544] python invoked oom-killer: gfp_mask=0x100cca(GFP_HIGHUSER_MOVABLE), order=0, oom_score_adj=0
+[29266.039551] CPU: 2 UID: 0 PID: 233 Comm: python Not tainted 6.18.44-fc-v880 #1 PREEMPT(none) 
+[29266.039554] Call Trace:
+[29266.039556]  <TASK>
+[29266.039557]  dump_stack_lvl+0x59/0x90
+[29266.039563]  dump_header+0x43/0x1c0
+[29266.039567]  oom_kill_process.cold+0x8/0x8a
+[29266.039570]  out_of_memory+0x214/0x500
+[29266.039572]  mem_cgroup_out_of_memory+0xe8/0x130
+[29266.039576]  try_charge_memcg+0x439/0x700
+[29266.039578]  charge_memcg+0x2f/0x90
+[29266.039579]  __mem_cgroup_charge+0x2c/0x90
+[29266.039581]  filemap_add_folio+0x5a/0x220
+[29266.039584]  ? alloc_pages_mpol+0x86/0x180
+[29266.039588]  __filemap_get_folio+0x1d9/0x5c0
+[29266.039589]  ? page_cache_ra_unbounded+0x1ac/0x280
+[29266.039593]  filemap_fault+0x10e/0x1700
+[29266.039595]  ? filemap_map_pages+0x53a/0x810
+[29266.039596]  ? fourcc_string+0x271/0x490
+[29266.039600]  ? asm_sysvec_call_function+0x16/0x20
+[29266.039601]  ? sysvec_call_function+0xa/0x80
+[29266.039603]  ? asm_sysvec_call_function+0x16/0x20
+[29266.039605]  __do_fault+0x34/0xd0
+[29266.039607]  do_fault+0x319/0x660
+[29266.039610]  ? ___pte_offset_map+0x17/0x100
+[29266.039612]  __handle_mm_fault+0x842/0xf80
+[29266.039615]  handle_mm_fault+0xd0/0x310
+[29266.039617]  exc_page_fault+0x176/0x770
+[29266.039619]  asm_exc_page_fault+0x22/0x30
+[29266.039621] RIP: 0033:0x5a3de1
+[29266.039625] Code: Unable to access opcode bytes at 0x5a3db7.
+[29266.039626] RSP: 002b:00007ffda470beb0 EFLAGS: 00010202
+[29266.039627] RAX: 000000000ddaaa10 RBX: 000000000ecdd820 RCX: 0000000000000001
+[29266.039628] RDX: 0000000000000001 RSI: 00000000000083c1 RDI: 0000000000ba6748
+[29266.039629] RBP: 00007ffda470bf10 R08: 00007f6731e98810 R09: 00007f6726c47e80
+[29266.039630] R10: 00007f6732120148 R11: 0000000000000002 R12: 0000000000b3cd78
+[29266.039631] R13: 00007f67304a7600 R14: 0000000000b48e28 R15: 000000000ddaaa10
+[29266.039632]  </TASK>
+[29266.039632] memory: usage 14002316kB, limit 14002316kB, failcnt 271183074
+[29266.039636] memory+swap: usage 14002316kB, limit 9007199254740988kB, failcnt 0
+[29266.039637] kmem: usage 325644kB, limit 9007199254740988kB, failcnt 0
+[29266.039637] Memory cgroup stats for /process_api/<id>/claude-code-bash:
+[29266.039648] cache 180224
+[29266.039649] rss 14004633600
+[29266.039650] rss_huge 11064573952
+[29266.039650] shmem 0
+[29266.039651] mapped_file 172032
+[29266.039651] dirty 0
+[29266.039652] writeback 0
+[29266.039652] workingset_refault_anon 0
+[29266.039653] workingset_refault_file 426528678
+[29266.039654] swap 0
+[29266.039654] swapcached 0
+[29266.039655] pgpgin 551368560
+[29266.039655] pgpgout 559590312
+[29266.039656] pgfault 560241942
+[29266.039656] pgmajfault 19844464
+[29266.039697] inactive_anon 14004482048
+[29266.039697] active_anon 81920
+[29266.039698] inactive_file 0
+[29266.039698] active_file 0
+[29266.039699] unevictable 0
+[29266.039700] hierarchical_memory_limit 14338371584
+[29266.039700] hierarchical_memsw_limit 9223372036854771712
+[29266.039701] total_cache 180224
+[29266.039701] total_rss 14004633600
+[29266.039702] total_rss_huge 11064573952
+[29266.039702] total_shmem 0
+[29266.039703] total_mapped_file 172032
+[29266.039703] total_dirty 0
+[29266.039704] total_writeback 0
+[29266.039704] total_workingset_refault_anon 0
+[29266.039705] total_workingset_refault_file 426528678
+[29266.039705] total_swap 0
+[29266.039706] total_swapcached 0
+[29266.039706] total_pgpgin 551368560
+[29266.039707] total_pgpgout 559590312
+[29266.039707] total_pgfault 560241942
+[29266.039708] total_pgmajfault 19844464
+[29266.039708] total_inactive_anon 14004482048
+[29266.039709] total_active_anon 81920
+[29266.039709] total_inactive_file 0
+[29266.039710] total_active_file 0
+[29266.039710] total_unevictable 0
+[29266.039711] Tasks state (memory values in pages):
+[29266.039711] [  pid  ]   uid  tgid total_vm      rss rss_anon rss_file rss_shmem pgtables_bytes swapents oom_score_adj name
+[29266.039713] [    226]     0   226     1119      785       64      721         0    49152        0             0 bash
+[29266.039716] [    228]     0   228     1119      806       64      742         0    53248        0             0 bash
+[29266.039718] [    233]     0   233    94634    32947    32225      722         0   376832        0             0 python
+[29266.039720] [   9930]     0  9930     1119      828       96      732         0    53248        0             0 bash
+[29266.039722] [   9931]     0  9931     1118      783       64      719         0    49152        0             0 bash
+[29266.039723] [  18594]     0 18594      679      394        0      394         0    49152        0             0 sleep
+[29266.039725] [  19348]     0 19348   521128    16854    16205      649         0 18452480        0             0 lake
+[29266.039727] [  20435]     0 20435   521128    15874    15208      666         0 18456576        0             0 lake
+[29266.039728] [  20441]     0 20441      679      394        0      394         0    49152        0             0 sleep
+[29266.039730] [  20484]     0 20484  1867303     6253     5738      515         0 99131392        0             0 lean
+[29266.039731] oom-kill:constraint=CONSTRAINT_MEMCG,nodemask=(null),cpuset=/,mems_allowed=0,oom_memcg=/process_api/<id>/claude-code-bash,task_memcg=/process_api/<id>/claude-code-bash,task=python,pid=233,uid=0
+[29266.039762] Memory cgroup out of memory: Killed process 233 (python) total-vm:378536kB, anon-rss:128900kB, file-rss:2888kB, shmem-rss:0kB, UID:0 pgtables:368kB oom_score_adj:0
+[29266.043637] lean invoked oom-killer: gfp_mask=0xcc0(GFP_KERNEL), order=0, oom_score_adj=0
+[29266.043643] CPU: 3 UID: 0 PID: 20487 Comm: lean Not tainted 6.18.44-fc-v880 #1 PREEMPT(none) 
+[29266.043645] Call Trace:
+[29266.043647]  <TASK>
+[29266.043648]  dump_stack_lvl+0x59/0x90
+[29266.043662]  dump_header+0x43/0x1c0
+[29266.043665]  oom_kill_process.cold+0x8/0x8a
+[29266.043667]  out_of_memory+0x214/0x500
+[29266.043669]  mem_cgroup_out_of_memory+0xe8/0x130
+[29266.043672]  try_charge_memcg+0x439/0x700
+[29266.043674]  charge_memcg+0x2f/0x90
+[29266.043675]  __mem_cgroup_charge+0x2c/0x90
+[29266.043677]  do_anonymous_page+0x220/0xaa0
+[29266.043681]  ? ___pte_offset_map+0x17/0x100
+[29266.043683]  __handle_mm_fault+0xa64/0xf80
+[29266.043685]  ? __pfx_sg_pool_free+0x10/0x10
+[29266.043688]  handle_mm_fault+0xd0/0x310
+[29266.043690]  exc_page_fault+0x176/0x770
+[29266.043693]  asm_exc_page_fault+0x22/0x30
+[29266.043694] RIP: 0033:0x7f806762e2b0
+[29266.043696] Code: 03 48 ff c6 48 89 f7 48 83 e7 fc 48 8d 0c f9 66 48 0f 6e c3 66 0f 70 c0 44 45 31 c0 66 66 66 66 66 2e 0f 1f 84 00 00 00 00 00 <f3> 42 0f 7f 44 c0 18 f3 42 0f 7f 44 c0 28 49 83 c0 04 4c 39 c7 75
+[29266.043697] RSP: 002b:00007f805d7fd4d0 EFLAGS: 00010212
+[29266.043699] RAX: 000002891a010000 RBX: 0000000000000001 RCX: 000002891b010018
+[29266.043700] RDX: 0000000001000000 RSI: 0000000000200000 RDI: 0000000000200000
+[29266.043701] RBP: 0000028918520000 R08: 00000000000143fc R09: 0000000000000000
+[29266.043701] R10: 0000000000010008 R11: 0000000000000001 R12: 00000000002d6c9b
+[29266.043702] R13: 00000000008845d1 R14: 0000000000200000 R15: 0000000000200000
+[29266.043703]  </TASK>
+[29266.043724] memory: usage 14002316kB, limit 14002316kB, failcnt 271183098
+[29266.043725] memory+swap: usage 14002316kB, limit 9007199254740988kB, failcnt 0
+[29266.043726] kmem: usage 325572kB, limit 9007199254740988kB, failcnt 0
+[29266.043727] Memory cgroup stats for /process_api/<id>/claude-code-bash:
+[29266.043742] cache 188416
+[29266.043743] rss 13979275264
+[29266.043744] rss_huge 11051991040
+[29266.043744] shmem 0
+[29266.043745] mapped_file 167936
+[29266.043745] dirty 0
+[29266.043745] writeback 0
+[29266.043746] workingset_refault_anon 0
+[29266.043746] workingset_refault_file 426528680
+[29266.043747] swap 0
+[29266.043748] swapcached 0
+[29266.043748] pgpgin 551368562
+[29266.043749] pgpgout 559590312
+[29266.043749] pgfault 560241942
+[29266.043749] pgmajfault 19844464
+[29266.043750] inactive_anon 14004482048
+[29266.043751] active_anon 81920
+[29266.043751] inactive_file 0
+[29266.043751] active_file 0
+[29266.043752] unevictable 0
+[29266.043752] hierarchical_memory_limit 14338371584
+[29266.043753] hierarchical_memsw_limit 9223372036854771712
+[29266.043753] total_cache 188416
+[29266.043754] total_rss 13979275264
+[29266.043754] total_rss_huge 11051991040
+[29266.043755] total_shmem 0
+[29266.043755] total_mapped_file 167936
+[29266.043756] total_dirty 0
+[29266.043756] total_writeback 0
+[29266.043757] total_workingset_refault_anon 0
+[29266.043757] total_workingset_refault_file 426528680
+[29266.043758] total_swap 0
+[29266.043758] total_swapcached 0
+[29266.043759] total_pgpgin 551368562
+[29266.043759] total_pgpgout 559590312
+[29266.043760] total_pgfault 560241942
+[29266.043760] total_pgmajfault 19844464
+[29266.043760] total_inactive_anon 14004482048
+[29266.043761] total_active_anon 81920
+[29266.043761] total_inactive_file 0
+[29266.043762] total_active_file 0
+[29266.043762] total_unevictable 0
+[29266.043763] Tasks state (memory values in pages):
+[29266.043763] [  pid  ]   uid  tgid total_vm      rss rss_anon rss_file rss_shmem pgtables_bytes swapents oom_score_adj name
+[29266.043765] [    226]     0   226     1119      785       64      721         0    49152        0             0 bash
+[29266.043767] [    228]     0   228     1119      806       64      742         0    53248        0             0 bash
+[29266.043768] [   9930]     0  9930     1119      828       96      732         0    53248        0             0 bash
+[29266.043770] [   9931]     0  9931     1118      783       64      719         0    49152        0             0 bash
+[29266.043771] [  18594]     0 18594      679      394        0      394         0    49152        0             0 sleep
+[29266.043773] [  19348]     0 19348   521128    16854    16205      649         0 18452480        0             0 lake
+[29266.043774] [  20435]     0 20435   521128    15874    15208      666         0 18456576        0             0 lake
+[29266.043775] [  20441]     0 20441      679      394        0      394         0    49152        0             0 sleep
+[29266.043777] [  20484]     0 20484  1867303     6253     5738      515         0 99131392        0             0 lean
+[29266.043778] oom-kill:constraint=CONSTRAINT_MEMCG,nodemask=(null),cpuset=/,mems_allowed=0,oom_memcg=/process_api/<id>/claude-code-bash,task_memcg=/process_api/<id>/claude-code-bash,task=lean,pid=20484,uid=0
+[29266.043798] Memory cgroup out of memory: Killed process 20484 (lean) total-vm:7469212kB, anon-rss:22952kB, file-rss:2060kB, shmem-rss:0kB, UID:0 pgtables:96808kB oom_score_adj:0

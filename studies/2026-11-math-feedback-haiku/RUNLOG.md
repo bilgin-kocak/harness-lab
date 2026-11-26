@@ -24,7 +24,7 @@ Times are UTC.
 | setup | a9398f8 | 2026-11-25T14:10:30Z | `harnesslab study search studies/2026-11-math-feedback-haiku/study.yaml --stage setup --yes` | 120/120 cells, $0.2701, 14:10-14:38; every call served by claude-haiku-5-5; 0 refusals, token-cap stops or harness errors |
 | freeze | d3deb77 | 2026-11-25T14:39:02Z | `harnesslab study freeze studies/2026-11-math-feedback-haiku/study.yaml --yes` | F frozen (8fadd8740a41), chosen by held_out.fixed_frozen; freeze.json committed in 61beca4 |
 | held-out | e939c64 (+ run scripts) | 2026-11-25T17:17:01Z | `run_heldout.sh` (resumes after outages per section 8) and `snapshot_heldout.sh` (hourly record snapshots) | stopped 2026-11-26T01:23:33Z: the kernel's out-of-memory killer killed the process (exit 137) at 2,202/4,080 valid records, $9.21 recorded plus $3.20 charged for 4 interrupted cells; see below and DEVIATIONS.md D1 |
-| held-out, resumed | (the D1 commit) | (see below) | `run_heldout.sh`, now also resuming after exit 137 (D1) | (running) |
+| held-out, resumed | the D1 commit | not yet | `run_heldout.sh` as changed by D1, with a new run log, and `snapshot_heldout.sh` | not resumed yet |
 
 ## Smoke test check (2026-11-25)
 
@@ -72,7 +72,34 @@ No deviation.
   - 2,202 valid records and 0 harness-error records;
   - every call served by claude-haiku-5-5;
   - $9.2054 recorded, plus 4 interrupted cells charged $0.80096 each.
-- **Cause:** proofs of `mathd_numbertheory_451` whose Lean check grew past 12.9 GB. The kernel
-  lines and the matching records are in `oom_kernel_log.txt`.
-- **Decision:** resume, as section 8 requires. The supervisor now also resumes after exit 137.
-  This is DEVIATIONS.md D1, committed before the resume. No outcome by arm was looked at.
+- **Spend charged so far:** $12.73 across all phases (smoke $0.0546, setup $0.2701, held-out
+  $9.2054, interrupted $3.2038).
+  - At the cost per record so far, the 1,878 cells left cost about $7.85, for about $20.6 in all.
+  - Each further kill of the held-out process charges about $3.20. So about 4 more kills would
+    reach the $35 cap, and section 8 would apply.
+- **Cause:** proofs of `mathd_numbertheory_451` whose Lean check grew to 13.2-13.9 GB of the
+  14.3 GB limit (the kernel's kB are KiB). The evidence:
+  - the kernel lines and matching records are in `oom_kernel_log.txt`;
+  - the full reports are in `held_out_snapshot/kernel_oom_boot_2026-11-25T17-15-47.txt`.
+- **The interrupted cells' transcripts at the stop.** A cell that runs again appends to the same
+  file, so these sizes mark where its first attempt ends:
+  - `held_out/artifacts/mathd_numbertheory_451/59eb7f95143b9fcf/4/transcript.jsonl`, 85,999 bytes
+    (its `proof.lean` is 844 bytes, written at 01:19:24);
+  - `held_out/artifacts/aime_1999_p11/8fadd8740a416895/4/transcript.jsonl`, 55,263 bytes;
+  - `held_out/artifacts/imo_1969_p2/40ca2d6a9288fc1d/4/transcript.jsonl`, 43,272 bytes;
+  - `held_out/artifacts/amc12_2001_p5/59eb7f95143b9fcf/2/transcript.jsonl`, 17,659 bytes.
+- **What the kill left behind:**
+  - no Lean or lake process;
+  - two Lean temp directories (`/tmp/harnesslab-lean-gcl536fs`, 01:19:25, and
+    `/tmp/harnesslab-lean-msfvl12d`, 01:23:11), whose cleanup never ran.
+- **Decision:** resume, as section 8 requires, under DEVIATIONS.md D1, which is committed before
+  the resume.
+  - D1 was reviewed independently (registration, supervisor script, validity), and its findings
+    were applied. The supervisor was tested on synthetic runs (a kernel kill, a manual kill, an
+    outage).
+  - No outcome by arm was looked at.
+- **While the phase runs:** only the supervisor, the snapshot loop and the progress check run in
+  this session (D1).
+- **To stop the run by hand:** kill the supervisor (its PID is in `<run log>.pid`), then the
+  `harnesslab.cli study heldout` process. A `kill -9` of the CLI alone also stops it, since the
+  kernel log shows no kill.

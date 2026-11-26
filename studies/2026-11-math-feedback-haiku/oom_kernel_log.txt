@@ -3,7 +3,10 @@
 Copied from the kernel log (`dmesg`) on 2026-11-26 after the stop, keeping only the lines that
 name the process that triggered a kill and the process killed. The machine booted at
 2026-11-25T17:15:47Z; times are boot time plus the kernel's seconds, in UTC. The memory
-cgroup all study processes share has a limit of 14,338,371,584 bytes (16 GB machine, no swap).
+cgroup all study processes share has a limit of 14,338,371,584 bytes (16 GB machine, no swap). The
+kernel's "kB" are KiB (1,024 bytes): the first Lean process killed in each event had 13.2-13.9 GB
+anon-rss, 92-97% of the limit. The full report of each event (memory statistics and the table of
+processes running) is in `held_out_snapshot/kernel_oom_boot_2026-11-25T17-15-47.txt`.
 
 ## Kernel lines
 
@@ -36,9 +39,11 @@ cgroup all study processes share has a limit of 14,338,371,584 bytes (16 GB mach
 
 Columns: the record's finish time, problem, the verifier's exit code, whether the 300 s timeout
 fired, Lean's seconds, and the verdict's reason. Arms are left out on purpose (no outcome by arm is
-looked at before the phase ends). Exit -9 is the verifier's own kill after its timeout; the record
-at 17:39:59 also matches the kernel kill at 17:39:58. The 4 cells in progress at 01:23:33 have no
-record (see `held_out/reservations.jsonl`, the dangling reservations).
+looked at before the phase ends). Exit -9 with timed_out True is the verifier's own kill after its
+timeout (all four -9 records here); -9 with timed_out False would mean lake itself was killed. The
+record at 17:39:59 also matches the kernel kill at 17:39:58: its 300 s timeout took effect 187 s
+late. The 4 cells in progress at 01:23:33 have no record (see `held_out/reservations.jsonl`, the
+dangling reservations).
 
 2026-11-25T17:39:59Z  mathd_numbertheory_451  exit_code=-9  timed_out=True  lean_s=487.476  reason='timeout'
 2026-11-25T17:53:17Z  mathd_numbertheory_451  exit_code=137  timed_out=False  lean_s=175.188  reason='lean exited with code 137'

@@ -6,13 +6,17 @@ the registered 300 s if Lean had enough memory? No machine with more than 16 GB 
 swap is added and Lean runs with no memory limit but very slowly. Wall-clock time then means
 nothing, but CPU time still measures the computation:
 
-* a thread cannot use more CPU time than wall-clock time passes, so if one Lean thread uses more
-  than 300 s of CPU before the check ends, the check would take more than 300 s of wall-clock
-  time on any machine, and the registered verifier would time it out;
+* a thread cannot use more CPU time than wall-clock time passes, so if one Lean thread spends
+  more than 300 s computing in user mode before the check ends, the check would take more than
+  300 s of wall-clock time on a CPU like this one, and the registered verifier would time it out;
+* only user time counts: under swap, system time includes the kernel's paging work, which a
+  machine with enough memory would not do (a first version that counted user plus system time was
+  stopped and discarded for that reason);
 * if the check ends, its verdict (judged by the registered rule) and its CPU time are reported.
 
-Each run stops when one thread's CPU time passes ``--thread-cpu-cap`` (default 330 s) without
-the check ending, or after ``--wall-cap`` seconds. The candidate file is rebuilt with the
+The result holds for this CPU (recorded below); a faster CPU could take less time. Each run stops
+when one thread's user time passes ``--thread-cpu-cap`` (default 330 s) without the check ending,
+or after ``--wall-cap`` seconds. The candidate file is rebuilt with the
 registered verifier's code, and its SHA-256 must equal the one in the record. No model is called.
 
 Usage (repository root, pinned toolchain on PATH, swap enabled)::
@@ -70,13 +74,13 @@ def _comm(pid: int) -> str:
         return ""
 
 
-def _thread_cpu(pid: int) -> list[float]:
-    """CPU seconds (user + system) of each thread of ``pid``."""
+def _thread_cpu(pid: int) -> list[tuple[float, float]]:
+    """(user, system) CPU seconds of each thread of ``pid``."""
     out = []
     for t in Path(f"/proc/{pid}/task").glob("*"):
         try:
             fields = (t / "stat").read_text().rsplit(")", 1)[1].split()
-            out.append((int(fields[11]) + int(fields[12])) / TICK)
+            out.append((int(fields[11]) / TICK, int(fields[12]) / TICK))
         except (OSError, IndexError, ValueError):
             pass
     return out
@@ -102,8 +106,9 @@ def measure(cmd: list[str], cwd: Path, env: dict, thread_cap: float, wall_cap: f
         stderr=subprocess.PIPE, start_new_session=True,
     )
     peak_rss = peak_total = 0
-    max_thread_cpu = total_cpu = 0.0
+    max_thread_cpu = max_thread_sys = total_cpu = 0.0
     threads_busy = 0
+    user_at_14gb = None
     stopped = None
     samples = []
     out_chunks: list[bytes] = []
@@ -120,16 +125,20 @@ def measure(cmd: list[str], cwd: Path, env: dict, thread_cap: float, wall_cap: f
                 continue
             cpus = _thread_cpu(p)
             if cpus:
-                max_thread_cpu = max(max_thread_cpu, max(cpus))
-                total_cpu = max(total_cpu, sum(cpus))
-                threads_busy = max(threads_busy, sum(1 for c in cpus if c > 5))
+                top = max(cpus)
+                max_thread_cpu = max(max_thread_cpu, top[0])
+                max_thread_sys = max(max_thread_sys, top[1])
+                total_cpu = max(total_cpu, sum(u + s for u, s in cpus))
+                threads_busy = max(threads_busy, sum(1 for u, s in cpus if u + s > 5))
             rss, swap = _memory_bytes(p)
             peak_rss, peak_total = max(peak_rss, rss), max(peak_total, rss + swap)
+            if user_at_14gb is None and rss + swap > 14.0e9:
+                user_at_14gb = round(max_thread_cpu, 1)
         wall = time.monotonic() - start
         if not samples or wall - samples[-1][0] >= 60:
             samples.append((round(wall, 1), round(max_thread_cpu, 1), round(peak_total / 1e9, 2)))
         if max_thread_cpu > thread_cap:
-            stopped = f"one Lean thread passed {thread_cap:.0f} s of CPU without the check ending"
+            stopped = f"one Lean thread passed {thread_cap:.0f} s of user CPU without the check ending"
         elif wall > wall_cap:
             stopped = f"wall-clock cap of {wall_cap:.0f} s"
         if stopped:
@@ -142,12 +151,14 @@ def measure(cmd: list[str], cwd: Path, env: dict, thread_cap: float, wall_cap: f
         "returncode": proc.returncode,
         "stopped": stopped,
         "wall_s": round(time.monotonic() - start, 1),
-        "max_thread_cpu_s": round(max_thread_cpu, 1),
+        "max_thread_user_s": round(max_thread_cpu, 1),
+        "that_thread_system_s": round(max_thread_sys, 1),
+        "user_s_when_memory_passed_14gb": user_at_14gb,
         "total_cpu_s": round(total_cpu, 1),
         "threads_over_5s_cpu": threads_busy,
         "peak_rss_gb": round(peak_rss / 1e9, 2),
         "peak_rss_plus_swap_gb": round(peak_total / 1e9, 2),
-        "samples_wall_s_threadcpu_s_mem_gb": samples,
+        "samples_wall_s_thread_user_s_mem_gb": samples,
         "stdout": out.decode("utf-8", errors="replace"),
         "stderr_tail": err.decode("utf-8", errors="replace")[-2000:],
     }
@@ -179,6 +190,14 @@ def main() -> int:
     cells = [(c.split(":")[0], int(c.split(":")[1])) for c in args.cells.split(",")]
     results = json.loads(args.out.read_text()) if args.out.exists() else {"rows": []}
     results["label"] = "exploratory (not registered); written after the held-out phase ended"
+    try:
+        results["cpu"] = next(
+            line.split(":", 1)[1].strip()
+            for line in Path("/proc/cpuinfo").read_text().splitlines()
+            if line.startswith("model name")
+        )
+    except (OSError, StopIteration):
+        results["cpu"] = None
     results["method"] = __doc__.split("Usage")[0].strip()
     done = {(r["arm"], r["repetition"]) for r in results["rows"]}
     for arm, rep in cells:

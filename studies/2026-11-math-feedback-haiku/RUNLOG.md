@@ -24,7 +24,7 @@ Times are UTC.
 | setup | a9398f8 | 2026-11-25T14:10:30Z | `harnesslab study search studies/2026-11-math-feedback-haiku/study.yaml --stage setup --yes` | 120/120 cells, $0.2701, 14:10-14:38; every call served by claude-haiku-5-5; 0 refusals, token-cap stops or harness errors |
 | freeze | d3deb77 | 2026-11-25T14:39:02Z | `harnesslab study freeze studies/2026-11-math-feedback-haiku/study.yaml --yes` | F frozen (8fadd8740a41), chosen by held_out.fixed_frozen; freeze.json committed in 61beca4 |
 | held-out | e939c64 (+ run scripts) | 2026-11-25T17:17:01Z | `run_heldout.sh` (resumes after outages per section 8) and `snapshot_heldout.sh` (hourly record snapshots) | stopped 2026-11-26T01:23:33Z: the kernel's out-of-memory killer killed the process (exit 137) at 2,202/4,080 valid records, $9.21 recorded plus $3.20 charged for 4 interrupted cells; see below and DEVIATIONS.md D1 |
-| held-out, resumed | the D1 commit | not yet | `run_heldout.sh` as changed by D1, with a new run log, and `snapshot_heldout.sh` | not resumed yet |
+| held-out, resumed | 15f7689 | 2026-11-26T02:15:32Z | `run_heldout.sh` as changed by D1 (run log `main-heldout-2.log`, copied here when the phase ends) and `snapshot_heldout.sh` | running: 2,709/4,080 valid records and 0 harness errors at 04:12Z, no kernel kills since the resume |
 
 ## Smoke test check (2026-11-25)
 

@@ -141,7 +141,11 @@ No deviation.
   F's repetition 0 and discarded (`recheck_heavy_cpu_v1_discarded.json`), because under swap system
   time includes paging. The second counted user time only: each of the 4 passed 330 s of user CPU
   without finishing (`recheck_heavy_cpu.json`). The independent review of the paper outline
-  (12:30-12:50) ran during the first version. The swap was turned off afterwards; the swap file
+  (about 12:24-12:43) ran during the first version, before the second started at 12:43. The swap was turned off afterwards; the swap file
   (`/swapfile-recheck`, 24 GB) is still on the container's disk.
 - **Paper:** `paper/OUTLINE.md`, an outline and abstract for the owner, reviewed independently.
   Nothing is published.
+- **13:58-.** A fact-check of the new text found its conclusion stated too firmly: the runs stopped
+  at 330 s against a 300 s limit, a margin of about 10% that an inflation of user time by memory
+  pressure, or a faster CPU, could void. The text now says "very likely", and a longer measurement
+  runs (to 450 s of user CPU, F's repetitions 0-4, `recheck_heavy_cpu_450.json`).

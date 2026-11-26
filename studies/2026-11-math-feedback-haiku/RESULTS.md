@@ -36,13 +36,14 @@
     +1.5 points, p = 0.062). H1 would read "difference (positive)" only if, besides them, one of
     F's 5 killed proofs of `mathd_numbertheory_451` also passed (p = 0.043), or three of them
     without the artifacts (p = 0.048).
-  - None of F's 5 could have passed within the registered 300 s (exploratory). Re-checked alone,
-    the fifth ran its full 300 s and timed out. With the memory limit lifted by swap, each of the
-    other 4 computed for more than 330 s of user CPU (which leaves out the paging) without
-    finishing, its memory still growing past 21 GB: even with enough memory it would have needed
-    more than 300 s on the CPU measured, and the registered rule would have counted a timeout. So
-    the recounts that change a reading do not occur. No check of any proof of that problem has ever
-    passed (0 of 86).
+  - Very likely none of F's 5 could have passed within the registered 300 s (exploratory).
+    Re-checked as the only Lean process (light session commands were also running), the fifth ran
+    its full 300 s and timed out. With the memory limit lifted by swap, each of the other 4 computed
+    for more than 330 s of user CPU without finishing, its memory still growing past 21 GB. Unless
+    memory pressure added about 10% to that user time, or the run's CPU (not recorded) was about 10%
+    faster per thread, each would have needed more than 300 s even with enough memory, and the
+    registered rule would have counted a timeout. So the recounts that change a reading are very
+    unlikely. [A longer measurement, to 450 s, is running.]
 - **The run.** 4,080 of 4,080 cells have valid records: 0 harness errors, 0 refusals, every call
   served by `claude-haiku-5-5`. One deviation (D1) resumed the run after the kernel's
   out-of-memory killer stopped it; it changed only the run procedure, and was committed in the
@@ -286,10 +287,10 @@ records where D1's expectations were wrong.
 
   The registered rule counts a memory-ended check as not verified, so the registered readings
   stand. With the `aime_1990_p15` cell counted as a pass, these exploratory readings change only if
-  one of F's killed proofs of `mathd_numbertheory_451` would pass. None of them could have passed
-  within the registered 300 s (section 8), so the rows that change a reading do not occur. Counted
-  as the re-checks show (the two artifacts as passes), every reading is the same as the registered
-  one: H1 +1.47, p = 0.062; H2 Holm p = 0.080; H3 unchanged.
+  one of F's killed proofs of `mathd_numbertheory_451` would pass. Very likely none of them could
+  have passed within the registered 300 s (section 8, with its caveats), so the rows that change a
+  reading very likely do not occur. Counting the two known artifacts as passes, every reading is
+  the same as the registered one: H1 +1.47, p = 0.062; H2 Holm p = 0.080; H3 unchanged.
 - **Exploratory checks D1 promised** (details in `d1_report.md`):
 
   | H1 variant | Problems | Estimate | 90% interval | Sign-flip p | Reading under the registered rule |
@@ -342,16 +343,20 @@ records where D1's expectations were wrong.
     lifted the memory limit and `recheck_heavy_cpu.py` measured CPU time instead (12:21-13:43Z, one
     proof at a time; `recheck_heavy_cpu.json`). A thread's user time cannot exceed the wall-clock
     time that passes, and it leaves out the paging work, which counts as system time (213-226 s per
-    run). Each of the 4 passed 330 s of user CPU in one thread without finishing (after 850-926 s of
+    run). Each of the 4 passed 330 s of user CPU in one thread without finishing (after 851-926 s of
     wall-clock time), with its memory still growing (21.7-22.4 GB when stopped; it had passed 14 GB
-    after 141-146 s of user CPU). So on the CPU measured (Intel Xeon, 2.1 GHz; the run's own CPU was
-    not recorded) each would have needed more than 300 s even with enough memory, and the registered
-    rule would have counted a timeout. Two caveats: user time may still include some slowdown from
-    memory pressure that cannot be separated; and a much faster CPU could take less time. A first
-    version of the measurement, which counted user plus system time, was stopped and discarded
-    (`recheck_heavy_cpu_v1_discarded.json`). Corroborating it: the fifth proof needed no swap and
-    ran out the 300 s; and no check of any proof of this problem has ever passed, in the loop, in
-    the run, or since (0 of 86).
+    after 141-146 s of user CPU). So on the CPU measured (Intel Xeon, 2.1 GHz, in a new container
+    after the restart; the run's own CPU was not recorded) each would very likely have needed more
+    than 300 s even with enough memory, and the registered rule would have counted a timeout. The
+    margin is small: the runs stopped at 330 s, so the conclusion fails if memory pressure added
+    about 30 s of user time (about 10%), or if the run's CPU was about 10% faster per thread. The
+    samples do not exclude an inflation of that order. [A longer measurement, to 450 s of user CPU
+    and including F's repetition 1, is running.] A first version of the measurement, which counted
+    user plus system time, was stopped and discarded (`recheck_heavy_cpu_v1_discarded.json`).
+    Corroborating it, weakly: the fifth proof ran out the 300 s in a wall-clock re-check; and no
+    check of any proof of this problem has ever passed: 0 of 82 checks that reached a verdict (45
+    in-loop with a 120 s limit, 20 final, 17 re-checks; at most 54 distinct proofs), plus the 4
+    measurements stopped unfinished.
 
 ## 9. What this study cannot show (registration section 10)
 

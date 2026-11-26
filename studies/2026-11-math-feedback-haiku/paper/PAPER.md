@@ -18,16 +18,16 @@ whether Lean's report helps beyond fresh attempts at the same cap of calls. In a
 study, Claude Haiku 5.5 attempted 204 miniF2F problems in Lean 4, five times each, in four
 interleaved arms: one call (B); up to four calls showing the failed proof and Lean's report (F); up
 to four fresh tries (R4); and a placebo showing the failed proof with a fixed rejection sentence
-(P). F verified 93.4% of attempts and R4 92.1%: +1.4 points (90% CI +0.2 to +2.6; sign-flip
+(P). F verified 93.43% of attempts and R4 92.06%: +1.4 points (90% CI +0.20 to +2.65; sign-flip
 p = 0.093), which the registered rule reads as no difference of 3 points or more in the overall
-verified rate; descriptively, F removed about 17% of R4's failures (95% CI 1% to 38%). F versus P
-(+1.4, Holm p = 0.12) and P versus R4 (0.0) read the same way. Arms capped at four calls (1.3 to
+verified rate; descriptively, F's unverified share was about 17% smaller than R4's (95% CI 1% to
+38%; not a test). F versus P (+1.4, Holm p = 0.125) and P versus R4 (0.0) read the same way. Arms capped at four calls (1.3 to
 1.4 used on average) verified 8 to 10 points more than one call. An exploratory pilot had estimated
 +5.8 points for F over R4; our 90% interval excludes it and the +4.1 points the study was powered
 for. Out-of-memory events ended 19 of the 4,080 final checks, 17 of them on one problem no arm
 proved; under the registered rule every reading stands, and exploratory re-checks indicate that
 the recounts that would change a reading are very unlikely. Code, records, transcripts and
-analysis are released.
+analysis will be released with the paper.
 
 ## 1. Introduction
 
@@ -37,14 +37,14 @@ again (Lin et al., 2025; Wang et al., 2025). Such loops are usually credited wit
 against a single attempt. That comparison mixes two things: what the checker's report tells the
 model, and the extra attempts the loop makes. A model that is simply sampled again, with no feedback
 at all, also gets more chances, and coverage improves smoothly with the number of independent
-samples, Lean proofs included (Brown et al., 2024). Our own earlier study is an example: it found
-that feedback from Lean raised Claude Opus 5.5's verified rate on 40 miniF2F problems from 85.0% to
-97.5% against one call, but the feedback arm could make up to four calls and the baseline one, so
-the comparison could not separate feedback from extra attempts (Harness Lab, 2026).
+samples, Lean proofs included (Brown et al., 2024). Our own earlier study is an example: a loop
+showing Lean's report, with up to four calls, verified 97.5% of Claude Opus 5.5's attempts on 40
+miniF2F problems against 85.0% for one call, but because the loop could make up to four calls and the
+baseline one, the comparison could not separate feedback from extra attempts (Harness Lab, 2026).
 
 Comparisons matched on calls or samples exist, and they disagree. A call-matched comparison of
 refinement with resampling across 14 models found refinement ahead on average on a 50-problem
-miniF2F subset and behind on a miniCTX subset (Klingner et al., 2026). With two open models on
+miniF2F subset and behind on average on a miniCTX subset (Klingner et al., 2026). With two open models on
 difficult miniF2F problems, no tested feedback condition established an advantage over
 instruction-only resampling (Li and Li, 2026). Repair gains at matched sample counts have been
 reported in Isabelle/HOL (First et al., 2023) and, self-reported, for a Lean prover trained to fix
@@ -111,8 +111,9 @@ reports variance. Goedel-Prover-V2 (Lin et al., 2025) ablates the compiler's err
 trained self-correction loop and finds that revising without them gains less on miniF2F-test at
 pass@32. The ablation removes the messages rather than replacing them with an uninformative one, and
 it has no arm of fresh samples matched on calls (the conference version compares with plain
-sampling on output tokens). It is the nearest published analogue of our P, which keeps the failed
-proof and replaces Lean's report with a fixed sentence.
+sampling on output tokens). Revising without the messages is analogous to our P, and the ablation
+to our F − P contrast, except that P replaces Lean's report with a fixed sentence instead of
+removing it.
 
 **Self-correction and repeated sampling.** Huang et al. (2024) find that intrinsic self-correction,
 with no external feedback, does not improve and often lowers reasoning accuracy, separate this from
@@ -186,18 +187,21 @@ reports no error, the theorem statement is unchanged, the proof contains no `sor
 depends on no axioms beyond `propext`, `Classical.choice` and `Quot.sound`, and the check ends
 within 300 s.
 
-**Machine and order.** One machine with 16 GB of RAM, no swap and 4 CPUs ran everything. The
-study's processes shared a memory limit of 14.3 GB, at most 3 Lean processes ran at once, and at
-most 4 attempts. Time limits were wall-clock, enforced by the process that ran the attempts. All
-4,080 cells (4 arms × 204 problems × 5 repetitions) ran once, in one seeded random order, so the
-arms are interleaved in time; the records follow that order exactly.
+**Machine and order.** One machine with 16 GB of RAM, no swap and 4 CPUs ran every cell of the
+study. The study's processes shared a memory limit of 14.3 GB, at most 3 Lean processes ran at once,
+and at most 4 attempts. Time limits were wall-clock, enforced by the process that ran the attempts.
+Each of the 4,080 cells (4 arms × 204 problems × 5 repetitions) has exactly one record, from one
+seeded random order, so the arms are interleaved in time; the 4 cells interrupted by the crash
+(Section 6) ran again first on resuming, and otherwise the cells ran in that order.
 
 ## 4. Pre-registration and analysis
 
 **What was fixed in advance.** Before any paid call, we committed the registration
-(`REGISTRATION.md`; commit `64abcd7`, 2026-11-25 07:22Z, about 75 minutes before the first paid
-call), with the SHA-256 of every registered file: the hypotheses, the estimand, the analysis script
-`analyze.py`, the reading rules, the power analysis, the budget and the stop rules.
+(`REGISTRATION.md`; commit `64abcd7`, 2026-11-25 07:22Z, about 76 minutes before the first paid
+call, the smoke test at 08:38Z). It fixes the hypotheses, the estimand, the reading rules, the
+power analysis, the budget and the stop rules, and records the SHA-256 of 17 registered files
+(among them the analysis script `analyze.py`, the split and the code the analysis and the prover
+depend on), of the 204 held-out problem IDs, of the prompts and of the placebo sentence.
 [Whether the registration was also lodged on OSF: owner to state.] The held-out phase ran once.
 Every registered file matched its recorded hash when the analysis ran.
 
@@ -227,8 +231,9 @@ comparison arm's unverified share, so the margin can be read against the room le
 the exact sign test on the problems that differ.
 
 **Power.** A simulation that resampled the pilot's per-problem outcomes onto 204 problems gave power
-0.96 at the planning effect of +4.1 points (three-quarters of the pilot's +5.8, discounting its
-first-call noise) and 0.86 at +2.7 points, with five repetitions.
+0.96 at the planning effect of +4.1 points and 0.86 at +2.7 points, with five repetitions. The
+planning effect is three-quarters of the pilot's effect after the simulation's smoothing (+5.4 to
++5.5 points, against +5.8 raw); the discount allows for the pilot's first-call noise (Section 7).
 
 **One deviation (D1).** The run was stopped once by the kernel's out-of-memory killer (Section 6).
 Deviation D1 resumed it under the registration's resume rule and changed only the run procedure:
@@ -255,9 +260,9 @@ rate, in points. "Higher / lower / equal" counts problems. The comparison arm's 
 
 | Contrast | Rates | Estimate | 95% interval | 90% interval | Higher / lower / equal | Sign-flip p | Holm p | Exact sign test p | Reading |
 |---|---|---|---|---|---|---|---|---|---|
-| **H1 F − R4** (primary) | 92.1% → 93.4% | **+1.37** | +0.10 to +2.94 | +0.20 to +2.65 | 8 / 4 / 192 | 0.093 | – | 0.39 | no difference of 3 points or more |
-| H2 F − P | 92.1% → 93.4% | +1.37 | +0.10 to +2.75 | +0.29 to +2.55 | 11 / 4 / 189 | 0.062 | 0.125 | 0.12 | no difference of 3 points or more |
-| H3 P − R4 | 92.1% → 92.1% | 0.00 | −1.18 to +1.37 | −0.98 to +1.08 | 7 / 9 / 188 | 1.000 | 1.000 | 0.80 | no difference of 3 points or more |
+| **H1 F − R4** (primary) | 92.06% → 93.43% | **+1.37** | +0.10 to +2.94 | +0.20 to +2.65 | 8 / 4 / 192 | 0.093 | – | 0.39 | no difference of 3 points or more |
+| H2 F − P | 92.06% → 93.43% | +1.37 | +0.10 to +2.75 | +0.29 to +2.55 | 11 / 4 / 189 | 0.062 | 0.125 | 0.12 | no difference of 3 points or more |
+| H3 P − R4 | 92.06% → 92.06% | 0.00 | −1.18 to +1.37 | −0.98 to +1.08 | 7 / 9 / 188 | 1.000 | 1.000 | 0.80 | no difference of 3 points or more |
 
 All three contrasts read "no difference of 3 points or more in the overall verified rate", and the
 attribution rule attributes nothing to Lean's report (Figure 1a). The estimate of H1 is positive:
@@ -267,10 +272,11 @@ verified rate is excluded by the registered 90% interval, and no difference was 
 registered test.
 
 H1's 95% interval, +0.10 to +2.94 at the registered seed, excludes zero although p = 0.093. The
-registered test decides whether there is a difference; the interval is not read as a test. Its
-lower end depends on the bootstrap seed: in an exploratory check over seeds 1 to 150 it was 0.00 for
-14 of them. The 90% interval that carries the reading ends at +2.65 to +2.75 across those seeds, so
-the reading does not depend on the seed.
+registered test decides whether there is a difference; the interval is not read as a test. Both
+its ends depend on the bootstrap seed: in an exploratory check (not registered) over seeds 1 to 150,
+the lower end was 0.00 for 14 seeds and the upper end +3.04 for 89. The 90% interval that carries
+the reading ends at +2.65 to +2.75 across those seeds, so the reading does not depend on the
+seed.
 
 No diagnostic flag was raised. The identical first request passed in the loop at 81.9% (F), 83.4%
 (R4) and 83.4% (P), with no pair differing (Holm p ≥ 0.61). No integrity rate that the registration
@@ -288,7 +294,7 @@ descriptive contrasts of the capped arms with one call (95% intervals), which ha
 None of these is a test of a hypothesis, and their p-values are not adjusted.
 
 **Against one call.** Every arm capped at four calls verified 8 to 10 points more than the
-single-call baseline, which verified 83.8% (Figure 1b): R4 − B +8.24 points (95% interval +6.08 to
+single-call baseline, which verified 83.82% (Figure 1b): R4 − B +8.24 points (95% interval +6.08 to
 +10.59; 52 problems higher, 0 lower), F − B +9.61 (+6.96 to +12.45; 52 / 0) and P − B +8.24 (+6.08
 to +10.59; 53 / 1).
 
@@ -298,7 +304,8 @@ problems B never proved, it is +11.3 points (−2.5 to +28.8): F 18.8% against R
 problems to say whether feedback helps more on hard problems.
 
 **Scaled by the room left.** Divided by R4's unverified share, F − R4 is 17% (95% interval 1% to
-38%): F removed about a sixth of R4's failures. This is a descriptive ratio, not a test.
+38%): F's unverified share (6.57%) was about a sixth smaller than R4's (7.94%). This is a
+descriptive ratio, not a test.
 
 **After the first call.** On each problem's verified rate minus its first-round pass rate, F − R4 is
 +2.9 points (+0.3 to +5.7; unadjusted sign-flip p = 0.038, exact sign test p = 0.53 with 35 problems
@@ -308,7 +315,7 @@ Exploratory (not registered): at R4's number of first-call failures, the gain wo
 points.
 
 **Rescue after a failed first call.** Among attempts whose first call failed in the loop, F verified
-119 of 185 (64.3%), R4 88 of 169 (52.1%) and P 88 of 169 (52.1%). F − R4 is +12.3 points (95%
+119 of 185 (64.32%), R4 88 of 169 (52.07%) and P 88 of 169 (52.07%). F − R4 is +12.3 points (95%
 interval +3.3 to +21.7) and F − P +12.3 (+3.9 to +21.0). These pool attempts, weigh problems with
 many first-call failures more, and reuse H1's attempts, so they are not separate findings. By why
 the first call failed, F's extra rescues were mostly in the "other Lean error or rejection" class
@@ -335,9 +342,9 @@ both, +0.5; leaving out any single problem gives +0.9 to +1.5.
 | | B | F | R4 | P |
 |---|---|---|---|---|
 | Calls per attempt | 1.00 | 1.33 | 1.36 | 1.36 |
-| Output tokens | 4.69 M | 9.09 M | 9.80 M | 9.28 M |
-| Cost per attempt | $0.0024 | $0.0046 | $0.0049 | $0.0047 |
-| Cost per verified proof | $0.0029 | $0.0050 | $0.0053 | $0.0051 |
+| Output tokens (total) | 4.69 M | 9.09 M | 9.80 M | 9.28 M |
+| Cost per attempt | $0.00240 | $0.00463 | $0.00491 | $0.00473 |
+| Cost per verified proof | $0.00287 | $0.00495 | $0.00534 | $0.00514 |
 
 F's cost per verified proof was 0.93 of R4's (95% interval 0.86 to 0.99): F cost 0.94 of R4's total
 and verified 14 more attempts.
@@ -354,24 +361,30 @@ tries (H3: 0.0 points, 7 problems higher and 9 lower).
 The descriptive statistics on attempts whose first call failed suggest where the small positive
 estimate comes from: when the first call fails, F's second call succeeds more often than a fresh try
 or the placebo (Figure 3, exploratory). That advantage moves the overall rate little because most
-problems are solved by every arm every time (139 of 204 even by B), and only 12 problems differ
-between F and R4. The registered test cannot tell such a small effect from noise, and it was not
+problems are solved by every arm every time (138 of 204; B alone solved 139 every time), and only
+12 problems differ between F and R4. The registered test cannot tell such a small effect from noise, and it was not
 designed to: it was powered for +4.1 points.
 
 ## 6. Out-of-memory kills on the checking machine
 
+Except for the registered rule and the registered readings, everything in this section comes from
+analyses added after the phase (the reports D1 promised, and later re-checks) and is exploratory
+(not registered).
+
 **What happened.** Every final proof of one problem, `mathd_numbertheory_451`, checks a bounded
-statement with `decide +kernel` over all m below 2020 (below 2019 in two of them), and every such
-check needed more memory than the 14.3 GB the study's processes shared. The kernel's out-of-memory
-killer ended 17 of the problem's 20 final checks, in all four arms (F 5, R4 4, P 3, B 5); the
-problem is 0 of 5 in every arm. In one of the 18 out-of-memory events it also killed the process
+statement with `decide +kernel` over all m below 2020 (below 2019 in two of them), and the checks
+the kernel killed had grown to 13.2 to 13.9 GB, against the 14.3 GB the study's processes shared. The kernel's
+out-of-memory killer ended 17 of the problem's 20 final checks, in all four arms (F 5, R4 4, P 3,
+B 5); of the other 3, one ended in 5 s with an ordinary Lean error and two ran out the 300 s
+timeout. The problem is 0 of 5 in every arm. In one of the 18 out-of-memory events it also killed the process
 that ran the attempts, which stopped the run after 2,202 records and interrupted 4 attempts. Those
 had no record, were charged in full ($3.20 in all), and ran again on resuming (Appendix D).
 
 **Two verdicts on other problems.** The same events ended two final checks of proofs that pass when
 re-checked alone: F's `aime_1990_p15` (repetition 3), whose check ran during a memory stall until a
 timeout fired after 571.8 s although the same proof had passed in the loop in 18.5 s, and re-checks
-in 9.1 s; and B's `imo_2019_p1` (repetition 1), killed after 126.7 s, which re-checks in 8.5 s.
+in 9.1 s; and B's `imo_2019_p1` (repetition 1), killed after 126.7 s, which re-checks in 8.5 s
+(`recheck_killed.json`).
 One in-loop check was also killed; its attempt was verified anyway. While the process that times
 the checks stalled under memory pressure, the registered 300 s timeout fired late in 3 final checks
 (487, 572 and 721 s); none of the three passed.
@@ -381,12 +394,14 @@ verifier accepts its proof, and D1, committed before any outcome by arm was look
 checks "not verified"; the registration re-runs only infrastructure outages, not killed checks.
 Under that rule every reading in Section 5 stands, whatever later re-checks show.
 
-**Bounds.** Each cell is 0.098 points of a mean difference over 204 problems. If every memory-ended
-"not verified" verdict had been a pass, H1 and H2 could rise by at most 0.59 points (F's six such
-cells) and fall by at most 0.39 and 0.29; H3 could move by at most 0.39. D1 had said the memory
-events could move a mean difference only through `mathd_numbertheory_451`, by at most about 0.5
-points; that missed the two cells on other problems. D1 also bounded the mean differences, not the
-p-values, and H1's p = 0.093 is close enough to 0.05 that a few such cells could change its reading.
+**Bounds.** Each cell is 0.098 points of a mean difference over 204 problems. Whichever of the
+memory-ended "not verified" verdicts had been passes, H1 and H2 could rise by at most 0.59 points
+(if only F's six such cells passed) and fall by at most 0.39 and 0.29 (if only R4's, or only P's,
+did); H3 could move by at most 0.39. If all of them had passed, H1 would be +1.57 points and both
+H1 and H2 would read "difference (positive)" (Table 2). D1 had said the memory events could move a
+mean difference only through `mathd_numbertheory_451`, by at most about 0.5 points; that missed the
+two cells on other problems. D1 also bounded the mean differences, not the p-values, and H1's
+p = 0.093 is close enough to 0.05 that a few such cells could change its reading.
 
 **Table 2 (exploratory, not registered). Recounts that count memory-ended cells as passes.** H1
 columns as in Table 1; the reading follows the registered rule.
@@ -400,12 +415,20 @@ columns as in Table 1; the reading follows the registered rule.
 | F's 5 killed cells of `mathd_numbertheory_451` | +1.86 | +0.49 to +3.43 | 0.046 | difference (positive) | 0.062 | inconclusive |
 | all of F's: the 5 killed cells and the `aime_1990_p15` cell | +1.96 | +0.59 to +3.53 | 0.031 | difference (positive) | 0.040 | difference (positive) |
 | all arms' killed cells of `mathd_numbertheory_451` (17) | +1.47 | +0.29 to +2.75 | 0.068 | no difference of 3 points or more | 0.073 | inconclusive |
+| every memory-ended cell in every arm: those 17 and the `aime_1990_p15` cell | +1.57 | +0.39 to +2.84 | 0.043 | difference (positive) | 0.045 | difference (positive) |
 | R4's 4 killed cells only | +0.98 | −0.39 to +2.45 | 0.318 | no difference of 3 points or more | 0.125 | no difference of 3 points or more |
 
 Source: `d1_report.json` (`counterfactual_readings`). H3 reads "no difference of 3 points or more"
-in every row. For the two rows that describe any subset of a given size, every subset gives the
-same estimate and p-values, which is what the table shows; their intervals, and so H2's reading,
-were not computed (–). One of F's killed cells of `mathd_numbertheory_451` alone gives p = 0.068.
+in every row. In the rows where both H1 and H2 read "difference (positive)", the attribution rule
+would credit Lean's report; in every other row, as in the registered result, nothing is attributed.
+For the two rows that describe any subset of a given size, every subset gives the same estimate and
+p-values, which is what the table shows; their intervals, and so H2's reading, were not computed
+(–). One of F's killed cells of `mathd_numbertheory_451` alone gives p = 0.068. The source entries
+of the second row and of the two rows with all arms' cells also count B's `imo_2019_p1` cell as a
+pass; B is in none of H1 to H3, so the values are the same. Three of the 17 killed cells (R4's
+repetition 2 and B's repetitions 0 and 1) had run 487, 721 and 300 s by their record, so they
+would most likely be "not verified" by timeout in any case; the rows and the bounds count
+them anyway.
 
 **D1's promised analyses (exploratory, not registered).** Without `mathd_numbertheory_451`, H1 is
 +1.38 points (90% interval +0.30 to +2.66, p = 0.093) and H2 and H3 are unchanged in reading. 602 of
@@ -419,8 +442,9 @@ Tables by arm are in Appendix D.
 cell counted as a pass, a reading changes only if one of F's five killed proofs of
 `mathd_numbertheory_451` would have passed. We checked whether any could:
 
-- Re-checked alone after the run, with the whole memory limit available, 16 of the 17 proofs were
-  killed again at 14.0 GB and 1 (F's repetition 1) ran out the 300 s and timed out.
+- Re-checked after the run as the only Lean process (until about 10:20Z a few light commands also
+  ran in the session), 16 of the 17 proofs were killed again at 14.0 GB and 1 (F's repetition 1)
+  ran out the 300 s and timed out.
 - With the memory limit lifted by a 24 GB swap file, we measured each thread's user CPU time, which
   cannot exceed the wall-clock time that passes and leaves out the paging. Each of F's five proofs
   passed 450 s of user CPU in one thread, 1.5 times the limit, without finishing, its memory still
@@ -436,8 +460,9 @@ reading equals the registered one (H1 p = 0.062, H2 Holm p = 0.080). Two caveats
 under swap may inflate user time, and the conclusion fails if it did so by about half at the median
 speed ratio (about twofold for the part after memory passed 14 GB, where paging became heavy). And
 the speed ratio comes from ordinary checks, so carrying it over to this memory-heavy proof is an
-assumption. No check of any proof of this problem has ever passed: 0 of 82 checks that reached a
-verdict, plus 9 measurements of F's five proofs stopped unfinished.
+assumption. As weak corroboration, no check of any proof of this problem has ever passed: 0 of 82
+checks that reached a verdict (45 in-loop with a 120 s limit, 20 final, 17 re-checks; at most 54
+distinct proofs), plus 9 measurements of F's five proofs stopped unfinished.
 
 **Lessons for harness builders.** Cap each check's memory, so that one proof cannot starve the
 others or the process that runs them. Time checks outside the process being timed, or a stall in
@@ -458,12 +483,13 @@ the pilot and in this study. (b) Gain over one call in the earlier study, the pi
 Sources: the pilot's report, the earlier study's report, and `analysis.json`.
 
 The pilot put F 5.8 points above R4 for both models (Haiku: 95% interval +0.8 to +12.5; Opus: 0.0 to
-+12.5). This study estimates +1.4, and its 90% interval (+0.2 to +2.6) excludes both the pilot's
++12.5). This study estimates +1.4, and its 90% interval (+0.20 to +2.65) excludes both the pilot's
 estimate and the +4.1 points the study was powered for. We did not test why the pilot's estimate was
 larger, but three reasons are plausible. Few problems carried information: only 4 of the 40 differed
-between F and R4 for Haiku. The arms ran in separate time blocks, and the identical first request
-succeeded 103 times in F's block against 99 in R4's, so first-call differences that F and R4 share by
-design were worth about 1.8 of the 5.8 points. And selection: we ran this study because the pilot's
+between F and R4 for Haiku. The arms ran in separate time blocks, and the identical first request,
+which F and R4 share by design, succeeded 103 times in F's block against 99 in R4's; by the
+registration's estimate (its section 2), that first-call difference was worth about 1.8 of the 5.8
+points. And selection: we ran this study because the pilot's
 estimate was large, so a pilot estimate that happened to be high was more likely to be followed up.
 
 **What it means for our earlier result.** The earlier study compared Opus 5.5 with feedback (F)
@@ -491,7 +517,7 @@ feedback's +9.6 points over one call (descriptive). We do not re-estimate the ea
   between F and R4, so the test says little about hard problems. On the 16 problems B never solved,
   F − R4 was +11.3 points (−2.5 to +28.8; descriptive, too few problems): a hypothesis for a new
   pre-registered study, not a finding.
-- **The memory events.** One problem's checks exceeded the machine's memory; the registered 300 s
+- **The memory events.** One problem's checks grew past the machine's memory; the registered 300 s
   timeout fired late in 3 checks during memory stalls; and the deviation that resumed the run was
   committed mid-phase (Sections 4 and 6).
 
@@ -500,8 +526,9 @@ feedback's +9.6 points over one call (descriptive). We do not re-estimate the ea
 We release, with the paper, the code, the registration and its hashes, every record, the transcripts
 of prompts and outputs, the kernel's out-of-memory logs, and the analysis and re-check scripts.
 [Owner: the transcripts are in `held_out/artifacts/`, which git ignores; they must be packaged for
-release.] Registration section 12 commits us to releasing all of these with the results, whatever
-they show. The study's total spend was $17.33 from the records, $20.54 including the $3.20 charged
+release.] Registration section 12 commits us to releasing the code, records, transcripts and
+analysis with the results, whatever they show; we release the kernel logs and re-check scripts as
+well. The study's total spend was $17.33 from the records, $20.54 including the $3.20 charged
 for the 4 attempts the crash interrupted, against a cap of $35.
 
 ## 10. Disclosures
@@ -573,7 +600,9 @@ own code, not by people. [Funding and affiliations: owner to fill in.]
 The registration is `REGISTRATION.md` at commit `64abcd7` (SHA-256
 `6a9a3ed682b77ad4861ec2c453e2ff044c022b6de6802508d157a058cbd754b0`), and the deviation is
 `DEVIATIONS.md`, D1 as committed in `15f7689` before the resume, followed by the note written after
-the phase. Both are reproduced verbatim in the assembled paper (`build.py` inlines them from git).
+the phase. Both are reproduced verbatim in the assembled paper: `build.py` inlines the registration
+from git at `64abcd7`, checking its SHA-256, and `DEVIATIONS.md` as it stands in the repository,
+whose D1 section is unchanged since `15f7689`.
 In brief, the note records that:
 
 - D1 was committed in the middle of the phase, after 2,202 of 4,080 records, while the registration
@@ -652,25 +681,27 @@ time effect.
 | Rounds with dropped context | 0 | 0 | 0 | 0 |
 | In-loop timeouts (rounds) | 0 | 17 | 22 | 18 |
 | Verifier timeouts | 6 | 1 | 2 | 1 |
-| Final checks killed by the kernel (exit 137; not in the row above) | 4 | 5 | 3 | 3 |
+| Final checks killed by the kernel, exit 137 (exploratory, not registered: `d1_report.json`, as D1 promised; not in the row above) | 4 | 5 | 3 | 3 |
 | Verified attempts whose Lean check took over 120 s | 1 | 4 | 4 | 2 |
 
 Calls stopped at the token limit, which the registration's asymmetry rule does not name, differ by
-1.8 points per attempt between F and P. Of the verifier timeouts, 4 coincide with a memory event.
+1.8 points per attempt between F and P. Exploratory (not registered): of the verifier timeouts, 4
+coincide with a memory event (B 2, F 1, R4 1).
 
 **Cost** (registered descriptive):
 
 | | B | F | R4 | P |
 |---|---|---|---|---|
 | Total | $2.45 | $4.72 | $5.01 | $4.83 |
-| Per attempt | $0.0024 | $0.0046 | $0.0049 | $0.0047 |
-| Per verified proof | $0.0029 | $0.0050 | $0.0053 | $0.0051 |
+| Per attempt | $0.00240 | $0.00463 | $0.00491 | $0.00473 |
+| Per verified proof | $0.00287 | $0.00495 | $0.00534 | $0.00514 |
 | Calls per attempt | 1.00 | 1.33 | 1.36 | 1.36 |
-| Output tokens | 4.69 M | 9.09 M | 9.80 M | 9.28 M |
+| Output tokens (total) | 4.69 M | 9.09 M | 9.80 M | 9.28 M |
 
 Total spend across all phases: $17.33 from the records (smoke test $0.05, setup check $0.27,
-held-out $17.01), $20.54 with the 4 interrupted cells. The projection at registration was about $14
-($5 to $27); the cap was $35.
+held-out $17.01), $20.54 with the 4 interrupted cells. The registration projected about $14 ($5 to
+$27) for the held-out phase, which cost $17.01 ($20.21 with the interrupted cells); the cap for all
+phases was $35.
 
 ## Appendix C. Prompts
 
@@ -735,8 +766,11 @@ re-check files named below.
 
 **Kills.** 18 out-of-memory events (10 before the stop at 01:23:33Z, 8 after the resume at
 02:15:32Z) killed 22 processes: 18 Lean checks of 13.2 to 13.9 GB, the first process killed in each
-event; 3 small Lean processes (24, 167 and 184 MB) killed right after a large one; and the process
-running the attempts (01:23:33).
+event; 3 small Lean processes (24, 167 and 184 MB) killed right after a large one ("bystanders",
+under 1 GB); and the process running the attempts (01:23:33). Three kills matched no check: those
+of the 01:23:33 event (the 13.7 GB check of the interrupted `mathd_numbertheory_451` cell, the
+process running the attempts, and a 24 MB Lean process), while the 4 interrupted cells were in
+progress.
 
 **Killed checks, assigned one kill to one process:**
 
@@ -771,6 +805,10 @@ not exposed):
 | F | 141 / 879 | 2 / 15 | 1 / 0 | 2 / 0 | 118.7 / 7.3 |
 | R4 | 156 / 864 | 4 / 18 | 0 / 2 | 0 / 0 | 27.0 / 7.9 |
 | P | 149 / 871 | 4 / 14 | 0 / 1 | 1 / 0 | 136.1 / 6.8 |
+
+No cell, exposed or not, was stopped by the time cap. The counts use the inclusive rule (a start in
+the same second as a cell of that problem starts or ends counts as exposed); the strict rule gives
+576 cells and 463 pairs, and H1 without those pairs also reads "inconclusive" (p = 0.107).
 
 **D1's analyses:**
 
@@ -828,9 +866,10 @@ slot was free when 70 of the 72 started.
   freeze, 5,159 calls all served by `claude-haiku-5-5`, no refusals, charges equal to the calls'
   costs, every pass with exit code 0, an unchanged statement, no `sorry` and allowed axioms, the run
   order equal to the seeded order, and the 4 dangling reservations exactly the interrupted cells.
-- **Lean re-checks.** 379 cells (every arm and repetition) of the 19 problems whose rates differ in
-  H1, H2 or H3, and 240 further cells drawn at random (60 per arm): all 619 verdicts repeat. The 19
-  memory-touched final checks are in Appendix D.
+- **Lean re-checks.** 379 cells of the 19 problems whose rates differ in H1, H2 or H3 (every arm
+  and repetition except F's `aime_1990_p15` repetition 3, re-checked with the memory-touched checks
+  in Appendix D, where it passes), and 240 further cells drawn at random (60 per arm, seed
+  20261126): all 619 verdicts repeat.
 - **Reviews.** Separate agents reviewed the registration's application, the crash evidence, the
   record integrity and the written reports; each finding was checked by a second agent trying to
   refute it, and the confirmed findings were corrected. These reviewers were Claude agents, not

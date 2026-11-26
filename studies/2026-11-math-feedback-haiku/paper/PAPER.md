@@ -513,8 +513,8 @@ own code, not by people. [Funding and affiliations: owner to fill in.]
 
 ## References
 
-- Bertinetto, L., Henriques, J. F., Albanie, S., Paganini, M., and Varol, G., eds. (2021). Preface.
-  *NeurIPS 2020 Workshop on Pre-registration in Machine Learning*. PMLR 148.
+- Bertinetto, L., Henriques, J. F., Albanie, S., Paganini, M., and Varol, G. (2021). Preface. In
+  *NeurIPS 2020 Workshop on Pre-registration in Machine Learning*, PMLR 148.
   https://proceedings.mlr.press/v148/bertinetto21a.html
 - Brown, B., Juravsky, J., Ehrlich, R., Clark, R., Le, Q. V., Ré, C., and Mirhoseini, A. (2024).
   Large Language Monkeys: Scaling Inference Compute with Repeated Sampling. arXiv:2407.21787.
@@ -523,7 +523,7 @@ own code, not by people. [Funding and affiliations: owner to fill in.]
 - de Moura, L. and Ullrich, S. (2021). The Lean 4 Theorem Prover and Programming Language. In
   *Automated Deduction – CADE 28*, LNCS 12699, pp. 625–635. Springer.
   https://doi.org/10.1007/978-3-030-79876-5_37
-- Efron, B. and Tibshirani, R. J. (1993). *An Introduction to the Bootstrap*. Chapman & Hall.
+- Efron, B. and Tibshirani, R. J. (1993). *An Introduction to the Bootstrap*. Chapman & Hall. Chapter 13.
 - First, E., Rabe, M. N., Ringer, T., and Brun, Y. (2023). Baldur: Whole-Proof Generation and Repair
   with Large Language Models. In *ESEC/FSE '23*, pp. 1229–1241. https://doi.org/10.1145/3611643.3616243
 - Fisher, R. A. (1935). *The Design of Experiments*. Oliver and Boyd. Section 21.
@@ -534,7 +534,7 @@ own code, not by people. [Funding and affiliations: owner to fill in.]
 - Hofman, J. M., Chatzimparmpas, A., Sharma, A., Watts, D. J., and Hullman, J. (2023).
   Pre-registration for Predictive Modeling. arXiv:2311.18807.
 - Holm, S. (1979). A Simple Sequentially Rejective Multiple Test Procedure. *Scandinavian Journal of
-  Statistics* 6(2), 65–70.
+  Statistics* 6(2), 65–70. https://www.jstor.org/stable/4615733
 - Huang, J., Chen, X., Mishra, S., Zheng, H. S., Yu, A. W., Song, X., and Zhou, D. (2024). Large
   Language Models Cannot Self-Correct Reasoning Yet. In *ICLR 2024*. arXiv:2310.01798.
 - Kamoi, R., Zhang, Y., Zhang, N., Han, J., and Zhang, R. (2024). When Can LLMs Actually Correct

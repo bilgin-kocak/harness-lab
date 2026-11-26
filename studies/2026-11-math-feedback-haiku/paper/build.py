@@ -67,10 +67,16 @@ def main() -> int:
     print(f"wrote {out / 'PAPER_full.md'} (registration SHA-256 checked)")
     pandoc = shutil.which("pandoc")
     if pandoc:
+        (out / "style.html").write_text(
+            "<style>body{max-width:68em;font-size:15px;line-height:1.45}"
+            "table{font-size:13px;border-collapse:collapse}th,td{padding:3px 6px;vertical-align:top}"
+            "img{max-width:100%;height:auto}code{font-size:90%}</style>\n",
+            encoding="utf-8",
+        )
         subprocess.run(
             [pandoc, "PAPER_full.md", "-f", "gfm", "-t", "html5", "--standalone", "--embed-resources",
-             "--resource-path", str(HERE), "--metadata", "title=Paper draft (not for circulation)",
-             "-o", "PAPER_full.html"],
+             "--resource-path", str(HERE), "--include-in-header", "style.html",
+             "--metadata", "title=Paper draft (not for circulation)", "-o", "PAPER_full.html"],
             cwd=out, check=True,
         )
         print(f"wrote {out / 'PAPER_full.html'}")

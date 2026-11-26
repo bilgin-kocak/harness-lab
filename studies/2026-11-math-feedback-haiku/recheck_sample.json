@@ -1,0 +1,5049 @@
+{
+  "label": "exploratory (not registered); written after the held-out phase ended",
+  "set": "sample",
+  "cells": 240,
+  "same_status": 240,
+  "changed": [],
+  "rows": [
+    {
+      "arm": "F",
+      "task_id": "aime_1983_p1",
+      "repetition": 0,
+      "proof_sha256": "3a2449acda48299d49a4c309507953cb6b09e1f92b19a1c0b98992f245e67018",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.192,
+        "wall_s": 7.194
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "aime_1983_p2",
+      "repetition": 4,
+      "proof_sha256": "8bfe0fa8ec8c4aaabaee7aa393a6c8bf6e1ada5f97576b03334b076747ba02fe",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.405,
+        "wall_s": 7.407
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "aime_1984_p1",
+      "repetition": 4,
+      "proof_sha256": "fd51c80a5cdc3be7e06fe1bc5e9fb0dd909b7e25d8428d87b8cb491b264f8986",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 9.313,
+        "wall_s": 9.315
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "aime_1984_p7",
+      "repetition": 3,
+      "proof_sha256": "e328bcf835e11ff5cff07e2ddf43f66b2bfc5f3a3346bf066f9e3a757c0904cb",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.128,
+        "wall_s": 7.13
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "aime_1990_p4",
+      "repetition": 4,
+      "proof_sha256": "96f916f26aec18b4bc8b2b209468efd4bfde6eaf1cb4c55b1f50f2455b9de409",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.716,
+        "wall_s": 7.718
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "aime_1990_p4",
+      "repetition": 0,
+      "proof_sha256": "6e9f7b60d9cc8fc17ac213b73d3dd91a2da5e69a91c040ae258257b9c48ab00a",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 8.693,
+        "wall_s": 8.7
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "aime_1990_p4",
+      "repetition": 3,
+      "proof_sha256": "a55e044e25ca0358fc783d2ece60f02cfdb3d2b459eb4894ec9d2a630ba1dfd2",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.635,
+        "wall_s": 7.637
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "aime_1994_p3",
+      "repetition": 2,
+      "proof_sha256": "7ed6aa8f9496ba4e8f62eb14dd652f3630c91f05ea41d4730ff0699708b87c20",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 8.576,
+        "wall_s": 15.268
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "aime_1995_p7",
+      "repetition": 3,
+      "proof_sha256": "5aae9edca2c40343482d34eb5d911b89779e68d611d387db80aa57f577e510d3",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 20.711,
+        "wall_s": 20.715
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "aime_1995_p7",
+      "repetition": 4,
+      "proof_sha256": "4a38bfd9661129098ade7b68cfab70626719463f3063ed34648de21038637b5f",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 16.746,
+        "wall_s": 16.75
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "aime_1995_p7",
+      "repetition": 2,
+      "proof_sha256": "9d974e9e11a432b27c1c96b9fe9c7a1fb1862b4eaafc4544ce67202aedf1dec3",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 18.287,
+        "wall_s": 18.291
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "aime_1997_p9",
+      "repetition": 1,
+      "proof_sha256": "4aaba258da947c263f89109944588883d788c7060cb29046976f501a7058ab72",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 10.038,
+        "wall_s": 10.041
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "aime_1997_p9",
+      "repetition": 2,
+      "proof_sha256": "5c25e3bce8ada5a4248c75973fbe77648e21402a4493097900730dfd176cfabe",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 9.85,
+        "wall_s": 9.852
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "algebra_absxm1pabsxpabsxp1eqxp2_0leqxleq1",
+      "repetition": 3,
+      "proof_sha256": "08138f686d16639686b130a631df62f77545028aa209a04d0bdd647d73546793",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.562,
+        "wall_s": 7.564
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "algebra_absxm1pabsxpabsxp1eqxp2_0leqxleq1",
+      "repetition": 1,
+      "proof_sha256": "08138f686d16639686b130a631df62f77545028aa209a04d0bdd647d73546793",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.969,
+        "wall_s": 7.971
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "algebra_amgm_sum1toneqn_prod1tonleq1",
+      "repetition": 2,
+      "proof_sha256": "f6bb9d3f654ee3c417e0de1f801b2a604db88700d2a4a008110da08bff107c52",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.347,
+        "wall_s": 7.35
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "algebra_amgm_sumasqdivbgeqsuma",
+      "repetition": 3,
+      "proof_sha256": "c55876506d977b83a0c9599ef70932a8b20a51b30937a29a7f8ca7c7ffd2f8c8",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 8.921,
+        "wall_s": 8.924
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "algebra_apbon2pownleqapownpbpowon2",
+      "repetition": 0,
+      "proof_sha256": "1bddffad3855bc0a7239ffb8a7ff39748fe2ac1019ae53f79f1d50668d313862",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.764,
+        "wall_s": 6.767
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "algebra_apbon2pownleqapownpbpowon2",
+      "repetition": 1,
+      "proof_sha256": "9a090be6da689508ef77b95ee2e87611415a623be119820a98decf280665c7f2",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.947,
+        "wall_s": 6.948
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "algebra_apbpceq2_abpbcpcaeq1_aleq1on3anbleq1ancleq4on3",
+      "repetition": 2,
+      "proof_sha256": "bb6b97158b0e8b2134e95355b0d41644e649fdb93471f78bf2fa2241a0013bae",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 26.622,
+        "wall_s": 26.625
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "algebra_apbpceq2_abpbcpcaeq1_aleq1on3anbleq1ancleq4on3",
+      "repetition": 2,
+      "proof_sha256": "1a8504fabd8578a2523b706c4868fe3aa70f3027f772cfb7963a817dc958e2c6",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 11.299,
+        "wall_s": 11.301
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "algebra_bleqa_apbon2msqrtableqambsqon8b",
+      "repetition": 0,
+      "proof_sha256": "6b9df78141a2aedae014254f97c3137967c46ffde29d90d903348fa40d8dbdb6",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 8.943,
+        "wall_s": 8.946
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "algebra_cubrtrp1oncubrtreq3_rcubp1onrcubeq5778",
+      "repetition": 3,
+      "proof_sha256": "da4ac01a8fa2aae91c35a5b87d69488cf57feca35756cd6d909646124db8be1a",
+      "recorded": {
+        "status": "fail",
+        "reason": "Lean error at line 11, column 50: Unknown identifier `hr`",
+        "exit_code": 1,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "fail",
+        "reason": "Lean error at line 11, column 50: Unknown identifier `hr`",
+        "exit_code": 1,
+        "timed_out": false,
+        "lean_s": 7.694,
+        "wall_s": 7.698
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "algebra_ineq_nto1onlt2m1on",
+      "repetition": 0,
+      "proof_sha256": "99a274038b47cd527da366b9c5fbcf9deb3330c8b1157fa26b83a685acb3cd30",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.987,
+        "wall_s": 7.991
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "algebra_ineq_nto1onlt2m1on",
+      "repetition": 3,
+      "proof_sha256": "975da8875d0ea0b72d153ee00443bb74a1bb3f111cee740a0839f3378fb8f73f",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 8.654,
+        "wall_s": 8.656
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "algebra_others_exirrpowirrrat",
+      "repetition": 4,
+      "proof_sha256": "3aa81d369f5c43da2c1ca9003e01859da3841fd1ead8831e94256f61fe5c0d83",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.811,
+        "wall_s": 7.813
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "algebra_sqineq_at2malt1",
+      "repetition": 0,
+      "proof_sha256": "d54beb8ffa8191bb035be5d6b81fc7b39eab18cb0ae456b14118c075d9f6ef10",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.327,
+        "wall_s": 6.328
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "algebra_sqineq_at2malt1",
+      "repetition": 0,
+      "proof_sha256": "d54beb8ffa8191bb035be5d6b81fc7b39eab18cb0ae456b14118c075d9f6ef10",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.973,
+        "wall_s": 6.974
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "algebra_sqineq_at2malt1",
+      "repetition": 0,
+      "proof_sha256": "d54beb8ffa8191bb035be5d6b81fc7b39eab18cb0ae456b14118c075d9f6ef10",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 8.165,
+        "wall_s": 8.167
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "algebra_sqineq_at2malt1",
+      "repetition": 1,
+      "proof_sha256": "d54beb8ffa8191bb035be5d6b81fc7b39eab18cb0ae456b14118c075d9f6ef10",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.915,
+        "wall_s": 6.917
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "algebra_sqineq_at2malt1",
+      "repetition": 3,
+      "proof_sha256": "d54beb8ffa8191bb035be5d6b81fc7b39eab18cb0ae456b14118c075d9f6ef10",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.881,
+        "wall_s": 6.882
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "algebra_sum1onsqrt2to1onsqrt10000lt198",
+      "repetition": 3,
+      "proof_sha256": "40d144df9dfa9e1b6ae436398b6c3f1c4cd0550a3645a5e6f657a817f5899eed",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 10.1,
+        "wall_s": 10.102
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "amc12a_2002_p13",
+      "repetition": 3,
+      "proof_sha256": "471abac18836a8502f41d789bc95c6c028bceef786f9a7d96700fa9371eda689",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 8.891,
+        "wall_s": 8.893
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "amc12a_2002_p13",
+      "repetition": 1,
+      "proof_sha256": "d32aec912f3e0ed3ffbb194449e886bcbfda68dc1341606e48a6a6b5a1af2dff",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 10.121,
+        "wall_s": 10.124
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "amc12a_2002_p6",
+      "repetition": 4,
+      "proof_sha256": "352e24bf2616480cc1af308c9f9c0eaee3ff99d64c84e8930d812daa85ec1af3",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.213,
+        "wall_s": 6.215
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "amc12a_2002_p6",
+      "repetition": 3,
+      "proof_sha256": "352e24bf2616480cc1af308c9f9c0eaee3ff99d64c84e8930d812daa85ec1af3",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.437,
+        "wall_s": 6.439
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "amc12a_2002_p6",
+      "repetition": 1,
+      "proof_sha256": "352e24bf2616480cc1af308c9f9c0eaee3ff99d64c84e8930d812daa85ec1af3",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.155,
+        "wall_s": 6.156
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "amc12a_2002_p6",
+      "repetition": 3,
+      "proof_sha256": "802bfc8fa931a9db432395214900a73f5c4fc12afd4ecd037944821c66ca9bd4",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.172,
+        "wall_s": 6.173
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "amc12a_2003_p23",
+      "repetition": 1,
+      "proof_sha256": "62a34480fccaf1c0a1505077dc3d73e18178a5fda1a4bf0a77665502d1f89a05",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.635,
+        "wall_s": 7.64
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "amc12a_2003_p5",
+      "repetition": 1,
+      "proof_sha256": "c586942c9eeba1dc54205c38375d3925d46ce803c7507cf071ad6e4ed575d707",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 10.848,
+        "wall_s": 10.85
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "amc12a_2009_p6",
+      "repetition": 1,
+      "proof_sha256": "5e66ae0c694b1a75c39ff14855e2858bfa274004729a3d561d7eb0ec4c545985",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.147,
+        "wall_s": 7.149
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "amc12a_2009_p7",
+      "repetition": 1,
+      "proof_sha256": "0d733804118ddefbe3e06cd8ebc6cf036bef298c2a35bbdab06af2e0bd5db1cf",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 8.595,
+        "wall_s": 8.597
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "amc12a_2009_p7",
+      "repetition": 2,
+      "proof_sha256": "f4328a6caf1b08aae46abe21a25e98ae14d339395088429cf55b3d1a6fa672b8",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.047,
+        "wall_s": 7.049
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "amc12a_2020_p10",
+      "repetition": 0,
+      "proof_sha256": "a4583614db8d3f9d94aea7cbbcc7ec91d744d159bddb6219ee5dc8fd5db254fb",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 9.497,
+        "wall_s": 9.501
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "amc12a_2020_p4",
+      "repetition": 0,
+      "proof_sha256": "18beefa04f846dd180cae0142c8b9a0b02398afc796ae6752154cc66e18d5f9d",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 12.4,
+        "wall_s": 12.403
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "amc12a_2020_p4",
+      "repetition": 1,
+      "proof_sha256": "03d824224a2c0c88c4dc7f4f5fc5a87d45be0de8362ef95faffc62fdb6e3a8fb",
+      "recorded": {
+        "status": "fail",
+        "reason": "Lean error at line 49, column 2: maximum recursion depth has been reached\nuse `set_option maxRecDepth <num>` to increase limit\nuse `set_option diagnostics true` to get diagnostic information",
+        "exit_code": 1,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "fail",
+        "reason": "Lean error at line 49, column 2: maximum recursion depth has been reached\nuse `set_option maxRecDepth <num>` to increase limit\nuse `set_option diagnostics true` to get diagnostic information",
+        "exit_code": 1,
+        "timed_out": false,
+        "lean_s": 13.683,
+        "wall_s": 13.686
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "amc12a_2020_p7",
+      "repetition": 2,
+      "proof_sha256": "f49000ee8be7935c15cd732a15eeadc9834a4866b1d25d6c4251e77e07797a93",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.209,
+        "wall_s": 6.212
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "amc12a_2020_p7",
+      "repetition": 0,
+      "proof_sha256": "b7f218ccd88c6c811cb527840d1a8c78323d3363d068c02766a4102d6883a91c",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.431,
+        "wall_s": 7.433
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "amc12a_2021_p12",
+      "repetition": 3,
+      "proof_sha256": null,
+      "recorded": {
+        "status": "fail",
+        "reason": "no proof produced",
+        "exit_code": null,
+        "timed_out": null
+      },
+      "recheck": {
+        "status": "fail",
+        "reason": "no proof produced",
+        "exit_code": null,
+        "timed_out": null,
+        "lean_s": null,
+        "wall_s": 0.0
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "amc12a_2021_p22",
+      "repetition": 0,
+      "proof_sha256": "2269dbbeccd451bb8455a2bdf896de519b2d586466d534ec53c0468e70ad7fcd",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 15.618,
+        "wall_s": 15.623
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "amc12a_2021_p25",
+      "repetition": 0,
+      "proof_sha256": "701eb78ae3cedf67ce6dea5366c37fb836053bbd7486dde51b0cf926663398a2",
+      "recorded": {
+        "status": "fail",
+        "reason": "rejected before compiling: contains the denied word `sorry`",
+        "exit_code": null,
+        "timed_out": null
+      },
+      "recheck": {
+        "status": "fail",
+        "reason": "rejected before compiling: contains the denied word `sorry`",
+        "exit_code": null,
+        "timed_out": null,
+        "lean_s": null,
+        "wall_s": 0.001
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "amc12a_2021_p25",
+      "repetition": 4,
+      "proof_sha256": null,
+      "recorded": {
+        "status": "fail",
+        "reason": "no proof produced",
+        "exit_code": null,
+        "timed_out": null
+      },
+      "recheck": {
+        "status": "fail",
+        "reason": "no proof produced",
+        "exit_code": null,
+        "timed_out": null,
+        "lean_s": null,
+        "wall_s": 0.0
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "amc12a_2021_p8",
+      "repetition": 1,
+      "proof_sha256": "538d9526061ae18d864b1d9daf1e64991f3b437ceb3c46a399fd81ca7904cd06",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 8.908,
+        "wall_s": 8.912
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "amc12a_2021_p8",
+      "repetition": 4,
+      "proof_sha256": "6aaab75b57edac053c953d5805d73aa9c600d85d2ef86ff275fe518954e2532e",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 9.272,
+        "wall_s": 9.275
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "amc12a_2021_p8",
+      "repetition": 1,
+      "proof_sha256": "b8730f6d6c99e8998616e22c879e2c337fff17047b2c4e6ff2630586757177a8",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 8.357,
+        "wall_s": 8.36
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "amc12b_2002_p19",
+      "repetition": 1,
+      "proof_sha256": "97a89382e335b58f8bb17260c7892792dd27c71beafb320661210c2ac8f4c73f",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.841,
+        "wall_s": 7.844
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "amc12b_2002_p2",
+      "repetition": 0,
+      "proof_sha256": "17492d76a2ea0c105e0d3854188593b1e488f0a4ce0e2900fae8bedc7e922321",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 5.721,
+        "wall_s": 5.722
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "amc12b_2002_p7",
+      "repetition": 2,
+      "proof_sha256": "ccb2955380a430c42698d358876dc4784d66251980a26810b8d01617358ce7bc",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 8.443,
+        "wall_s": 8.444
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "amc12b_2020_p2",
+      "repetition": 2,
+      "proof_sha256": "7c64df8336d5a348b5f037e1d91facb19224fdef00e798d5c48c07a184602a59",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.654,
+        "wall_s": 7.655
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "amc12b_2020_p21",
+      "repetition": 4,
+      "proof_sha256": "8bc9ec3743cf0a5677379ae6b0ecc28f02e072d2ad897aafeef142e6c3333afd",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.502,
+        "wall_s": 7.505
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "amc12b_2020_p21",
+      "repetition": 3,
+      "proof_sha256": "05e0175a061b863d7177c7788ea967890cedba140fc53e87aa3e936cbe1021d4",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 8.607,
+        "wall_s": 8.61
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "amc12b_2020_p21",
+      "repetition": 3,
+      "proof_sha256": "976aff77369dbb390a289d34545f68786ddb3204f9f13e1eb708e663a91b4ec9",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 15.52,
+        "wall_s": 15.525
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "amc12b_2020_p22",
+      "repetition": 2,
+      "proof_sha256": "6cd25af389da310b89f1035448b927f6d58e977c59bf2e6f20073e5d8059a06d",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.22,
+        "wall_s": 7.222
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "amc12b_2020_p6",
+      "repetition": 2,
+      "proof_sha256": "177c23c872cae15cf6ab382023a6355afbfe63dfa3dad1272ee6da3062b7bcd7",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.827,
+        "wall_s": 6.829
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "amc12b_2020_p6",
+      "repetition": 3,
+      "proof_sha256": "ac727150aef44693a918e7119ad217b9f5abe160c6763b467141d54c32d4e9ad",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.046,
+        "wall_s": 6.049
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "amc12b_2020_p6",
+      "repetition": 1,
+      "proof_sha256": "4914c6e3183f1066596ac9b5ecc257f73abb721030188b96308bdce0a77562ba",
+      "recorded": {
+        "status": "fail",
+        "reason": "Lean error at line 18, column 6: Tactic `rewrite` failed: Did not find an occurrence of the pattern\n  ?m.148 / \u2191n ! = ?m.150\nin the target expression\n  (\u2191n + 1) ^ 2 = ((\u2191n + 2) * ((\u2191n + 1) * \u2191n !) - (\u2191n + 1) * \u2191n !) / \u2191n !\n\nn : \u2115\nh\u2080 : 9 \u2264 n\nh2 : (n + 1)! = (n + 1) * n !\nh1 : (n + 2)! = (n + 2) * ((n + 1) * n !)\nhpos : \u2191n ! \u2260 0\n\u22a2 (\u2191... [68 more chars]",
+        "exit_code": 1,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "fail",
+        "reason": "Lean error at line 18, column 6: Tactic `rewrite` failed: Did not find an occurrence of the pattern\n  ?m.148 / \u2191n ! = ?m.150\nin the target expression\n  (\u2191n + 1) ^ 2 = ((\u2191n + 2) * ((\u2191n + 1) * \u2191n !) - (\u2191n + 1) * \u2191n !) / \u2191n !\n\nn : \u2115\nh\u2080 : 9 \u2264 n\nh2 : (n + 1)! = (n + 1) * n !\nh1 : (n + 2)! = (n + 2) * ((n + 1) * n !)\nhpos : \u2191n ! \u2260 0\n\u22a2 (\u2191... [68 more chars]",
+        "exit_code": 1,
+        "timed_out": false,
+        "lean_s": 6.218,
+        "wall_s": 6.22
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "amc12b_2021_p1",
+      "repetition": 2,
+      "proof_sha256": "7ad74aa3e8914b2d268f6f930be2ed85d50e186ad734675ca289ae5faf695a96",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.065,
+        "wall_s": 7.067
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "amc12b_2021_p1",
+      "repetition": 4,
+      "proof_sha256": "5393ea8d7be5142de448304645b853ac112f3c3351d0f42d7f60b358e30dce3d",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.96,
+        "wall_s": 7.962
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "amc12b_2021_p13",
+      "repetition": 2,
+      "proof_sha256": null,
+      "recorded": {
+        "status": "fail",
+        "reason": "no proof produced",
+        "exit_code": null,
+        "timed_out": null
+      },
+      "recheck": {
+        "status": "fail",
+        "reason": "no proof produced",
+        "exit_code": null,
+        "timed_out": null,
+        "lean_s": null,
+        "wall_s": 0.0
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "amc12b_2021_p4",
+      "repetition": 1,
+      "proof_sha256": "9a5b9635405a2eb63929f55a0aaca9ed56e02a528f5dd68d3cb5931d63376bfe",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 9.071,
+        "wall_s": 9.074
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "amc12b_2021_p9",
+      "repetition": 0,
+      "proof_sha256": "237a4510769245f568c73762605c0ec38c8e5515c8694977dd6c0b54609c020c",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.879,
+        "wall_s": 7.882
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "imo_1959_p1",
+      "repetition": 0,
+      "proof_sha256": "25fedbebed4fc6f48d680126cf734c3f87d20630c2741819e3310161e603a425",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.714,
+        "wall_s": 6.715
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "imo_1959_p1",
+      "repetition": 4,
+      "proof_sha256": "a73b75c09b066d3e361f5fec9b9494877a1c48c39bd0010b9013a764f6b3a7f9",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.54,
+        "wall_s": 7.544
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "imo_1960_p2",
+      "repetition": 3,
+      "proof_sha256": "dbec5bd7c5afd690879a842054469cfaa53944a27336faf68725e8228eeee959",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 9.519,
+        "wall_s": 9.521
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "imo_1963_p5",
+      "repetition": 0,
+      "proof_sha256": "2532ecb666b54ba2b345bfe6371b81b5fddb4fcf67d45d5379bf42d8b4ef7c01",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.763,
+        "wall_s": 7.767
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "imo_1963_p5",
+      "repetition": 1,
+      "proof_sha256": "de550543169953c55d40fc8e77a522b1fd6005eb91273bea2aee338965b48eca",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.399,
+        "wall_s": 7.402
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "imo_1963_p5",
+      "repetition": 3,
+      "proof_sha256": "919e52a2a06fa918ab78fb5dc807675aeb260444688d749a59ea645f07302c1a",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 8.967,
+        "wall_s": 8.969
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "imo_1968_p5_1",
+      "repetition": 4,
+      "proof_sha256": "d25e6c56025fb84309104d061e413b6f1c9eac453012a0d04ea9ac81d4bb7cdf",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 10.961,
+        "wall_s": 10.963
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "imo_1982_p1",
+      "repetition": 2,
+      "proof_sha256": "b501c5d2a5f762ee8aac28f86050e9a61b7c16981eae98bdbbb2ca0202da3edd",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.065,
+        "wall_s": 6.067
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "imo_1983_p6",
+      "repetition": 0,
+      "proof_sha256": "afcb10361e70d947e85bceb4d8e9f5162a4f46b56cbaaea463dd03b928c098dc",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 36.603,
+        "wall_s": 36.606
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "imo_1983_p6",
+      "repetition": 1,
+      "proof_sha256": "429e59d09ccdce2b911fa8d5bbf3d30bc8b12ebfecc23f20ec9c517993b5edf0",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 27.355,
+        "wall_s": 27.356
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "imo_1983_p6",
+      "repetition": 1,
+      "proof_sha256": "f1a77fdfb9330a2ff660558960d50dd465f44f706b09059f6635ed842d4335df",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 36.354,
+        "wall_s": 36.356
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "imo_1983_p6",
+      "repetition": 2,
+      "proof_sha256": "ccd79c28429716efcee2ef9ceb90f5a28e983ebfc80d34312b0c8ed1449c6e00",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 25.974,
+        "wall_s": 25.977
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "imo_1985_p6",
+      "repetition": 0,
+      "proof_sha256": null,
+      "recorded": {
+        "status": "fail",
+        "reason": "no proof produced",
+        "exit_code": null,
+        "timed_out": null
+      },
+      "recheck": {
+        "status": "fail",
+        "reason": "no proof produced",
+        "exit_code": null,
+        "timed_out": null,
+        "lean_s": null,
+        "wall_s": 0.0
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "imo_2019_p1",
+      "repetition": 1,
+      "proof_sha256": "5678b3cd50499756e006db3369bf6d7e51d722811dcdde3c05b6908c7623eeaf",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.702,
+        "wall_s": 7.709
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "imo_2019_p1",
+      "repetition": 3,
+      "proof_sha256": "5a687cac9b37518a77f8d2c30b1e207a73ceb628c7989cbda2698d1c8a898d2d",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 8.503,
+        "wall_s": 8.506
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "induction_11div10tonmn1ton",
+      "repetition": 0,
+      "proof_sha256": "2973d239764c8fc56f1e4eac77f5ef86b4d8d336eaa8eb795c5f576235e6e1f8",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.106,
+        "wall_s": 6.108
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "induction_11div10tonmn1ton",
+      "repetition": 2,
+      "proof_sha256": "e88c3147d07ee5a689cd21424fe0f5c2b04ece9fc29c1927115f9b70b5eceae4",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.355,
+        "wall_s": 6.356
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "induction_11div10tonmn1ton",
+      "repetition": 3,
+      "proof_sha256": "22458b7d18792b860df532727ebf94fd1aad377febf1b213b75fd67753daea74",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.349,
+        "wall_s": 6.35
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "induction_11div10tonmn1ton",
+      "repetition": 4,
+      "proof_sha256": "3abeb50b84008e38c5dfdd89905a82ecf09fe43691c601ed67f8e1be654a60c6",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 5.928,
+        "wall_s": 5.93
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "induction_1pxpownlt1pnx",
+      "repetition": 1,
+      "proof_sha256": "6584a1df29d7a3805fab6e94e980a99ff2974e10696b32ce49bd2895c9a46b54",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.284,
+        "wall_s": 7.286
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "induction_1pxpownlt1pnx",
+      "repetition": 1,
+      "proof_sha256": "8192a13021fcf8e069fde9f3ac3978e98944573c5ca002148a3db0ebc878108b",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.598,
+        "wall_s": 7.6
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "induction_nfactltnexpnm1ngt3",
+      "repetition": 2,
+      "proof_sha256": "615df3ca099936c965ec5a913dbdeb3404b0009aa594a21e71d722f1603ccc76",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 8.361,
+        "wall_s": 8.363
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "induction_pprime_pdvdapowpma",
+      "repetition": 0,
+      "proof_sha256": "9aa414f7b69c34e9cfc89099db1d97a3e6dff5bd2f1e6b704787d613c4f0fb71",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.892,
+        "wall_s": 6.893
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "induction_pprime_pdvdapowpma",
+      "repetition": 3,
+      "proof_sha256": "fb6487172b83e7ecc010eba62682d3baeaed73f801e7b150aebf5ab4a114161b",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.2,
+        "wall_s": 7.202
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "induction_prod1p1onk3le3m1onn",
+      "repetition": 1,
+      "proof_sha256": "bf058bb57715cbb0960aa053e54ace18774c628a826d912d3c54f0ef7ffa9eb0",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 9.36,
+        "wall_s": 9.364
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "mathd_algebra_107",
+      "repetition": 4,
+      "proof_sha256": "04f0bf79c3d414264edc38707a01810ec6d1a463e6d7ef6eea0460be59a67cdd",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 8.063,
+        "wall_s": 8.064
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "mathd_algebra_114",
+      "repetition": 3,
+      "proof_sha256": "43e601dcd48907371bdce4507d544028cdf6a2160d2cac8e1267a1d9be690737",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.214,
+        "wall_s": 7.216
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "mathd_algebra_114",
+      "repetition": 4,
+      "proof_sha256": "c10112c12a78c57ac9ee935e786f7249c6ec3d0f9ac53879a350e6e7d0dc6b28",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.388,
+        "wall_s": 7.391
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "mathd_algebra_125",
+      "repetition": 2,
+      "proof_sha256": "304b4a90a76a1cbe4c112e074b30e75181f54df43d60f883597457844293b341",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 8.255,
+        "wall_s": 8.289
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "mathd_algebra_125",
+      "repetition": 0,
+      "proof_sha256": "304b4a90a76a1cbe4c112e074b30e75181f54df43d60f883597457844293b341",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 8.123,
+        "wall_s": 8.124
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "mathd_algebra_125",
+      "repetition": 1,
+      "proof_sha256": "1c2a5eeb724fc76c2444d19b0bbd9cd32755c4ca71facc5da7b85dffda282b1d",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.192,
+        "wall_s": 6.204
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "mathd_algebra_125",
+      "repetition": 3,
+      "proof_sha256": "1c2a5eeb724fc76c2444d19b0bbd9cd32755c4ca71facc5da7b85dffda282b1d",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.836,
+        "wall_s": 6.838
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "mathd_algebra_129",
+      "repetition": 2,
+      "proof_sha256": "b270624d186a880033192cd661094ef836fb2b5eb2779443f22fbe5b56fb632c",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.986,
+        "wall_s": 6.988
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "mathd_algebra_139",
+      "repetition": 1,
+      "proof_sha256": "89d55f816a2c620f0abaafa257db738fb099b083e2db73ee3c5d9f1191c86c7e",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.601,
+        "wall_s": 6.603
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "mathd_algebra_139",
+      "repetition": 3,
+      "proof_sha256": "89d55f816a2c620f0abaafa257db738fb099b083e2db73ee3c5d9f1191c86c7e",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.12,
+        "wall_s": 6.123
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "mathd_algebra_143",
+      "repetition": 2,
+      "proof_sha256": "0c47b8103b6b4dd2e304f5b0eecffbacd8b562a5b58df378198f9531af771839",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 5.999,
+        "wall_s": 6.0
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "mathd_algebra_148",
+      "repetition": 0,
+      "proof_sha256": "6e4d1b3266af1243c5fd0ad4ed648ff1af15a4ed9502edacd45f3af6b663af56",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 8.226,
+        "wall_s": 8.228
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "mathd_algebra_153",
+      "repetition": 3,
+      "proof_sha256": "bf30eb7d1b85a90eaadb68f0f044808b3b0805063d56ab999d869ad2952e3a3a",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.418,
+        "wall_s": 7.421
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "mathd_algebra_156",
+      "repetition": 0,
+      "proof_sha256": "c09881c230849aa24347031a5ca947b38b4e80e75e3be0c397b83979cbe36cd8",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.705,
+        "wall_s": 6.707
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "mathd_algebra_156",
+      "repetition": 1,
+      "proof_sha256": "8401bd97ee561ec88d6e2de513730a89be42289424841dd14bb7960eb8b63545",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 8.837,
+        "wall_s": 8.839
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "mathd_algebra_156",
+      "repetition": 3,
+      "proof_sha256": "eb4de442e83f6f84006cb8bd5379110b28258ce3d106170a7ab8143542d1167c",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.605,
+        "wall_s": 7.606
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "mathd_algebra_158",
+      "repetition": 2,
+      "proof_sha256": "d097705d4fdf971212cd6155f6165a845e9972652e13eaef01f8093915649bb8",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.469,
+        "wall_s": 6.471
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "mathd_algebra_158",
+      "repetition": 3,
+      "proof_sha256": "a1a0f9ab8e75a099c930fb4d892f9b90afbeff3bc76139dfef9181ba5eb1de38",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.716,
+        "wall_s": 6.718
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "mathd_algebra_160",
+      "repetition": 1,
+      "proof_sha256": "2c587e2f140ae41533b8e0551e8c940d4f70fbd4b1f4245ea1c9efcde110c9af",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.539,
+        "wall_s": 7.548
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "mathd_algebra_17",
+      "repetition": 1,
+      "proof_sha256": "7292954a16ceac15ed156bb63c44660089257760e4a382aa2abac9ba5671e776",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.33,
+        "wall_s": 7.333
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "mathd_algebra_17",
+      "repetition": 1,
+      "proof_sha256": "5d797bc3ad9945e0b2b8b620a8f3b1a5a968cb3d06e80977fe4dd5f98ea57c32",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.69,
+        "wall_s": 14.379
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "mathd_algebra_171",
+      "repetition": 3,
+      "proof_sha256": "ca6fd4293ec40b0f334fdd27ac499181c13b90391a92d6134c9b72540127d3fa",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.093,
+        "wall_s": 6.095
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "mathd_algebra_171",
+      "repetition": 1,
+      "proof_sha256": "ca6fd4293ec40b0f334fdd27ac499181c13b90391a92d6134c9b72540127d3fa",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.166,
+        "wall_s": 7.168
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "mathd_algebra_171",
+      "repetition": 3,
+      "proof_sha256": "ca6fd4293ec40b0f334fdd27ac499181c13b90391a92d6134c9b72540127d3fa",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.476,
+        "wall_s": 7.478
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "mathd_algebra_208",
+      "repetition": 0,
+      "proof_sha256": "b3e0fc03dcc6edbaa42fcf0ebde23001318fabb63a603197baecaff268039a86",
+      "recorded": {
+        "status": "fail",
+        "reason": "Lean error at line 18, column 10: Tactic `rewrite` failed: Did not find an occurrence of the pattern\n  1000000 ^ (1 / 3)\nin the target expression\n  1000 - 1000000 ^ (1 / 3) = 900\n\nh1 : \u221a1000000 = 1000\nh3 : 1000000 = 100 ^ 3\nh2 : 1000000 ^ (1 / 3) = 100\n\u22a2 1000 - 1000000 ^ (1 / 3) = 900",
+        "exit_code": 1,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "fail",
+        "reason": "Lean error at line 18, column 10: Tactic `rewrite` failed: Did not find an occurrence of the pattern\n  1000000 ^ (1 / 3)\nin the target expression\n  1000 - 1000000 ^ (1 / 3) = 900\n\nh1 : \u221a1000000 = 1000\nh3 : 1000000 = 100 ^ 3\nh2 : 1000000 ^ (1 / 3) = 100\n\u22a2 1000 - 1000000 ^ (1 / 3) = 900",
+        "exit_code": 1,
+        "timed_out": false,
+        "lean_s": 6.363,
+        "wall_s": 6.365
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "mathd_algebra_208",
+      "repetition": 0,
+      "proof_sha256": "9cfd77606a434a43c93447424128eb4a0c29cb8339a2b4feca8f089898db1a68",
+      "recorded": {
+        "status": "fail",
+        "reason": "Lean error at line 16, column 10: Tactic `rewrite` failed: Did not find an occurrence of the pattern\n  1000000 ^ (1 / 3)\nin the target expression\n  1000 - 1000000 ^ (1 / 3) = 900\n\nh1 : \u221a1000000 = 1000\nh2 : 1000000 ^ (1 / 3) = 100\n\u22a2 1000 - 1000000 ^ (1 / 3) = 900",
+        "exit_code": 1,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "fail",
+        "reason": "Lean error at line 16, column 10: Tactic `rewrite` failed: Did not find an occurrence of the pattern\n  1000000 ^ (1 / 3)\nin the target expression\n  1000 - 1000000 ^ (1 / 3) = 900\n\nh1 : \u221a1000000 = 1000\nh2 : 1000000 ^ (1 / 3) = 100\n\u22a2 1000 - 1000000 ^ (1 / 3) = 900",
+        "exit_code": 1,
+        "timed_out": false,
+        "lean_s": 6.706,
+        "wall_s": 6.707
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "mathd_algebra_209",
+      "repetition": 0,
+      "proof_sha256": "82008c3016a7a3af043f272911ccaf5476d2faf33364b502758bd6707b84322b",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.234,
+        "wall_s": 6.238
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "mathd_algebra_215",
+      "repetition": 3,
+      "proof_sha256": "ea47ce54b31e4446e4cfd6bef4e2f8f69e7141c5d5f7ef3a59896291e89f2b36",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.565,
+        "wall_s": 6.566
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "mathd_algebra_24",
+      "repetition": 1,
+      "proof_sha256": "e344d5e5f59bb9717e01eb47a41fff247a8bd21d544ecb9808be47079b5418fc",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.618,
+        "wall_s": 7.619
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "mathd_algebra_24",
+      "repetition": 2,
+      "proof_sha256": "d436666023d79ff92a16ddb92119715621dac99b3ac12ce1e9c29a344fcdc3aa",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.964,
+        "wall_s": 14.652
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "mathd_algebra_246",
+      "repetition": 4,
+      "proof_sha256": "087bf9e8b46583d46d5c118d12356bc21a68e2e0ce5e7d091a897b09d5ee7063",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.672,
+        "wall_s": 7.674
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "mathd_algebra_270",
+      "repetition": 4,
+      "proof_sha256": "406eb70accb95ae5d633b409225014e3595fcaaba93f0230abbed8516d4907f4",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.218,
+        "wall_s": 7.219
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "mathd_algebra_275",
+      "repetition": 1,
+      "proof_sha256": "421545498866125f929e8363a04e5cd19976b26916eb5fdeb9c4585676875860",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.714,
+        "wall_s": 6.715
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "mathd_algebra_275",
+      "repetition": 1,
+      "proof_sha256": "66deef9d99b2b2dd384bcc91f35a2d64cf2446cdd9af79184778a554060345d2",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.809,
+        "wall_s": 6.811
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "mathd_algebra_276",
+      "repetition": 1,
+      "proof_sha256": "ff68f3e38e21b703cdc9125c7a2574d083668d3a34ddca0e88ac7ea01bb79907",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 8.558,
+        "wall_s": 8.585
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "mathd_algebra_288",
+      "repetition": 2,
+      "proof_sha256": "423fdf9b99f689dd48c386b640209b2700efd773edf3ab1964afbab7491e142a",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 8.207,
+        "wall_s": 8.21
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "mathd_algebra_296",
+      "repetition": 2,
+      "proof_sha256": "2ea7b2e7e0ee9040cf3e032873de9a2cafbc913cdb2a3e033703982020075937",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 5.979,
+        "wall_s": 5.981
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "mathd_algebra_302",
+      "repetition": 2,
+      "proof_sha256": "34e607713b7012de2f51091629548a78e5d46f7e039f8bd645025ed3b8ad90b6",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 5.923,
+        "wall_s": 5.924
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "mathd_algebra_304",
+      "repetition": 1,
+      "proof_sha256": "7c64df8336d5a348b5f037e1d91facb19224fdef00e798d5c48c07a184602a59",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.357,
+        "wall_s": 6.358
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "mathd_algebra_304",
+      "repetition": 2,
+      "proof_sha256": "7c64df8336d5a348b5f037e1d91facb19224fdef00e798d5c48c07a184602a59",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.204,
+        "wall_s": 7.206
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "mathd_algebra_313",
+      "repetition": 3,
+      "proof_sha256": "843fc73b90c10f6180edfeb380b13ba542a81da896c6650fecf026c0e148b7d3",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.204,
+        "wall_s": 6.207
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "mathd_algebra_313",
+      "repetition": 4,
+      "proof_sha256": "67a4ffdc4d58e25290c16022c6175c0253dc9924d0d2ddea2038ba367ee56ae9",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.231,
+        "wall_s": 6.233
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "mathd_algebra_313",
+      "repetition": 4,
+      "proof_sha256": "4b177ad94d040d3d127eb4e1fcc077e2c2b0335a3ac598cd2c2c9738316e11ad",
+      "recorded": {
+        "status": "fail",
+        "reason": "Lean error at line 18, column 4: ring failed, ring expressions not equal\nv i : \u2102\nh\u2081 : v = 1 + Complex.I\nh\u2080 : v = i * (2 - Complex.I)\nh3 : i * (2 - Complex.I) = 1 + Complex.I\nhI : Complex.I ^ 2 = -1\n\u22a2 i * 2 + i * Complex.I ^ 2 * 2 = 0",
+        "exit_code": 1,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "fail",
+        "reason": "Lean error at line 18, column 4: ring failed, ring expressions not equal\nv i : \u2102\nh\u2081 : v = 1 + Complex.I\nh\u2080 : v = i * (2 - Complex.I)\nh3 : i * (2 - Complex.I) = 1 + Complex.I\nhI : Complex.I ^ 2 = -1\n\u22a2 i * 2 + i * Complex.I ^ 2 * 2 = 0",
+        "exit_code": 1,
+        "timed_out": false,
+        "lean_s": 6.422,
+        "wall_s": 6.424
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "mathd_algebra_314",
+      "repetition": 3,
+      "proof_sha256": "17492d76a2ea0c105e0d3854188593b1e488f0a4ce0e2900fae8bedc7e922321",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.081,
+        "wall_s": 7.082
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "mathd_algebra_329",
+      "repetition": 0,
+      "proof_sha256": "2c587e2f140ae41533b8e0551e8c940d4f70fbd4b1f4245ea1c9efcde110c9af",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.296,
+        "wall_s": 7.298
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "mathd_algebra_329",
+      "repetition": 4,
+      "proof_sha256": "2c587e2f140ae41533b8e0551e8c940d4f70fbd4b1f4245ea1c9efcde110c9af",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 8.676,
+        "wall_s": 8.677
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "mathd_algebra_338",
+      "repetition": 0,
+      "proof_sha256": "41c57a0217e7cfa1111c11ccbc9e1ba73ef676ca207b6e3d6fd2807345e04a7d",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.265,
+        "wall_s": 7.267
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "mathd_algebra_338",
+      "repetition": 0,
+      "proof_sha256": "41c57a0217e7cfa1111c11ccbc9e1ba73ef676ca207b6e3d6fd2807345e04a7d",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.495,
+        "wall_s": 6.496
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "mathd_algebra_338",
+      "repetition": 2,
+      "proof_sha256": "4326c362a2fea09f824fd18166c375727b290d17dddf926d4ce3ef6cd7569b0e",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.079,
+        "wall_s": 7.08
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "mathd_algebra_338",
+      "repetition": 2,
+      "proof_sha256": "41c57a0217e7cfa1111c11ccbc9e1ba73ef676ca207b6e3d6fd2807345e04a7d",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.303,
+        "wall_s": 7.306
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "mathd_algebra_346",
+      "repetition": 4,
+      "proof_sha256": "db54329a30c1067d745ea26f26d75424dbbef2327bafd36f0b1b1dae5ddc85c6",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.716,
+        "wall_s": 6.717
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "mathd_algebra_346",
+      "repetition": 0,
+      "proof_sha256": "db54329a30c1067d745ea26f26d75424dbbef2327bafd36f0b1b1dae5ddc85c6",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.388,
+        "wall_s": 7.389
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "mathd_algebra_346",
+      "repetition": 2,
+      "proof_sha256": "db54329a30c1067d745ea26f26d75424dbbef2327bafd36f0b1b1dae5ddc85c6",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.396,
+        "wall_s": 7.397
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "mathd_algebra_362",
+      "repetition": 1,
+      "proof_sha256": "ee3a57ac594452b29f561de110d28e29476ad173d57d4b556d5c4fa1c3029ffd",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 14.094,
+        "wall_s": 14.096
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "mathd_algebra_362",
+      "repetition": 0,
+      "proof_sha256": "1a481c9284b9423bc3d5422efef2e8878b73fdedc41654c802c61504db5d29f4",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 8.019,
+        "wall_s": 8.021
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "mathd_algebra_388",
+      "repetition": 3,
+      "proof_sha256": "2c587e2f140ae41533b8e0551e8c940d4f70fbd4b1f4245ea1c9efcde110c9af",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 8.058,
+        "wall_s": 8.089
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "mathd_algebra_388",
+      "repetition": 3,
+      "proof_sha256": "2c587e2f140ae41533b8e0551e8c940d4f70fbd4b1f4245ea1c9efcde110c9af",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.36,
+        "wall_s": 7.362
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "mathd_algebra_392",
+      "repetition": 2,
+      "proof_sha256": "96445f8cf6b50c7cb88d20c665f9fdf26db3340b193c5ff5c052a3d885cec402",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.991,
+        "wall_s": 6.992
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "mathd_algebra_392",
+      "repetition": 2,
+      "proof_sha256": "1d0dc4f16d3cf94ee9612fcd51ff2071dd7021afdf78cae1da32456be8db2c22",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.26,
+        "wall_s": 7.262
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "mathd_algebra_400",
+      "repetition": 0,
+      "proof_sha256": "2c587e2f140ae41533b8e0551e8c940d4f70fbd4b1f4245ea1c9efcde110c9af",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.849,
+        "wall_s": 6.85
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "mathd_algebra_400",
+      "repetition": 2,
+      "proof_sha256": "bc36ae7972022d75b3e55b4ff22db5805fcb73000391da5b065f48a8977ed453",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.569,
+        "wall_s": 7.571
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "mathd_algebra_419",
+      "repetition": 0,
+      "proof_sha256": "1171215d5867767980fe07ae4c1e6b33963f98acc7a24562a85ac3f5bf3efd63",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.117,
+        "wall_s": 7.119
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "mathd_algebra_419",
+      "repetition": 3,
+      "proof_sha256": "2e91b0b457da14d70b0c6367594ece299c7ef6f24ba534c7da5f8c1e33c0bc41",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.567,
+        "wall_s": 7.569
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "mathd_algebra_432",
+      "repetition": 0,
+      "proof_sha256": "16b974583155fdcb11fb6832a37be09c18c7acecbfb352c25a35512bfd755a33",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.77,
+        "wall_s": 7.772
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "mathd_algebra_432",
+      "repetition": 4,
+      "proof_sha256": "16b974583155fdcb11fb6832a37be09c18c7acecbfb352c25a35512bfd755a33",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 5.554,
+        "wall_s": 5.555
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "mathd_algebra_432",
+      "repetition": 2,
+      "proof_sha256": "16b974583155fdcb11fb6832a37be09c18c7acecbfb352c25a35512bfd755a33",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.67,
+        "wall_s": 6.672
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "mathd_algebra_44",
+      "repetition": 1,
+      "proof_sha256": "48a85f362a4552ca96d0a36c1962455c369efc013f46eebe6bb9df5ff370c06c",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.727,
+        "wall_s": 6.728
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "mathd_algebra_44",
+      "repetition": 2,
+      "proof_sha256": "e510ac95a776ac7c135d535eba0ca3e63383ce15383f97ba4129a5fbe2e3455f",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.624,
+        "wall_s": 7.626
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "mathd_algebra_441",
+      "repetition": 0,
+      "proof_sha256": "7104e0e0200c2733f30885c9a01d2622dac9d97c5edf1ba187b2277816f1ab25",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.419,
+        "wall_s": 6.421
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "mathd_algebra_441",
+      "repetition": 4,
+      "proof_sha256": "2c802562ce43833473a562ef8d625fb63b2174e85436a3985c4d45002356611a",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.88,
+        "wall_s": 6.881
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "mathd_algebra_441",
+      "repetition": 4,
+      "proof_sha256": "7104e0e0200c2733f30885c9a01d2622dac9d97c5edf1ba187b2277816f1ab25",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.395,
+        "wall_s": 7.397
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "mathd_algebra_452",
+      "repetition": 2,
+      "proof_sha256": "f32aeaba76466498b38a3ae2dfae9b678197d5f98b2053172bab66b1919128f7",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 8.852,
+        "wall_s": 8.854
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "mathd_algebra_459",
+      "repetition": 0,
+      "proof_sha256": "acc9297c68cbb06a7ad51e35609e9c9afbe5c276d7d0b160daca9fc94c809504",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.642,
+        "wall_s": 6.645
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "mathd_algebra_459",
+      "repetition": 3,
+      "proof_sha256": "374dd8f9d50d5f6b12e995a714374cb300d2de7155a0a28a6a91a52039341ad7",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.348,
+        "wall_s": 7.349
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "mathd_algebra_459",
+      "repetition": 4,
+      "proof_sha256": "62e4cb9d5ac4aea2421be936ba9e6f3e146ce47f936b70c6b83cac3faa0aee27",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.568,
+        "wall_s": 6.57
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "mathd_algebra_478",
+      "repetition": 2,
+      "proof_sha256": "5f8019c10091aff082bc8f6c1a26273e949253f48ec7dc66025c424be28bd9d2",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.279,
+        "wall_s": 6.28
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "mathd_algebra_478",
+      "repetition": 2,
+      "proof_sha256": "5f8019c10091aff082bc8f6c1a26273e949253f48ec7dc66025c424be28bd9d2",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.781,
+        "wall_s": 7.784
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "mathd_algebra_478",
+      "repetition": 3,
+      "proof_sha256": "ca860617cded409891e65849eddf21ce3a2cce5b37dca6a6bfbf17f1e8ce425f",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.688,
+        "wall_s": 6.69
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "mathd_algebra_478",
+      "repetition": 4,
+      "proof_sha256": "ca860617cded409891e65849eddf21ce3a2cce5b37dca6a6bfbf17f1e8ce425f",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.154,
+        "wall_s": 7.156
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "mathd_algebra_478",
+      "repetition": 2,
+      "proof_sha256": "5f8019c10091aff082bc8f6c1a26273e949253f48ec7dc66025c424be28bd9d2",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.931,
+        "wall_s": 6.933
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "mathd_algebra_487",
+      "repetition": 3,
+      "proof_sha256": "9fe31f95c1aa61391eb929a460da89e296a275941896202a4011c6d0fb8f2b3c",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.736,
+        "wall_s": 6.739
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "mathd_algebra_513",
+      "repetition": 1,
+      "proof_sha256": "eecca34f0c06b645ef52afdc97e2c924ead9638e0d9a7b6fb27968a8a8335c7b",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.016,
+        "wall_s": 6.018
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "mathd_algebra_756",
+      "repetition": 2,
+      "proof_sha256": "2fc3913624c9407a297827bf86d9a9ee5a8f1b4f69b7efba0ce04d1b6c860d50",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 8.756,
+        "wall_s": 8.758
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "mathd_algebra_756",
+      "repetition": 0,
+      "proof_sha256": "05455b7423142a8fc2bf6a2ea3cc1e32b7de3312149b2e65067d4a3c19003864",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.873,
+        "wall_s": 6.877
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "mathd_algebra_76",
+      "repetition": 1,
+      "proof_sha256": "1ee8af150eed16a64339a1a797a9ae00abe2f2f3668ebfd908f6e11ae2050ef7",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.189,
+        "wall_s": 7.191
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "mathd_algebra_80",
+      "repetition": 2,
+      "proof_sha256": "c2e6d80e5e9e603ffc6a4ac57bc91fdd801cf185672c850d3c6bbff6f9b750a9",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.628,
+        "wall_s": 6.63
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "mathd_algebra_80",
+      "repetition": 4,
+      "proof_sha256": "5a4f41ad993580c621470833235f8882647b7df4b62782301778064e1210d86c",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 8.115,
+        "wall_s": 8.117
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "mathd_numbertheory_100",
+      "repetition": 1,
+      "proof_sha256": "f7fc352ad4b439814834e0b563a07cacec6dcb1941c1c2e0d20f05b816ec3337",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.23,
+        "wall_s": 6.232
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "mathd_numbertheory_1124",
+      "repetition": 1,
+      "proof_sha256": "a0a84413bb52532e5852d26890f3aa5ec15f24c14f27481c5d7307e8296c2ad8",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.927,
+        "wall_s": 6.93
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "mathd_numbertheory_1124",
+      "repetition": 3,
+      "proof_sha256": "a0a84413bb52532e5852d26890f3aa5ec15f24c14f27481c5d7307e8296c2ad8",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.963,
+        "wall_s": 6.964
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "mathd_numbertheory_185",
+      "repetition": 3,
+      "proof_sha256": "304b4a90a76a1cbe4c112e074b30e75181f54df43d60f883597457844293b341",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.163,
+        "wall_s": 6.164
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "mathd_numbertheory_234",
+      "repetition": 1,
+      "proof_sha256": "2c5b999a5ec3fca27b750d79cf0670a6ceb7502d3a7c3776cac9a302bd4f728c",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.157,
+        "wall_s": 7.159
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "mathd_numbertheory_234",
+      "repetition": 0,
+      "proof_sha256": "eb6010ee35784e405075f3dd65d4941d2ed8d731395904fd5fbcdef4f0c265b5",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.781,
+        "wall_s": 7.782
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "mathd_numbertheory_235",
+      "repetition": 0,
+      "proof_sha256": "7c64df8336d5a348b5f037e1d91facb19224fdef00e798d5c48c07a184602a59",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.529,
+        "wall_s": 6.53
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "mathd_numbertheory_239",
+      "repetition": 1,
+      "proof_sha256": "5f929a62c03cbcbd9822353adf0d26f71d1e09d06ea8b307815bc7fc3d72914c",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 5.802,
+        "wall_s": 5.803
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "mathd_numbertheory_239",
+      "repetition": 1,
+      "proof_sha256": "5589aa5863c2d85622d06d651add002416e5513afdbb455666cdde01bb3e257d",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.671,
+        "wall_s": 6.672
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "mathd_numbertheory_247",
+      "repetition": 0,
+      "proof_sha256": "304b4a90a76a1cbe4c112e074b30e75181f54df43d60f883597457844293b341",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.906,
+        "wall_s": 6.908
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "mathd_numbertheory_254",
+      "repetition": 3,
+      "proof_sha256": "7c64df8336d5a348b5f037e1d91facb19224fdef00e798d5c48c07a184602a59",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.995,
+        "wall_s": 6.997
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "mathd_numbertheory_277",
+      "repetition": 3,
+      "proof_sha256": "dcc8010136d0b88949fed610efefc438a622e49566754696b4981c101a5fd598",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.576,
+        "wall_s": 7.579
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "mathd_numbertheory_277",
+      "repetition": 3,
+      "proof_sha256": "d44a96a8d9e27019eb17422b6f7dc198fc59680e77afd28913e91b75f81723c7",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 9.824,
+        "wall_s": 9.826
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "mathd_numbertheory_277",
+      "repetition": 4,
+      "proof_sha256": "41cda5b20856a66f292468f20028ba40786a108d4b0a0927a82f7e58b4e4b1ee",
+      "recorded": {
+        "status": "fail",
+        "reason": "Lean error at line 20, column 23: omega could not prove the goal:\nNo usable constraints found. You may need to unfold definitions so `omega` can see linear arithmetic facts about `Nat` and `Int`, which may also involve multiplication, division, and modular remainder by constants.",
+        "exit_code": 1,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "fail",
+        "reason": "Lean error at line 20, column 23: omega could not prove the goal:\nNo usable constraints found. You may need to unfold definitions so `omega` can see linear arithmetic facts about `Nat` and `Int`, which may also involve multiplication, division, and modular remainder by constants.",
+        "exit_code": 1,
+        "timed_out": false,
+        "lean_s": 8.295,
+        "wall_s": 8.298
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "mathd_numbertheory_293",
+      "repetition": 3,
+      "proof_sha256": "a0a84413bb52532e5852d26890f3aa5ec15f24c14f27481c5d7307e8296c2ad8",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.471,
+        "wall_s": 6.472
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "mathd_numbertheory_296",
+      "repetition": 0,
+      "proof_sha256": "dd3a411af65346abda765b83c0a3d9ff10592e8997e30af1e8efbe1c25bdbb90",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.359,
+        "wall_s": 7.362
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "mathd_numbertheory_34",
+      "repetition": 0,
+      "proof_sha256": "3fdbf09072111869bd2927055c2756f540805de8ccf5074309480912db17cfe9",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.326,
+        "wall_s": 6.327
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "mathd_numbertheory_342",
+      "repetition": 3,
+      "proof_sha256": "7c64df8336d5a348b5f037e1d91facb19224fdef00e798d5c48c07a184602a59",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 5.605,
+        "wall_s": 5.606
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "mathd_numbertheory_343",
+      "repetition": 0,
+      "proof_sha256": "a6c2aadd4d586ba9a0d7005a18401b747055e5dcdb8f8175a09bd52483608da0",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.38,
+        "wall_s": 6.381
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "mathd_numbertheory_343",
+      "repetition": 1,
+      "proof_sha256": "a6c2aadd4d586ba9a0d7005a18401b747055e5dcdb8f8175a09bd52483608da0",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.365,
+        "wall_s": 7.367
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "mathd_numbertheory_345",
+      "repetition": 1,
+      "proof_sha256": "7c64df8336d5a348b5f037e1d91facb19224fdef00e798d5c48c07a184602a59",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.559,
+        "wall_s": 6.562
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "mathd_numbertheory_430",
+      "repetition": 1,
+      "proof_sha256": "662cb0d664bc01f941d719af2513ccc0f5ee664a9774ebb625d5a0c8eeb42937",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.974,
+        "wall_s": 6.976
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "mathd_numbertheory_430",
+      "repetition": 3,
+      "proof_sha256": "662cb0d664bc01f941d719af2513ccc0f5ee664a9774ebb625d5a0c8eeb42937",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.719,
+        "wall_s": 7.72
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "mathd_numbertheory_430",
+      "repetition": 4,
+      "proof_sha256": "662cb0d664bc01f941d719af2513ccc0f5ee664a9774ebb625d5a0c8eeb42937",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.36,
+        "wall_s": 7.362
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "mathd_numbertheory_430",
+      "repetition": 2,
+      "proof_sha256": "c0d7137e168536fdf5e973955e6027ae7fb8163cef2fb0f2fde722c7d641a5b1",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.32,
+        "wall_s": 6.322
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "mathd_numbertheory_435",
+      "repetition": 3,
+      "proof_sha256": "c083a3aff5470af404a22c7c76bd976f5a68ee18e1b3b4b7bc8fd97ed5ebea48",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.314,
+        "wall_s": 6.316
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "mathd_numbertheory_435",
+      "repetition": 2,
+      "proof_sha256": "91fc4ec063e2a2c2672258555e8f9cfd7182e10419d4cca69d788915d0be16a3",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.493,
+        "wall_s": 6.494
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "mathd_numbertheory_435",
+      "repetition": 3,
+      "proof_sha256": "c083a3aff5470af404a22c7c76bd976f5a68ee18e1b3b4b7bc8fd97ed5ebea48",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.648,
+        "wall_s": 6.65
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "mathd_numbertheory_447",
+      "repetition": 0,
+      "proof_sha256": "4375197e080fab983a065b147a90952cebe900ec5d767a702275207513e8366a",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 5.851,
+        "wall_s": 5.854
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "mathd_numbertheory_447",
+      "repetition": 0,
+      "proof_sha256": "46fcf9768a9438092884788ca56e437796c37a435b4929eac71d152c939e6b48",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 5.813,
+        "wall_s": 5.814
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "mathd_numbertheory_457",
+      "repetition": 0,
+      "proof_sha256": "b6a44a971c003252aea921a1c32063da73936f89deccef1bda66864314d16393",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.997,
+        "wall_s": 6.999
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "mathd_numbertheory_457",
+      "repetition": 2,
+      "proof_sha256": "d0f00d919b0c693d12d03a2eca334c3f9f584cc258fda74498efd3e3a7aee49c",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.024,
+        "wall_s": 6.025
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "mathd_numbertheory_457",
+      "repetition": 3,
+      "proof_sha256": "eb70240daf59f79c7b22550eff7d7238acd78fc0e43057e0996673ab0edf3666",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.179,
+        "wall_s": 7.182
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "mathd_numbertheory_483",
+      "repetition": 1,
+      "proof_sha256": "015461597531b35b8a789558ce6db09c76fda77ea08fd36a8e2abbb7786f8f91",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.819,
+        "wall_s": 7.821
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "mathd_numbertheory_483",
+      "repetition": 4,
+      "proof_sha256": "4a152d154d0419395b30e80966739f99b5045cd0d693febbf31318aed4015bcb",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 8.973,
+        "wall_s": 8.977
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "mathd_numbertheory_483",
+      "repetition": 1,
+      "proof_sha256": "241db8cd1dcc213a636b4dbc2c9cc092c1a5500acbb2f2f3065a4a2f2ac436b5",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.367,
+        "wall_s": 7.371
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "mathd_numbertheory_495",
+      "repetition": 3,
+      "proof_sha256": "8cc59b30c3f2b9631ee49e848df821a6591e558ecc1467dd19566316103079c8",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 9.311,
+        "wall_s": 9.313
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "mathd_numbertheory_5",
+      "repetition": 3,
+      "proof_sha256": "9223c3a88fb443ca10a7bdaae5a8cd8aa5eb217c125daba92d059357925cee56",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.217,
+        "wall_s": 7.218
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "mathd_numbertheory_5",
+      "repetition": 1,
+      "proof_sha256": "9e0d8f85512d34cb2af3dd36737269c911f4f3bd51cce67ca1807a67728beca0",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 8.862,
+        "wall_s": 8.864
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "mathd_numbertheory_517",
+      "repetition": 1,
+      "proof_sha256": "7c64df8336d5a348b5f037e1d91facb19224fdef00e798d5c48c07a184602a59",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 5.957,
+        "wall_s": 5.958
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "mathd_numbertheory_521",
+      "repetition": 4,
+      "proof_sha256": "e3ac80a7c5768f23a7bc508f860641625c08ced5b44457795d41d8bf7e798b8e",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.882,
+        "wall_s": 6.883
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "mathd_numbertheory_541",
+      "repetition": 2,
+      "proof_sha256": "930706a3e8495fab2f2cae0c02727f4cf30b982fe42e65d69a83347b4c251be3",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 49.031,
+        "wall_s": 49.033
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "mathd_numbertheory_552",
+      "repetition": 1,
+      "proof_sha256": "74b1e07706c2252fdeee3848b4dccba1c364c123df411ff26e43344eff8117c1",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.814,
+        "wall_s": 7.816
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "mathd_numbertheory_552",
+      "repetition": 3,
+      "proof_sha256": "e23f10aaed3dfe95cf9330f8acb14f59ece4f72c919d178f24d8236bb6b89717",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.88,
+        "wall_s": 6.882
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "mathd_numbertheory_559",
+      "repetition": 0,
+      "proof_sha256": "304b4a90a76a1cbe4c112e074b30e75181f54df43d60f883597457844293b341",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.187,
+        "wall_s": 7.189
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "mathd_numbertheory_66",
+      "repetition": 3,
+      "proof_sha256": "7c64df8336d5a348b5f037e1d91facb19224fdef00e798d5c48c07a184602a59",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 5.799,
+        "wall_s": 5.8
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "mathd_numbertheory_66",
+      "repetition": 0,
+      "proof_sha256": "7c64df8336d5a348b5f037e1d91facb19224fdef00e798d5c48c07a184602a59",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 8.168,
+        "wall_s": 8.169
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "mathd_numbertheory_66",
+      "repetition": 4,
+      "proof_sha256": "7c64df8336d5a348b5f037e1d91facb19224fdef00e798d5c48c07a184602a59",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.418,
+        "wall_s": 6.419
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "mathd_numbertheory_769",
+      "repetition": 1,
+      "proof_sha256": "7c64df8336d5a348b5f037e1d91facb19224fdef00e798d5c48c07a184602a59",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 5.551,
+        "wall_s": 5.552
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "mathd_numbertheory_85",
+      "repetition": 3,
+      "proof_sha256": "7c64df8336d5a348b5f037e1d91facb19224fdef00e798d5c48c07a184602a59",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.08,
+        "wall_s": 6.082
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "mathd_numbertheory_85",
+      "repetition": 0,
+      "proof_sha256": "7c64df8336d5a348b5f037e1d91facb19224fdef00e798d5c48c07a184602a59",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 7.0,
+        "wall_s": 7.001
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "mathd_numbertheory_85",
+      "repetition": 2,
+      "proof_sha256": "7c64df8336d5a348b5f037e1d91facb19224fdef00e798d5c48c07a184602a59",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.556,
+        "wall_s": 6.559
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "numbertheory_aoddbdiv4asqpbsqmod8eq1",
+      "repetition": 2,
+      "proof_sha256": "5a19864b1fc1d987067e0e417ef55314e2f5b9db1040330a46ef78f47351cc62",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.933,
+        "wall_s": 6.935
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "numbertheory_aoddbdiv4asqpbsqmod8eq1",
+      "repetition": 4,
+      "proof_sha256": "e2e2b8da73be68efc53f73a9ab2a706102b31cbcd099d653bbeb9680329f00db",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.854,
+        "wall_s": 6.856
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "numbertheory_exk2powkeqapb2mulbpa2_aeq1",
+      "repetition": 3,
+      "proof_sha256": "536f63b74abb24235dfb8d021471f8d78a674cc2f2d4e662883feacd64aa44eb",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 11.914,
+        "wall_s": 11.918
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "numbertheory_fxeq4powxp6powxp9powx_f2powmdvdf2pown",
+      "repetition": 4,
+      "proof_sha256": "5ead1266e71b6a7be1453595d46eaf90ba4361caf1b59c44600f2bef80bcaef1",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 8.469,
+        "wall_s": 8.471
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "numbertheory_fxeq4powxp6powxp9powx_f2powmdvdf2pown",
+      "repetition": 3,
+      "proof_sha256": "a5f985a07a78fb5ec47833bc5c91a6f2fdf022ee4164c59e2527aad18030538f",
+      "recorded": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 6.695,
+        "wall_s": 6.7
+      },
+      "same_status": true
+    }
+  ]
+}

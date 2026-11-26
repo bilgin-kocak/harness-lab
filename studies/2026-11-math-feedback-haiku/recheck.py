@@ -19,7 +19,10 @@ Sets:
   time only. Run with ``--workers 1`` and nothing else running: a check of
   ``mathd_numbertheory_451`` reached 13.2-13.9 GB of the session's 14.3 GB memory limit.
 
-Writes ``recheck_<SET>.json`` in the study directory (or ``--out``).
+Writes ``recheck_<SET>.json`` in the study directory (or ``--out``). With ``--progress FILE``,
+each verdict is also appended to FILE as it is made, and cells already in FILE are not checked
+again, so a run killed for memory can resume. ``--order light-first`` checks the cells of
+``mathd_numbertheory_451`` last.
 """
 
 from __future__ import annotations
@@ -90,7 +93,7 @@ def select(name: str, records: list[dict]) -> list[dict]:
     raise SystemExit(f"unknown set {name!r}")
 
 
-async def run(selected: list[dict], workers: int) -> list[dict]:
+async def run(selected: list[dict], workers: int, progress: Path | None = None) -> list[dict]:
     from harnesslab.domains import ensure_builtin_domains
     from harnesslab.study.contract import Attempt, VerifyContext
     from harnesslab.study.registry import create_domain
@@ -102,6 +105,12 @@ async def run(selected: list[dict], workers: int) -> list[dict]:
     tasks = {t.id: t for t in adapter.load_tasks(sorted({r["task_id"] for r in selected}))}
     gate = asyncio.Semaphore(workers)
     out: list[dict] = []
+    if progress is not None and progress.exists():
+        done = [json.loads(x) for x in progress.read_text(encoding="utf-8").splitlines() if x.strip()]
+        out.extend(done)
+        seen = {(x["arm"], x["task_id"], x["repetition"]) for x in done}
+        selected = [r for r in selected if _key(r) not in seen]
+        print(f"resuming: {len(done)} verdicts already in {progress}", flush=True)
 
     async def one(r: dict, tmp: Path) -> None:
         async with gate:
@@ -139,6 +148,9 @@ async def run(selected: list[dict], workers: int) -> list[dict]:
             }
             row["same_status"] = row["recorded"]["status"] == row["recheck"]["status"]
             out.append(row)
+            if progress is not None:
+                with progress.open("a", encoding="utf-8") as f:
+                    f.write(json.dumps(row) + "\n")
             print(
                 f"{len(out)}/{len(selected)} {row['arm']} {row['task_id']} rep {row['repetition']}: "
                 f"{row['recorded']['status']} -> {row['recheck']['status']}"
@@ -148,7 +160,11 @@ async def run(selected: list[dict], workers: int) -> list[dict]:
 
     try:
         with tempfile.TemporaryDirectory() as tmp:
-            await asyncio.gather(*(one(r, Path(tmp)) for r in selected))
+            if workers == 1:
+                for r in selected:  # in the given order
+                    await one(r, Path(tmp))
+            else:
+                await asyncio.gather(*(one(r, Path(tmp)) for r in selected))
     finally:
         close = getattr(adapter, "close", None)
         if close is not None:
@@ -161,10 +177,14 @@ def main() -> int:
     ap.add_argument("set", choices=("differing", "sample", "killed"))
     ap.add_argument("--workers", type=int, default=3)
     ap.add_argument("--out", type=Path)
+    ap.add_argument("--progress", type=Path)
+    ap.add_argument("--order", choices=("record", "light-first"), default="record")
     args = ap.parse_args()
     selected = select(args.set, _records())
+    if args.order == "light-first":
+        selected.sort(key=lambda r: (r["task_id"] == HEAVY, _key(r)))
     print(f"EXPLORATORY (NOT REGISTERED) re-check, set {args.set}: {len(selected)} cells", flush=True)
-    rows = asyncio.run(run(selected, args.workers))
+    rows = asyncio.run(run(selected, args.workers, args.progress))
     summary = {
         "label": "exploratory (not registered); written after the held-out phase ended",
         "set": args.set,

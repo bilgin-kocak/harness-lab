@@ -2,6 +2,8 @@
 
 - **Status: draft for the owner, 2026-11-26. Not published, not submitted.** Every claim below
   needs the owner's approval before it leaves this repository.
+- **Superseded in part by the full draft, `PAPER.md`.** Where they differ (the abstract's wording,
+  the related work after each citation was checked, `REFERENCES_CHECK.md`), `PAPER.md` is current.
 - **Sources:** `../RESULTS.md` (the results draft), `../analysis.json` (the registered output),
   `../d1_report.md`, `../REGISTRATION.md`, `../DEVIATIONS.md`, `../RELATED_WORK.md`, the pilot
   (`../../2026-11-math-pilot/REPORT.md`) and the earlier math study
@@ -261,3 +263,7 @@ Trim to the venue's limit.
 5. Releasing the paper releases the results; under registration section 12 that commits us to
    release all code, records, transcripts and the analysis with it, whatever they show.
 6. Authors, affiliations and funding; the AI-assistance disclosure.
+7. The related-work characterizations in `PAPER.md` section 2, each checked against its source
+   (`REFERENCES_CHECK.md`), including the correction that pre-registration is not new here: Li and
+   Li (2026) pre-registered their primary endpoint, which our registration's background, written
+   before that was read, did not know.

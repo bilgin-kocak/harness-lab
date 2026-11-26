@@ -1,4 +1,4 @@
-# Feedback or just another try? A pre-registered test of Lean's error report against fresh attempts, with Claude Haiku 5.5 on miniF2F
+# Feedback or just another try? A pre-registered test of Lean's error report against fresh tries, with Claude Haiku 5.5 on miniF2F
 
 **[Authors and affiliations: owner to fill in]**
 
@@ -14,7 +14,7 @@
 
 Showing a language model its failed proof with the proof checker's error messages is common in
 LLM theorem proving, but its gain is not always separated from that of simply trying again. We ask
-whether Lean's report helps beyond fresh attempts at the same cap of calls. In a pre-registered
+whether Lean's report helps beyond fresh tries at the same cap of calls. In a pre-registered
 study, Claude Haiku 5.5 attempted 204 miniF2F problems in Lean 4, five times each, in four
 interleaved arms: one call (B); up to four calls, each after the first showing the attempt's earlier
 failed proofs with Lean's report on each (F); up to four fresh tries (R4); and a placebo like F with
@@ -25,22 +25,23 @@ verified rate; descriptively, F's unverified share was about 17% smaller than R4
 1.4 used on average) verified 8 to 10 points more than one call (descriptive). An exploratory pilot had estimated
 +5.8 points for F over R4; our 90% interval excludes it and the +4.1 points the study was powered
 for. Out-of-memory events ended 19 of the 4,080 final checks, 17 of them on one problem no arm
-proved; under the registered rule every reading stands, and exploratory re-checks indicate that
-the recounts that would change a reading are very unlikely. Code, records, transcripts and
+proved; under the registered rule every reading stands. A reading would change only if one of F's
+proofs of that problem had passed, and exploratory re-checks indicate that very likely none could have
+within the registered 300 s limit, even with enough memory. Code, records, transcripts and
 analysis will be released with the paper.
 
 ## 1. Introduction
 
 Language models that write formal proofs are often run in a repair loop. When the proof checker
-rejects an attempt, the model is shown the failed proof with the checker's error messages and tries
+rejects a proof, the model is shown the failed proof with the checker's error messages and tries
 again (Lin et al., 2025; Wang et al., 2025). Such loops are usually credited with gains measured
-against a single attempt. That comparison mixes two things: what the checker's report tells the
-model, and the extra attempts the loop makes. A model that is simply sampled again, with no feedback
+against a single call. That comparison mixes two things: what the checker's report tells the
+model, and the extra calls the loop makes. A model that is simply sampled again, with no feedback
 at all, also gets more chances, and coverage improves smoothly with the number of independent
 samples, Lean proofs included (Brown et al., 2024). Our own earlier study is an example: a loop
 showing Lean's report, with up to four calls, verified 97.5% of Claude Opus 5.5's attempts on 40
 miniF2F problems against 85.0% for one call, but because the loop could make up to four calls and the
-baseline one, the comparison could not separate feedback from extra attempts (Harness Lab, 2026).
+baseline one, the comparison could not separate feedback from extra calls (Harness Lab, 2026).
 
 Comparisons matched on calls or samples exist, and they disagree. A call-matched comparison of
 refinement with resampling across 14 models found refinement ahead on average on a 50-problem
@@ -53,7 +54,7 @@ is counted (Olausson et al., 2024).
 
 We ask two questions. At a matched cap of four model calls, does showing the model its failed proof
 with Lean's report change how often its attempts verify, compared with fresh tries? And if it does,
-is that because of Lean's report, or because the model sees its failed attempt? We answer them for
+is that because of Lean's report, or because the model sees its failed proof? We answer them for
 one current API model, Claude Haiku 5.5, on the 204 miniF2F test problems we had never run.
 
 Our contributions are:
@@ -70,7 +71,7 @@ Our contributions are:
    arms run in separate time blocks, had put feedback 5.8 points above fresh tries. The larger,
    pre-registered and interleaved study on 204 new problems estimates +1.4, and its 90% interval
    excludes both the pilot's estimate and the +4.1 points the study was powered for. We also show
-   why our earlier comparison with one call could not separate feedback from extra attempts.
+   why our earlier comparison with one call could not separate feedback from extra calls.
 4. **An account of out-of-memory kills on the checking machine,** handled under rules fixed before
    the outcomes were seen (a killed check is not a pass), bounded, recounted and reported, with the
    lessons for anyone building such a harness.
@@ -144,7 +145,8 @@ Tibshirani, 1993) and an exact paired sign-flip test (Fisher, 1935), which assum
 problems whose differences are symmetric about zero under the null (Winkler et al., 2014).
 Pre-registration has been argued for in machine learning (Forde and Paganini, 2019; Hofman et al.,
 2023) and piloted as a publication model (Bertinetto et al., 2021). Ours is a self-registration,
-committed with its hashes before any paid call, not a peer-reviewed registered report.
+committed with its hashes and pushed to GitHub before any paid call [owner: "and lodged on OSF" /
+"but not lodged with a registry"], not a peer-reviewed registered report.
 
 **What is new here.** Li and Li (2026) pre-registered a comparison of feedback with resampling on
 open models. Our registration's background (Appendix A) listed pre-registration among what this
@@ -157,10 +159,21 @@ been missed.
 
 ## 3. Setup
 
+**Terms.** An *attempt* is one arm's run on one problem in one repetition, one *cell* of the design:
+4 arms × 204 problems × 5 repetitions = 4,080 attempts. An attempt is a sequence of *rounds*, each one
+model call: one round in B, up to four in F, R4 and P. R4's rounds are called *tries*. Every round's
+proof except the attempt's last is checked in the loop by the verifier's own code with a 120 s limit,
+and a pass ends the attempt. The attempt's *final proof* is the proof of its latest round that gave
+one. It gets the final check described under Verifier, and the attempt is *verified* if that check
+passes. An attempt in which no round gave a proof is not verified.
+
 **Model and settings.** All calls went to `claude-haiku-5-5` through the Anthropic Messages API,
 with effort `medium`, adaptive thinking, `max_tokens` 32,000, automatic prompt caching and no
-fallback model. Each round is a fresh request; thinking never carries across rounds. A prompt is
-capped at 12,000 tokens (estimated as characters / 4): above the cap the oldest earlier attempts
+fallback model. No sampling parameter (`temperature`, `top_p` or `top_k`) was sent, so every call
+used the API's default sampling, which cannot be seeded: a rerun would give different proofs. R4's
+later tries send the first request again unchanged, so their replies differ from the first only
+through sampling. Each round is a fresh request; thinking never carries across rounds. A prompt is
+capped at 12,000 tokens (estimated as characters / 4): above the cap the oldest earlier rounds
 would be left out whole, never the instructions or the problem. The cap never bound; no round left
 anything out (Appendix B). The served model of every call was
 recorded: all 5,159 calls in the records, and the 8 further calls that the 4 attempts interrupted by
@@ -174,8 +187,7 @@ commit `5746b7d`; the toolchain is Lean 4.24.0 (de Moura and Ullrich, 2021) with
 mathlib Community, 2020) in its Lean 4 version at commit `f897ebc`.
 
 **Arms.** All four arms send the identical first request (Appendix C). A round's answer is the
-proof in its last `lean` code block. It is checked by Lean in the loop, with a 120 s limit, unless
-it is the attempt's last round; a pass ends the attempt.
+proof in its last `lean` code block.
 
 | Arm | Call cap | What later rounds show |
 |---|---|---|
@@ -208,14 +220,22 @@ seeded random order, so the arms are interleaved in time; the 4 cells interrupte
 
 ## 4. Pre-registration and analysis
 
-**What was fixed in advance.** Before any paid call, we committed the registration
-(`REGISTRATION.md`; commit `64abcd7`, 2026-11-25 07:22Z, about 76 minutes before the first paid
-call, the smoke test at 08:38Z). It fixes the hypotheses, the estimand, the reading rules, the
+**What was fixed in advance.** Before any paid call, we committed the registration and pushed it to
+the study's GitHub repository (`REGISTRATION.md`; commit `64abcd7`, committed 2026-11-25 07:22:20Z
+and pushed at 07:22:23Z, about 76 minutes before the first paid call, the smoke test at 08:38Z). It fixes the hypotheses, the estimand, the reading rules, the
 power analysis, the budget and the stop rules, and records the SHA-256 of 17 registered files
 (among them the analysis script `analyze.py`, the split and the code the analysis and the prover
 depend on), of the 204 held-out problem IDs, of the prompts and of the placebo sentence.
-[Whether the registration was also lodged on OSF: owner to state.] The held-out phase ran once.
-Every registered file matched its recorded hash when the analysis ran.
+[Owner, one of: "It was also lodged on OSF on [date, time], which dates it independently of our
+repository." / "It was not lodged with a registry, so the order rests on the commit and push times
+in our repository and on GitHub's record of the push [say whether that record is publicly
+visible], not on a registry's timestamp."] Between the registration and the held-out phase (the
+4,080 cells on the 204 problems), two short paid runs used the earlier study's 30 development
+problems, which come from miniF2F's validation split and so include none of the 204. The smoke
+test (3 problems × 4 arms) checked from its transcripts that each arm sent the requests the
+registration describes, and measured cost; the setup check ran all 30 problems once in each arm
+(120 cells). As registered, nothing was selected on either run, and no deviation followed either.
+The held-out phase ran once. Every registered file matched its recorded hash when the analysis ran.
 
 **Hypotheses.** The estimand of each contrast is the mean, over problems, of the per-problem
 difference in verified rate (verified attempts out of 5). H1, the primary, is F − R4: with the same
@@ -226,8 +246,10 @@ report changes the rate. All tests are two-sided.
 
 **Tests and readings.** Each contrast has a 95% percentile bootstrap interval over problems (10,000
 resamples, seed 20261125), a 90% interval from the same resamples, and a two-sided paired sign-flip
-test of a zero mean difference, computed exactly by counting sign patterns on the 1/60 lattice on
-which per-problem rates lie. The reading of H1, fixed in advance, is:
+test of a zero mean difference, computed exactly by enumerating every pattern of signs on the
+problems that differ (for H1, 12 problems and 4,096 patterns). The registered code counts on a 1/60
+lattice, so that rates over any 1 to 5 matched repetitions would stay exact; with no missing cell,
+every rate here is a multiple of 1/5. The reading of H1, fixed in advance, is:
 
 - "difference" if p < 0.05, in the direction of the estimate;
 - "no difference of 3 points or more in the overall verified rate" if p ≥ 0.05 and the 90% interval
@@ -240,12 +262,18 @@ feedback's extra complexity over fresh tries. A claim that Lean's report itself 
 and H2 to read "difference" with F above. If H1 does and H2 does not, the gain is not attributed to
 the report; in every other pattern, nothing is attributed. Beside each reading we report the
 comparison arm's unverified share, so the margin can be read against the room left to improve, and
-the exact sign test on the problems that differ.
+the exact sign test: a two-sided binomial test of how many of the problems that differ favour each
+arm, which ignores the size of each difference. As registered, a disagreement between the two tests
+changes no reading.
 
-**Power.** A simulation that resampled the pilot's per-problem outcomes onto 204 problems gave power
-0.96 at the planning effect of +4.1 points and 0.86 at +2.7 points, with five repetitions. The
+**Power.** A simulation that resampled the pilot's per-problem outcomes onto 204 problems gave the
+registered sign-flip test (two-sided, α = 0.05, p approximated by a normal) a probability of 0.96 of
+reading "difference" at the planning effect of +4.1 points, and 0.86 at +2.7 points, with five
+repetitions. The simulation assumed, among other things, that the 204 problems resemble the pilot's
+40 and that no problem's true effect is negative (registration section 7, in Appendix A). The
 planning effect is three-quarters of the pilot's effect after the simulation's smoothing (+5.4 to
 +5.5 points, against +5.8 raw); the discount allows for the pilot's first-call noise (Section 7).
+The registration set no power for the "no difference" reading.
 
 **One deviation (D1).** The run was stopped once by the kernel's out-of-memory killer (Section 6).
 Deviation D1 resumed it under the registration's resume rule and changed only the run procedure:
@@ -267,8 +295,11 @@ another model, and no missing cell in any arm.
 ### 5.1 Registered results
 
 **Table 1. Registered contrasts.** Mean over 204 problems of the per-problem difference in verified
-rate, in points. "Higher / lower / equal" counts problems. The comparison arm's unverified share is
-7.9% in every row (R4's, and P's for H2).
+rate, in points. "Rates" gives the second-named arm's verified rate, then the first-named arm's
+(H1: R4 92.06% → F 93.43%). "Higher / lower / equal" counts problems on which the first-named arm's
+rate is higher than, lower than or equal to the second-named arm's. Sign-flip p is the registered
+test; the exact sign test uses only the directions. The comparison arm's unverified share is 7.9% in
+every row (R4's, and P's for H2).
 
 | Contrast | Rates | Estimate | 95% interval | 90% interval | Higher / lower / equal | Sign-flip p | Holm p | Exact sign test p | Reading |
 |---|---|---|---|---|---|---|---|---|---|
@@ -281,7 +312,10 @@ attribution rule attributes nothing to Lean's report (Figure 1a). The estimate o
 F verified 953 of its 1,020 attempts and R4 939. The reading does not say the difference is zero.
 It says that, on these problems at this cap, a difference of 3 points or more in the overall
 verified rate is excluded by the registered 90% interval, and no difference was established by the
-registered test.
+registered test. Read against the room left to improve, as the registration intends, the margin is
+wide: R4 left 7.9% of its attempts unverified, so 3 points is about 38% of the room left, and the
+reading is compatible with feedback removing a sizeable share of R4's failures (the descriptive ratio
+is in Section 5.2).
 
 H1's 95% interval, +0.10 to +2.94 at the registered seed, excludes zero although p = 0.093. The
 registered test decides whether there is a difference; the interval is not read as a test. Both
@@ -328,7 +362,8 @@ against 29). This statistic reuses H1's attempts. The registration (its 6.4) des
 the first-call noise that F and R4 share by design, but it does not fully do so: subtracting the
 first-round pass rate removes the first-call successes, not the room they leave, and F's identical
 first calls happened to fail more often (185 against 169 attempts), which left it more room to gain.
-Exploratory (not registered): at R4's number of first-call failures, the gain would be about +1.9
+Exploratory (not registered): scaling F's gain after the first call by R4's 169 first-call failures
+over F's 185, which assumes the same gain per failed first call, gives a difference of about +1.9
 points.
 
 **Rescue after a failed first call.** Among attempts whose first call failed in the loop, F verified
@@ -338,21 +373,6 @@ many first-call failures more, and reuse H1's attempts, so they are not separate
 the first call failed, F's extra rescues were mostly in the "other Lean error or rejection" class
 (100 of 111 against R4's 72 of 98); the "unknown name" class, where repair might come from a
 memorized proof written for an older Mathlib, was 16 of F's 185 failed first calls (Appendix B).
-
-**Exploratory (not registered): when the rescues happened.** F's advantage after a failed first call
-is concentrated in its second call (Figure 2): F's second call verified 100 of its 185 failed
-attempts, R4's and P's 60 of 169 each. Calls three and four added 19 for F, 28 for R4 and 28 for P.
-
-![Figure 2](figures/fig2_rescue_by_call.svg)
-
-**Figure 2 (exploratory, not registered).** Attempts whose first call failed in the loop: the share
-verified at call 2, 3 or 4, by arm. Numbers on the bars count attempts. Source: the records
-(`make_figures.py`).
-
-**Exploratory (not registered): which problems carry H1.** Twelve problems differ between F and R4
-(Appendix B). Two carry most of the estimate: `mathd_numbertheory_175` (R4 0 of 5, F 5 of 5) and
-`amc12a_2021_p14` (0 of 5 against 4 of 5). Without the first, H1's estimate is +0.9 points; without
-both, +0.5; leaving out any single problem gives +0.9 to +1.5.
 
 **Cost.** The arms were matched on the call cap, not on cost.
 
@@ -366,15 +386,33 @@ both, +0.5; leaving out any single problem gives +0.9 to +1.5.
 F's cost per verified proof was 0.93 of R4's (95% interval 0.86 to 0.99): F cost 0.94 of R4's total
 and verified 14 more attempts.
 
-### 5.3 What the results say
+### 5.3 Exploratory analyses (not registered)
+
+**When the rescues happened.** F's advantage after a failed first call
+is concentrated in its second call (Figure 2): F's second call verified 100 of its 185 failed
+attempts, R4's and P's 60 of 169 each. Calls three and four added 19 for F, 28 for R4 and 28 for P.
+
+![Figure 2](figures/fig2_rescue_by_call.svg)
+
+**Figure 2 (exploratory, not registered).** Attempts whose first call failed in the loop: the share
+verified at call 2, 3 or 4, by arm. Numbers on the bars count attempts. Source: the records
+(`make_figures.py`).
+
+**Which problems carry H1.** Twelve problems differ between F and R4
+(Appendix B). Two carry most of the estimate: `mathd_numbertheory_175` (R4 0 of 5, F 5 of 5) and
+`amc12a_2021_p14` (0 of 5 against 4 of 5). Without the first, H1's estimate is +0.9 points; without
+both, +0.5; leaving out any single problem gives +0.9 to +1.5.
+
+### 5.4 What the results say
 
 For Claude Haiku 5.5 at a cap of four calls on these problems, showing the failed proof with Lean's
 report did not change the overall verified rate by 3 points or more, compared with fresh tries. The
-estimate is small and positive. Most of what a loop of four calls adds over one call, in this setup,
+estimate is small in points and positive; relative to the room left it is about a sixth of R4's
+failures (descriptive, Section 5.2). Most of what a loop of four calls adds over one call, in this setup,
 is available from fresh tries alone: R4 gained +8.2 of F's +9.6 points over one call (descriptive).
 Showing the failed proof with a bare rejection sentence (P) also read "no difference of 3 points or
 more" against fresh tries; in this sample both verified 939 of 1,020 attempts (H3: 0.0 points, 95%
-interval −1.18 to +1.37; 7 problems higher and 9 lower).
+interval −1.18 to +1.37; P higher on 7 problems and lower on 9).
 
 Descriptively, the small positive estimate arises after a failed first call: among those attempts,
 F's second call verified 100 of 185, and R4's and P's 60 of 169 each (Figure 2; exploratory, not
@@ -478,8 +516,8 @@ cell counted as a pass, a reading changes only if one of F's five killed proofs 
   0.97 to 1.07). The run's machine was about as fast on ordinary checks, far from 1.5 times as
   fast.
 
-So very likely none of F's proofs would have checked within 300 s even with enough memory, and the
-recounts that change a reading are very unlikely; counting the two known artifacts as passes, every
+So very likely none of F's proofs would have checked within 300 s even with enough memory, and so
+very likely no recount changes a reading; counting the two known artifacts as passes, every
 reading equals the registered one (H1 p = 0.062, H2 Holm p = 0.080). Two caveats remain. Running
 under swap may inflate user time, and the conclusion fails if it did so by about half at the median
 speed ratio (about twofold for the part after memory passed 14 GB, where paging became heavy). And
@@ -519,7 +557,7 @@ estimate was large, so a pilot estimate that happened to be high was more likely
 
 **What it means for our earlier result.** The earlier study compared Opus 5.5 with feedback (F)
 against one call and found +12.5 points (95% interval +4.2 to +22.5); its report said that the
-comparison could not separate feedback from extra attempts, and it cannot. On its 40 problems the
+comparison could not separate feedback from extra calls, and it cannot. On its 40 problems the
 pilot's exploratory runs split that gain roughly evenly: fresh tries gave +6.7 points over one call
 for Opus and +7.5 for Haiku, and feedback +5.8 over fresh tries for both, with arms not interleaved
 and wide intervals. In this study, with Haiku on 204 new problems, fresh tries gave +8.2 of
@@ -542,7 +580,8 @@ feedback's +9.6 points over one call (descriptive). We do not re-estimate the ea
   in those the second call showed only that note. H1 and H3 therefore also compare that note with a
   fresh request.
 - **What "no difference" covers.** The reading concerns the overall verified rate at this cap. It
-  does not show that feedback never helps.
+  does not show that feedback never helps: with 7.9% of R4's attempts unverified, the 3-point margin
+  is about 38% of the room left, so the reading allows a sizeable relative reduction in failures.
 - **Saturation.** B solved 139 of the 204 problems in every attempt, and only 12 problems differ
   between F and R4, so the test says little about hard problems. On the 16 problems B never solved,
   F − R4 was +11.3 points (−2.5 to +28.8; descriptive, too few problems): a hypothesis for a new
@@ -553,7 +592,8 @@ feedback's +9.6 points over one call (descriptive). We do not re-estimate the ea
 
 ## 9. Reproducibility and release
 
-We release, with the paper, the code, the registration and its hashes, every record, the transcripts
+Model sampling cannot be seeded, so the released records and transcripts, not a rerun, are the
+reproducible object. We release, with the paper, the code, the registration and its hashes, every record, the transcripts
 of prompts and outputs, the kernel's out-of-memory logs, and the analysis and re-check scripts.
 [Owner: the transcripts are in `held_out/artifacts/`, which git ignores; they must be packaged for
 release. The transcript files of the 4 interrupted cells begin with the interrupted attempt's calls
@@ -653,7 +693,8 @@ In brief, the note records that:
 
 All from `analysis.json` unless marked exploratory.
 
-**Problems whose rates differ in H1** (verified rate over 5 repetitions):
+**Problems whose rates differ in H1** (verified rate over 5 repetitions; left, the 8 problems where
+F's rate is higher; right, the 4 where R4's is higher):
 
 | Problem | R4 | F | | Problem | R4 | F |
 |---|---|---|---|---|---|---|

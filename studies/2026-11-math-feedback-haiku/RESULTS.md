@@ -144,8 +144,9 @@ Descriptive: none is a test of a hypothesis, and their p-values are not adjusted
   sign-flip p = 0.038, exact sign test p = 0.53 (35 against 29 problems). It is descriptive (6.4),
   reuses H1's attempts, and changes no reading. Contrary to the registration's description (6.4),
   it is not free of first-call noise: it removes first-call successes but not the room they leave,
-  and F's first calls happened to fail more often (185 against 169), which leaves more room to gain. Exploratory: at
-  R4's number of first-call failures the gain would be about +1.9 points.
+  and F's first calls happened to fail more often (185 against 169), which leaves more room to gain. Exploratory: scaling
+  F's gain after the first call by R4's 169 first-call failures over F's 185, which assumes the
+  same gain per failed first call, gives a difference of about +1.9 points.
 - **First-call parity (6.5.1).** The identical first request passed in the loop at 81.9% (F),
   83.4% (R4) and 83.4% (P). No pair differs (Holm p ≥ 0.61): no flag.
 - **Rescue after a failed first call (6.5.2).**

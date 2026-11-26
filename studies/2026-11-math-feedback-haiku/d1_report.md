@@ -72,7 +72,7 @@ resuming.
 
 D1 named only the first as a new attempt; all four are.
 
-## 4. Exposure: cells that started while a check of `mathd_numbertheory_451` ran
+## 4. Exposure: cells that started while a cell of `mathd_numbertheory_451` was running
 
 Times are to the second. The inclusive rule counts a start in the same second as that cell's start
 or end (602 cells); the strict rule does not (576). D1's earlier count of 373 records overlapping such
@@ -85,8 +85,10 @@ a cell used strict boundaries on the first 2,202 records.
 | R4 | 156 / 864 | 4 / 18 | 0 / 2 | 0 / 0 | 27.0 / 7.9 |
 | P | 149 / 871 | 4 / 14 | 0 / 1 | 1 / 0 | 136.1 / 6.8 |
 
-(Inclusive rule; "exposed / not exposed". The strict rule's table is in `d1_report.json`.) In-loop
-timeouts are counted per round, as in 6.5. Every long wait for a Lean slot was in an exposed cell.
+(Inclusive rule; "exposed / not exposed". The strict rule's table is in `d1_report.json`.) A cell
+of `mathd_numbertheory_451` "runs" from its `started_at` to its `finished_at`, model calls
+included, as D1 defines it. In-loop timeouts are counted per round, as in 6.5. No cell, exposed or
+not, was stopped by the time cap. Every long wait for a Lean slot was in an exposed cell.
 
 ## 5. Exploratory analyses D1 named
 
@@ -99,7 +101,8 @@ timeouts are counted per round, as in 6.5. Every long wait for a Lean slot was i
 | the same, strict rule (463 pairs) | 197 | +1.61 | −0.08 to +3.64 | +0.17 to +3.30 | 7 / 3 / 187 | 0.107 | inconclusive |
 | H1 without the 8 pairs with a matched check (added after the phase) | 203 | +1.48 | +0.20 to +3.05 | +0.39 to +2.76 | 8 / 3 / 192 | 0.062 | no difference of 3 points or more |
 
-Dropping the exposed pairs removes 46-47% of the data, which is why its interval widens past
+Dropping the exposed pairs removes 45-47% of the data (47% with the inclusive rule, 45% with the
+strict rule), which is why its interval widens past
 +3 points.
 
 ## 6. How much the memory events can matter
@@ -132,31 +135,40 @@ cells can change the reading:
 | every killed check of `mathd_numbertheory_451` (17), in all arms | +1.47, 0.068 | no difference of 3 points or more | 0.073 | inconclusive |
 | those 17 and the `aime_1990_p15` cell | +1.57, 0.043 | difference (positive) | 0.045 | difference (positive) |
 
-H3 reads "no difference of 3 points or more" in every row. The smallest sets that bring H1 below
-0.05 are the `aime_1990_p15` cell together with any one of F's 5 killed cells of
-`mathd_numbertheory_451` (p = 0.043).
+H3 reads "no difference of 3 points or more" in every row. The smallest recounts that bring H1
+below 0.05 are the `aime_1990_p15` cell together with any one of F's 5 killed cells of
+`mathd_numbertheory_451` (p = 0.043), or, without the `aime_1990_p15` cell, any three of those 5
+(p = 0.048); one alone gives p = 0.068. Every row of this table, and these subsets, are in
+`d1_report.json` (`counterfactual_readings`).
 
 ## 7. Lean re-checks of these proofs (added after the phase)
 
 The 19 final checks above (the 18 the kernel killed or that timed out just after a kill, and
 F's `aime_1990_p15`) were checked again with the registered verifier and its 300 s timeout, one at
-a time, with nothing else running (`recheck.py killed --workers 1`; 10:00-11:10Z).
+a time (`recheck.py killed --workers 1 --order light-first`, 09:59-11:10Z; the two light checks
+first). During the first heavy checks, until about 10:20, light commands also ran in this session
+(`d1_report.py`, which loads the records; file edits; a commit; progress checks); after that
+nothing else ran. The kernel's lines for these kills are in `recheck_kernel_oom.txt` and at the end
+of `oom_kernel_log.txt`.
 
 | Cells | Recorded | Re-checked alone |
 |---|---|---|
 | F `aime_1990_p15` rep 3 | timeout after 571.8 s | **pass** in 9.1 s |
 | B `imo_2019_p1` rep 1 | exit 137 after 126.7 s | **pass** in 8.5 s |
-| 17 of `mathd_numbertheory_451` (F 5, R4 4, P 3, B 5) | 14 exit 137, 3 timeouts | **all fail**: 16 killed by the kernel again (exit 137, after 215-290 s), 1 timeout (F rep 1, 301.7 s) |
+| 17 of `mathd_numbertheory_451` (F 5, R4 4, P 3, B 5) | 14 exit 137, 3 timeouts | **all fail**: 16 killed by the kernel again (exit 137 at 14.0 GB, after 215-290 s, each the only Lean process running), 1 timeout (F rep 1, 301.7 s) |
 
 - **Two verdicts came from the memory problem, not from the proofs.** Under the registered rule
   they stay "not verified". Counting both as verified (exploratory): H1 +1.47 points, 8 / 3 / 193,
   p = 0.062; H2 Holm p = 0.080; H3 unchanged. Every reading stays the same.
-- **The proofs of `mathd_numbertheory_451` cannot be checked on this machine.** Alone, with the
-  whole 14.3 GB limit available, 16 of 17 exceeded it within 300 s, and the 17th ran out the 300 s
-  timeout. In the run, two further checks of this problem that were not killed also ran out the
-  300 s, and 42 of the 45 in-loop checks of its proofs ran out their 120 s. Whether any of these
-  proofs would check within 300 s with more memory is not known; nothing seen suggests one would.
-- **So the readings rest on this:** if none of F's proofs of `mathd_numbertheory_451` would pass,
-  every registered reading holds, with the two artifacts counted either way. If one of them would
-  pass (with `aime_1990_p15` counted as verified), H1 would read "difference (positive)",
-  p = 0.043.
+- **16 of the 17 proofs of `mathd_numbertheory_451` cannot be checked on this machine.** Alone,
+  with the whole 14.3 GB limit available, they exceeded it within 300 s. The 17th, F's repetition
+  1, ran its full 300 s without reaching the limit and timed out, a definite "not verified". In the
+  run, two further checks of this problem that were not killed also ran out the 300 s, and 42 of
+  the 45 in-loop checks of its proofs ran out their 120 s. No check of any proof of this problem
+  has ever passed. Whether any of the 16 would check within 300 s with more memory is not known;
+  nothing seen suggests one would.
+- **What the exploratory readings rest on.** The registered readings stand whatever these show.
+  If none of F's proofs of `mathd_numbertheory_451` at repetitions 0, 2, 3 and 4 would pass, every
+  exploratory reading is the same as the registered one, with the two artifacts counted either
+  way. If one of them would pass (with `aime_1990_p15` counted as verified), H1 would read
+  "difference (positive)", p = 0.043.

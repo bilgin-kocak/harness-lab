@@ -104,7 +104,8 @@ below are copied as above; the full reports are in the same snapshot file.
 2026-11-26T08:00:22Z  mathd_numbertheory_451  exit_code=-9  timed_out=True  lean_s=300.035  reason='timeout'
 2026-11-26T08:44:18Z  mathd_numbertheory_451  exit_code=-9  timed_out=True  lean_s=302.399  reason='timeout'
 
-Notes, read from the times, exit codes and process sizes alone (arms are matched in `d1_report.md`):
+Notes, from the times, exit codes, process sizes, the records' check durations and the re-checks
+(arms are matched in `d1_report.md`):
 
 - **04:04:17, a second problem.** The kernel killed a 13.48 GB Lean process (the final check of a
   `mathd_numbertheory_451` cell) and then a 167 MB Lean process. The record of an `imo_2019_p1`
@@ -140,3 +141,44 @@ Notes, read from the times, exit codes and process sizes alone (arms are matched
   The 20th was rejected by Lean after 5.0 s. The one large kill matched to no record (01:23:33, the 10th of the 18 large kills in time order)
   has no record:
   that cell was interrupted with the held-out process and ran again after the resume.
+
+# The re-check after the phase (2026-11-26, 09:59-11:10Z)
+
+`recheck.py killed --workers 1 --order light-first` checked again, one at a time, the 19 final
+checks the memory problem touched (`recheck_killed.json`). The kernel killed 16 of the 17 checks of
+`mathd_numbertheory_451` again: 16 kills, each the only Lean process running, of 14.00-14.00 GB
+anon-rss. The 17th timed out at 301.7 s. The lines are below; the full reports are in
+`recheck_kernel_oom.txt`.
+
+2026-11-26T10:03:45Z  [60478.174]  bash invoked oom-killer: gfp_mask=0x100cca(GFP_HIGHUSER_MOVABLE), order=0, oom_score_adj=0
+2026-11-26T10:03:45Z  [60478.174]  Memory cgroup out of memory: Killed process 11747 (lean) total-vm:20727196kB, anon-rss:13671616kB, file-rss:2296kB, shmem-rss:0kB, UID:0 pgtables:124260kB oom_score_adj:0
+2026-11-26T10:12:58Z  [61031.659]  lean invoked oom-killer: gfp_mask=0x100cca(GFP_HIGHUSER_MOVABLE), order=0, oom_score_adj=0
+2026-11-26T10:12:58Z  [61031.659]  Memory cgroup out of memory: Killed process 12112 (lean) total-vm:20727196kB, anon-rss:13671824kB, file-rss:2424kB, shmem-rss:0kB, UID:0 pgtables:124264kB oom_score_adj:0
+2026-11-26T10:16:51Z  [61264.561]  lean invoked oom-killer: gfp_mask=0x100cca(GFP_HIGHUSER_MOVABLE), order=0, oom_score_adj=0
+2026-11-26T10:16:51Z  [61264.561]  Memory cgroup out of memory: Killed process 12202 (lean) total-vm:20727196kB, anon-rss:13671984kB, file-rss:2636kB, shmem-rss:0kB, UID:0 pgtables:124252kB oom_score_adj:0
+2026-11-26T10:20:51Z  [61504.461]  lean invoked oom-killer: gfp_mask=0x100cca(GFP_HIGHUSER_MOVABLE), order=0, oom_score_adj=0
+2026-11-26T10:20:51Z  [61504.461]  Memory cgroup out of memory: Killed process 12287 (lean) total-vm:20727196kB, anon-rss:13671796kB, file-rss:2276kB, shmem-rss:0kB, UID:0 pgtables:124268kB oom_score_adj:0
+2026-11-26T10:25:10Z  [61763.725]  lean invoked oom-killer: gfp_mask=0x100cca(GFP_HIGHUSER_MOVABLE), order=0, oom_score_adj=0
+2026-11-26T10:25:10Z  [61763.725]  Memory cgroup out of memory: Killed process 12405 (lean) total-vm:20727196kB, anon-rss:13672760kB, file-rss:2352kB, shmem-rss:0kB, UID:0 pgtables:124272kB oom_score_adj:0
+2026-11-26T10:30:01Z  [62054.045]  lean invoked oom-killer: gfp_mask=0x100cca(GFP_HIGHUSER_MOVABLE), order=0, oom_score_adj=0
+2026-11-26T10:30:01Z  [62054.045]  Memory cgroup out of memory: Killed process 12493 (lean) total-vm:20727196kB, anon-rss:13671932kB, file-rss:2380kB, shmem-rss:0kB, UID:0 pgtables:124268kB oom_score_adj:0
+2026-11-26T10:34:01Z  [62294.230]  lean invoked oom-killer: gfp_mask=0x100cca(GFP_HIGHUSER_MOVABLE), order=0, oom_score_adj=0
+2026-11-26T10:34:01Z  [62294.230]  Memory cgroup out of memory: Killed process 12584 (lean) total-vm:20727196kB, anon-rss:13671820kB, file-rss:2416kB, shmem-rss:0kB, UID:0 pgtables:124252kB oom_score_adj:0
+2026-11-26T10:38:08Z  [62541.469]  lean invoked oom-killer: gfp_mask=0x100cca(GFP_HIGHUSER_MOVABLE), order=0, oom_score_adj=0
+2026-11-26T10:38:08Z  [62541.469]  Memory cgroup out of memory: Killed process 12668 (lean) total-vm:20727196kB, anon-rss:13672788kB, file-rss:2404kB, shmem-rss:0kB, UID:0 pgtables:124264kB oom_score_adj:0
+2026-11-26T10:41:43Z  [62756.284]  lean invoked oom-killer: gfp_mask=0x100cca(GFP_HIGHUSER_MOVABLE), order=0, oom_score_adj=0
+2026-11-26T10:41:43Z  [62756.284]  Memory cgroup out of memory: Killed process 12752 (lean) total-vm:20727196kB, anon-rss:13672032kB, file-rss:2320kB, shmem-rss:0kB, UID:0 pgtables:124256kB oom_score_adj:0
+2026-11-26T10:45:36Z  [62989.646]  lean invoked oom-killer: gfp_mask=0x100cca(GFP_HIGHUSER_MOVABLE), order=0, oom_score_adj=0
+2026-11-26T10:45:36Z  [62989.646]  Memory cgroup out of memory: Killed process 12832 (lean) total-vm:20727196kB, anon-rss:13672192kB, file-rss:2312kB, shmem-rss:0kB, UID:0 pgtables:124260kB oom_score_adj:0
+2026-11-26T10:49:35Z  [63228.792]  lean invoked oom-killer: gfp_mask=0x100cca(GFP_HIGHUSER_MOVABLE), order=0, oom_score_adj=0
+2026-11-26T10:49:35Z  [63228.792]  Memory cgroup out of memory: Killed process 12912 (lean) total-vm:20727196kB, anon-rss:13672824kB, file-rss:2308kB, shmem-rss:0kB, UID:0 pgtables:124268kB oom_score_adj:0
+2026-11-26T10:53:38Z  [63471.248]  lean invoked oom-killer: gfp_mask=0x100cca(GFP_HIGHUSER_MOVABLE), order=0, oom_score_adj=0
+2026-11-26T10:53:38Z  [63471.248]  Memory cgroup out of memory: Killed process 12994 (lean) total-vm:20727196kB, anon-rss:13671808kB, file-rss:2528kB, shmem-rss:0kB, UID:0 pgtables:124268kB oom_score_adj:0
+2026-11-26T10:58:03Z  [63736.971]  lean invoked oom-killer: gfp_mask=0x100cca(GFP_HIGHUSER_MOVABLE), order=0, oom_score_adj=0
+2026-11-26T10:58:03Z  [63736.971]  Memory cgroup out of memory: Killed process 13077 (lean) total-vm:20727196kB, anon-rss:13672996kB, file-rss:2388kB, shmem-rss:0kB, UID:0 pgtables:124260kB oom_score_adj:0
+2026-11-26T11:01:46Z  [63959.922]  lean invoked oom-killer: gfp_mask=0x100cca(GFP_HIGHUSER_MOVABLE), order=0, oom_score_adj=0
+2026-11-26T11:01:46Z  [63959.922]  Memory cgroup out of memory: Killed process 13169 (lean) total-vm:20727196kB, anon-rss:13672796kB, file-rss:2328kB, shmem-rss:0kB, UID:0 pgtables:124268kB oom_score_adj:0
+2026-11-26T11:06:12Z  [64225.495]  lean invoked oom-killer: gfp_mask=0x100cca(GFP_HIGHUSER_MOVABLE), order=0, oom_score_adj=0
+2026-11-26T11:06:12Z  [64225.495]  Memory cgroup out of memory: Killed process 13249 (lean) total-vm:20727196kB, anon-rss:13671944kB, file-rss:2512kB, shmem-rss:0kB, UID:0 pgtables:124260kB oom_score_adj:0
+2026-11-26T11:10:36Z  [64489.171]  lean invoked oom-killer: gfp_mask=0x100cca(GFP_HIGHUSER_MOVABLE), order=0, oom_score_adj=0
+2026-11-26T11:10:36Z  [64489.172]  Memory cgroup out of memory: Killed process 13337 (lean) total-vm:20727196kB, anon-rss:13672004kB, file-rss:2564kB, shmem-rss:0kB, UID:0 pgtables:124272kB oom_score_adj:0

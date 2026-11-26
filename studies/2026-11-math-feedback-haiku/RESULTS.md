@@ -10,35 +10,47 @@
 
 ## 1. Bottom line
 
-- **Primary (H1).** With the same cap of 4 calls, showing the model its failed proof with Lean's
-  report (F) did **not** beat fresh tries (R4) by the registered margin of 3 points.
-  - F verified 93.4% of attempts, R4 92.1%: **+1.4 points** (90% interval +0.2 to +2.7).
-  - The registered test does not find a difference: two-sided sign-flip p = 0.093 (8 problems
-    higher with F, 4 higher with R4, 192 equal).
+- **Primary (H1).** With the same cap of 4 calls, the registered test found no difference between
+  showing the model its failed proof with Lean's report (F) and fresh tries (R4), and the 90%
+  interval excludes a difference of 3 points or more in either direction.
+  - F verified 93.4% of attempts, R4 92.1%: **+1.4 points** (90% interval +0.2 to +2.6).
+  - Two-sided sign-flip p = 0.093 (8 problems higher with F, 4 higher with R4, 192 equal).
   - The registered reading is **"no difference of 3 points or more in the overall verified rate"**.
     It does not say the difference is zero, and the estimate is positive.
 - **Secondary (H2, H3).** F against P (Lean's report replaced by "Lean did not accept this proof.")
   and P against R4 also read "no difference of 3 points or more": F − P +1.4 (Holm p = 0.12),
   P − R4 0.0 (p = 1). Nothing is attributed to Lean's report (6.3).
-- **Against one call (descriptive).** Every arm with 4 calls verified 8-10 points more than the
-  single-call baseline (B 83.8%; R4 and P 92.1%; F 93.4%).
+- **Against one call (descriptive).** Every arm with a cap of 4 calls (1.33-1.36 made on average)
+  verified 8-10 points more than the single-call baseline (B 83.8%; R4 and P 92.1%; F 93.4%).
 - **The pilot's gap did not hold up.** The exploratory pilot (40 problems) had F 5.8 points above
   R4, and this study was powered for +4.1. On 204 fresh problems the estimate is +1.4.
-- **The reading is fragile, because of the run's memory problem (section 7).**
-  - Proof checks of one problem (`mathd_numbertheory_451`) used over 13 GB, and the kernel killed
-    17 of them, in all four arms. The same memory events also ended two checks on other problems
-    whose proofs pass when re-checked alone: one in F (`aime_1990_p15`), one in B.
-  - Under the registered rule these all count as "not verified", and the readings stand.
-  - Counting the two artifacts as passes changes no reading (H1 +1.5 points, p = 0.062;
-    exploratory).
-  - But H1's p is close enough to 0.05 that one passing proof of `mathd_numbertheory_451` in F
-    would make H1 read "difference (positive)". Re-checked alone after the run, none of the 17
-    could be checked: 16 exceeded the machine's memory limit within 300 s, and 1 ran out the 300 s
-    timeout. Whether any would pass with more memory is not known.
+- **The memory problem (section 7).** Proof checks of one problem (`mathd_numbertheory_451`) used
+  over 13 GB, and the kernel killed 17 of its 20 recorded final checks, in all four arms. The same
+  memory events also ended two checks on other problems whose proofs pass when re-checked alone:
+  one in F (`aime_1990_p15`), one in B.
+  - The registered rule decides, and it was fixed before the outcomes were seen: an attempt counts
+    as verified only when the verifier accepts its proof (5.4), and D1, committed before any
+    outcome by arm was looked at, kept killed checks "not verified". Under it every reading above
+    stands, whatever later re-checks show.
+  - Exploratory (not registered): counting the two artifacts as passes changes no reading (H1
+    +1.5 points, p = 0.062). H1 would read "difference (positive)" only if, besides them, one of
+    F's 5 killed proofs of `mathd_numbertheory_451` also passed (p = 0.043), or three of them
+    without the artifacts (p = 0.048).
+  - No check of any proof of that problem has ever passed: every one timed out, was killed or
+    ended in a Lean error (0 of 45 in-loop checks, 0 of 20 final checks, 0 of 17 re-checks).
+    Re-checked alone, 4 of F's 5 again exceeded the memory limit (after 233-258 s), and the fifth
+    ran its full 300 s and timed out. Whether any of those 4 would check within 300 s with more
+    memory is not known; nothing seen suggests one would.
 - **The run.** 4,080 of 4,080 cells have valid records: 0 harness errors, 0 refusals, every call
-  served by `claude-haiku-5-5`. An independent recomputation from the raw records reproduces every
-  registered number exactly. Of 638 recorded proofs re-checked by Lean after the run, 636 gave the
-  same verdict; the 2 that changed are the memory artifacts above.
+  served by `claude-haiku-5-5`. One deviation (D1) resumed the run after the kernel's
+  out-of-memory killer stopped it; it changed only the run procedure, and was committed in the
+  middle of the held-out phase (after 2,202 of 4,080 records), not before it as section 9 asks.
+  While the held-out process stalled under memory pressure, the registered 300 s verifier timeout
+  fired late in 3 final checks (487, 572 and 721 s); none passed (section 7).
+- **Checks.** An independent recomputation from the raw records reproduces every registered number
+  exactly. Lean re-checked 619 recorded proofs after the run and all 619 gave the same verdict; of
+  the 19 checks the memory problem touched, 2 now pass (the artifacts above), 16 were killed for
+  memory again and 1 timed out.
 - **Spend:** $17.33 in records across all phases; $20.54 with the 4 cells interrupted by the crash;
   cap $35.
 
@@ -71,13 +83,14 @@ Per-problem verified rate over 5 repetitions; mean over 204 problems; points of 
   - R4's unverified share is 7.9% (P's is the same, 7.9%), so a 3-point margin is about 38% of
     the room left.
   - The exact sign test on the 12 problems that differ in H1 gives p = 0.39 (8 against 4).
-- **The 95% interval and the test.** H1's 95% bootstrap interval (+0.10 to +2.94) excludes zero
-  while the registered test gives p = 0.093. The registered test decides whether there is a
-  difference; the interval is not read as a test. Its upper end is also seed-dependent (with other
-  seeds it is sometimes +3.04), which is why the registration reads H1 on the 90% interval
-  (stable at +2.65 to +2.75).
-- **Flags next to H1-H3:** none. First-call parity holds (6.5.1), and no integrity rate differs by
-  more than 1 point between F and R4, or F and P (6.5.4).
+- **The 95% interval and the test.** At the registered seed, H1's 95% bootstrap interval is
+  +0.10 to +2.94, which excludes zero, but both ends depend on the seed. Exploratory: across seeds
+  1-150 the lower end is 0.00 for 14 seeds and the upper end +3.04 for 89. The registered test
+  decides whether there is a difference; the interval is not read as a test. The registration
+  fixed before the data that H1's "no difference" part is read on the 90% interval (6.2); its upper
+  end is +2.65 to +2.75 across those seeds, so the reading does not depend on the seed.
+- **Flags next to H1-H3:** none. First-call parity holds (6.5.1), and none of the integrity rates
+  6.5.4 names differs by more than 1 point between F and R4, or F and P.
 
 ### Problems whose rates differ in H1
 
@@ -94,9 +107,12 @@ Per-problem verified rate over 5 repetitions; mean over 204 problems; points of 
 
 - Two problems carry most of the estimate: `mathd_numbertheory_175` (0/5 to 5/5) and
   `amc12a_2021_p14` (0/5 to 4/5) add 0.9 of the 1.4 points.
-- One of F's 4 losses, `aime_1990_p15`, comes from a cell the memory problem ended (section 7).
-- The lists for H2, H3 and the comparisons with the baseline (52, 52 and 54 problems) are in
-  `analysis.json` (`secondary`, `descriptive.vs_baseline`).
+- One of F's 4 losses, `aime_1990_p15`, comes from a cell the memory problem ended; its proof
+  passes when re-checked (section 7).
+- One of F's 8 wins, `aime_1999_p11`, includes a cell (repetition 4) that the crash interrupted and
+  that ran again under section 8; the new attempt was verified (`d1_report.md`, section 3).
+- The lists for H2 (15 problems), H3 (16) and the comparisons with the baseline (52, 52 and 54) are
+  in `analysis.json` (`secondary`, `descriptive.vs_baseline`).
 
 ## 4. Descriptive results and diagnostics (6.4, 6.5)
 
@@ -110,8 +126,9 @@ Descriptive: none is a test of a hypothesis, and their p-values are not adjusted
   | F − B | +9.61 | +6.96 to +12.45 | 52 / 0 / 152 | 4 × 10⁻¹⁶ |
   | P − B | +8.24 | +6.08 to +10.59 | 53 / 1 / 150 | 4 × 10⁻¹⁵ |
 
-  One B cell (`imo_2019_p1`) was ended by the memory problem; counted as verified, each of these
-  falls by 0.1 point.
+  Six B cells were ended by the memory problem: 5 of `mathd_numbertheory_451` and 1 of
+  `imo_2019_p1`, whose proof passes when re-checked. Counting that one as verified, each of these
+  falls by 0.1 point; counting all six, by at most 0.6 (section 7).
 - **F − R4 by the baseline's rate:**
   - 139 problems B always proved: no difference (both 100%).
   - 49 problems B sometimes proved: +2.0 points (−0.8 to +5.3).
@@ -120,10 +137,10 @@ Descriptive: none is a test of a hypothesis, and their p-values are not adjusted
 - **Headroom-scaled F − R4** (the mean difference over R4's mean unverified share): 17% (95%
   interval 1% to 38%; 10,000 of 10,000 resamples used).
 - **Post-first-call gain.** On the rate gained after round 1, F − R4 is +2.9 points (+0.3 to +5.7),
-  sign-flip p = 0.038, exact sign test p = 0.53 (35 against 29 problems). It reuses H1's attempts,
-  is not a registered test, and changes no reading. It is not free of first-call noise: F's first
-  calls happened to fail more often (185 against 169), which leaves more room to gain; at R4's
-  number of first-call failures the gain would be about +1.9 points.
+  sign-flip p = 0.038, exact sign test p = 0.53 (35 against 29 problems). It is descriptive (6.4),
+  reuses H1's attempts, and changes no reading. It is not free of first-call noise: F's first calls
+  happened to fail more often (185 against 169), which leaves more room to gain. Exploratory: at
+  R4's number of first-call failures the gain would be about +1.9 points.
 - **First-call parity (6.5.1).** The identical first request passed in the loop at 81.9% (F),
   83.4% (R4) and 83.4% (P). No pair differs (Holm p ≥ 0.61): no flag.
 - **Rescue after a failed first call (6.5.2).**
@@ -169,9 +186,11 @@ Descriptive: none is a test of a hypothesis, and their p-values are not adjusted
   | Final checks killed by the kernel, exit 137 (D1; not in the row above) | 4 | 5 | 3 | 3 |
   | Verified attempts whose Lean check took over 120 s (Lean time, without the wait for a slot) | 1 | 4 | 4 | 2 |
 
-  No rate differs by more than 1 point between F and R4 or F and P. Of the verifier timeouts, 4
-  also coincide with a memory event (B 2, F 1, R4 1; section 7). One in-loop check (R4) was killed
-  by the kernel.
+  None of the rates 6.5.4 names (capped or errored attempts, verifier timeouts, dropped-context
+  rounds, in-loop timeouts, harness errors) differs by more than 1 point between F and R4 or F and
+  P. Calls stopped at the token limit, which 6.5.4 does not name, differ by 1.8 points per attempt
+  between F (155) and P (137). Of the verifier timeouts, 4 also coincide with a memory event (B 2,
+  F 1, R4 1; section 7). One in-loop check (R4) was killed by the kernel.
 
 ## 5. Sensitivity of H1 (6.6)
 
@@ -215,15 +234,18 @@ the other 1,878 under D1's. A note added after the phase (`DEVIATIONS.md`, "Afte
 records where D1's expectations were wrong.
 
 - **Cause.** Every final proof of `mathd_numbertheory_451`, in every arm, checks a bounded statement
-  with `decide +kernel` over all m < 2020. Its Lean checks grew to 13.2-13.9 GB, against the 14.3 GB
-  memory limit the study's processes share.
+  with `decide +kernel` over all m < 2020 (m < 2019 in two of them). Its Lean checks grew to
+  13.2-13.9 GB, against the 14.3 GB memory limit the study's processes share.
 - **What the kernel did** (`d1_report.md`): 18 out-of-memory events, killing 21 Lean processes and,
   once (01:23:33), the held-out process, which interrupted 4 cells; those had no record, were
   charged in full, and ran again on resuming.
 - **Verdicts the memory problem set:**
   - 17 of the 20 final checks of `mathd_numbertheory_451` (F 5, R4 4, P 3, B 5): killed, or timed
     out just after a kill. The other 3 ended by an ordinary timeout or a Lean error.
-    `mathd_numbertheory_451` is 0/5 in every arm.
+    `mathd_numbertheory_451` is 0/5 in every arm. Three of the 17 (R4 repetition 2, B repetitions 0
+    and 1) had run about 300 s or more when they were killed (487, 721 and 300 s to their record),
+    so they would most likely be "not verified" by timeout in any case; the bounds below count them
+    anyway.
   - **`aime_1990_p15`, F, repetition 3.** The same proof had passed Lean in the loop in 18.5 s. Its
     final check ran during the 04:50 memory event and was ended by a timeout that fired late, after
     571.8 s. It is the only cell in the study whose proof passed in the loop but not in the final
@@ -240,7 +262,7 @@ records where D1's expectations were wrong.
   (F's 6 cells) and fall by at most 0.39 and 0.29; H3 move by at most 0.39; the comparisons with
   the baseline fall by at most 0.59. D1 had said "only through `mathd_numbertheory_451`, at most
   0.5 points"; that was wrong.
-- **The readings depend on these cells (exploratory, not registered).** D1 bounded the mean
+- **Exploratory readings that count these cells as passes (not registered).** D1 bounded the mean
   differences, not the p-values:
 
   | If these cells had passed | H1 estimate, p | H1 reading | H2 Holm p | H2 reading |
@@ -252,27 +274,35 @@ records where D1's expectations were wrong.
   | all 17 killed cells of `mathd_numbertheory_451` (every arm) | +1.47, 0.068 | no difference of 3 points or more | 0.073 | inconclusive |
   | those 17 and the `aime_1990_p15` cell | +1.57, 0.043 | difference (positive) | 0.045 | difference (positive) |
 
-  H3 reads "no difference of 3 points or more" in every row. The registered rule counts a
-  memory-ended check as not verified, so the registered readings stand. With the `aime_1990_p15`
-  proof known to pass, the readings change only if one of F's killed proofs of
-  `mathd_numbertheory_451` would pass. None could be checked on this machine (section 8), so that
-  is not known, and nothing seen suggests one would.
+  H3 reads "no difference of 3 points or more" in every row. In the two rows where both H1 and H2
+  read "difference (positive)", the attribution rule (6.3) would credit Lean's report; in every
+  other row, as in the registered result, nothing is attributed.
+
+  The smallest recounts that bring H1 below 0.05 are: the `aime_1990_p15` cell and any one of F's 5
+  killed cells of `mathd_numbertheory_451` (p = 0.043); or, without the `aime_1990_p15` cell, any
+  three of those 5 (p = 0.048). One of them alone gives p = 0.068 (`d1_report.json`).
+
+  The registered rule counts a memory-ended check as not verified, so the registered readings
+  stand. With the `aime_1990_p15` cell counted as a pass, these exploratory readings change only if
+  one of F's killed proofs of `mathd_numbertheory_451` would pass. On this machine, 4 of F's 5
+  could not be checked and the fifth timed out (section 8), so that is not known, and nothing seen
+  suggests one would.
 - **Exploratory checks D1 promised** (details in `d1_report.md`):
 
   | H1 variant | Problems | Estimate | 90% interval | Sign-flip p | Reading under the registered rule |
   |---|---|---|---|---|---|
   | Without `mathd_numbertheory_451` | 203 | +1.38 | +0.30 to +2.66 | 0.093 | no difference of 3 points or more |
-  | Without the 476 (problem, repetition) pairs with a cell that started during a check of `mathd_numbertheory_451` | 197 | +1.61 | +0.08 to +3.34 | 0.117 | inconclusive |
+  | Without the 476 (problem, repetition) pairs with a cell that started while a cell of `mathd_numbertheory_451` was running | 197 | +1.61 | +0.08 to +3.34 | 0.117 | inconclusive |
   | Without the 8 pairs with a memory-matched check (added after the phase) | 203 | +1.48 | +0.39 to +2.76 | 0.062 | no difference of 3 points or more |
 
   H2 and H3 without `mathd_numbertheory_451`: +1.38 (Holm p 0.125) and 0.00 (p 1). The second row
   drops 47% of the data, which is why its interval reaches past +3 points.
-- **Exposure.** 602 of 4,080 cells (15%) started while a check of `mathd_numbertheory_451` was
-  running. Every final check that waited more than 60 s for a Lean slot was among them (up to
+- **Exposure.** 602 of 4,080 cells (15%) started while a cell of `mathd_numbertheory_451` was
+  running (from its start to its record). Every final check that waited more than 60 s for a Lean slot was among them (up to
   174 s, against at most 8 s otherwise). Tables by arm are in `d1_report.md`.
 - **Evidence:** `oom_kernel_log.txt`, `held_out_snapshot/kernel_oom_boot_2026-11-25T17-15-47.txt`,
   `held_out_run_log_1.txt`, `held_out_run_log_2.txt`, `d1_report.py`, `d1_report.json`,
-  `d1_report.md`, `recheck_killed.json`.
+  `d1_report.md`, `recheck_killed.json`, `recheck_kernel_oom.txt`.
 
 ## 8. Verification after the run (exploratory checks, not registered)
 
@@ -293,17 +323,21 @@ records where D1's expectations were wrong.
   `d1_report.md`.
 - **Lean re-checks of recorded proofs** (`recheck.py`; the registered verifier, no model call):
   - 379 cells (every arm and repetition) of the 19 problems whose rates differ in H1, H2 or H3,
-    except `mathd_numbertheory_451`: all 379 verdicts repeat.
+    except F's `aime_1990_p15` repetition 3, which is re-checked with the memory-touched checks
+    below: all 379 verdicts repeat.
   - 240 further cells drawn at random (60 per arm, seed 20261126): all 240 repeat.
-  - The 19 memory-touched final checks, one at a time on an otherwise idle machine:
-    `aime_1990_p15` (F, 9.1 s) and `imo_2019_p1` (B, 8.5 s) now pass. All 17 of
-    `mathd_numbertheory_451` fail again: 16 exceed the 14.3 GB memory limit within 300 s (after
-    215-290 s), and 1 runs out the 300 s timeout. In the run, two other checks of this problem ran
-    out the 300 s without being killed, and 42 of its 45 in-loop checks ran out their 120 s.
-  - **Not settled:** whether any proof of `mathd_numbertheory_451` would check within 300 s on a
-    machine with more memory. It matters only if one of F's 5 would (section 7). Settling it needs
-    a Lean re-check of those 17 proofs on a machine with more than 16 GB; it calls no model and
-    costs nothing but machine time.
+  - The 19 memory-touched final checks, one at a time (`--workers 1 --order light-first`;
+    09:59-11:10Z): `aime_1990_p15` (F, 9.1 s) and `imo_2019_p1` (B, 8.5 s) now pass. All 17 of
+    `mathd_numbertheory_451` fail again: the kernel killed 16 of them, each the only Lean process
+    running, at 14.0 GB after 215-290 s (`recheck_kernel_oom.txt`), and 1 (F repetition 1) ran its
+    full 300 s and timed out. In the run, two other checks of this problem ran out the 300 s without
+    being killed, and 42 of its 45 in-loop checks ran out their 120 s. During the first heavy
+    checks, until about 10:20, light commands also ran in this session (`d1_report.py`, file edits,
+    a commit, progress checks); after that nothing else ran.
+  - **Not settled:** whether F's proofs of `mathd_numbertheory_451` at repetitions 0, 2, 3 and 4
+    would check within 300 s on a machine with more memory. It bears only on the exploratory
+    readings (section 7). Settling it needs a Lean re-check of those proofs on a machine with more
+    than 16 GB; it calls no model and costs nothing but machine time.
 
 ## 9. What this study cannot show (registration section 10)
 
@@ -312,7 +346,9 @@ records where D1's expectations were wrong.
 - **No long agent loops.**
 - **Matched on the call cap,** not on calls made, tokens or cost (section 6).
 - **Contamination may interact with the arms:** Lean's report can help repair a memorized proof
-  written for an older Lean or Mathlib, which fresh tries cannot do.
+  written for an older Lean or Mathlib, which fresh tries cannot do. So the effect on these public
+  problems may differ from that on unseen problems. The rescue split by failure class (section 4)
+  shows how much of the effect such failures carry.
 - **P controls for Lean's report only with its one fixed sentence.**
 - **"No difference of 3 points or more"** is about the overall verified rate at this cap. It does
   not show that feedback never helps, nor anything about harder problems (the 16 problems the
@@ -324,4 +360,4 @@ records where D1's expectations were wrong.
   the model under test is also Anthropic's.
 - Funding and affiliations: [owner to fill in].
 - If the results are released, all code, records, transcripts of prompts and outputs, and the
-  analysis are released with them.
+  analysis are released with them, whatever they show.

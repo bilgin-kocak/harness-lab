@@ -2575,7 +2575,146 @@
         "holm_p": 1.0,
         "reading_if_registered_rule": "no difference of 0.03 or more in the overall verified rate"
       }
-    }
+    },
+    "the cells on other problems (aime_1990_p15 F, imo_2019_p1 B) pass": {
+      "cells_flipped": [
+        [
+          "F",
+          "aime_1990_p15",
+          3
+        ],
+        [
+          "baseline",
+          "imo_2019_p1",
+          1
+        ]
+      ],
+      "H1": {
+        "estimate": 0.014705882352941176,
+        "ci90": [
+          0.0039215686274509795,
+          0.027450980392156866
+        ],
+        "wins_losses_ties": [
+          8,
+          3,
+          193
+        ],
+        "sign_flip_p": 0.0615234375,
+        "reading_if_registered_rule": "no difference of 0.03 or more in the overall verified rate"
+      },
+      "H2": {
+        "estimate": 0.014705882352941176,
+        "ci95": [
+          0.00196078431372549,
+          0.028431372549019607
+        ],
+        "holm_p": 0.079833984375,
+        "reading_if_registered_rule": "no difference of 0.03 or more in the overall verified rate"
+      }
+    },
+    "subsets of F's killed cells of the heavy problem": [
+      {
+        "f_heavy_cells_passing": 1,
+        "with_f_late_timeout_cell": false,
+        "subsets": 5,
+        "h1_p_min": 0.06787109375,
+        "h1_p_max": 0.06787109375,
+        "h1_estimate": 0.014705882352941176,
+        "h2_holm_p_min": 0.09027099609375,
+        "h2_holm_p_max": 0.09027099609375
+      },
+      {
+        "f_heavy_cells_passing": 2,
+        "with_f_late_timeout_cell": false,
+        "subsets": 10,
+        "h1_p_min": 0.05419921875,
+        "h1_p_max": 0.05419921875,
+        "h1_estimate": 0.01568627450980392,
+        "h2_holm_p_min": 0.07281494140625,
+        "h2_holm_p_max": 0.07281494140625
+      },
+      {
+        "f_heavy_cells_passing": 3,
+        "with_f_late_timeout_cell": false,
+        "subsets": 10,
+        "h1_p_min": 0.04833984375,
+        "h1_p_max": 0.04833984375,
+        "h1_estimate": 0.016666666666666666,
+        "h2_holm_p_min": 0.0654296875,
+        "h2_holm_p_max": 0.0654296875
+      },
+      {
+        "f_heavy_cells_passing": 4,
+        "with_f_late_timeout_cell": false,
+        "subsets": 5,
+        "h1_p_min": 0.046630859375,
+        "h1_p_max": 0.046630859375,
+        "h1_estimate": 0.01764705882352941,
+        "h2_holm_p_min": 0.06298828125,
+        "h2_holm_p_max": 0.06298828125
+      },
+      {
+        "f_heavy_cells_passing": 5,
+        "with_f_late_timeout_cell": false,
+        "subsets": 1,
+        "h1_p_min": 0.04638671875,
+        "h1_p_max": 0.04638671875,
+        "h1_estimate": 0.018627450980392157,
+        "h2_holm_p_min": 0.06243896484375,
+        "h2_holm_p_max": 0.06243896484375
+      },
+      {
+        "f_heavy_cells_passing": 1,
+        "with_f_late_timeout_cell": true,
+        "subsets": 5,
+        "h1_p_min": 0.04296875,
+        "h1_p_max": 0.04296875,
+        "h1_estimate": 0.01568627450980392,
+        "h2_holm_p_min": 0.0557861328125,
+        "h2_holm_p_max": 0.0557861328125
+      },
+      {
+        "f_heavy_cells_passing": 2,
+        "with_f_late_timeout_cell": true,
+        "subsets": 10,
+        "h1_p_min": 0.0341796875,
+        "h1_p_max": 0.0341796875,
+        "h1_estimate": 0.016666666666666666,
+        "h2_holm_p_min": 0.044921875,
+        "h2_holm_p_max": 0.044921875
+      },
+      {
+        "f_heavy_cells_passing": 3,
+        "with_f_late_timeout_cell": true,
+        "subsets": 10,
+        "h1_p_min": 0.03125,
+        "h1_p_max": 0.03125,
+        "h1_estimate": 0.01764705882352941,
+        "h2_holm_p_min": 0.041015625,
+        "h2_holm_p_max": 0.041015625
+      },
+      {
+        "f_heavy_cells_passing": 4,
+        "with_f_late_timeout_cell": true,
+        "subsets": 5,
+        "h1_p_min": 0.03076171875,
+        "h1_p_max": 0.03076171875,
+        "h1_estimate": 0.018627450980392157,
+        "h2_holm_p_min": 0.0400390625,
+        "h2_holm_p_max": 0.0400390625
+      },
+      {
+        "f_heavy_cells_passing": 5,
+        "with_f_late_timeout_cell": true,
+        "subsets": 1,
+        "h1_p_min": 0.03076171875,
+        "h1_p_max": 0.03076171875,
+        "h1_estimate": 0.0196078431372549,
+        "h2_holm_p_min": 0.0399169921875,
+        "h2_holm_p_max": 0.0399169921875
+      }
+    ]
   },
   "bounds_assigned_kills": {
     "per_cell_points": 0.098,

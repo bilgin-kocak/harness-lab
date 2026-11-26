@@ -107,22 +107,28 @@ No deviation.
 ## After the held-out phase (2026-11-26)
 
 - **During the resumed phase**, nothing ran in this session beyond the supervisor, the snapshot
-  loop and the two-hourly progress checks, which read only record counts, spend, served models and
-  the kernel's kill count. No outcome by arm was looked at before 09:08:30Z.
+  loop and the two-hourly progress checks, which read record counts, spend, served models, the
+  kernel's kill lines (times and sizes) and the number of records of `mathd_numbertheory_451`. The
+  04:12 check wrongly recorded no kills since the resume (the kernel had 4 events by then); the
+  06:08 check corrected it. No outcome by arm was looked at before 09:08:30Z.
 - **09:09-09:11.** The snapshot loop was stopped; the records were compressed (raw SHA-256:
   attempts `19d0bd50669ae3605aa06e4b4d6a564801b33db2d8a00ff259efe3e4ddec8436`, reservations
   `4de42ac4abc3fba7bd057646d9d086214c38b1b08080e717b98d91e764dad67d`), checked against the raw
   files, and committed with the run logs and kernel evidence (b1ff975).
 - **09:12-09:14.** All 17 registered files matched their SHA-256; `analyze.py` ran unchanged and wrote
   `analysis.json` (54afe9a).
-- **09:15-10:00.** Exploratory, not registered: `d1_report.py` (D1's reports); `recheck.py`, Lean
+- **09:15-10:05.** Exploratory, not registered: `d1_report.py` (D1's reports); `recheck.py`, Lean
   re-checks of 379 cells of the problems that differ and 240 sampled cells (all 619 verdicts
   repeat); an independent verification by four reviewers with their own code (statistics,
   crash evidence, record integrity, registration), each finding then checked by a second reviewer.
   Their confirmed findings are corrected in 5ea302d and after.
-- **10:00-11:10.** The 19 memory-touched final checks re-checked one at a time, with nothing else
-  running: 2 now pass (`aime_1990_p15` F, `imo_2019_p1` B), 17 of `mathd_numbertheory_451` fail
-  again (16 exceed the memory limit, 1 times out). `recheck_killed.json`.
+- **09:59-11:10.** The 19 memory-touched final checks re-checked one at a time
+  (`recheck.py killed --workers 1 --order light-first`): 2 now pass (`aime_1990_p15` F,
+  `imo_2019_p1` B), 17 of `mathd_numbertheory_451` fail again (16 killed by the kernel at 14.0 GB,
+  1 times out). Until about 10:20 light commands also ran (`d1_report.py`, edits, a commit,
+  progress checks); after that nothing else. `recheck_killed.json`, `recheck_kernel_oom.txt`.
+- **11:12-11:42.** A second independent review (three reviewers, each finding checked by another)
+  fact-checked the written reports; its confirmed findings are corrected in the next commit.
 - **Spend:** no paid call after 09:08:30Z. Total $17.33 in records, $20.54 with the interrupted
   cells, against the $35 cap.
 - **Results:** `RESULTS.md`, a draft for the owner. Nothing is published.

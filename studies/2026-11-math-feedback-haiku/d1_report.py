@@ -424,6 +424,51 @@ def counterfactuals(run: "Run", assigned: list[dict], time_only: list[dict]) -> 
                 ),
             }
         scenarios[label] = row
+
+    # Added after the re-checks: the cells whose re-check passes, and every subset of F's
+    # killed cells of the heavy problem, with and without F's late-timeout cell.
+    import itertools
+
+    other = {c for c in killed | late if c[1] != HEAVY}
+    f_heavy = sorted(c for c in killed if c[0] == "F" and c[1] == HEAVY)
+    f_late = {c for c in late if c[0] == "F"}
+
+    def h1_h2(flip: set) -> tuple[dict, dict]:
+        r = rates_with(flip)
+        with contextlib.redirect_stdout(io.StringIO()):
+            h1 = A._contrast("H1", r, "R4", "F", d.usable, "exploratory")
+            h2 = A._contrast("H2", r, "P", "F", d.usable, "exploratory")
+            h3 = A._contrast("H3", r, "R4", "P", d.usable, "exploratory")
+        adj = A.holm({"H2": h2["sign_flip_p"], "H3": h3["sign_flip_p"]})
+        return h1, {**h2, "holm_p": adj["H2"]}
+
+    h1, h2 = h1_h2(other)
+    scenarios["the cells on other problems (aime_1990_p15 F, imo_2019_p1 B) pass"] = {
+        "cells_flipped": sorted([list(c) for c in other]),
+        "H1": {"estimate": h1["estimate"], "ci90": h1["ci90"],
+               "wins_losses_ties": h1["wins_losses_ties"], "sign_flip_p": h1["sign_flip_p"],
+               "reading_if_registered_rule": A.three_way(h1["sign_flip_p"], h1["ci90"], h1["estimate"])},
+        "H2": {"estimate": h2["estimate"], "ci95": h2["ci95"], "holm_p": h2["holm_p"],
+               "reading_if_registered_rule": A.three_way(h2["holm_p"], h2["ci95"], h2["estimate"])},
+    }
+    subsets = []
+    for with_late in (False, True):
+        for k in range(1, len(f_heavy) + 1):
+            ps = []
+            for combo in itertools.combinations(f_heavy, k):
+                h1, h2 = h1_h2(set(combo) | (f_late if with_late else set()))
+                ps.append((h1["sign_flip_p"], h1["estimate"], h2["holm_p"]))
+            subsets.append({
+                "f_heavy_cells_passing": k,
+                "with_f_late_timeout_cell": with_late,
+                "subsets": len(ps),
+                "h1_p_min": min(x[0] for x in ps),
+                "h1_p_max": max(x[0] for x in ps),
+                "h1_estimate": ps[0][1],
+                "h2_holm_p_min": min(x[2] for x in ps),
+                "h2_holm_p_max": max(x[2] for x in ps),
+            })
+    scenarios["subsets of F's killed cells of the heavy problem"] = subsets
     return scenarios
 
 

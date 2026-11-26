@@ -8,7 +8,7 @@
 > `../RESULTS.md`, `../d1_report.md` and `../d1_report.json`, the re-check files named in the text,
 > the pilot's report and the earlier study's report. Everything not produced by `analyze.py` run
 > unchanged is marked *exploratory (not registered)*; none of it changes a registered reading.
-> Citations marked [CITE: …] are being checked and are filled in from `REFERENCES_CHECK.md`.
+> Every citation was checked against its source by two agents (`REFERENCES_CHECK.md`).
 
 ## Abstract
 
@@ -33,23 +33,23 @@ analysis are released.
 
 Language models that write formal proofs are often run in a repair loop. When the proof checker
 rejects an attempt, the model is shown the failed proof with the checker's error messages and tries
-again [CITE: DeepSeek-Prover-V1.5; Goedel-Prover-V2; Kimina-Prover]. Such loops are usually
-credited with gains measured against a single attempt. That comparison mixes two things: what the
-checker's report tells the model, and the extra attempts the loop makes. A model that is simply
-sampled again, with no feedback at all, also gets more chances, and repeated sampling alone raises
-the share of problems solved steadily with the number of samples [CITE: Brown et al., Large Language
-Monkeys]. Our own earlier study is an example: it found that feedback from Lean raised Claude Opus
-5.5's verified rate on 40 miniF2F problems from 85.0% to 97.5% against one call, but the feedback
-arm could make up to four calls and the baseline one, so the comparison could not separate feedback
-from extra attempts [CITE: earlier study report].
+again (Lin et al., 2025; Wang et al., 2025). Such loops are usually credited with gains measured
+against a single attempt. That comparison mixes two things: what the checker's report tells the
+model, and the extra attempts the loop makes. A model that is simply sampled again, with no feedback
+at all, also gets more chances, and coverage improves smoothly with the number of independent
+samples, Lean proofs included (Brown et al., 2024). Our own earlier study is an example: it found
+that feedback from Lean raised Claude Opus 5.5's verified rate on 40 miniF2F problems from 85.0% to
+97.5% against one call, but the feedback arm could make up to four calls and the baseline one, so
+the comparison could not separate feedback from extra attempts (Harness Lab, 2026).
 
 Comparisons matched on calls or samples exist, and they disagree. A call-matched comparison of
-refinement with resampling across 14 models found refinement ahead on a 50-problem miniF2F subset
-and behind on average on miniCTX [CITE: Klingner et al.]. With two open models on difficult miniF2F
-problems, no tested feedback condition established an advantage over instruction-only resampling
-[CITE: Li & Li]. Repair gains at matched sample counts have been reported in Isabelle/HOL
-[CITE: Baldur] and, self-reported, for a Lean prover [CITE: Kimina-Prover]. In code generation,
-self-repair's gains are often modest once its cost is counted [CITE: Olausson et al.].
+refinement with resampling across 14 models found refinement ahead on average on a 50-problem
+miniF2F subset and behind on a miniCTX subset (Klingner et al., 2026). With two open models on
+difficult miniF2F problems, no tested feedback condition established an advantage over
+instruction-only resampling (Li and Li, 2026). Repair gains at matched sample counts have been
+reported in Isabelle/HOL (First et al., 2023) and, self-reported, for a Lean prover trained to fix
+errors (Wang et al., 2025). In code generation, self-repair's gains are often modest once its cost
+is counted (Olausson et al., 2024).
 
 We ask two questions. At a matched cap of four model calls, does showing the model its failed proof
 with Lean's report change how often its attempts verify, compared with fresh tries? And if it does,
@@ -77,54 +77,79 @@ Our contributions are:
 
 ## 2. Related work
 
-**Refinement against resampling at matched calls.** The closest prior design is that of
-Klingner et al. [CITE], who define Δ_k as refine@k minus pass@k: after a failed generation, the
-model is re-prompted with its faulty proof and the verifier's trace, for up to k turns. Across 14
-models, Δ_32 averages +7.7 points on a 50-problem miniF2F subset and −1.4 on a 50-problem miniCTX
-subset, with one refinement run per problem and the comparison matched on calls, not tokens or
-cost. Our design differs in having a placebo arm, five repetitions on each of 204 problems,
-interleaved arms, a pre-registered analysis, and a smaller cap (four calls); our estimate at that
-cap is +1.4.
+**Refinement against resampling at matched calls.** Klingner et al. (2026) compare refine@k, in
+which a model whose proof fails is re-prompted with that proof and the Lean verifier's error trace
+for up to k turns, with pass@k, k independent samples. Across 14 models, Δ_32 = refine@32 −
+pass@32 averages +7.7 points on a 50-problem miniF2F subset and −1.4 points on a 50-problem miniCTX
+subset, from a single refine run that the authors call a snapshot rather than a statistical
+estimate. (We use the values of their Table 3.1; their text's counts of models with a positive
+Δ_32 differ from it.) The design is closely related to ours. It differs in the cap (32 calls
+against 4), in having one run per problem, and in having no placebo arm or pre-registration.
 
-**Feedback conditions against resampling.** Li and Li [CITE] test a general-purpose and a
-specialized open model on difficult miniF2F problems. Displaying the model's failed predecessor
-reduced success; on one model, adding that attempt's compiler error recovered the loss; and no
-tested one-step feedback condition, nor sequential repair with failed proofs and correct diagnostics
-at 64 attempts, established an advantage over instruction-only resampling. Their "failed
-predecessor" and "compiler error" conditions correspond to our P and F.
+**Feedback conditions against resampling, pre-registered.** Li and Li (2026) test Qwen3.6-27B and
+DeepSeek-Prover-V2-7B on difficult miniF2F test problems, with a pre-registered primary endpoint.
+No tested one-step feedback condition established an advantage over instruction-only resampling,
+nor did sequential repair at 64 attempts: on Qwen the pre-registered comparison of repair with
+retrying was unresolved (−18.3 points, 95% interval −41.8 to +5.3), and on DeepSeek-Prover-V2-7B
+repair was clearly worse (−50.7 points). Showing the model its failed predecessor without a
+diagnostic reduced success, and on Qwen adding that attempt's compiler error recovered the loss and
+beat controls that showed another problem's error. Their failed-predecessor condition is the
+closest counterpart of our P, which adds only a fixed rejection sentence, and their compiler-error
+condition of our F; their wrong-diagnostic controls have no counterpart here. With a different
+model and setting, our P did not fall below fresh tries (H3: 0.0 points).
 
-**Repair at matched samples.** In code generation, Olausson et al. [CITE] find that once the cost
-of repair is counted, performance gains are often modest, vary between subsets of the data, and are
-sometimes absent; their main comparison is matched on samples. Baldur [CITE], in Isabelle/HOL,
-reports 36.3% for generation plus repair against 34.8% for generation alone at 16 samples, with
-repair using half the samples and one repair each. The Kimina-Prover blog post [CITE] reports 35.6%
-for a 16+16 attempt-and-fix strategy against 28.8% for 32 independent attempts on the 59 miniF2F-test
-problems with the lowest win rates, without variance. Goedel-Prover-V2 [CITE] reports that removing
-compiler error messages from self-correction lowers miniF2F performance; it has no matched
-resampling arm, which makes it the closest prior analogue of our P arm rather than of R4.
+**Repair at matched samples.** In Python code generation, Olausson et al. (2024) compare self-repair
+with independent sampling at a matched number of sampled programs and find that once the cost of
+repair is counted, gains "are often modest, vary a lot between subsets of the data, and are
+sometimes not present at all". Baldur (First et al., 2023), in Isabelle/HOL, proves 36.3% of the
+PISA test theorems with generation plus repair against 34.8% with generation alone at 16 samples,
+the repair arm using half the samples and one repair attempt each, with a separately fine-tuned
+repair model. A self-reported blog post on Kimina-Prover (Wang et al., 2025), a model trained to fix
+errors from Lean's feedback, gives 35.6% for 16 attempts each followed by one fix, against 28.8% for
+32 independent attempts, on 59 miniF2F-test problems selected for their low win rates; neither study
+reports variance. Goedel-Prover-V2 (Lin et al., 2025) ablates the compiler's error messages from its
+trained self-correction loop and finds that revising without them gains less on miniF2F-test at
+pass@32. The ablation removes the messages rather than replacing them with an uninformative one, and
+it has no arm of fresh samples matched on calls (the conference version compares with plain
+sampling on output tokens). It is the nearest published analogue of our P, which keeps the failed
+proof and replaces Lean's report with a fixed sentence.
 
-**Self-correction and repeated sampling.** Without external feedback, language models often fail to
-improve their reasoning by correcting themselves [CITE: Huang et al.], and a survey of
-self-correction finds it works best with reliable external feedback [CITE: Kamoi et al.]. A proof
-checker is such feedback, which makes formal proving a clean test case. The natural baseline for any
-loop that makes several calls is repeated sampling, which raises coverage with the number of samples
-on formal proofs as elsewhere [CITE: Brown et al.]. Provers that use the checker's feedback in
-training or search include DeepSeek-Prover-V1.5 [CITE].
+**Self-correction and repeated sampling.** Huang et al. (2024) find that intrinsic self-correction,
+with no external feedback, does not improve and often lowers reasoning accuracy, separate this from
+correction with valid external feedback, and argue that self-correction must be compared with
+baselines of equivalent inference cost. A survey by Kamoi et al. (2024) concludes that
+self-correction is effective where reliable external feedback is available, and that it is often
+not compared with sufficiently strong baselines. A proof checker gives such feedback, and fresh
+tries at a matched cap are a strong baseline: Brown et al. (2024) find that coverage improves
+smoothly with the number of independent samples across tasks, including Lean 4 proofs of the
+130-problem MiniF2F-MATH subset, and conjecture that execution feedback from such verifiers should
+improve solution quality, which their single-turn setup did not test. Other provers use the
+checker's feedback in training and search rather than as text in the prompt, for example
+DeepSeek-Prover-V1.5 (Xin et al., 2024), which learns from verified/not-verified rewards and resumes
+generation from Lean's tactic state.
 
-**Benchmark state.** The strongest systems now prove nearly all of miniF2F-test [CITE: Seed-Prover],
-so this study does not measure the state of the art. It measures the effect of one harness choice
-for one model at a small, fixed budget.
+**Benchmark state.** The strongest systems now prove nearly all of miniF2F-test: Seed-Prover proves
+99.6% under its medium setting (Chen et al., 2025). This study does not measure the state of the
+art. It measures the effect of one harness choice for one model at a small, fixed budget.
 
-**Statistics and pre-registration.** Our three-way reading, which asks whether a 90% interval lies
-inside a ±3-point margin, is close to an equivalence test by two one-sided tests [CITE: Lakens].
-We use Holm's procedure for the two secondary tests [CITE: Holm], percentile bootstrap intervals
-[CITE: Efron & Tibshirani] and an exact paired sign-flip test [CITE: sign-flip reference].
-Pre-registration is still rare in machine learning [CITE: pre-registration in ML].
+**Statistics and pre-registration.** Our "no difference" reading, a 90% interval inside a ±3-point
+margin, is close to an equivalence test by two one-sided tests (Lakens, 2017), here with a percentile
+bootstrap interval; the three-way reading combines it with an ordinary test of no difference. We use
+Holm's (1979) procedure for the two secondary tests, percentile bootstrap intervals (Efron and
+Tibshirani, 1993) and an exact paired sign-flip test (Fisher, 1935), which assumes independent
+problems whose differences are symmetric about zero under the null (Winkler et al., 2014).
+Pre-registration has been argued for in machine learning (Forde and Paganini, 2019; Hofman et al.,
+2023) and piloted as a publication model (Bertinetto et al., 2021). Ours is a self-registration,
+committed with its hashes before any paid call, not a peer-reviewed registered report.
 
-**What is new here.** We found no study that combines pre-registration, a multi-round cap of four
-calls, five repetitions on each of 204 problems, a placebo arm and a current API model. Our search
-was not systematic: research agents searched the web and arXiv on 2026-11-24, and the queries were
-not logged (`RELATED_WORK.md`), so relevant work may have been missed.
+**What is new here.** Li and Li (2026) pre-registered a comparison of feedback with resampling on
+open models. Our registration's background (Appendix A) listed pre-registration among what this
+study adds; it was written before we read that part of their paper. What this study adds is the
+combination of a current API model, a multi-round cap of four calls with a placebo arm, five
+repetitions on each of 204 problems, arms interleaved in time, and an exact paired test with a
+reading rule fixed in advance. Our search was not systematic: research agents searched the web and
+arXiv on 2026-11-24 and the queries were not logged (`RELATED_WORK.md`), so relevant work may have
+been missed.
 
 ## 3. Setup
 
@@ -135,10 +160,11 @@ is capped at 12,000 tokens (estimated as characters / 4). The served model of ev
 recorded: all 5,159 calls were served by Claude Haiku 5.5, and none was refused. The model had no
 tools and no planning step.
 
-**Problems.** The 204 miniF2F test problems [CITE: miniF2F] that our earlier studies had not run:
-ranks 41 to 244 of a seeded hash ranking of the 244 test problems, whose ranks 1 to 40 were the
-earlier study's held-out set. We used the Lean 4 port of miniF2F [CITE: miniF2F-lean4] at commit
-`5746b7d`, Lean 4.24.0 [CITE: Lean 4] and Mathlib [CITE: Mathlib] at `f897ebc`.
+**Problems.** The 204 miniF2F test problems (Zheng et al., 2022) that our earlier studies had not
+run: ranks 41 to 244 of a seeded hash ranking of the 244 test problems, whose ranks 1 to 40 were the
+earlier study's held-out set. The statements come from the Lean 4 port of miniF2F (Yang, 2023) at
+commit `5746b7d`; the toolchain is Lean 4.24.0 (de Moura and Ullrich, 2021) with Mathlib (The
+mathlib Community, 2020) in its Lean 4 version at commit `f897ebc`.
 
 **Arms.** All four arms send the identical first request (Appendix C). A round's answer is the
 proof in its last `lean` code block. It is checked by Lean in the loop, with a 120 s limit, unless
@@ -487,7 +513,58 @@ own code, not by people. [Funding and affiliations: owner to fill in.]
 
 ## References
 
-[To be filled from `REFERENCES_CHECK.md`, each entry checked against its source.]
+- Bertinetto, L., Henriques, J. F., Albanie, S., Paganini, M., and Varol, G., eds. (2021). Preface.
+  *NeurIPS 2020 Workshop on Pre-registration in Machine Learning*. PMLR 148.
+  https://proceedings.mlr.press/v148/bertinetto21a.html
+- Brown, B., Juravsky, J., Ehrlich, R., Clark, R., Le, Q. V., Ré, C., and Mirhoseini, A. (2024).
+  Large Language Monkeys: Scaling Inference Compute with Repeated Sampling. arXiv:2407.21787.
+- Chen, L., Gu, J., Huang, L., et al. (ByteDance Seed AI4Math) (2025). Seed-Prover: Deep and Broad
+  Reasoning for Automated Theorem Proving. arXiv:2507.23726.
+- de Moura, L. and Ullrich, S. (2021). The Lean 4 Theorem Prover and Programming Language. In
+  *Automated Deduction – CADE 28*, LNCS 12699, pp. 625–635. Springer.
+  https://doi.org/10.1007/978-3-030-79876-5_37
+- Efron, B. and Tibshirani, R. J. (1993). *An Introduction to the Bootstrap*. Chapman & Hall.
+- First, E., Rabe, M. N., Ringer, T., and Brun, Y. (2023). Baldur: Whole-Proof Generation and Repair
+  with Large Language Models. In *ESEC/FSE '23*, pp. 1229–1241. https://doi.org/10.1145/3611643.3616243
+- Fisher, R. A. (1935). *The Design of Experiments*. Oliver and Boyd. Section 21.
+- Forde, J. Z. and Paganini, M. (2019). The Scientific Method in the Science of Machine Learning.
+  ICLR 2019 Debugging Machine Learning Models workshop. arXiv:1904.10922.
+- Harness Lab (2026). Lean 4 proving on a pinned miniF2F subset: held-out result. Released with this
+  paper (`docs/results/2026-11-23-math.md`). [Owner: name the report as it will be cited.]
+- Hofman, J. M., Chatzimparmpas, A., Sharma, A., Watts, D. J., and Hullman, J. (2023).
+  Pre-registration for Predictive Modeling. arXiv:2311.18807.
+- Holm, S. (1979). A Simple Sequentially Rejective Multiple Test Procedure. *Scandinavian Journal of
+  Statistics* 6(2), 65–70.
+- Huang, J., Chen, X., Mishra, S., Zheng, H. S., Yu, A. W., Song, X., and Zhou, D. (2024). Large
+  Language Models Cannot Self-Correct Reasoning Yet. In *ICLR 2024*. arXiv:2310.01798.
+- Kamoi, R., Zhang, Y., Zhang, N., Han, J., and Zhang, R. (2024). When Can LLMs Actually Correct
+  Their Own Mistakes? A Critical Survey of Self-Correction of LLMs. *Transactions of the
+  Association for Computational Linguistics* 12, 1417–1440. arXiv:2406.01297.
+- Klingner, T., Bladek, D., Crawford, E., et al. (2026). Evaluation of LLMs for Mathematical
+  Formalization in Lean. arXiv:2606.05632.
+- Lakens, D. (2017). Equivalence Tests: A Practical Primer for t Tests, Correlations, and
+  Meta-Analyses. *Social Psychological and Personality Science* 8(4), 355–362.
+  https://doi.org/10.1177/1948550617697177
+- Li, J. and Li, S. (2026). Repair, Retry, and the Cost of Hindsight: Verifier Feedback in Formal
+  Theorem Proving. NeurIPS 2026 Workshop on AI for Verifiable Coding. arXiv:2610.22698.
+- Lin, Y., Tang, S., Lyu, B., et al. (2025). Goedel-Prover-V2: Scaling Formal Theorem Proving with
+  Scaffolded Data Synthesis and Self-Correction. arXiv:2508.03613; ICLR 2026.
+- Olausson, T. X., Inala, J. P., Wang, C., Gao, J., and Solar-Lezama, A. (2024). Is Self-Repair a
+  Silver Bullet for Code Generation? In *ICLR 2024*. arXiv:2306.09896.
+- The mathlib Community (2020). The Lean Mathematical Library. In *CPP 2020*, pp. 367–381.
+  https://doi.org/10.1145/3372885.3373824
+- Wang, H., Unsal, M., Lin, X., et al. (Numina & Kimi Team) (2025). Kimina-Prover: Applying
+  Test-time RL Search on Large Formal Reasoning Models. Hugging Face blog, 10 July 2025.
+  https://huggingface.co/blog/AI-MO/kimina-prover
+- Winkler, A. M., Ridgway, G. R., Webster, M. A., Smith, S. M., and Nichols, T. E. (2014).
+  Permutation inference for the general linear model. *NeuroImage* 92, 381–397.
+  https://doi.org/10.1016/j.neuroimage.2014.01.060
+- Xin, H., Ren, Z. Z., Song, J., et al. (2024). DeepSeek-Prover-V1.5: Harnessing Proof Assistant
+  Feedback for Reinforcement Learning and Monte-Carlo Tree Search. arXiv:2408.08152; ICLR 2025.
+- Yang, K. (2023). miniF2F-lean4. GitHub repository, https://github.com/yangky11/miniF2F-lean4
+  (commit `5746b7d`).
+- Zheng, K., Han, J. M., and Polu, S. (2022). miniF2F: a cross-system benchmark for formal
+  Olympiad-level mathematics. In *ICLR 2022*. arXiv:2109.00110.
 
 ---
 

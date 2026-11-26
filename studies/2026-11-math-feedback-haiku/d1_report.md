@@ -138,4 +138,25 @@ H3 reads "no difference of 3 points or more" in every row. The smallest sets tha
 
 ## 7. Lean re-checks of these proofs (added after the phase)
 
-[Filled in from `recheck_killed.json` when the re-check ends.]
+The 19 final checks above (the 18 the kernel killed or that timed out just after a kill, and
+F's `aime_1990_p15`) were checked again with the registered verifier and its 300 s timeout, one at
+a time, with nothing else running (`recheck.py killed --workers 1`; 10:00-11:10Z).
+
+| Cells | Recorded | Re-checked alone |
+|---|---|---|
+| F `aime_1990_p15` rep 3 | timeout after 571.8 s | **pass** in 9.1 s |
+| B `imo_2019_p1` rep 1 | exit 137 after 126.7 s | **pass** in 8.5 s |
+| 17 of `mathd_numbertheory_451` (F 5, R4 4, P 3, B 5) | 14 exit 137, 3 timeouts | **all fail**: 16 killed by the kernel again (exit 137, after 215-290 s), 1 timeout (F rep 1, 301.7 s) |
+
+- **Two verdicts came from the memory problem, not from the proofs.** Under the registered rule
+  they stay "not verified". Counting both as verified (exploratory): H1 +1.47 points, 8 / 3 / 193,
+  p = 0.062; H2 Holm p = 0.080; H3 unchanged. Every reading stays the same.
+- **The proofs of `mathd_numbertheory_451` cannot be checked on this machine.** Alone, with the
+  whole 14.3 GB limit available, 16 of 17 exceeded it within 300 s, and the 17th ran out the 300 s
+  timeout. In the run, two further checks of this problem that were not killed also ran out the
+  300 s, and 42 of the 45 in-loop checks of its proofs ran out their 120 s. Whether any of these
+  proofs would check within 300 s with more memory is not known; nothing seen suggests one would.
+- **So the readings rest on this:** if none of F's proofs of `mathd_numbertheory_451` would pass,
+  every registered reading holds, with the two artifacts counted either way. If one of them would
+  pass (with `aime_1990_p15` counted as verified), H1 would read "difference (positive)",
+  p = 0.043.

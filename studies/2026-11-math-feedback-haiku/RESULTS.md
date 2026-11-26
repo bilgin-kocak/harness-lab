@@ -29,13 +29,16 @@
     17 of them, in all four arms. The same memory events also ended two checks on other problems
     whose proofs pass when re-checked alone: one in F (`aime_1990_p15`), one in B.
   - Under the registered rule these all count as "not verified", and the readings stand.
-  - But H1's p is close enough to 0.05 that, had F's memory-touched cells passed, H1 would read
-    "difference (positive)". Re-checked alone after the run, [RESULT OF THE RE-CHECK OF THE
-    KILLED `mathd_numbertheory_451` PROOFS].
+  - Counting the two artifacts as passes changes no reading (H1 +1.5 points, p = 0.062;
+    exploratory).
+  - But H1's p is close enough to 0.05 that one passing proof of `mathd_numbertheory_451` in F
+    would make H1 read "difference (positive)". Re-checked alone after the run, none of the 17
+    could be checked: 16 exceeded the machine's memory limit within 300 s, and 1 ran out the 300 s
+    timeout. Whether any would pass with more memory is not known.
 - **The run.** 4,080 of 4,080 cells have valid records: 0 harness errors, 0 refusals, every call
   served by `claude-haiku-5-5`. An independent recomputation from the raw records reproduces every
-  registered number exactly, and 621 of 638 recorded proofs re-checked by Lean gave the same verdict
-  [to be updated].
+  registered number exactly. Of 638 recorded proofs re-checked by Lean after the run, 636 gave the
+  same verdict; the 2 that changed are the memory artifacts above.
 - **Spend:** $17.33 in records across all phases; $20.54 with the 4 cells interrupted by the crash;
   cap $35.
 
@@ -251,8 +254,9 @@ records where D1's expectations were wrong.
 
   H3 reads "no difference of 3 points or more" in every row. The registered rule counts a
   memory-ended check as not verified, so the registered readings stand. With the `aime_1990_p15`
-  proof known to pass, the reading depends on whether any of F's killed proofs of
-  `mathd_numbertheory_451` would pass: [RESULT].
+  proof known to pass, the readings change only if one of F's killed proofs of
+  `mathd_numbertheory_451` would pass. None could be checked on this machine (section 8), so that
+  is not known, and nothing seen suggests one would.
 - **Exploratory checks D1 promised** (details in `d1_report.md`):
 
   | H1 variant | Problems | Estimate | 90% interval | Sign-flip p | Reading under the registered rule |
@@ -292,7 +296,14 @@ records where D1's expectations were wrong.
     except `mathd_numbertheory_451`: all 379 verdicts repeat.
   - 240 further cells drawn at random (60 per arm, seed 20261126): all 240 repeat.
   - The 19 memory-touched final checks, one at a time on an otherwise idle machine:
-    `aime_1990_p15` (F) and `imo_2019_p1` (B) now pass; [the 17 of `mathd_numbertheory_451`].
+    `aime_1990_p15` (F, 9.1 s) and `imo_2019_p1` (B, 8.5 s) now pass. All 17 of
+    `mathd_numbertheory_451` fail again: 16 exceed the 14.3 GB memory limit within 300 s (after
+    215-290 s), and 1 runs out the 300 s timeout. In the run, two other checks of this problem ran
+    out the 300 s without being killed, and 42 of its 45 in-loop checks ran out their 120 s.
+  - **Not settled:** whether any proof of `mathd_numbertheory_451` would check within 300 s on a
+    machine with more memory. It matters only if one of F's 5 would (section 7). Settling it needs
+    a Lean re-check of those 17 proofs on a machine with more than 16 GB; it calls no model and
+    costs nothing but machine time.
 
 ## 9. What this study cannot show (registration section 10)
 

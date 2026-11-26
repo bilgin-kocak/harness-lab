@@ -1,0 +1,451 @@
+{
+  "label": "exploratory (not registered); written after the held-out phase ended",
+  "set": "killed",
+  "cells": 19,
+  "same_status": 17,
+  "changed": [
+    {
+      "arm": "F",
+      "task_id": "aime_1990_p15",
+      "repetition": 3,
+      "proof_sha256": "59e95f6a8cf7bd8d66eb3754ad2e0ffc62432b34c9c3c6be499ddbd1a18ce3ae",
+      "recorded": {
+        "status": "fail",
+        "reason": "timeout",
+        "exit_code": -9,
+        "timed_out": true
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 9.104,
+        "wall_s": 16.68
+      },
+      "same_status": false
+    },
+    {
+      "arm": "baseline",
+      "task_id": "imo_2019_p1",
+      "repetition": 1,
+      "proof_sha256": "719bc9869fbd3aa0450a12e74e4de362eb16f9fa74d19def294748ac0d8a8a94",
+      "recorded": {
+        "status": "fail",
+        "reason": "lean exited with code 137",
+        "exit_code": 137,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 8.472,
+        "wall_s": 8.475
+      },
+      "same_status": false
+    }
+  ],
+  "rows": [
+    {
+      "arm": "F",
+      "task_id": "aime_1990_p15",
+      "repetition": 3,
+      "proof_sha256": "59e95f6a8cf7bd8d66eb3754ad2e0ffc62432b34c9c3c6be499ddbd1a18ce3ae",
+      "recorded": {
+        "status": "fail",
+        "reason": "timeout",
+        "exit_code": -9,
+        "timed_out": true
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 9.104,
+        "wall_s": 16.68
+      },
+      "same_status": false
+    },
+    {
+      "arm": "baseline",
+      "task_id": "imo_2019_p1",
+      "repetition": 1,
+      "proof_sha256": "719bc9869fbd3aa0450a12e74e4de362eb16f9fa74d19def294748ac0d8a8a94",
+      "recorded": {
+        "status": "fail",
+        "reason": "lean exited with code 137",
+        "exit_code": 137,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "pass",
+        "reason": "kernel-checked; axioms: propext, Classical.choice, Quot.sound",
+        "exit_code": 0,
+        "timed_out": false,
+        "lean_s": 8.472,
+        "wall_s": 8.475
+      },
+      "same_status": false
+    },
+    {
+      "arm": "F",
+      "task_id": "mathd_numbertheory_451",
+      "repetition": 0,
+      "proof_sha256": "c14653b84d315e8b49f6461c64d39535b9055617a76d42da671ad673e1643a0b",
+      "recorded": {
+        "status": "fail",
+        "reason": "lean exited with code 137",
+        "exit_code": 137,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "fail",
+        "reason": "lean exited with code 137",
+        "exit_code": 137,
+        "timed_out": false,
+        "lean_s": 257.87,
+        "wall_s": 257.88
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "mathd_numbertheory_451",
+      "repetition": 1,
+      "proof_sha256": "2b4a656a716e37515678a33d0fd3ebf48efcc82021e450aa978458d351c9d56c",
+      "recorded": {
+        "status": "fail",
+        "reason": "lean exited with code 137",
+        "exit_code": 137,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "fail",
+        "reason": "timeout",
+        "exit_code": -9,
+        "timed_out": true,
+        "lean_s": 301.66,
+        "wall_s": 301.671
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "mathd_numbertheory_451",
+      "repetition": 2,
+      "proof_sha256": "67052bb33e665e3435de7bbd01bd66ed212c093bedcecc8ce760dc32d9627291",
+      "recorded": {
+        "status": "fail",
+        "reason": "lean exited with code 137",
+        "exit_code": 137,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "fail",
+        "reason": "lean exited with code 137",
+        "exit_code": 137,
+        "timed_out": false,
+        "lean_s": 251.717,
+        "wall_s": 251.728
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "mathd_numbertheory_451",
+      "repetition": 3,
+      "proof_sha256": "5c47e7a3868828e53329665b4ab91361e98ba3bea91eb060aacee7a4db40b7e6",
+      "recorded": {
+        "status": "fail",
+        "reason": "lean exited with code 137",
+        "exit_code": 137,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "fail",
+        "reason": "lean exited with code 137",
+        "exit_code": 137,
+        "timed_out": false,
+        "lean_s": 232.886,
+        "wall_s": 232.895
+      },
+      "same_status": true
+    },
+    {
+      "arm": "F",
+      "task_id": "mathd_numbertheory_451",
+      "repetition": 4,
+      "proof_sha256": "25636859bc7d8fc72c01a055acf414c7b17f39cd28f15aacb9d5ddd285f0a48c",
+      "recorded": {
+        "status": "fail",
+        "reason": "lean exited with code 137",
+        "exit_code": 137,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "fail",
+        "reason": "lean exited with code 137",
+        "exit_code": 137,
+        "timed_out": false,
+        "lean_s": 239.857,
+        "wall_s": 239.866
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "mathd_numbertheory_451",
+      "repetition": 0,
+      "proof_sha256": "1bb08aa32a4a341bb399957d718ef0d37b3b4331dace720af3f29711def8505e",
+      "recorded": {
+        "status": "fail",
+        "reason": "lean exited with code 137",
+        "exit_code": 137,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "fail",
+        "reason": "lean exited with code 137",
+        "exit_code": 137,
+        "timed_out": false,
+        "lean_s": 259.292,
+        "wall_s": 259.302
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "mathd_numbertheory_451",
+      "repetition": 3,
+      "proof_sha256": "839ca676ac221dd939e0a5500f3eadc630b2e0d66afeee950cdef108df55e540",
+      "recorded": {
+        "status": "fail",
+        "reason": "lean exited with code 137",
+        "exit_code": 137,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "fail",
+        "reason": "lean exited with code 137",
+        "exit_code": 137,
+        "timed_out": false,
+        "lean_s": 290.265,
+        "wall_s": 290.276
+      },
+      "same_status": true
+    },
+    {
+      "arm": "P",
+      "task_id": "mathd_numbertheory_451",
+      "repetition": 4,
+      "proof_sha256": "64381a5ae7d8e9ceb3935e9ed3dea7d2f0c2f4e8c8ab635085d89d64271d6de7",
+      "recorded": {
+        "status": "fail",
+        "reason": "lean exited with code 137",
+        "exit_code": 137,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "fail",
+        "reason": "lean exited with code 137",
+        "exit_code": 137,
+        "timed_out": false,
+        "lean_s": 240.165,
+        "wall_s": 240.178
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "mathd_numbertheory_451",
+      "repetition": 0,
+      "proof_sha256": "8f43bcadc1d1c15f69463340221a73546a93bdfe42148305289c4c6fa1d93616",
+      "recorded": {
+        "status": "fail",
+        "reason": "lean exited with code 137",
+        "exit_code": 137,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "fail",
+        "reason": "lean exited with code 137",
+        "exit_code": 137,
+        "timed_out": false,
+        "lean_s": 247.316,
+        "wall_s": 247.325
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "mathd_numbertheory_451",
+      "repetition": 1,
+      "proof_sha256": "31d38d8230525e83291503be2b2bc061d9e9d453a6a1b40ae916466b620f9531",
+      "recorded": {
+        "status": "fail",
+        "reason": "lean exited with code 137",
+        "exit_code": 137,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "fail",
+        "reason": "lean exited with code 137",
+        "exit_code": 137,
+        "timed_out": false,
+        "lean_s": 214.77,
+        "wall_s": 214.779
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "mathd_numbertheory_451",
+      "repetition": 2,
+      "proof_sha256": "a4878ee422c47442b6250b39484cbedaad46ae486110bd82e25c3857d34fffdf",
+      "recorded": {
+        "status": "fail",
+        "reason": "timeout",
+        "exit_code": -9,
+        "timed_out": true
+      },
+      "recheck": {
+        "status": "fail",
+        "reason": "lean exited with code 137",
+        "exit_code": 137,
+        "timed_out": false,
+        "lean_s": 233.34,
+        "wall_s": 233.35
+      },
+      "same_status": true
+    },
+    {
+      "arm": "R4",
+      "task_id": "mathd_numbertheory_451",
+      "repetition": 4,
+      "proof_sha256": "a2d717ba0e6948e8aa296c48d7db6ca95e8f9762a6981aee0e7365b852b76fb3",
+      "recorded": {
+        "status": "fail",
+        "reason": "lean exited with code 137",
+        "exit_code": 137,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "fail",
+        "reason": "lean exited with code 137",
+        "exit_code": 137,
+        "timed_out": false,
+        "lean_s": 239.183,
+        "wall_s": 239.191
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "mathd_numbertheory_451",
+      "repetition": 0,
+      "proof_sha256": "f2df1947c6ed0b04499a107c0d48e45b1ed7ada9c9ed081a57c6a8e412603588",
+      "recorded": {
+        "status": "fail",
+        "reason": "timeout",
+        "exit_code": -9,
+        "timed_out": true
+      },
+      "recheck": {
+        "status": "fail",
+        "reason": "lean exited with code 137",
+        "exit_code": 137,
+        "timed_out": false,
+        "lean_s": 242.453,
+        "wall_s": 242.463
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "mathd_numbertheory_451",
+      "repetition": 1,
+      "proof_sha256": "e80abd4b73c99a9bc2ef612dac7007c92024f76c0e5d3b3a0756d9e5c6a0377b",
+      "recorded": {
+        "status": "fail",
+        "reason": "timeout",
+        "exit_code": -9,
+        "timed_out": true
+      },
+      "recheck": {
+        "status": "fail",
+        "reason": "lean exited with code 137",
+        "exit_code": 137,
+        "timed_out": false,
+        "lean_s": 265.709,
+        "wall_s": 265.718
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "mathd_numbertheory_451",
+      "repetition": 2,
+      "proof_sha256": "9135e886ab99fb353d92b44b1be1c9c0e315a95b2fc4da4515fa2fcc83917803",
+      "recorded": {
+        "status": "fail",
+        "reason": "lean exited with code 137",
+        "exit_code": 137,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "fail",
+        "reason": "lean exited with code 137",
+        "exit_code": 137,
+        "timed_out": false,
+        "lean_s": 222.842,
+        "wall_s": 222.849
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "mathd_numbertheory_451",
+      "repetition": 3,
+      "proof_sha256": "f7dbd5169e644f38522f6ff2464a78ea34ed97499df5b0777fc4801de02d53e4",
+      "recorded": {
+        "status": "fail",
+        "reason": "lean exited with code 137",
+        "exit_code": 137,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "fail",
+        "reason": "lean exited with code 137",
+        "exit_code": 137,
+        "timed_out": false,
+        "lean_s": 265.594,
+        "wall_s": 265.601
+      },
+      "same_status": true
+    },
+    {
+      "arm": "baseline",
+      "task_id": "mathd_numbertheory_451",
+      "repetition": 4,
+      "proof_sha256": "b8988ac75aa45b8b2d4140d7dc4ed662d5dc37a3692d288b1f1ec93c0e341766",
+      "recorded": {
+        "status": "fail",
+        "reason": "lean exited with code 137",
+        "exit_code": 137,
+        "timed_out": false
+      },
+      "recheck": {
+        "status": "fail",
+        "reason": "lean exited with code 137",
+        "exit_code": 137,
+        "timed_out": false,
+        "lean_s": 263.66,
+        "wall_s": 263.669
+      },
+      "same_status": true
+    }
+  ]
+}

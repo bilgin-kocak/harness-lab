@@ -44,7 +44,8 @@ Option 1 is the most accurate; option 3 leads with the method story.
 **Words that need care:** "removed about 17% of the failures" is the registered headroom-scaled
 descriptive, not a test; "1.3 to 1.4 calls" (F 1.33, R4 1.36, P 1.36); "the recounts that would
 change a reading are very unlikely" rests on the exploratory re-checks, the CPU-time
-measurement and the speed comparison (section 6), with their 1.5-times margin and the swap caveat.
+measurement and the speed comparison (section 6), with their 1.5-times margin, the swap caveat
+and the assumption that the speed ratio from ordinary checks carries over to this proof.
 Trim to the venue's limit.
 
 ## Outline
@@ -168,15 +169,16 @@ Trim to the venue's limit.
   F's 5 passed 450 s of user CPU in one thread, 1.5 times the limit, without finishing (memory still
   growing, 25.8-26.5 GB; the paging, counted as system time, left out). The run's CPU was not
   recorded, but in the run 72 ordinary checks took a median of 0.99 times as long as when re-timed
-  one at a time on the machine measured: the run's machine was about as fast per check, far from 1.5
-  times as fast. So very likely none would have checked within 300 s even with enough memory, and
-  the recounts that change a reading are very unlikely; counting the two known artifacts as passes,
-  every reading equals the registered one (H1 p = 0.062). Caveats: running under swap may inflate
-  user time, and the conclusion fails if it did so by half (about twofold for the part after memory
-  passed 14 GB, where paging became heavy); a first measurement, stopped at 330 s (a 10% margin),
-  was superseded, and a version that counted system time was discarded. No check of any proof of
-  this problem has ever passed: 0 of 82 checks that reached a verdict, plus 9 measurements of F's 5
-  proofs stopped unfinished.
+  one at a time on the machine measured: the run's machine was about as fast on ordinary checks, far
+  from 1.5 times as fast. So very likely none would have checked within 300 s even with enough
+  memory, and the recounts that change a reading are very unlikely; counting the two known artifacts
+  as passes, every reading equals the registered one (H1 p = 0.062). Caveats: running under swap may
+  inflate user time, and the conclusion fails if it did so by about half (about twofold for the part
+  after memory passed 14 GB, where paging became heavy), at the median speed ratio; the speed ratio
+  comes from ordinary checks, and carrying it over to this memory-heavy proof is an assumption; a
+  first measurement, stopped at 330 s (a 10% margin), was superseded, and a version that counted
+  system time was discarded. No check of any proof of this problem has ever passed: 0 of 82 checks
+  that reached a verdict, plus 9 measurements of F's 5 proofs stopped unfinished.
 - Lessons for harness builders: cap each check's memory, time checks outside the process being
   timed, keep the kernel's evidence, decide in advance what a killed check means.
 

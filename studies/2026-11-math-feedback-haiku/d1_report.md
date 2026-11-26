@@ -168,20 +168,21 @@ of `oom_kernel_log.txt`.
 - **Very likely none of F's 5 could have passed within 300 s even with enough memory**
   (`recheck_heavy_cpu.py`; exploratory). With the memory limit lifted by a 24 GB swap file, each of
   F's repetitions 0-4 passed 450 s of user CPU in one thread, 1.5 times the limit, without finishing
-  (13:58-15:59Z, `recheck_heavy_cpu_450.json`; memory still growing, 25.8-26.5 GB when stopped). An
+  (14:00-15:59Z, `recheck_heavy_cpu_450.json`; memory still growing, 25.8-26.5 GB when stopped). An
   earlier measurement stopped repetitions 0, 2, 3 and 4 at 330 s (`recheck_heavy_cpu.json`), a 10%
   margin a fact-check found too small. User time cannot exceed wall-clock time and leaves out the
   paging (system time, 369-390 s per run), so on the CPU measured (Intel Xeon, 2.1 GHz, in a new
-  container after the restart) each would have needed more than 300 s. The run's CPU was not
-  recorded, but in the run, with three checks at a time, 72 ordinary final checks took a median of
-  0.99 times as long as when re-timed here one at a time (smallest 0.84; `recheck_speed.py`,
-  `recheck_speed.json`), so the run's machine was about as fast per check, far from 1.5 times as
-  fast. What could still void the conclusion is an inflation of user time under swap by half; paging
-  became heavy only after memory passed about 14 GB, at 143-151 s of user CPU, so the rest would
-  have to be inflated about twofold. A first version that counted user plus system time was stopped
-  and discarded (`recheck_heavy_cpu_v1_discarded.json`). No check of any proof of this problem has
-  ever passed: 0 of 82 checks that reached a verdict, plus 9 measurements of F's 5 proofs stopped
-  unfinished.
+  container after the restart) each would very likely have needed more than 300 s. The run's CPU was
+  not recorded, but in the run, with up to three checks at a time, 72 ordinary final checks took a
+  median of 0.99 times as long as when re-timed here one at a time (smallest 0.84; the 6 of 50 s or
+  more 0.97 to 1.07; `recheck_speed.py`, `recheck_speed.json`), so the run's machine was about as
+  fast on ordinary checks, far from 1.5 times as fast; carrying that over to this memory-heavy proof
+  is an assumption. What could still void the conclusion is an inflation of user time under swap by
+  about half (at the median speed ratio); paging became heavy only after memory passed about 14 GB,
+  at 143-151 s of user CPU, so the rest would have to be inflated about twofold. A first version
+  that counted user plus system time was stopped and discarded
+  (`recheck_heavy_cpu_v1_discarded.json`). No check of any proof of this problem has ever passed: 0
+  of 82 checks that reached a verdict, plus 9 measurements of F's 5 proofs stopped unfinished.
 - **What the exploratory readings rest on.** The registered readings stand whatever these show.
   The recounts that change a reading need one of F's proofs of `mathd_numbertheory_451` to pass;
   very likely none could within the registered 300 s. Counting the two known artifacts as passes,

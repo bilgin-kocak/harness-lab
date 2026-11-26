@@ -40,10 +40,11 @@
     (exploratory). With the memory limit lifted by swap, each of the 5 computed for more than 450 s
     of user CPU, 1.5 times the limit, without finishing, its memory still growing past 25 GB. In the
     run, 72 ordinary checks took a median of 0.99 times as long as when re-timed one at a time on
-    the machine measured, so the run's machine was about as fast per check, far from 1.5 times as
-    fast. Each would therefore have needed more than 300 s, and the registered rule would have
-    counted a timeout, unless running under swap inflated that user time by half (section 8). So the
-    recounts that change a reading are very unlikely.
+    the machine measured, so the run's machine was about as fast on ordinary checks, far from 1.5
+    times as fast (carrying that over to this memory-heavy proof is an assumption). Each would
+    therefore have needed more than 300 s, and the registered rule would have counted a timeout,
+    unless running under swap inflated that user time by about half (section 8). So the recounts
+    that change a reading are very unlikely.
 - **The run.** 4,080 of 4,080 cells have valid records: 0 harness errors, 0 refusals, every call
   served by `claude-haiku-5-5`. One deviation (D1) resumed the run after the kernel's
   out-of-memory killer stopped it; it changed only the run procedure, and was committed in the
@@ -345,27 +346,35 @@ records where D1's expectations were wrong.
     cannot exceed the wall-clock time that passes, and it leaves out the paging work, which counts
     as system time. A first measurement (12:43-13:43Z, `recheck_heavy_cpu.json`) stopped
     repetitions 0, 2, 3 and 4 at 330 s of user CPU; a fact-check found that 10% margin too small,
-    so a second (13:58-15:59Z, `recheck_heavy_cpu_450.json`) ran all 5 to 450 s, 1.5 times the
+    so a second (14:00-15:59Z, `recheck_heavy_cpu_450.json`) ran all 5 to 450 s, 1.5 times the
     limit. None finished: each passed 450 s of user CPU in one thread (after 1,372-1,496 s of
     wall-clock time and 369-390 s of system time), its memory still growing (25.8-26.5 GB when
     stopped; it had passed 14 GB after 143-151 s of user CPU). So on the CPU measured (Intel Xeon,
-    2.1 GHz, in a new container after the restart) each would have needed more than 300 s even
-    with enough memory, and the registered rule would have counted a timeout.
+    2.1 GHz, in a new container after the restart) each would very likely have needed more than
+    300 s even with enough memory, and the registered rule would have counted a timeout: it would
+    not only if running under swap inflated its user time by about half (below).
     - *Was the run's machine faster?* Its CPU was not recorded. `recheck_speed.py` re-timed here,
       one at a time, 72 of the run's final checks (20 s or more of Lean time, not of this problem,
       not overlapping a check of it; the rule was written in the script, 15:59:42Z, before it
       started, 15:59:51Z, and committed unchanged in 229b64f before any result was looked at). The
-      run, with three Lean checks at a time, took a median of 0.99 times as long as this machine
-      checking alone (10th to 90th percentile 0.93 to 1.13; smallest 0.84), and all 72
-      verdicts repeated (`recheck_speed.json`). So the run's machine was about as fast per check
-      (on the median check about 1% faster), far from 1.5 times as fast; even at the smallest
-      ratio, 450 s here would be about 380 s there.
+      run, with up to three Lean checks at a time (the configured cap; a Lean slot was free when 70
+      of the 72 started), took a median of 0.99 times as long as this machine checking alone (10th
+      to 90th percentile 0.93 to 1.13; smallest 0.84), and all 72 verdicts repeated
+      (`recheck_speed.json`). The spread comes mostly from the short checks: the 6 of 50 s or more,
+      the closest in length to this one, had ratios of 0.97 to 1.07. So the run's machine was
+      about as fast on ordinary checks (on the median check about 1% faster), far from 1.5 times
+      as fast; even at the smallest ratio, 450 s here would be about 380 s there. The 72 checks use
+      ordinary amounts of memory, while this proof's work grows past 26 GB; it could scale
+      differently between machines, so applying the ratio to it is an assumption. (The script's
+      description of the run, "3 Lean workers at once", is the configured cap, not the observed
+      load.)
     - *Could swap have inflated the user time?* Under paging, cache and TLB misses can add user
-      time; the samples cannot exclude some inflation. The conclusion needs an inflation by half.
-      Paging became heavy only after memory passed about 14 GB: once the imports had loaded, user
-      time grew 0.8-0.9 s per wall-clock second while memory stayed under it, then fell within
-      minutes to 0.1-0.3 s. By that point 143-151 s of user CPU had passed, so the rest would
-      have to be inflated about twofold.
+      time; the samples cannot exclude some inflation. Overturning the conclusion would need an
+      inflation by half at the median speed ratio (by about 46% at 0.97, the lowest ratio among
+      the 6 longest re-timed checks). Paging became heavy only after memory passed about 14 GB:
+      once the imports had loaded, user time grew 0.8-0.9 s per wall-clock second while memory
+      stayed under it, then fell within minutes to 0.1-0.3 s. By that point 143-151 s of user CPU
+      had passed, so the rest would have to be inflated about twofold (about 1.9 times at 0.97).
     - A first version of the measurement, which counted user plus system time, was stopped and
       discarded (`recheck_heavy_cpu_v1_discarded.json`). Corroborating it, weakly: on the machine
       before the restart, F's repetition 1 ran out the 300 s in a wall-clock re-check; and no

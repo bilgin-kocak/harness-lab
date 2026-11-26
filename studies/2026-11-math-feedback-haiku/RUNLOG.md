@@ -148,9 +148,10 @@ No deviation.
 - **13:58-15:59.** A fact-check of the new text found its conclusion stated too firmly: the runs
   stopped at 330 s against a 300 s limit, a margin of about 10% that an inflation of user time by
   memory pressure, or a faster CPU, could void. The text was changed to "very likely", and the swap
-  file was turned on again for a longer measurement: F's repetitions 0-4, to 450 s of user CPU
-  (`recheck_heavy_cpu_450.json`). None finished: each passed 450 s of user CPU in one thread
-  (1,372-1,496 s of wall-clock time each), memory 25.8-26.5 GB and still growing when stopped.
+  file was turned on again at 14:00 and a longer measurement started: F's repetitions 0-4, to
+  450 s of user CPU (`recheck_heavy_cpu_450.json`). None finished: each passed 450 s of user CPU
+  in one thread (1,372-1,496 s of wall-clock time each), memory 25.8-26.5 GB and still growing
+  when stopped.
   While it ran, only light commands ran in the session (file edits, a commit, progress checks).
   The swap was turned off at 15:59.
 - **15:59-16:40.** Was the run's machine faster than the container measured? `recheck_speed.py`
@@ -159,5 +160,17 @@ No deviation.
   before it ran, and the script was committed unchanged in 229b64f before any result was looked
   at) and compared each with its recorded time (`recheck_speed.json`). The run took a median of
   0.99 times as long (10th to 90th percentile 0.93 to 1.13, smallest 0.84); all 72 verdicts
-  repeated. While it ran, only light commands ran in the session (file edits, a commit, progress
-  checks).
+  repeated. While it ran, only light commands ran in the session (file edits, two commits
+  (229b64f, b643d72), progress checks).
+- **16:42-17:11.** A fact-check of the step 1 text (three checkers: numbers, reasoning, method;
+  each finding then judged by two reviewers trying to refute it) reported 13 findings: 8
+  confirmed, 3 split, 2 refuted. Corrected in the next commit: the 450 s measurement started at
+  14:00, not 13:58; `lean_workers: 3` is a cap, not the run's load (a Lean slot was free when 70
+  of the 72 re-timed checks started); "would have needed more than 300 s" had lost its hedge; a
+  sentence on the swap threshold read backwards; the speed ratio comes from ordinary checks, so
+  carrying it over to this memory-heavy proof is now stated as an assumption; the swap threshold
+  ("by half") is now stated at the median speed ratio, with the 6 longest re-timed checks (0.97 to
+  1.07); and the 15:59-16:40 entry undercounted the commits. The 2 refuted findings asked to
+  combine the smallest per-check ratio with the swap threshold (the reviewers found that spread
+  to be noise from the short checks) and to count 5 measurements instead of 9; neither was
+  applied.

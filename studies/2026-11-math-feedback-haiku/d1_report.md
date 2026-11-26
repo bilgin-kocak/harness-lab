@@ -70,7 +70,8 @@ resuming.
 | R4 | `imo_1969_p2` | 4 | 01:20:09 | verified |
 | P | `amc12_2001_p5` | 2 | 01:21:07 | not verified |
 
-D1 named only the first as a new attempt; all four are.
+D1 said all four would run again, but its bound counted only the first as a new attempt; all four
+are.
 
 ## 4. Exposure: cells that started while a cell of `mathd_numbertheory_451` was running
 

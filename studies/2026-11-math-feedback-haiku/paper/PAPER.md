@@ -22,7 +22,7 @@ Lean's report replaced by a fixed rejection sentence (P). F verified 93.43% of a
 p = 0.093), which the registered rule reads as no difference of 3 points or more in the overall
 verified rate; descriptively, F's unverified share was about 17% smaller than R4's (95% CI 1% to
 38%; not a test). F versus P (+1.4, Holm p = 0.125) and P versus R4 (0.0) read the same way. Arms capped at four calls (1.3 to
-1.4 used on average) verified 8 to 10 points more than one call. An exploratory pilot had estimated
+1.4 used on average) verified 8 to 10 points more than one call (descriptive). An exploratory pilot had estimated
 +5.8 points for F over R4; our 90% interval excludes it and the +4.1 points the study was powered
 for. Out-of-memory events ended 19 of the 4,080 final checks, 17 of them on one problem no arm
 proved; under the registered rule every reading stands, and exploratory re-checks indicate that
@@ -96,7 +96,8 @@ diagnostic reduced success, and on Qwen adding that attempt's compiler error rec
 beat controls that showed another problem's error. Their failed-predecessor condition is the
 closest counterpart of our P, which adds only a fixed rejection sentence, and their compiler-error
 condition of our F; their wrong-diagnostic controls have no counterpart here. With a different
-model and setting, our P did not fall below fresh tries (H3: 0.0 points).
+model, and on problems most of which every arm solved every time, our P against fresh tries read "no
+difference of 3 points or more" (H3: 0.0 points, 95% interval −1.18 to +1.37).
 
 **Repair at matched samples.** In Python code generation, Olausson et al. (2024) compare self-repair
 with independent sampling at a matched number of sampled programs and find that once the cost of
@@ -133,9 +134,11 @@ generation from Lean's tactic state.
 99.6% under its medium setting (Chen et al., 2025). This study does not measure the state of the
 art. It measures the effect of one harness choice for one model at a small, fixed budget.
 
-**Statistics and pre-registration.** Our "no difference" reading, a 90% interval inside a ±3-point
+**Statistics and pre-registration.** Our "no difference" reading, an interval inside a ±3-point
 margin, is close to an equivalence test by two one-sided tests (Lakens, 2017), here with a percentile
-bootstrap interval; the three-way reading combines it with an ordinary test of no difference. We use
+bootstrap interval: for H1 the 90% interval, which corresponds to two one-sided tests at α = 0.05,
+and for H2 and H3 the stricter 95% interval. The three-way reading combines it with an ordinary test
+of no difference. We use
 Holm's (1979) procedure for the two secondary tests, percentile bootstrap intervals (Efron and
 Tibshirani, 1993) and an exact paired sign-flip test (Fisher, 1935), which assumes independent
 problems whose differences are symmetric about zero under the null (Winkler et al., 2014).
@@ -288,8 +291,11 @@ the reading ends at +2.65 to +2.75 across those seeds, so the reading does not d
 seed.
 
 No diagnostic flag was raised. The identical first request passed in the loop at 81.9% (F), 83.4%
-(R4) and 83.4% (P), with no pair differing (Holm p ≥ 0.61). No integrity rate that the registration
-names differs by more than 1 point between F and R4, or between F and P.
+(R4) and 83.4% (P), with no pair differing (Holm p ≥ 0.61). None of the per-attempt rates the
+registration's asymmetry rule names (capped or errored attempts, verifier timeouts, dropped-context
+rounds, in-loop timeouts, harness errors) differs by more than 1 point between F and R4, or between F
+and P. Calls stopped at the token limit, which that rule does not name, differ by 1.8 points per
+attempt between F and P (Appendix B).
 
 ![Figure 1](figures/fig1_contrasts.svg)
 
@@ -318,7 +324,9 @@ descriptive ratio, not a test.
 
 **After the first call.** On each problem's verified rate minus its first-round pass rate, F − R4 is
 +2.9 points (+0.3 to +5.7; unadjusted sign-flip p = 0.038, exact sign test p = 0.53 with 35 problems
-against 29). This statistic reuses H1's attempts and is not free of first-call noise: F's identical
+against 29). This statistic reuses H1's attempts. The registration (its 6.4) describes it as removing
+the first-call noise that F and R4 share by design, but it does not fully do so: subtracting the
+first-round pass rate removes the first-call successes, not the room they leave, and F's identical
 first calls happened to fail more often (185 against 169 attempts), which left it more room to gain.
 Exploratory (not registered): at R4's number of first-call failures, the gain would be about +1.9
 points.
@@ -364,21 +372,27 @@ For Claude Haiku 5.5 at a cap of four calls on these problems, showing the faile
 report did not change the overall verified rate by 3 points or more, compared with fresh tries. The
 estimate is small and positive. Most of what a loop of four calls adds over one call, in this setup,
 is available from fresh tries alone: R4 gained +8.2 of F's +9.6 points over one call (descriptive).
-Showing the failed proof with a bare rejection sentence (P) gave the same overall rate as fresh
-tries (H3: 0.0 points, 7 problems higher and 9 lower).
+Showing the failed proof with a bare rejection sentence (P) also read "no difference of 3 points or
+more" against fresh tries; in this sample both verified 939 of 1,020 attempts (H3: 0.0 points, 95%
+interval −1.18 to +1.37; 7 problems higher and 9 lower).
 
-The descriptive statistics on attempts whose first call failed suggest where the small positive
-estimate comes from: when the first call fails, F's second call succeeds more often than a fresh try
-or the placebo (Figure 2, exploratory). That advantage moves the overall rate little because most
-problems are solved by every arm every time (138 of 204; B alone solved 139 every time), and only
-12 problems differ between F and R4. The registered test cannot tell such a small effect from noise, and it was not
-designed to: it was powered for +4.1 points.
+Descriptively, the small positive estimate arises after a failed first call: among those attempts,
+F's second call verified 100 of 185, and R4's and P's 60 of 169 each (Figure 2; exploratory, not
+registered). These rescue figures reuse H1's attempts and are not a separate test. Neither H1 nor
+H2 reads "difference", so under the registered rule nothing is attributed to Lean's report. Any
+difference there moves the overall rate little, because most problems are solved by every arm every
+time (138 of 204; B alone solved 139 every time) and only 12 problems differ between F and R4. The
+registered test was not designed to tell a difference this small from noise: it was powered for +4.1
+points.
 
 ## 6. Out-of-memory kills on the checking machine
 
-Except for the registered rule and the registered readings, everything in this section comes from
-analyses added after the phase (the reports D1 promised, and later re-checks) and is exploratory
-(not registered).
+Except for the registered rule and the registered readings, everything in this section is
+exploratory (not registered). The reports D1 promised (kills by arm, interrupted cells, exposure, H1
+to H3 without `mathd_numbertheory_451`, H1 without exposed pairs, the bounds) were specified before
+the resume, with 1,878 records still to come, and computed after the phase. The one-to-one
+assignment of kills, the readings in Table 2 and the re-checks were added after the phase, with the
+outcomes by arm known.
 
 **What happened.** Every final proof of one problem, `mathd_numbertheory_451`, checks a bounded
 statement with `decide +kernel` over all m below 2020 (below 2019 in two of them), and the checks
@@ -412,7 +426,8 @@ mean difference only through `mathd_numbertheory_451`, by at most about 0.5 poin
 two cells on other problems. D1 also bounded the mean differences, not the p-values, and H1's
 p = 0.093 is close enough to 0.05 that a few such cells could change its reading.
 
-**Table 2 (exploratory, not registered). Recounts that count memory-ended cells as passes.** H1
+**Table 2 (exploratory, not registered; added after the phase). Recounts that count memory-ended
+cells as passes.** H1
 columns as in Table 1; the reading follows the registered rule.
 
 | If these cells had passed | H1 estimate | H1 90% interval | H1 p | H1 reading | H2 Holm p | H2 reading |
@@ -629,8 +644,10 @@ In brief, the note records that:
   `mathd_numbertheory_451`, by at most about 0.5 points, was wrong: two cells on other problems were
   also affected, and the bound is 0.59 points;
 - D1 did not consider the p-values, and H1's p is close enough to 0.05 for a few cells to matter;
-- all 4 interrupted cells got a new attempt, not only the one D1 named, and the registered timeout
-  fired late in 3 final checks.
+- D1 said the 4 interrupted cells would run again, but its bound counted only the re-run of the
+  `mathd_numbertheory_451` cell as a new attempt; all four were new attempts (F's re-run cell of
+  `aime_1999_p11` was verified, and that problem is one of F's 8 wins in H1: Appendix B);
+- the registered 300 s timeout fired late in 3 final checks.
 
 ## Appendix B. Further tables
 
@@ -649,8 +666,10 @@ All from `analysis.json` unless marked exploratory.
 | `imo_1974_p3` | 0.0 | 0.2 | | | | |
 | `mathd_numbertheory_711` | 0.8 | 1.0 | | | | |
 
-One of F's 4 losses, `aime_1990_p15`, comes from the memory-ended cell of Section 6. One of F's 8
-wins, `aime_1999_p11`, includes the interrupted cell that ran again on resuming.
+Exploratory (not registered; `d1_report.md`, sections 2 and 3): one of F's 4 losses,
+`aime_1990_p15`, comes from the memory-ended cell of Section 6 (repetition 3), and one of F's 8 wins,
+`aime_1999_p11`, includes the interrupted cell (repetition 4) that ran again on resuming and was
+verified (Appendix D).
 
 **Rescue after a failed first call, by why the first call failed** (verified after / failed):
 

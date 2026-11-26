@@ -157,8 +157,10 @@ was committed (15f7689), before the resume.
   p = 0.093 is close enough to 0.05 that a few of these cells would change the reading if they had
   passed: `d1_report.md`, section 6.
 - **Also not as D1 expected:**
-  - all 4 interrupted cells got a new attempt, not only the one of `mathd_numbertheory_451`
-    (`d1_report.md`, section 3);
+  - D1 said the 4 interrupted cells would run again, but its bound counted only the re-run of the
+    `mathd_numbertheory_451` cell as a new attempt; all four were new attempts. F's re-run cell of
+    `aime_1999_p11` was verified, and that problem is one of F's 8 wins in H1; P's re-run cell of
+    `amc12_2001_p5` was not verified (`d1_report.md`, section 3);
   - the registered 300 s verifier timeout fired late in 3 final checks (487, 572 and 721 s), so it
     was not enforced as written while the held-out process stalled; none of the three passed;
   - D1 matched kills to checks by time alone; one kill can match two checks, so `d1_report.py`

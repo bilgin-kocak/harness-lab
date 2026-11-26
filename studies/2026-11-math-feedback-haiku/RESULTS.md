@@ -142,8 +142,9 @@ Descriptive: none is a test of a hypothesis, and their p-values are not adjusted
   interval 1% to 38%; 10,000 of 10,000 resamples used).
 - **Post-first-call gain.** On the rate gained after round 1, F − R4 is +2.9 points (+0.3 to +5.7),
   sign-flip p = 0.038, exact sign test p = 0.53 (35 against 29 problems). It is descriptive (6.4),
-  reuses H1's attempts, and changes no reading. It is not free of first-call noise: F's first calls
-  happened to fail more often (185 against 169), which leaves more room to gain. Exploratory: at
+  reuses H1's attempts, and changes no reading. Contrary to the registration's description (6.4),
+  it is not free of first-call noise: it removes first-call successes but not the room they leave,
+  and F's first calls happened to fail more often (185 against 169), which leaves more room to gain. Exploratory: at
   R4's number of first-call failures the gain would be about +1.9 points.
 - **First-call parity (6.5.1).** The identical first request passed in the loop at 81.9% (F),
   83.4% (R4) and 83.4% (P). No pair differs (Holm p ≥ 0.61): no flag.

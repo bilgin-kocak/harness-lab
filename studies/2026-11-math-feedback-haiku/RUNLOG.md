@@ -113,9 +113,9 @@ No deviation.
   attempts `19d0bd50669ae3605aa06e4b4d6a564801b33db2d8a00ff259efe3e4ddec8436`, reservations
   `4de42ac4abc3fba7bd057646d9d086214c38b1b08080e717b98d91e764dad67d`), checked against the raw
   files, and committed with the run logs and kernel evidence (b1ff975).
-- **09:16.** All 17 registered files matched their SHA-256; `analyze.py` ran unchanged and wrote
+- **09:12-09:14.** All 17 registered files matched their SHA-256; `analyze.py` ran unchanged and wrote
   `analysis.json` (54afe9a).
-- **09:20-10:00.** Exploratory, not registered: `d1_report.py` (D1's reports); `recheck.py`, Lean
+- **09:15-10:00.** Exploratory, not registered: `d1_report.py` (D1's reports); `recheck.py`, Lean
   re-checks of 379 cells of the problems that differ and 240 sampled cells (all 619 verdicts
   repeat); an independent verification by four reviewers with their own code (statistics,
   crash evidence, record integrity, registration), each finding then checked by a second reviewer.

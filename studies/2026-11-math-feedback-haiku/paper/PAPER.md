@@ -8,7 +8,9 @@
 > `../RESULTS.md`, `../d1_report.md` and `../d1_report.json`, the re-check files named in the text,
 > the pilot's report and the earlier study's report. Everything not produced by `analyze.py` run
 > unchanged is marked *exploratory (not registered)*; none of it changes a registered reading.
-> Every citation was checked against its source by two agents (`REFERENCES_CHECK.md`).
+> Every citation was checked by two agents (`REFERENCES_CHECK.md`). Two were not read in full: Holm
+> (1979), which neither agent could open, was checked against catalog records only, and Efron and
+> Tibshirani (1993) against publisher and library records and its table of contents.
 
 ## Abstract
 
@@ -34,7 +36,7 @@ analysis will be released with the paper.
 
 Language models that write formal proofs are often run in a repair loop. When the proof checker
 rejects a proof, the model is shown the failed proof with the checker's error messages and tries
-again (Lin et al., 2025; Wang et al., 2025). Such loops are usually credited with gains measured
+again (Lin et al., 2025; Wang et al., 2025). Such loops are sometimes credited with gains measured
 against a single call. That comparison mixes two things: what the checker's report tells the
 model, and the extra calls the loop makes. A model that is simply sampled again, with no feedback
 at all, also gets more chances, and coverage improves smoothly with the number of independent
@@ -90,11 +92,13 @@ against 4), in having one run per problem, and in having no placebo arm or pre-r
 **Feedback conditions against resampling, pre-registered.** Li and Li (2026) test Qwen3.6-27B and
 DeepSeek-Prover-V2-7B on difficult miniF2F test problems, with a pre-registered primary endpoint.
 No tested one-step feedback condition established an advantage over instruction-only resampling,
-nor did sequential repair at 64 attempts: on Qwen the pre-registered comparison of repair with
-retrying was unresolved (−18.3 points, 95% interval −41.8 to +5.3), and on DeepSeek-Prover-V2-7B
-repair was clearly worse (−50.7 points). Showing the model its failed predecessor without a
-diagnostic reduced success, and on Qwen adding that attempt's compiler error recovered the loss and
-beat controls that showed another problem's error. Their failed-predecessor condition is the
+nor did sequential repair at 64 attempts, run on a separate 11-problem bank per model: on Qwen the
+pre-registered comparison of repair with retrying was unresolved (−18.3 points, 95% interval −41.8
+to +5.3), and on DeepSeek-Prover-V2-7B repair was clearly worse (−50.7 points). Showing the model
+its failed predecessor without a diagnostic reduced success. On Qwen, adding that attempt's compiler
+error recovered the loss in one-step tests, mostly on predecessors written in obsolete Lean 3 syntax
+(an exploratory subgroup), and in sequential repair it beat controls that showed another problem's
+error; DeepSeek-Prover-V2-7B showed no such recovery. Their failed-predecessor condition is the
 closest counterpart of our P, which adds only a fixed rejection sentence, and their compiler-error
 condition of our F; their wrong-diagnostic controls have no counterpart here. With a different
 model, and on problems most of which every arm solved every time, our P against fresh tries read "no
@@ -545,9 +549,11 @@ the pilot (exploratory, not registered; 40 reused problems, arms not interleaved
 study, each from its own report. Blue rows: this study (`analysis.json`). (a) F − R4 in the pilot
 and in this study. (b) Gain over one call in the earlier study, the pilot and this study.
 
-The pilot put F 5.8 points above R4 for both models (Haiku: 95% interval +0.8 to +12.5; Opus: 0.0 to
-+12.5). This study estimates +1.4, and its 90% interval (+0.20 to +2.65) excludes both the pilot's
-estimate and the +4.1 points the study was powered for. We did not test why the pilot's estimate was
+The pilot put F 5.8 points above R4 in each model (Haiku: 95% interval +0.8 to +12.5; Opus: 0.0 to
++12.5), but the two are not independent confirmations: the same two problems made up about 71% of
+the difference in each. This study estimates +1.4, and its 90% interval (+0.20 to +2.65) excludes
+both the pilot's estimate and the +4.1 points the study was powered for; both pilot intervals, in
+turn, include +1.4. We did not test why the pilot's estimate was
 larger, but three reasons are plausible. Few problems carried information: only 4 of the 40 differed
 between F and R4 for Haiku. The arms ran in separate time blocks, and the identical first request,
 which F and R4 share by design, succeeded 103 times in F's block against 99 in R4's; by the
@@ -556,11 +562,13 @@ points. And selection: we ran this study because the pilot's
 estimate was large, so a pilot estimate that happened to be high was more likely to be followed up.
 
 **What it means for our earlier result.** The earlier study compared Opus 5.5 with feedback (F)
-against one call and found +12.5 points (95% interval +4.2 to +22.5); its report said that the
-comparison could not separate feedback from extra calls, and it cannot. On its 40 problems the
-pilot's exploratory runs split that gain roughly evenly: fresh tries gave +6.7 points over one call
-for Opus and +7.5 for Haiku, and feedback +5.8 over fresh tries for both, with arms not interleaved
-and wide intervals. In this study, with Haiku on 204 new problems, fresh tries gave +8.2 of
+against one call and found +12.5 points (95% interval +4.2 to +22.5). Its report said that the
+held-out result alone could not separate Lean's messages from extra tries, though it read its
+per-round data as pointing to the messages ("The round data point to the messages"). The held-out
+comparison cannot separate them. On its 40 problems the pilot's exploratory point estimates put +6.7
+points of that gain on fresh tries over one call and +5.8 on feedback over fresh tries (Haiku: +7.5
+and +5.8). But the Opus parts compare runs made a day apart, the arms were not interleaved, and the
+intervals (Opus: +0.8 to +14.2 and 0.0 to +12.5) are too wide to say how the gain divides. In this study, with Haiku on 204 new problems, fresh tries gave +8.2 of
 feedback's +9.6 points over one call (descriptive). We do not re-estimate the earlier result.
 
 ## 8. Limitations

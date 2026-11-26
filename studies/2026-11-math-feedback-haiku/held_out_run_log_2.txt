@@ -1,0 +1,91 @@
+=== run 1 start 2026-11-26T02:15:32Z
+held-out: 4 configuration(s) x 204 task(s) x 5 = 4080 cells
+held_out: 2227/4080 cells
+held_out: 2252/4080 cells
+held_out: 2277/4080 cells
+held_out: 2302/4080 cells
+held_out: 2327/4080 cells
+held_out: 2352/4080 cells
+held_out: 2377/4080 cells
+held_out: 2402/4080 cells
+held_out: 2427/4080 cells
+held_out: 2452/4080 cells
+held_out: 2477/4080 cells
+held_out: 2502/4080 cells
+held_out: 2527/4080 cells
+held_out: 2552/4080 cells
+held_out: 2577/4080 cells
+held_out: 2602/4080 cells
+held_out: 2627/4080 cells
+held_out: 2652/4080 cells
+held_out: 2677/4080 cells
+held_out: 2702/4080 cells
+held_out: 2727/4080 cells
+held_out: 2752/4080 cells
+held_out: 2777/4080 cells
+held_out: 2802/4080 cells
+held_out: 2827/4080 cells
+held_out: 2852/4080 cells
+held_out: 2877/4080 cells
+held_out: 2902/4080 cells
+held_out: 2927/4080 cells
+held_out: 2952/4080 cells
+held_out: 2977/4080 cells
+held_out: 3002/4080 cells
+held_out: 3027/4080 cells
+held_out: 3052/4080 cells
+held_out: 3077/4080 cells
+held_out: 3102/4080 cells
+held_out: 3127/4080 cells
+held_out: 3152/4080 cells
+held_out: 3177/4080 cells
+held_out: 3202/4080 cells
+held_out: 3227/4080 cells
+held_out: 3252/4080 cells
+held_out: 3277/4080 cells
+held_out: 3302/4080 cells
+held_out: 3327/4080 cells
+held_out: 3352/4080 cells
+held_out: 3377/4080 cells
+held_out: 3402/4080 cells
+held_out: 3427/4080 cells
+held_out: 3452/4080 cells
+held_out: 3477/4080 cells
+held_out: 3502/4080 cells
+held_out: 3527/4080 cells
+held_out: 3552/4080 cells
+held_out: 3577/4080 cells
+held_out: 3602/4080 cells
+held_out: 3627/4080 cells
+held_out: 3652/4080 cells
+held_out: 3677/4080 cells
+held_out: 3702/4080 cells
+held_out: 3727/4080 cells
+held_out: 3752/4080 cells
+held_out: 3777/4080 cells
+held_out: 3802/4080 cells
+held_out: 3827/4080 cells
+held_out: 3852/4080 cells
+held_out: 3877/4080 cells
+held_out: 3902/4080 cells
+held_out: 3927/4080 cells
+held_out: 3952/4080 cells
+held_out: 3977/4080 cells
+held_out: 4002/4080 cells
+held_out: 4027/4080 cells
+held_out: 4052/4080 cells
+held_out: 4077/4080 cells
+held-out: ran 1878, already done 2202, not started 0, verdicts {'pass': 1685, 
+'fail': 193}, charged $7.8048
+=== run 1 exit 0 2026-11-26T09:08:30Z
+--- kernel: [33038.641597] Memory cgroup out of memory: Killed process 28347 (lean) total-vm:20661660kB, anon-rss:13149376kB, file-rss:2348kB, shmem-rss:0kB, UID:0 pgtables:123244kB oom_score_adj:0
+--- kernel: [33038.646357] Memory cgroup out of memory: Killed process 29105 (lean) total-vm:7501984kB, anon-rss:179228kB, file-rss:2536kB, shmem-rss:0kB, UID:0 pgtables:97784kB oom_score_adj:0
+--- kernel: [35495.946165] Memory cgroup out of memory: Killed process 15308 (lean) total-vm:20661660kB, anon-rss:12961484kB, file-rss:2440kB, shmem-rss:0kB, UID:0 pgtables:122884kB oom_score_adj:0
+--- kernel: [37983.464409] Memory cgroup out of memory: Killed process 31269 (lean) total-vm:20661660kB, anon-rss:13001340kB, file-rss:2456kB, shmem-rss:0kB, UID:0 pgtables:122956kB oom_score_adj:0
+--- kernel: [38910.081429] Memory cgroup out of memory: Killed process 3934 (lean) total-vm:20661660kB, anon-rss:13165660kB, file-rss:2380kB, shmem-rss:0kB, UID:0 pgtables:123276kB oom_score_adj:0
+--- kernel: [38910.088848] Memory cgroup out of memory: Killed process 4635 (lean) total-vm:7469344kB, anon-rss:162656kB, file-rss:2352kB, shmem-rss:0kB, UID:0 pgtables:97740kB oom_score_adj:0
+--- kernel: [41679.367079] Memory cgroup out of memory: Killed process 24922 (lean) total-vm:20661660kB, anon-rss:13247424kB, file-rss:2296kB, shmem-rss:0kB, UID:0 pgtables:123424kB oom_score_adj:0
+--- kernel: [45070.833172] Memory cgroup out of memory: Killed process 19247 (lean) total-vm:20661660kB, anon-rss:13353676kB, file-rss:2240kB, shmem-rss:0kB, UID:0 pgtables:123640kB oom_score_adj:0
+--- kernel: [49704.191382] Memory cgroup out of memory: Killed process 25606 (lean) total-vm:20661660kB, anon-rss:13225280kB, file-rss:2280kB, shmem-rss:0kB, UID:0 pgtables:123392kB oom_score_adj:0
+--- kernel: [53074.898744] Memory cgroup out of memory: Killed process 16110 (lean) total-vm:20661660kB, anon-rss:13061908kB, file-rss:2300kB, shmem-rss:0kB, UID:0 pgtables:123072kB oom_score_adj:0
+=== COMPLETE

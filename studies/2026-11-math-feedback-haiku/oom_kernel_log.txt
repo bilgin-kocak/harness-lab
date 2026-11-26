@@ -57,3 +57,76 @@ dangling reservations).
 2026-11-26T00:33:59Z  mathd_numbertheory_451  exit_code=137  timed_out=False  lean_s=272.639  reason='lean exited with code 137'
 2026-11-26T01:06:14Z  mathd_numbertheory_451  exit_code=137  timed_out=False  lean_s=251.174  reason='lean exited with code 137'
 2026-11-26T01:19:19Z  mathd_numbertheory_427  exit_code=-9  timed_out=True  lean_s=300.075  reason='timeout'
+
+# After the resume (added when the phase ended, 2026-11-26T09:08:30Z)
+
+The phase resumed at 2026-11-26T02:15:32Z and completed at 09:08:30Z. The kernel had 8 more
+out-of-memory events. In each, the first process killed was a Lean process of 13.27-13.67 GB
+anon-rss (the kernel's kB are KiB, as above). The held-out process was not killed again. The lines
+below are copied as above; the full reports are in the same snapshot file.
+
+### Kernel lines after the resume (2026-11-26T02:15:32Z)
+
+2026-11-26T02:26:25Z  [33038.641]  lean invoked oom-killer: gfp_mask=0x100cca(GFP_HIGHUSER_MOVABLE), order=0, oom_score_adj=0
+2026-11-26T02:26:25Z  [33038.642]  Memory cgroup out of memory: Killed process 28347 (lean) total-vm:20661660kB, anon-rss:13149376kB, file-rss:2348kB, shmem-rss:0kB, UID:0 pgtables:123244kB oom_score_adj:0
+2026-11-26T02:26:25Z  [33038.646]  lean invoked oom-killer: gfp_mask=0x100cca(GFP_HIGHUSER_MOVABLE), order=0, oom_score_adj=0
+2026-11-26T02:26:25Z  [33038.646]  Memory cgroup out of memory: Killed process 29105 (lean) total-vm:7501984kB, anon-rss:179228kB, file-rss:2536kB, shmem-rss:0kB, UID:0 pgtables:97784kB oom_score_adj:0
+2026-11-26T03:07:22Z  [35495.946]  lean invoked oom-killer: gfp_mask=0x100cca(GFP_HIGHUSER_MOVABLE), order=0, oom_score_adj=0
+2026-11-26T03:07:22Z  [35495.946]  Memory cgroup out of memory: Killed process 15308 (lean) total-vm:20661660kB, anon-rss:12961484kB, file-rss:2440kB, shmem-rss:0kB, UID:0 pgtables:122884kB oom_score_adj:0
+2026-11-26T03:48:50Z  [37983.464]  lean invoked oom-killer: gfp_mask=0x100cca(GFP_HIGHUSER_MOVABLE), order=0, oom_score_adj=0
+2026-11-26T03:48:50Z  [37983.464]  Memory cgroup out of memory: Killed process 31269 (lean) total-vm:20661660kB, anon-rss:13001340kB, file-rss:2456kB, shmem-rss:0kB, UID:0 pgtables:122956kB oom_score_adj:0
+2026-11-26T04:04:17Z  [38910.081]  lean invoked oom-killer: gfp_mask=0x100cca(GFP_HIGHUSER_MOVABLE), order=0, oom_score_adj=0
+2026-11-26T04:04:17Z  [38910.081]  Memory cgroup out of memory: Killed process 3934 (lean) total-vm:20661660kB, anon-rss:13165660kB, file-rss:2380kB, shmem-rss:0kB, UID:0 pgtables:123276kB oom_score_adj:0
+2026-11-26T04:04:17Z  [38910.089]  lean invoked oom-killer: gfp_mask=0x100cca(GFP_HIGHUSER_MOVABLE), order=0, oom_score_adj=0
+2026-11-26T04:04:17Z  [38910.089]  Memory cgroup out of memory: Killed process 4635 (lean) total-vm:7469344kB, anon-rss:162656kB, file-rss:2352kB, shmem-rss:0kB, UID:0 pgtables:97740kB oom_score_adj:0
+2026-11-26T04:50:26Z  [41679.367]  lake invoked oom-killer: gfp_mask=0x100cca(GFP_HIGHUSER_MOVABLE), order=0, oom_score_adj=0
+2026-11-26T04:50:26Z  [41679.367]  Memory cgroup out of memory: Killed process 24922 (lean) total-vm:20661660kB, anon-rss:13247424kB, file-rss:2296kB, shmem-rss:0kB, UID:0 pgtables:123424kB oom_score_adj:0
+2026-11-26T05:46:57Z  [45070.833]  lean invoked oom-killer: gfp_mask=0x100cca(GFP_HIGHUSER_MOVABLE), order=0, oom_score_adj=0
+2026-11-26T05:46:57Z  [45070.833]  Memory cgroup out of memory: Killed process 19247 (lean) total-vm:20661660kB, anon-rss:13353676kB, file-rss:2240kB, shmem-rss:0kB, UID:0 pgtables:123640kB oom_score_adj:0
+2026-11-26T07:04:11Z  [49704.191]  lean invoked oom-killer: gfp_mask=0x100cca(GFP_HIGHUSER_MOVABLE), order=0, oom_score_adj=0
+2026-11-26T07:04:11Z  [49704.191]  Memory cgroup out of memory: Killed process 25606 (lean) total-vm:20661660kB, anon-rss:13225280kB, file-rss:2280kB, shmem-rss:0kB, UID:0 pgtables:123392kB oom_score_adj:0
+2026-11-26T08:00:21Z  [53074.898]  lean invoked oom-killer: gfp_mask=0x100cca(GFP_HIGHUSER_MOVABLE), order=0, oom_score_adj=0
+2026-11-26T08:00:21Z  [53074.899]  Memory cgroup out of memory: Killed process 16110 (lean) total-vm:20661660kB, anon-rss:13061908kB, file-rss:2300kB, shmem-rss:0kB, UID:0 pgtables:123072kB oom_score_adj:0
+
+### Held-out records after the resume whose final Lean check ended by a signal (exit code 137 or -9)
+
+2026-11-26T02:26:26Z  mathd_numbertheory_451  exit_code=137  timed_out=False  lean_s=179.311  reason='lean exited with code 137'
+2026-11-26T03:01:33Z  mathd_numbertheory_427  exit_code=-9  timed_out=True  lean_s=300.064  reason='timeout'
+2026-11-26T03:07:23Z  mathd_numbertheory_451  exit_code=137  timed_out=False  lean_s=185.269  reason='lean exited with code 137'
+2026-11-26T03:48:51Z  mathd_numbertheory_451  exit_code=137  timed_out=False  lean_s=173.097  reason='lean exited with code 137'
+2026-11-26T04:04:17Z  imo_2019_p1  exit_code=137  timed_out=False  lean_s=126.747  reason='lean exited with code 137'
+2026-11-26T04:04:17Z  mathd_numbertheory_451  exit_code=137  timed_out=False  lean_s=250.811  reason='lean exited with code 137'
+2026-11-26T04:50:27Z  aime_1990_p15  exit_code=-9  timed_out=True  lean_s=571.763  reason='timeout'
+2026-11-26T04:50:27Z  mathd_numbertheory_451  exit_code=-9  timed_out=True  lean_s=720.661  reason='timeout'
+2026-11-26T05:46:58Z  mathd_numbertheory_451  exit_code=137  timed_out=False  lean_s=250.836  reason='lean exited with code 137'
+2026-11-26T06:51:29Z  amc12a_2020_p7  exit_code=-9  timed_out=True  lean_s=300.164  reason='timeout'
+2026-11-26T07:04:12Z  mathd_numbertheory_451  exit_code=137  timed_out=False  lean_s=263.091  reason='lean exited with code 137'
+2026-11-26T08:00:22Z  mathd_numbertheory_451  exit_code=-9  timed_out=True  lean_s=300.035  reason='timeout'
+2026-11-26T08:44:18Z  mathd_numbertheory_451  exit_code=-9  timed_out=True  lean_s=302.399  reason='timeout'
+
+Notes, read from the times, exit codes and process sizes alone (arms are matched in `d1_report.md`):
+
+- **04:04:17, a second problem.** The kernel killed a 13.48 GB Lean process (the final check of a
+  `mathd_numbertheory_451` cell) and then a 167 MB Lean process. The record of an `imo_2019_p1`
+  cell ended at the same second with exit code 137 after 126.7 s, under its 300 s timeout: its
+  final check was that second process. So its "not verified" verdict comes from the memory kill.
+  DEVIATIONS.md D1 said the out-of-memory verdicts could affect results only through
+  `mathd_numbertheory_451`; this record shows that was wrong (see the D1 follow-up).
+- **02:26:25, a second process.** The kernel also killed a 184 MB Lean process. No final check
+  ended then except the `mathd_numbertheory_451` one, so it was an in-loop check or a final check
+  that was retried in the loop; `d1_report.md` matches it.
+- **04:50:26-27, a late timeout.** The kernel killed one 13.57 GB Lean process. One second later the
+  verifier's own timeout (exit -9) ended two final checks: a `mathd_numbertheory_451` check after
+  720.7 s and an `aime_1990_p15` check after 571.8 s, both against the 300 s timeout. As at
+  17:39:59, the held-out process stalled under memory pressure and its timeouts fired late. The
+  process killed by the kernel was the large one, `mathd_numbertheory_451`'s; `aime_1990_p15`'s
+  check was ended by the verifier's timeout, which would have fired at 300 s anyway.
+- **08:00:21-22.** The kernel killed a 13.38 GB Lean process; a `mathd_numbertheory_451` record ended
+  one second later as a timeout after 300.0 s, so its timeout and the kill came together.
+- **All 20 cells of `mathd_numbertheory_451` have records.** 19 ended their final check by a signal:
+  - 17 at a kernel kill (a kill line within 2 s of the record's end): 14 with exit code 137, and 3
+    timeouts (17:39:59, 04:50:27, 08:00:22) that the kernel's kill preceded by about 1 s;
+  - 2 by an ordinary timeout with no kernel kill (22:58:07 after 302.6 s, 08:44:18 after 302.4 s).
+
+  The 20th was rejected by Lean after 5.0 s. The kernel's 18th large kill (01:23:33) has no record:
+  that cell was interrupted with the held-out process and ran again after the resume.

@@ -98,9 +98,9 @@ to +5.3), and on DeepSeek-Prover-V2-7B repair was clearly worse (−50.7 points)
 its failed predecessor without a diagnostic reduced success. On Qwen, adding that attempt's compiler
 error recovered the loss in one-step tests, mostly on predecessors written in obsolete Lean 3 syntax
 (an exploratory subgroup), and in sequential repair it beat controls that showed another problem's
-error; DeepSeek-Prover-V2-7B showed no such recovery. Their failed-predecessor condition is the
-closest counterpart of our P, which adds only a fixed rejection sentence, and their compiler-error
-condition of our F; their wrong-diagnostic controls have no counterpart here. With a different
+error; DeepSeek-Prover-V2-7B showed no such recovery. Their failed-predecessor condition
+corresponds to our P, which adds a fixed rejection sentence, and their compiler-error condition to
+our F; their wrong-diagnostic controls have no counterpart here. With a different
 model, and on problems most of which every arm solved every time, our P against fresh tries read "no
 difference of 3 points or more" (H3: 0.0 points, 95% interval −1.18 to +1.37).
 
@@ -120,6 +120,22 @@ it has no arm of fresh samples matched on calls (the conference version compares
 sampling on output tokens). Revising without the messages is analogous to our P, and the ablation
 to our F − P contrast, except that P replaces Lean's report with a fixed sentence instead of
 removing it.
+
+**Placebo-controlled studies of self-repair in code.** Three recent studies of small open code models
+(0.5B to 7B parameters, Python tasks from HumanEval+, MBPP+ and BigCodeBench) use placebo arms and
+pre-registrations held in the author's own version control or by the author, not with a registry.
+Closest to our design, Verma (2026) keeps the failed program, replaces the test output with a fixed
+content-free notice, and compares each repair arm with blind resampling at the same cap of eight
+retries. Execution feedback never beat that placebo (0.0 to +2.6 pass@1 points, not significant),
+and both arms that showed the failed program trailed blind resampling at 1.5B and 3B parameters
+(placebo − resampling −6.1 and −6.9 points), with all arms tied at 7B. İşcan (2026a) found that
+adding executed failing-test assertions to the failed code beat a same-code placebo of generic
+requirement bullets, but only tied blind resampling at four generations per arm (26 against 26
+unlocks among 290 unsolved tasks, a comparison outside the pre-registered family). İşcan (2026b) did
+not confirm an advantage of error content over form-matched placebos, in prompts or in fine-tuned
+adapters, on 40 tasks, and does not read this as equivalence. With a larger model and a different
+task, our P read "no difference of 3 points or more" against fresh tries (H3), where Verma's placebo
+trailed blind resampling at the two smaller sizes.
 
 **Self-correction and repeated sampling.** Huang et al. (2024) find that intrinsic self-correction,
 with no external feedback, does not improve and often lowers reasoning accuracy, separate this from
@@ -152,12 +168,14 @@ Pre-registration has been argued for in machine learning (Forde and Paganini, 20
 committed with its hashes and pushed to GitHub before any paid call [owner: "and lodged on OSF" /
 "but not lodged with a registry"], not a peer-reviewed registered report.
 
-**What is new here.** Li and Li (2026) pre-registered a comparison of feedback with resampling on
-open models. Our registration's background (Appendix A) listed pre-registration among what this
-study adds; it was written before we read that part of their paper. What this study adds is the
-combination of a current API model, a multi-round cap of four calls with a placebo arm, five
-repetitions on each of 204 problems, arms interleaved in time, and an exact paired test with a
-reading rule fixed in advance. Our search was not systematic: research agents searched the web and
+**What is new here.** Neither pre-registration nor a placebo arm is new: Li and Li (2026)
+pre-registered their primary endpoint, and the three studies of code models above used placebo arms
+and internal pre-registrations. Our registration's background (Appendix A), written before we read
+these papers, listed pre-registration among what this study adds. What this study adds is the
+combination, in Lean theorem proving, of a current API model, a multi-round cap of four calls with
+the identical first request in every arm, a placebo arm, five repetitions on each of 204 problems,
+arms interleaved in time, a registration committed with its hashes and pushed before any paid call,
+and an exact paired test with a reading rule fixed in advance. Our search was not systematic: research agents searched the web and
 arXiv on 2026-11-24 and the queries were not logged (`RELATED_WORK.md`), so relevant work may have
 been missed.
 
@@ -644,6 +662,11 @@ own code, not by people. [Funding and affiliations: owner to fill in.]
   Statistics* 6(2), 65–70. https://www.jstor.org/stable/4615733
 - Huang, J., Chen, X., Mishra, S., Zheng, H. S., Yu, A. W., Song, X., and Zhou, D. (2024). Large
   Language Models Cannot Self-Correct Reasoning Yet. In *ICLR 2024*. arXiv:2310.01798.
+- İşcan, M. (2026a). Falsification, Not Exposure: An Internally Preregistered Placebo-Controlled
+  Decomposition of Self-Repair Feedback in Frozen Small Code Models. arXiv:2606.31511.
+- İşcan, M. (2026b). Form, Not Content? A Preregistered, Placebo-Controlled Evaluation of Learned
+  Error-Conditioned Self-Repair Through Prompts and Weights in Frozen Small Code Models.
+  arXiv:2607.12962.
 - Kamoi, R., Zhang, Y., Zhang, N., Han, J., and Zhang, R. (2024). When Can LLMs Actually Correct
   Their Own Mistakes? A Critical Survey of Self-Correction of LLMs. *Transactions of the
   Association for Computational Linguistics* 12, 1417–1440. arXiv:2406.01297.
@@ -660,6 +683,8 @@ own code, not by people. [Funding and affiliations: owner to fill in.]
   Silver Bullet for Code Generation? In *ICLR 2024*. arXiv:2306.09896.
 - The mathlib Community (2020). The Lean Mathematical Library. In *CPP 2020*, pp. 367–381.
   https://doi.org/10.1145/3372885.3373824
+- Verma, Y. (2026). Try Again, Don't Look Back: Blind Resampling Outperforms Self-Repair in Small
+  Code Models. arXiv:2607.26117.
 - Wang, H., Unsal, M., Lin, X., et al. (Numina & Kimi Team) (2025). Kimina-Prover: Applying
   Test-time RL Search on Large Formal Reasoning Models. Hugging Face blog, 10 July 2025.
   https://huggingface.co/blog/AI-MO/kimina-prover

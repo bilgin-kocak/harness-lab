@@ -107,7 +107,7 @@
       "pid": 233,
       "process": "python",
       "anon_rss_bytes": 131993600,
-      "bystander": true,
+      "bystander": false,
       "boot_file": "kernel_oom_boot_2026-11-25T17-15-47.txt",
       "anon_rss_gb": 0.132
     },
@@ -1019,6 +1019,10 @@
       "R4 mathd_numbertheory_234": 1
     }
   },
+  "d1_literal_count": {
+    "final_checks_matched_by_the_time_rule": 19,
+    "inloop_checks_matched": 1
+  },
   "unmatched_kills": [
     {
       "kill_time": "2026-11-26T01:23:33Z",
@@ -1038,7 +1042,7 @@
       "kill_pid": 233,
       "process": "python",
       "anon_rss_gb": 0.132,
-      "bystander": true,
+      "bystander": false,
       "cells_in_progress": [
         "P mathd_numbertheory_451 rep 4 (interrupted, no record)",
         "F aime_1999_p11 rep 4 (interrupted, no record)",
@@ -1052,7 +1056,12 @@
       "process": "lean",
       "anon_rss_gb": 0.024,
       "bystander": true,
-      "cells_in_progress": []
+      "cells_in_progress": [
+        "P mathd_numbertheory_451 rep 4 (interrupted, no record)",
+        "F aime_1999_p11 rep 4 (interrupted, no record)",
+        "R4 imo_1969_p2 rep 4 (interrupted, no record)",
+        "P amc12_2001_p5 rep 2 (interrupted, no record)"
+      ]
     }
   ],
   "interrupted_cells": [
@@ -1278,7 +1287,91 @@
       }
     }
   },
+  "exposure_strict_boundaries": {
+    "baseline": {
+      "exposed": {
+        "cells": 150,
+        "inloop_timeouts": 0,
+        "verifier_timeouts": 1,
+        "time_cap_stops": 0,
+        "final_check_waits_over_60s": 2,
+        "max_final_check_wait_s": 173.6,
+        "verified_share_exploratory": 0.8533333333333334
+      },
+      "unexposed": {
+        "cells": 870,
+        "inloop_timeouts": 0,
+        "verifier_timeouts": 5,
+        "time_cap_stops": 0,
+        "final_check_waits_over_60s": 0,
+        "max_final_check_wait_s": 4.2,
+        "verified_share_exploratory": 0.835632183908046
+      }
+    },
+    "F": {
+      "exposed": {
+        "cells": 134,
+        "inloop_timeouts": 2,
+        "verifier_timeouts": 1,
+        "time_cap_stops": 0,
+        "final_check_waits_over_60s": 2,
+        "max_final_check_wait_s": 118.7,
+        "verified_share_exploratory": 0.9328358208955224
+      },
+      "unexposed": {
+        "cells": 886,
+        "inloop_timeouts": 15,
+        "verifier_timeouts": 0,
+        "time_cap_stops": 0,
+        "final_check_waits_over_60s": 0,
+        "max_final_check_wait_s": 7.3,
+        "verified_share_exploratory": 0.9345372460496614
+      }
+    },
+    "R4": {
+      "exposed": {
+        "cells": 148,
+        "inloop_timeouts": 4,
+        "verifier_timeouts": 0,
+        "time_cap_stops": 0,
+        "final_check_waits_over_60s": 0,
+        "max_final_check_wait_s": 27.0,
+        "verified_share_exploratory": 0.9662162162162162
+      },
+      "unexposed": {
+        "cells": 872,
+        "inloop_timeouts": 18,
+        "verifier_timeouts": 2,
+        "time_cap_stops": 0,
+        "final_check_waits_over_60s": 0,
+        "max_final_check_wait_s": 7.9,
+        "verified_share_exploratory": 0.9128440366972477
+      }
+    },
+    "P": {
+      "exposed": {
+        "cells": 144,
+        "inloop_timeouts": 4,
+        "verifier_timeouts": 0,
+        "time_cap_stops": 0,
+        "final_check_waits_over_60s": 1,
+        "max_final_check_wait_s": 136.1,
+        "verified_share_exploratory": 0.9097222222222222
+      },
+      "unexposed": {
+        "cells": 876,
+        "inloop_timeouts": 14,
+        "verifier_timeouts": 1,
+        "time_cap_stops": 0,
+        "final_check_waits_over_60s": 0,
+        "max_final_check_wait_s": 6.8,
+        "verified_share_exploratory": 0.9223744292237442
+      }
+    }
+  },
   "exposed_pairs": 476,
+  "exposed_cells": 602,
+  "exposed_cells_strict": 576,
   "exploratory": {
     "without_mathd_numbertheory_451": {
       "H1": {
@@ -1657,6 +1750,93 @@
       ],
       "reading_if_registered_rule": "inconclusive",
       "pairs_dropped": 476,
+      "problems_dropped_entirely": [
+        "amc12b_2020_p13",
+        "induction_1pxpownlt1pnx",
+        "induction_prod1p1onk3le3m1onn",
+        "mathd_algebra_342",
+        "mathd_numbertheory_1124",
+        "mathd_numbertheory_239",
+        "mathd_numbertheory_343"
+      ]
+    },
+    "h1_without_exposed_pairs_strict": {
+      "contrast": "H1 F - R4, without (problem, repetition) pairs with an exposed cell, strict boundaries",
+      "role": "exploratory",
+      "n_problems": 197,
+      "rate_a": 0.9170896785109982,
+      "rate_b": 0.9331641285956007,
+      "unverified_share_a": 0.08291032148900179,
+      "estimate": 0.01607445008460237,
+      "ci95": [
+        -0.0008460236886632824,
+        0.03637901861252115
+      ],
+      "ci90": [
+        0.0016920473773265653,
+        0.03299492385786802
+      ],
+      "wins_losses_ties": [
+        7,
+        3,
+        187
+      ],
+      "sign_flip_p": 0.107421875,
+      "sign_test_p": 0.34375,
+      "differing": [
+        [
+          "aime_1987_p5",
+          0.0,
+          1.0
+        ],
+        [
+          "amc12a_2020_p9",
+          0.5,
+          0.0
+        ],
+        [
+          "amc12a_2021_p14",
+          0.0,
+          0.75
+        ],
+        [
+          "imo_1974_p3",
+          0.0,
+          0.3333
+        ],
+        [
+          "imo_1977_p6",
+          1.0,
+          0.75
+        ],
+        [
+          "imo_2001_p6",
+          0.3333,
+          0.0
+        ],
+        [
+          "mathd_algebra_184",
+          0.5,
+          1.0
+        ],
+        [
+          "mathd_numbertheory_175",
+          0.0,
+          1.0
+        ],
+        [
+          "mathd_numbertheory_427",
+          0.6667,
+          1.0
+        ],
+        [
+          "mathd_numbertheory_711",
+          0.6667,
+          1.0
+        ]
+      ],
+      "reading_if_registered_rule": "inconclusive",
+      "pairs_dropped": 463,
       "problems_dropped_entirely": [
         "amc12b_2020_p13",
         "induction_1pxpownlt1pnx",

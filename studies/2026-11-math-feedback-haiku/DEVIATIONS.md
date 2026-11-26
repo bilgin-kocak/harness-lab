@@ -129,3 +129,40 @@
   - The one cell of that problem run again after the kill can change it by at most 1/(5 × 204),
     about 0.1 points. It gets a new attempt where it would most likely have had a "not verified"
     record.
+
+## After the phase: what D1 got wrong (written 2026-11-26, after the held-out phase ended)
+
+This note is not a deviation: it changes no rule, record or analysis. It was written with the
+outcomes by arm known, and records where D1's expectations did not hold. D1 above is left as it
+was committed (15f7689), before the resume.
+
+- **Timing.** D1 was committed in the middle of the phase, after 2,202 of 4,080 records. Section 9
+  asks for deviations before the phase they affect. The first 2,202 records ran under the
+  registered procedure, the other 1,878 under D1's run procedure; the design did not change.
+- **The phase completed** in one more run (02:15:32 to 09:08:30Z): 4,080 of 4,080 valid records,
+  0 harness errors. The kernel had 8 more out-of-memory events, but did not kill the held-out
+  process again, so no cell was interrupted after the resume.
+- **Wrong: "only through `mathd_numbertheory_451`: by at most 1/204, about 0.5 points".** The
+  memory events also set two verdicts on other problems. Re-checked alone after the phase, both
+  proofs pass (`recheck_killed.json`).
+  - At 04:04:17 the kernel killed a second, small Lean process: the final check of a baseline cell
+    of `imo_2019_p1` (exit 137 after 126.7 s). This affects only the comparisons with the baseline
+    (6.4), by 0.098 points each; H1-H3 do not use the baseline.
+  - At 04:50:26 the held-out process stalled under memory pressure. The final check of an F cell of
+    `aime_1990_p15` ran 571.8 s before the late timeout ended it, though the same proof had passed
+    Lean in the loop in 18.5 s. This verdict is in H1 and H2.
+  - So H1 and H2 could rise by up to 0.59 points (6 F cells), not 0.49; the comparisons with the
+    baseline could fall by up to 0.59.
+- **Not considered: the readings.** D1 bounded the mean differences, not the p-values. H1's
+  p = 0.093 is close enough to 0.05 that a few of these cells would change the reading if they had
+  passed: `d1_report.md`, section 6.
+- **Also not as D1 expected:**
+  - all 4 interrupted cells got a new attempt, not only the one of `mathd_numbertheory_451`
+    (`d1_report.md`, section 3);
+  - the registered 300 s verifier timeout fired late in 3 final checks (487, 572 and 721 s), so it
+    was not enforced as written while the held-out process stalled; none of the three passed;
+  - D1 matched kills to checks by time alone; one kill can match two checks, so `d1_report.py`
+    also assigns each kill to the one process it killed (added after the phase).
+- **The records stay as recorded,** as D1 says, including the two verdicts now known to come from
+  the memory problem. They are reported beside the registered results, with exploratory readings
+  that count them as passes (`RESULTS.md`, section 7).

@@ -111,22 +111,32 @@ Notes, read from the times, exit codes and process sizes alone (arms are matched
   cell ended at the same second with exit code 137 after 126.7 s, under its 300 s timeout: its
   final check was that second process. So its "not verified" verdict comes from the memory kill.
   DEVIATIONS.md D1 said the out-of-memory verdicts could affect results only through
-  `mathd_numbertheory_451`; this record shows that was wrong (see the D1 follow-up).
+  `mathd_numbertheory_451`; this record shows that was wrong (see DEVIATIONS.md, "After the phase:
+  what D1 got wrong"). Re-checked alone after the phase, the same proof passes (`recheck_killed.json`).
 - **02:26:25, a second process.** The kernel also killed a 184 MB Lean process. No final check
   ended then except the `mathd_numbertheory_451` one, so it was an in-loop check or a final check
   that was retried in the loop; `d1_report.md` matches it.
-- **04:50:26-27, a late timeout.** The kernel killed one 13.57 GB Lean process. One second later the
-  verifier's own timeout (exit -9) ended two final checks: a `mathd_numbertheory_451` check after
-  720.7 s and an `aime_1990_p15` check after 571.8 s, both against the 300 s timeout. As at
-  17:39:59, the held-out process stalled under memory pressure and its timeouts fired late. The
-  process killed by the kernel was the large one, `mathd_numbertheory_451`'s; `aime_1990_p15`'s
-  check was ended by the verifier's timeout, which would have fired at 300 s anyway.
+- **04:50:26-27, a late timeout caused by the memory event.** The kernel killed one 13.57 GB Lean
+  process, the final check of a `mathd_numbertheory_451` cell (the task table's process order and
+  the checks' start times agree). Within the next second the verifier's own timeout (exit -9) ended
+  two final checks: that `mathd_numbertheory_451` check after 720.7 s, and an F check of
+  `aime_1990_p15` after 571.8 s, both against the 300 s timeout. As at 17:39:59, the held-out
+  process stalled under memory pressure and its timeouts fired late.
+  - The `aime_1990_p15` check was not killed by the kernel, but its verdict comes from the memory
+    event: the same proof had passed Lean in the loop in 18.5 s, the other 19 final checks of that
+    problem took 5.6-8.0 s, and the kernel's report at 04:50:26 shows the cgroup's page cache
+    almost empty (Lean's imported files were being re-read from disk). Re-checked alone after the
+    phase, the proof passes (`recheck_killed.json`).
+  - An earlier version of this note said the check "would have fired at 300 s anyway". That
+    presented a memory-caused verdict as an ordinary timeout, and is withdrawn.
 - **08:00:21-22.** The kernel killed a 13.38 GB Lean process; a `mathd_numbertheory_451` record ended
   one second later as a timeout after 300.0 s, so its timeout and the kill came together.
 - **All 20 cells of `mathd_numbertheory_451` have records.** 19 ended their final check by a signal:
   - 17 at a kernel kill (a kill line within 2 s of the record's end): 14 with exit code 137, and 3
-    timeouts (17:39:59, 04:50:27, 08:00:22) that the kernel's kill preceded by about 1 s;
+    timeouts (17:39:59, 04:50:27, 08:00:22) that the kernel's kill preceded by under 2 s (record
+    and boot times are to the second);
   - 2 by an ordinary timeout with no kernel kill (22:58:07 after 302.6 s, 08:44:18 after 302.4 s).
 
-  The 20th was rejected by Lean after 5.0 s. The kernel's 18th large kill (01:23:33) has no record:
+  The 20th was rejected by Lean after 5.0 s. The one large kill matched to no record (01:23:33, the 10th of the 18 large kills in time order)
+  has no record:
   that cell was interrupted with the held-out process and ran again after the resume.

@@ -8,7 +8,8 @@ Usage (from the repository root)::
 
     python studies/2026-11-math-feedback-haiku/d1_report.py [--study-dir DIR]
 
-Writes ``d1_report.json`` in the study directory; ``d1_report.md`` is the written account of it.
+Writes ``d1_report.json`` in the study directory; ``d1_report.md`` is the written account of it,
+together with the Lean re-checks in ``recheck_killed.json``.
 
 Inputs: the held-out records and reservations, and the kernel's out-of-memory reports kept in
 ``held_out_snapshot/kernel_oom_boot_<boot time>.txt``. Kernel times are the boot time in the file
@@ -98,7 +99,7 @@ def kernel_kills(study_dir: Path) -> list[dict]:
                     "pid": pid,
                     "process": comm,
                     "anon_rss_bytes": kib * 1024,
-                    "bystander": kib * 1024 < BYSTANDER_BYTES,
+                    "bystander": comm in ("lean", "lake") and kib * 1024 < BYSTANDER_BYTES,
                     "boot_file": f.name,
                 }
             )
@@ -250,7 +251,9 @@ class Run:
                 "(interrupted, no record)"
                 for x in self.interrupted
                 if self.runner_kills
-                and _t(x["started_at"]) <= k["time"] <= self.runner_kills[-1]["time"]
+                and _t(x["started_at"])
+                <= k["time"]
+                <= self.runner_kills[-1]["time"] + timedelta(seconds=1)  # the same event
             ]
             out.append(
                 {
@@ -278,13 +281,17 @@ class Run:
                 w.append((f"interrupted, reserved {x['started_at']}", _t(x["started_at"]), end))
         return w
 
-    def exposed(self) -> set[int]:
+    def exposed(self, strict: bool = False) -> set[int]:
+        """Cells that started while another cell of the heavy problem ran. Times are to the
+        second: the inclusive rule counts a start in the same second as that cell's start or end;
+        the strict rule does not."""
         w = self.heavy_windows()
         out = set()
         for r in self.records:
             s = _t(r["started_at"])
             for _, a, b in w:
-                if a <= s <= b and not (r["task_id"] == HEAVY and a == s):
+                inside = (a < s < b) if strict else (a <= s <= b)
+                if inside and not (r["task_id"] == HEAVY and a == s):
                     out.add(id(r))
                     break
         return out
@@ -489,6 +496,14 @@ def main() -> int:
         "matched_by_time_only": time_only,
         "ambiguous_kills": ambiguous,
         "killed_checks_by_arm_and_problem": {k: dict(sorted(v.items())) for k, v in killed_table.items()},
+        "d1_literal_count": {
+            "final_checks_matched_by_the_time_rule": len(
+                {(m["arm"], m["task_id"], m["repetition"]) for m in final}
+            ),
+            "inloop_checks_matched": len(
+                {(m["arm"], m["task_id"], m["repetition"]) for m in inloop}
+            ),
+        },
         "unmatched_kills": unmatched,
         "interrupted_cells": [
             {
@@ -507,11 +522,22 @@ def main() -> int:
         ],
         "heavy_windows": [[n, _iso(a), _iso(b)] for n, a, b in run.heavy_windows()],
         "exposure": run.exposure_table(exposed),
+        "exposure_strict_boundaries": run.exposure_table(run.exposed(strict=True)),
         "exposed_pairs": len(exposed_pairs),
+        "exposed_cells": len(exposed),
+        "exposed_cells_strict": len(run.exposed(strict=True)),
         "exploratory": {
             "without_" + HEAVY: run.contrasts_without({HEAVY}, f"without {HEAVY}"),
             "h1_without_exposed_pairs": run.h1_without_pairs(
                 exposed_pairs, "without (problem, repetition) pairs with an exposed cell"
+            ),
+            "h1_without_exposed_pairs_strict": run.h1_without_pairs(
+                {
+                    (r["task_id"], int(r["repetition"]))
+                    for r in run.records
+                    if id(r) in run.exposed(strict=True)
+                },
+                "without (problem, repetition) pairs with an exposed cell, strict boundaries",
             ),
             "h1_without_kill_matched_pairs": run.h1_without_pairs(
                 matched_pairs,

@@ -46,8 +46,8 @@ earlier study is an example: a loop showing Lean's report verified 97.5% of Clau
 attempts on 40 miniF2F problems against 85.0% for one call, but the loop could make four calls and
 the baseline one, so it could not separate feedback from extra calls (Harness Lab, 2026). Studies
 matched on calls or samples disagree: averaged over 14 models, refinement led resampling on a miniF2F
-subset and trailed it on a miniCTX subset (Klingner et al., 2026); with two open models on hard miniF2F problems no feedback condition
-beat resampling (Li and Li, 2026); and in placebo-controlled studies of small code models, execution
+subset and trailed it on a miniCTX subset (Klingner et al., 2026); with two open models on difficult miniF2F problems no tested feedback
+condition established an advantage over instruction-only resampling (Li and Li, 2026); and in placebo-controlled studies of small code models, execution
 feedback did not beat blind resampling (Verma, 2026; İşcan, 2026a).
 
 We ask, for one current API model at a matched cap of four calls, whether showing Claude Haiku 5.5
@@ -76,16 +76,18 @@ averages +7.7 points on a 50-problem miniF2F subset and −1.4 on a miniCTX subs
 the authors call a snapshot (we use their Table 3.1, whose counts of positive models differ from
 their text). Li and Li (2026), with Qwen3.6-27B and DeepSeek-Prover-V2-7B on difficult miniF2F
 problems and a pre-registered primary endpoint, found that no tested one-step feedback condition
-beat instruction-only resampling, nor did sequential repair at 64 attempts on 11-problem banks
+established an advantage over instruction-only resampling, nor did sequential repair at 64 attempts on 11-problem banks
 (unresolved on Qwen, −18.3 points, 95% interval −41.8 to +5.3; clearly worse on DeepSeek-Prover,
 −50.7), and that showing the failed predecessor without a diagnostic reduced success, a loss that adding
 that attempt's compiler error recovered on Qwen in one-step tests (mostly on predecessors in
-obsolete Lean 3 syntax, an exploratory subgroup) but not on DeepSeek-Prover; their
-failed-predecessor and compiler-error conditions correspond to our P and F, except that P adds a
-fixed rejection sentence. Gains from repair at
+obsolete Lean 3 syntax, an exploratory subgroup) and in sequential repair beat controls showing another problem's error, but not on
+DeepSeek-Prover; their failed-predecessor and compiler-error conditions correspond to our P and F,
+except that P adds a fixed rejection sentence, and their wrong-diagnostic controls have no
+counterpart here. Gains from repair at
 matched sample counts were reported for Baldur in Isabelle/HOL, with a separately fine-tuned repair
-model (First et al., 2023), and in a self-reported blog post for Kimina-Prover, a model trained to
-fix errors (Wang et al., 2025), neither with variance. Goedel-Prover-V2's trained self-correction
+model (36.3% against 34.8% at 16 samples; First et al., 2023), and in a self-reported blog post for
+Kimina-Prover, a model trained to fix errors (35.6% against 28.8% at 32 attempts, on 59 miniF2F-test
+problems selected for their low win rates; Wang et al., 2025), neither with variance. Goedel-Prover-V2's trained self-correction
 gains less when Lean's messages are removed (Lin et al., 2025), an ablation like our F − P contrast
 except that P replaces the report with a fixed sentence; it has no call-matched resampling arm.
 
@@ -98,15 +100,18 @@ resampling at the same cap of eight retries: execution feedback never beat that 
 tested except 7B (by 6.1 and 6.9 points at 1.5B and 3B on Qwen2.5-Coder, 13.8 and 4.5 at 1.3B and
 6.7B on DeepSeek-Coder), a penalty the author finds tracks first-attempt success rather than size.
 İşcan (2026a) found that executed failing-test assertions beat a same-code placebo of generic
-requirement bullets but only tied blind resampling (26 against 26 unlocks among 290 task–model units
-no cached candidate had solved, outside the pre-registered family), and that the placebo contrast
+requirement bullets but only tied blind resampling at four generations per arm (26 against
+26 unlocks among 290 task–model units on which none of eight cached candidates had passed the
+public tests, outside the pre-registered family), and that the placebo contrast
 reversed in a separate 60-unit sample; İşcan (2026b) did not confirm an advantage of error content
-over form-matched placebos, and does not read this as equivalence. In code generation more broadly,
+over form-matched placebos, in prompts or in fine-tuned adapters, on 40 task–model units, and does
+not read this as equivalence. In code generation more broadly,
 repair's gains once its cost is counted "are often modest, vary a lot between subsets of the data,
 and are sometimes not present at all" (Olausson et al., 2024).
 
-**Self-correction and sampling.** Without external feedback, self-correction often fails to
-improve reasoning and must be compared with baselines of equal inference cost (Huang et al., 2024);
+**Self-correction and sampling.** Without external feedback, LLMs struggle to
+self-correct their reasoning, and any self-correction must be compared with baselines of equal
+inference cost (Huang et al., 2024);
 it is effective where reliable external feedback is available and is often not compared with
 sufficiently strong baselines (Kamoi et al., 2024). A proof checker gives such feedback, and fresh
 tries are a strong baseline: Brown et al. (2024) find that coverage improves smoothly with
@@ -232,7 +237,8 @@ resumed it under the registration's resume rule and changed only the run procedu
 supervising script resumes, cleans up and keeps kernel evidence), not the design, arms, prompts,
 verifier rules, timeouts or analysis. But D1 was committed mid-phase, after 2,202 of the 4,080
 records, not before the phase as the registration requires; the other 1,878 records ran under D1's
-procedure. Appendix A gives D1 and a note, written after the phase, on what it got wrong.
+procedure. Appendix A gives D1 and a note, written after the phase, on what it got wrong;
+Section 6 and Appendix D report what it promised.
 
 **Labels.** Everything not produced by `analyze.py` run unchanged is marked *exploratory (not
 registered)* and changes no registered reading.
@@ -292,12 +298,12 @@ None of these is a test of a hypothesis, and their p-values are not adjusted.
   +10.59; 53 / 1) (Figure 1b).
 - **By difficulty.** On the 139 problems B proved every time, F and R4 verified every attempt; on
   the 49 it proved sometimes, F − R4 is +2.0 points (−0.8 to +5.3); on the 16 it never proved,
-  +11.3 (−2.5 to +28.8), too few problems to say whether feedback helps more on hard problems.
+  +11.3 (−2.5 to +28.8): F 18.8% against R4 7.5%, too few problems to say whether feedback helps more on hard problems.
 - **Scaled by the room left.** F − R4 over R4's unverified share is 17% (95% interval 1% to 38%):
   F's unverified share (6.57%) was about 17% smaller than R4's (7.94%).
 - **After the first call.** On each problem's verified rate minus its first-round pass rate, F − R4
   is +2.9 points (+0.3 to +5.7; sign-flip p = 0.038; exact sign test p = 0.53, 35 problems against
-  29). The registration (its 6.4) describes this as removing the first-call noise F and R4 share by
+  29); it reuses H1's attempts, so it is not a separate finding. The registration (its 6.4) describes this as removing the first-call noise F and R4 share by
   design, but it removes first-call successes, not the room they leave, and F's identical first
   calls happened to fail more often (185 against 169). Exploratory (not registered): scaling F's gain
   by 169/185, which assumes the same gain per failed first call, gives about +1.9 points.
@@ -332,11 +338,11 @@ problem gives +0.9 to +1.5.
 For Claude Haiku 5.5 at a cap of four calls on these problems, showing the failed proof with Lean's
 report did not change the overall verified rate by 3 points or more, compared with fresh tries; the
 estimate is small in points and positive, and F's unverified share was about 17% smaller than R4's
-(descriptive). Most of what a loop of four calls adds over one call is available from fresh tries
-alone: R4 gained +8.2 of F's +9.6 points (descriptive). The placebo also read "no difference of 3
+(descriptive). In this setup, most of what a loop of four calls adds over one call is available from
+fresh tries alone: R4 gained +8.2 of F's +9.6 points (descriptive). The placebo also read "no difference of 3
 points or more" against fresh tries; both verified 939 of 1,020 attempts (H3: 0.0 points, 95%
 interval −1.18 to +1.37; P higher on 7 problems, lower on 9). Descriptively, the small positive
-estimate arises after a failed first call (Figure 2; exploratory), in figures that reuse H1's
+estimate arises after a failed first call (Figure 2; exploratory, not registered), in figures that reuse H1's
 attempts and are not a separate test; since neither H1 nor H2 reads "difference", nothing is
 attributed to Lean's report. Any difference there moves the overall rate little: 138 of 204 problems
 were solved by every arm every time (B alone solved 139 every time) and only 12 differ between F and
@@ -347,8 +353,8 @@ small from noise.
 
 Except for the registered rule and readings, this section and Appendix D are exploratory (not
 registered): the reports D1 promised were specified before the resume, with 1,878 records still to
-come, and computed after the phase; the recounts and re-checks were added after the phase, with the
-outcomes by arm known.
+come, and computed after the phase; the assignment of each kill to one process, the recounts and the
+re-checks were added after the phase, with the outcomes by arm known.
 
 **What happened.** Every final proof of `mathd_numbertheory_451` checks a bounded statement with
 `decide +kernel` over all m below 2020 (below 2019 in two of them), and its checks outgrew the 14.3 GB memory limit the study's
@@ -359,6 +365,12 @@ again on resuming. No arm proved the problem. The same events ended two final ch
 problems whose proofs pass when re-checked alone (F's `aime_1990_p15`, which had passed in the loop
 in 18.5 s, and B's `imo_2019_p1`), and while the process that times the checks stalled, the
 registered 300 s timeout fired late in 3 final checks (487, 572 and 721 s); none of them passed.
+
+**D1's promised analyses** (details in Appendix D). Without `mathd_numbertheory_451`, H1, H2 and H3
+keep their readings (H1 +1.38 points, p = 0.093). Without the 476 (problem, repetition) pairs that
+had a cell, in any arm, that started while a cell of that problem was running, H1 is +1.61 (90%
+interval +0.08 to +3.34, p = 0.117) and reads "inconclusive" under the registered rule, on 53% of
+the data, which is why its interval reaches past +3 points.
 
 **The registered rule decides.** An attempt counts as verified only when the verifier accepts its
 proof, D1 (committed before any outcome by arm was looked at) kept killed checks "not verified", and

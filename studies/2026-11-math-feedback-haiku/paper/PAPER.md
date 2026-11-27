@@ -73,8 +73,8 @@ registration committed before any paid call. Our contributions:
 **Feedback against resampling in formal proving.** Klingner et al. (2026) compare refinement with
 Lean's error trace (up to 32 turns) against 32 independent samples for 14 models: the difference
 averages +7.7 points on a 50-problem miniF2F subset and −1.4 on a miniCTX subset, from a single run
-the authors call a snapshot (we use their Table 3.1, whose counts of positive models differ from
-their text). Li and Li (2026), with Qwen3.6-27B and DeepSeek-Prover-V2-7B on difficult miniF2F
+the authors call a snapshot (we use their Table 3.1; their text's counts
+of models with a positive difference disagree with it). Li and Li (2026), with Qwen3.6-27B and DeepSeek-Prover-V2-7B on difficult miniF2F
 problems and a pre-registered primary endpoint, found that no tested one-step feedback condition
 established an advantage over instruction-only resampling, nor did sequential repair at 64 attempts on 11-problem banks
 (unresolved on Qwen, −18.3 points, 95% interval −41.8 to +5.3; clearly worse on DeepSeek-Prover,
@@ -100,9 +100,9 @@ resampling at the same cap of eight retries: execution feedback never beat that 
 tested except 7B (by 6.1 and 6.9 points at 1.5B and 3B on Qwen2.5-Coder, 13.8 and 4.5 at 1.3B and
 6.7B on DeepSeek-Coder), a penalty the author finds tracks first-attempt success rather than size.
 İşcan (2026a) found that executed failing-test assertions beat a same-code placebo of generic
-requirement bullets but only tied blind resampling at four generations per arm (26 against
-26 unlocks among 290 task–model units on which none of eight cached candidates had passed the
-public tests, outside the pre-registered family), and that the placebo contrast
+requirement bullets but only tied blind resampling at four generations per arm (each solved 26 of 290
+task–model units on which none of eight cached candidates had passed the public tests, a comparison
+outside the pre-registered family), and that the placebo contrast
 reversed in a separate 60-unit sample; İşcan (2026b) did not confirm an advantage of error content
 over form-matched placebos, in prompts or in fine-tuned adapters, on 40 task–model units, and does
 not read this as equivalence. In code generation more broadly,
@@ -140,8 +140,9 @@ problems × 5 repetitions = 4,080). It is a sequence of *rounds*, one model call
 to four in F, R4 and P (R4's rounds are *tries*). Every round's proof is checked in the loop by the
 verifier's own code with a 120 s limit, except in the last round the cap allows (B's only round; the
 fourth in F, R4 and P), and a pass ends the attempt. The attempt's *final proof* is that of its
-latest round that gave one, and the attempt is *verified* if the final check accepts it; an attempt
-with no proof is not verified.
+latest round that gave one; it gets the final check described under Verifier, even if it passed in
+the loop, and the attempt is *verified* if that check accepts it. An attempt with no proof is not
+verified.
 
 **Model and settings.** Every call went to `claude-haiku-5-5` through the Anthropic Messages API
 with effort `medium`, adaptive thinking, `max_tokens` 32,000, automatic prompt caching and no
@@ -197,8 +198,9 @@ commit and push times in our repository and on GitHub's record of the push [say 
 is publicly visible], not on a registry's timestamp."] A smoke test (3 problems × 4 arms, checking
 from transcripts that each arm sent the registered requests) and a setup check (30 problems × 4
 arms) ran first on the earlier study's development problems, from miniF2F's validation split;
-nothing was selected on them. The held-out phase ran once, and every registered file matched its
-hash when the analysis ran. This is a self-registration, not a peer-reviewed registered report;
+nothing was selected on them. The held-out phase (the 4,080 cells on the 204 problems, run from 2026-11-25
+17:17Z to 2026-11-26 09:08Z, stopped from 01:23Z to 02:15Z by the crash of Section 6) ran once,
+and every registered file matched its hash when the analysis ran. This is a self-registration, not a peer-reviewed registered report;
 pre-registration has been argued for in machine learning (Forde and Paganini, 2019; Hofman et al.,
 2023) and piloted as a publication model (Bertinetto et al., 2021).
 
@@ -226,9 +228,9 @@ the sign-flip test would change no reading.
 
 **Power.** A simulation resampling the pilot's per-problem outcomes onto 204 problems gave the
 registered sign-flip test a probability of 0.96 of reading "difference" at the planning effect of
-+4.1 points and 0.86 at +2.7, with five repetitions (normal approximation; it assumes, among other
-things, that the 204 problems resemble the pilot's 40 and that no problem's true effect is
-negative). The planning effect is three-quarters of the pilot's effect after the simulation's
++4.1 points and 0.86 at +2.7, with five repetitions (the simulation approximated the sign-flip test's null distribution by a
+normal and assumes, among other things, that the 204 problems resemble the pilot's 40 and that no
+problem's true effect is negative; registration section 7, Appendix A). The planning effect is three-quarters of the pilot's effect after the simulation's
 smoothing (+5.4 to +5.5 points, against +5.8 raw), discounted for its first-call noise (Section 7).
 No power was set for the "no difference" reading.
 
@@ -270,7 +272,7 @@ P's for H2).
 descriptive contrasts of the capped arms with one call (95% intervals), which have no margin.
 Source: `analysis.json`.
 
-All three contrasts read "no difference of 3 points or more in the overall verified rate", and
+All three contrasts read "no difference of 3 points or more in the overall verified rate" (Figure 1a), and
 nothing is attributed to Lean's report. The H1 estimate is positive (F verified 953 of 1,020
 attempts, R4 939); the reading does not say the difference is zero, only that the registered 90%
 interval excludes a difference of 3 points or more and the registered test did not establish a
@@ -281,8 +283,8 @@ removing a sizeable share of R4's failures.
 
 H1's 95% interval excludes zero although p = 0.093; the registered test decides, and the
 interval's ends depend on the bootstrap seed (exploratory, not registered: over seeds 1 to 150 the
-lower end was 0.00 for 14 seeds and the upper end +3.04 for 89, while the 90% interval that carries
-the reading ended at +2.65 to +2.75). No diagnostic flag was raised: the identical first request
+lower end was 0.00 for 14 seeds and the upper end +3.04 for 89, while the upper end of the 90% interval that
+carries the reading was +2.65 to +2.75, so the reading does not depend on the seed). No diagnostic flag was raised: the identical first request
 passed in the loop at 81.9% (F), 83.4% (R4) and 83.4% (P), no pair differing (Holm p ≥ 0.61), and
 none of the rates the registration's asymmetry rule names (capped or errored attempts, verifier
 timeouts, dropped-context rounds, in-loop timeouts, harness errors) differs by more than 1 point
@@ -398,8 +400,8 @@ limit lifted by swap, each of F's five proofs passed 450 s of user CPU in one th
 limit; user time cannot exceed wall-clock time and leaves out paging) without finishing, its memory
 still growing past 25 GB; and the run's machine, whose processor was not recorded, was about as fast
 on ordinary checks as the one measured (median ratio 0.99 over 72 re-timed checks). So very likely
-none of F's proofs would have checked within 300 s even with enough memory, and counting the two
-known artifacts as passes, every reading equals the registered one (H1 p = 0.062, H2 Holm p = 0.080).
+none of F's proofs would have checked within 300 s even with enough memory, and counting as passes the two
+cells on other problems that pass when re-checked alone, every reading equals the registered one (H1 p = 0.062, H2 Holm p = 0.080).
 This fails if swap inflated user time by about half at the median speed ratio, and it assumes the
 ratio from ordinary checks carries over to this memory-heavy proof. As weak corroboration, no check
 of any proof of this problem has ever passed (0 of 82, 33 of them ended by the memory events). Details and caveats
@@ -422,7 +424,7 @@ the pilot (exploratory, not registered; 40 reused problems, arms not interleaved
 study, each from its own report. Blue rows: this study (`analysis.json`). (a) F − R4. (b) Gain over
 one call.
 
-The pilot put F 5.8 points above R4 in each model (Haiku: 95% interval +0.8 to +12.5; Opus: 0.0 to
+The pilot put F 5.8 points above R4 in each model (Figure 3a; Haiku: 95% interval +0.8 to +12.5; Opus: 0.0 to
 +12.5), but the two are not independent confirmations: the same two problems made up about 71% of
 the difference in each. This study estimates +1.4; its 90% interval (+0.20 to +2.65) excludes the
 pilot's estimate and the +4.1 points the study was powered for, and both pilot intervals include
@@ -439,7 +441,7 @@ to the messages ("The round data point to the messages"); the held-out compariso
 them. The pilot's exploratory point estimates put +6.7 points of that gain on fresh tries and +5.8
 on feedback over fresh tries (Haiku: +7.5 and +5.8), but with arms not interleaved (the Opus parts a
 day apart) and intervals too wide to say how the gain divides (Opus: +0.8 to +14.2 and 0.0 to
-+12.5). In this study fresh tries gave +8.2 of feedback's +9.6 points over one call (descriptive). We
++12.5). In this study fresh tries gave +8.2 of feedback's +9.6 points over one call (descriptive; Figure 3b). We
 do not re-estimate the earlier result.
 
 ## 8. Limitations
@@ -768,7 +770,8 @@ not exposed):
 
 No cell, exposed or not, was stopped by the time cap. The counts use the inclusive rule (a start in
 the same second as a cell of that problem starts or ends counts as exposed); the strict rule gives
-576 cells and 463 pairs, and H1 without those pairs also reads "inconclusive" (p = 0.107).
+576 cells and 463 exposed (problem, repetition) pairs, and H1 without those pairs reads
+"inconclusive" (p = 0.107), as under the inclusive rule (next paragraph).
 
 **D1's analyses.** 602 of the 4,080 cells (15%) started while a cell of `mathd_numbertheory_451`
 was running; every final check that waited more than 60 s for a Lean slot was among them. Without

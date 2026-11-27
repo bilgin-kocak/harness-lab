@@ -189,6 +189,9 @@ No deviation.
 - **2026-11-27. Paper v2** (owner: "fresh redraft"). `paper/PAPER.md` rewritten from the outline to
   about eight pages plus appendices (main-text prose 5,470 words against v1's 8,350), keeping every
   verified number, checked citation, figure and review correction of v1; detail moved to the
-  appendices. v1 as reviewed is kept in `paper/drafts/PAPER_v1.md`. v2 commit 68bd982; four reviews
+  appendices. v1 as reviewed is kept in `paper/drafts/PAPER_v1.md`. v2 commit 68bd982. Four reviews
   of v2 (regression against v1, numbers, claims and registration, referee), each finding checked by
-  a refuter, follow.
+  a refuter, confirmed 35 findings (several duplicates across reviews), mostly qualifiers the
+  compression had dropped; all are applied (1f40800, 9014ff3, 8a42f64). Two also corrected the
+  wording of `RESULTS.md` and `d1_report.md` (the 82 earlier checks include 33 ended by the memory
+  events). Final v2 main-text prose: 5,830 words, against v1's 7,710.

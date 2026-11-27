@@ -182,8 +182,9 @@ of `oom_kernel_log.txt`.
   about half (at the median speed ratio); paging became heavy only after memory passed about 14 GB,
   at 143-151 s of user CPU, so the rest would have to be inflated about twofold. A first version
   that counted user plus system time was stopped and discarded
-  (`recheck_heavy_cpu_v1_discarded.json`). No check of any proof of this problem has ever passed: 0
-  of 82 checks that reached a verdict, plus 9 measurements of F's 5 proofs stopped unfinished.
+  (`recheck_heavy_cpu_v1_discarded.json`). No check of any proof of this problem has
+  ever passed: 0 of 82 checks, 33 of them ended by the memory events and 49 by a timeout or a Lean
+  error; 9 measurements of F's 5 proofs were also stopped unfinished.
 - **What the exploratory readings rest on.** The registered readings stand whatever these show.
   The recounts that change a reading need one of F's proofs of `mathd_numbertheory_451` to pass;
   very likely none could within the registered 300 s. Counting the two known artifacts as passes,

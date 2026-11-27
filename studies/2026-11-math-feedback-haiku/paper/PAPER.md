@@ -29,8 +29,10 @@ smaller than R4's (95% CI 1% to 38%; not a test). Fresh tries gave most of a fou
 over one call (+8.2 of F's +9.6 points; descriptive). An exploratory pilot's +5.8 points for F over
 R4 lies outside our 90% interval, as does the +4.1 the study was powered for. Out-of-memory events
 ended the final checks of 19 of the 4,080 attempts, 17 on one problem no arm proved; every
-registered reading stands, and exploratory re-checks indicate that very likely none of F's killed
-proofs of that problem could have passed within the registered 300 s limit, even with enough memory.
+registered reading stands. In exploratory recounts that count these checks as passes, a reading
+changes only if they include at least one of F's killed proofs of that problem, and exploratory
+re-checks indicate that very likely none of those could have passed within the registered 300 s
+limit, even with enough memory.
 Code, records, transcripts and analysis will be released with the paper.
 
 ## 1. Introduction
@@ -43,8 +45,8 @@ improves smoothly with independent samples alone, Lean proofs included (Brown et
 earlier study is an example: a loop showing Lean's report verified 97.5% of Claude Opus 5.5's
 attempts on 40 miniF2F problems against 85.0% for one call, but the loop could make four calls and
 the baseline one, so it could not separate feedback from extra calls (Harness Lab, 2026). Studies
-matched on calls or samples disagree: refinement led resampling on a miniF2F subset and trailed it on
-miniCTX (Klingner et al., 2026); with two open models on hard miniF2F problems no feedback condition
+matched on calls or samples disagree: averaged over 14 models, refinement led resampling on a miniF2F
+subset and trailed it on a miniCTX subset (Klingner et al., 2026); with two open models on hard miniF2F problems no feedback condition
 beat resampling (Li and Li, 2026); and in placebo-controlled studies of small code models, execution
 feedback did not beat blind resampling (Verma, 2026; İşcan, 2026a).
 
@@ -76,8 +78,11 @@ their text). Li and Li (2026), with Qwen3.6-27B and DeepSeek-Prover-V2-7B on dif
 problems and a pre-registered primary endpoint, found that no tested one-step feedback condition
 beat instruction-only resampling, nor did sequential repair at 64 attempts on 11-problem banks
 (unresolved on Qwen, −18.3 points, 95% interval −41.8 to +5.3; clearly worse on DeepSeek-Prover,
-−50.7), and that showing the failed predecessor without a diagnostic reduced success; their
-failed-predecessor and compiler-error conditions correspond to our P and F. Gains from repair at
+−50.7), and that showing the failed predecessor without a diagnostic reduced success, a loss that adding
+that attempt's compiler error recovered on Qwen in one-step tests (mostly on predecessors in
+obsolete Lean 3 syntax, an exploratory subgroup) but not on DeepSeek-Prover; their
+failed-predecessor and compiler-error conditions correspond to our P and F, except that P adds a
+fixed rejection sentence. Gains from repair at
 matched sample counts were reported for Baldur in Isabelle/HOL, with a separately fine-tuned repair
 model (First et al., 2023), and in a self-reported blog post for Kimina-Prover, a model trained to
 fix errors (Wang et al., 2025), neither with variance. Goedel-Prover-V2's trained self-correction
@@ -102,10 +107,11 @@ and are sometimes not present at all" (Olausson et al., 2024).
 
 **Self-correction and sampling.** Without external feedback, self-correction often fails to
 improve reasoning and must be compared with baselines of equal inference cost (Huang et al., 2024);
-it works best with reliable external feedback and is often compared with weak baselines (Kamoi et
-al., 2024). A proof checker gives such feedback, and fresh tries are a strong baseline: coverage
-improves smoothly with independent samples, including on the 130-problem MiniF2F-MATH subset in Lean
-4, whose authors conjecture that verifier feedback should help (Brown et al., 2024). Other provers
+it is effective where reliable external feedback is available and is often not compared with
+sufficiently strong baselines (Kamoi et al., 2024). A proof checker gives such feedback, and fresh
+tries are a strong baseline: Brown et al. (2024) find that coverage improves smoothly with
+independent samples, including on the 130-problem MiniF2F-MATH subset in Lean 4, and conjecture, but
+did not test, that verifier feedback should help. Other provers
 use the checker in training and search rather than as text in the prompt (Xin et al., 2024). The
 strongest systems prove nearly all of miniF2F-test (99.6% for Seed-Prover's medium setting: Chen et
 al., 2025), so we measure one harness choice for one model at a small budget, not the state of the
@@ -261,7 +267,8 @@ Source: `analysis.json`.
 All three contrasts read "no difference of 3 points or more in the overall verified rate", and
 nothing is attributed to Lean's report. The H1 estimate is positive (F verified 953 of 1,020
 attempts, R4 939); the reading does not say the difference is zero, only that the registered 90%
-interval excludes 3 points or more and the registered test established no difference. Read against
+interval excludes a difference of 3 points or more and the registered test did not establish a
+difference. Read against
 the room left, as the registration intends, the margin is wide: R4 left 7.9% of its attempts
 unverified, so 3 points is about 38% of the room left, and the reading is compatible with feedback
 removing a sizeable share of R4's failures.
@@ -344,7 +351,7 @@ come, and computed after the phase; the recounts and re-checks were added after 
 outcomes by arm known.
 
 **What happened.** Every final proof of `mathd_numbertheory_451` checks a bounded statement with
-`decide +kernel` over all m below 2020, and its checks outgrew the 14.3 GB memory limit the study's
+`decide +kernel` over all m below 2020 (below 2019 in two of them), and its checks outgrew the 14.3 GB memory limit the study's
 processes shared: the kernel's out-of-memory killer ended 17 of its 20 final checks, in all four
 arms (F 5, R4 4, P 3, B 5), and once also the process that ran the attempts, stopping the run after
 2,202 records; the 4 attempts then in progress had no record, were charged in full ($3.20) and ran
@@ -383,7 +390,7 @@ none of F's proofs would have checked within 300 s even with enough memory, and 
 known artifacts as passes, every reading equals the registered one (H1 p = 0.062, H2 Holm p = 0.080).
 This fails if swap inflated user time by about half at the median speed ratio, and it assumes the
 ratio from ordinary checks carries over to this memory-heavy proof. As weak corroboration, no check
-of any proof of this problem has ever passed (0 of 82 that reached a verdict). Details and caveats
+of any proof of this problem has ever passed (0 of 82, 33 of them ended by the memory events). Details and caveats
 are in Appendix D.
 
 **Lessons for harness builders.** Cap each check's memory, so that one proof cannot starve the
@@ -837,8 +844,9 @@ slot was free when 70 of the 72 started. The ratio comes from ordinary checks; c
 the memory-heavy proofs of `mathd_numbertheory_451` is an assumption.
 
 **Weak corroboration.** No check of any proof of `mathd_numbertheory_451` has ever passed: 0 of 82
-checks that reached a verdict (45 in-loop with a 120 s limit, 20 final, 17 re-checks; at most 54
-distinct proofs), plus 9 measurements of F's five proofs stopped unfinished.
+checks (45 in-loop with a 120 s limit, 20 final, 17 re-checks; at most 54 distinct proofs), 33 of
+them ended by the memory events (17 final, 16 re-checks) and 49 by a timeout (45) or a Lean error
+(4); 9 measurements of F's five proofs were also stopped unfinished.
 
 ## Appendix E. Independent verification (exploratory, not registered)
 

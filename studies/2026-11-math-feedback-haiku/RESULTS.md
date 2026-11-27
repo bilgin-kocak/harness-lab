@@ -380,9 +380,10 @@ records where D1's expectations were wrong.
     - A first version of the measurement, which counted user plus system time, was stopped and
       discarded (`recheck_heavy_cpu_v1_discarded.json`). Corroborating it, weakly: on the machine
       before the restart, F's repetition 1 ran out the 300 s in a wall-clock re-check; and no
-      check of any proof of this problem has ever passed: 0 of 82 checks that reached a verdict
-      (45 in-loop with a 120 s limit, 20 final, 17 re-checks; at most 54 distinct proofs), plus
-      9 measurements of F's 5 proofs stopped unfinished.
+      check of any proof of this problem has ever passed: 0 of 82 checks (45 in-loop with a 120 s
+      limit, 20 final, 17 re-checks; at most 54 distinct proofs), 33 of them ended by the memory
+      events (17 final, 16 re-checks) and 49 by a timeout (45) or a Lean error (4); 9 measurements
+      of F's 5 proofs were also stopped unfinished.
 
 ## 9. What this study cannot show (registration section 10)
 

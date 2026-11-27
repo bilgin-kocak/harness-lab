@@ -2,7 +2,8 @@
 
 - **Status: draft for the owner, 2026-11-26. Not published, not submitted.** Every claim below
   needs the owner's approval before it leaves this repository.
-- **Superseded in part by the full draft, `PAPER.md`.** Where they differ (the abstract's wording,
+- **Superseded in part by the full draft, `PAPER.md`** (v2, a fresh redraft to about eight pages,
+  2026-11-27; v1 as reviewed is in `drafts/PAPER_v1.md`). Where they differ (the abstract's wording,
   the related work after each citation was checked, `REFERENCES_CHECK.md`), `PAPER.md` is current.
 - **Sources:** `../RESULTS.md` (the results draft), `../analysis.json` (the registered output),
   `../d1_report.md`, `../REGISTRATION.md`, `../DEVIATIONS.md`, `../RELATED_WORK.md`, the pilot

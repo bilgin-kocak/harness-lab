@@ -186,3 +186,9 @@ No deviation.
   of them also corrected `RESULTS.md`, `d1_report.md` and the post-phase note in `DEVIATIONS.md`
   (wording only; no record or number changed). No model call of the study was made; nothing is
   published.
+- **2026-11-27. Paper v2** (owner: "fresh redraft"). `paper/PAPER.md` rewritten from the outline to
+  about eight pages plus appendices (main-text prose 5,470 words against v1's 8,350), keeping every
+  verified number, checked citation, figure and review correction of v1; detail moved to the
+  appendices. v1 as reviewed is kept in `paper/drafts/PAPER_v1.md`. v2 commit 68bd982; four reviews
+  of v2 (regression against v1, numbers, claims and registration, referee), each finding checked by
+  a refuter, follow.
